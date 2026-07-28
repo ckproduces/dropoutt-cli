@@ -61,27 +61,57 @@ dropoutt scan ./my-corpus
 
 ```
   Atlas coverage (atlas-lite-v0)
-    Regions      24 of 258 occupied
-    Spread       40% of even coverage  (specialised)
-    Off-atlas    0.0%
-    Top categories
-      general_chat            46%
-      code_explanation        31%
-      news_current_events     12%
-      code_generation          9%
-      sql_data                 1%
-    Top regions
-      160      49  import, return, file, license, version
-      161      47  import, return, class, none, name
-       62      32  return, şekilde, code, codeprep, kullanarak
+    Placed       6,042 of 6,130 sampled records (shares below are over these 6,042)
+    Breadth      195 of 258 regions occupied, as spread out as 63 even ones
+    Shape        75% of even coverage — mixed, covering roughly 25% of the atlas evenly
+    Where the corpus sits
+        1     801   13%  doğru, adım, hipotez, olduğunu, cevap
+            yours: Bir ilaç organizeri için kullanım talimatlarını düzenliyorum…
+       55     338    6%  kontrol, yüksek, farklı, düşük, else
+            yours: Aşağıda 8-12 yaş arası çocuklar için hazırlanmış bir bilgilen…
+    Subject areas
+        85%  General conversation and assistance
+         5%  Turkish literature, idiom and culture
+         5%  News and current events
+    Not in this corpus (13 of 20 subject areas the atlas covers are empty or near-empty here)
+      Code generation                    11 regions, 1 records here
+      Reading comprehension over a passage 10 regions, 7 records here
+      Arithmetic and word problems        8 regions, 26 records here
+      Religion, ethics and philosophy     7 regions, 0 records here
 ```
 
 | line | how to read it |
 | --- | --- |
-| Regions occupied | how much of the map this corpus touches at all |
-| Spread | region entropy against the entropy of a corpus spread evenly. Low is not bad: a specialised corpus *should* be concentrated, and a pretraining mixture should not be. |
 | Placed | how many sampled records landed on the atlas. Every share below is over these. |
-| Off-atlas | the rest: records too far from every centroid to place. Described, never grounds for withholding the rest. |
+| Breadth | two numbers, because occupancy alone is unreadable. **Occupied** counts a region holding one record the same as one holding a third of the corpus. **Effective** is the exponential of the region entropy: how many *evenly used* regions the corpus is as spread out as. The gap between them is the size of the tail. |
+| Shape | region entropy against the entropy of a corpus spread evenly, with the reading attached. Low is not bad: a specialised corpus *should* be concentrated and a pretraining mixture should not, and the tool has not been told which you are building. |
+| Where the corpus sits | the busiest regions. The five terms are the atlas's label for that region *in the reference corpus*; the `yours:` line is your own record sitting closest to the region's centre, which is what makes the label mean anything. Suppressed by `--no-evidence` and never written to `fingerprint.json`. |
+| Subject areas | level-0 categories, over placed records |
+| Not in this corpus | **the part a histogram of your own data cannot give you.** A histogram says what is present. It takes a fixed coordinate system to say what is *absent*, and that is the whole reason the atlas is a frozen artifact rather than a clustering of whatever was scanned. Listed, never judged: whether a gap matters depends on what you are building. |
+| Off-atlas | records too far from every centroid to place. Described, never grounds for withholding the rest. |
+
+A category counts as a gap below 0.5% of placed records rather than at exactly
+zero, because the level-0 probe is 86% accurate on held-out reference data and a
+category holding a handful of records is as likely to be probe error as presence.
+The denominator is the 20 categories the atlas carries regions for, not the 31
+the taxonomy defines — 11 never drew enough reference data to be clustered, and
+counting those as gaps would blame the corpus for the atlas's own limits.
+
+When a scan covers more than one dataset, a further section reports the cosine
+between each pair's region histograms. Two datasets can share no wording and
+still occupy the same ground, which is what "we added a third source and gained
+no new coverage" looks like from the outside; `T1-OVERLAP-001` compares text and
+cannot see it.
+
+### What the atlas still cannot tell you
+
+It has no record of how the **reference** corpus was distributed across its own
+regions — `atlas-lite-v0` stores centroids, labels and geometry, but not the
+per-region mass of the 152,622 records it was fitted on. So the gap list is
+absolute ("nothing of yours is here") and there is no over- or
+under-representation figure ("you have four times as much of this as the
+reference"). `tools/build_atlas.py` now records that distribution, so the next
+atlas can answer it; v0 cannot, and nothing in the output pretends otherwise.
 
 `--no-atlas` skips it. If it never appears, run `dropoutt doctor` — coverage
 needs the `atlas` extra.

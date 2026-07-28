@@ -227,3 +227,85 @@ class CrossDatasetOverlap(Check):
                 },
             )
         ]
+
+
+@register
+class ContradictorySupervision(Check):
+    check_id = "T1-DUP-002"
+    title = "The same prompt is answered two different ways"
+    tier = 1
+    profiles = (Profile.SFT,)
+    cost = CostClass.GLOBAL
+    severity = Severity.WARNING
+    blocking_in = ()
+    fix = "Keep one answer per prompt, or accept that the model is being taught to pick at random."
+    rationale = (
+        "Exact-duplicate detection finds records that are identical and reports them as "
+        "redundant. The more damaging case is the opposite: the same prompt appearing several "
+        "times with *different* answers. That is not redundancy, it is contradiction, and it "
+        "is invisible to every duplicate check because the records are genuinely distinct. "
+        "The gradient it produces points in two directions at once, and the usual cause is a "
+        "merge of two datasets that overlap on prompts, or a generation run repeated with a "
+        "different system prompt. Prompts are compared after whitespace normalisation only, "
+        "so near-misses are not counted."
+    )
+
+    #: Prompts are held as digests rather than text, so a corpus with millions of
+    #: records costs 16 bytes per distinct prompt rather than the prompt itself.
+    MAX_TRACKED = 2_000_000
+
+    def __init__(self) -> None:
+        from ..models import content_hash  # noqa: PLC0415
+
+        self._hash = content_hash
+        # prompt digest -> (first answer digest, distinct answers, an example)
+        self.seen: dict[str, tuple[str, int, tuple[str, str, int, str]]] = {}
+        self.answers: dict[str, set[str]] = {}
+        self.total = 0
+        self.overflowed = False
+
+    def observe(self, doc: Document, ctx: ScanContext) -> None:
+        if not doc.turns:
+            return
+        prompt = doc.prompt_text.strip()
+        answer = doc.assistant_text.strip()
+        if len(prompt) < 20 or not answer:
+            return
+        self.total += 1
+        if len(self.seen) >= self.MAX_TRACKED:
+            self.overflowed = True
+            return
+        pk = self._hash(" ".join(prompt.split()))
+        ak = self._hash(" ".join(answer.split()))
+        record = (doc.doc_id, doc.source_file, doc.source_index, excerpt(prompt, 120))
+        if pk not in self.seen:
+            self.seen[pk] = (ak, 1, record)
+            return
+        first_ak, _n, first_record = self.seen[pk]
+        bucket = self.answers.setdefault(pk, {first_ak})
+        bucket.add(ak)
+        self.seen[pk] = (first_ak, len(bucket), first_record)
+
+    def finalize(self, ctx: ScanContext) -> list[Finding]:
+        conflicts = {pk: n for pk, (_a, n, _r) in self.seen.items() if n > 1}
+        if not conflicts:
+            return []
+        affected = sum(conflicts.values())
+        evidence = [
+            Evidence(r[0], r[1], r[2], f"{n} different answers to: {r[3]}")
+            for pk, n in sorted(conflicts.items(), key=lambda kv: -kv[1])[:5]
+            for r in (self.seen[pk][2],)
+        ]
+        detail = (
+            f"{len(conflicts):,} prompt(s) appear more than once with differing answers, "
+            f"covering {affected:,} of {self.total:,} records"
+        )
+        if self.overflowed:
+            detail += f"; only the first {self.MAX_TRACKED:,} distinct prompts were tracked"
+        return [
+            make_finding(
+                self, count=len(conflicts), total=self.total, detail=detail,
+                evidence=evidence,
+                data={"max_answers_for_one_prompt": max(conflicts.values())},
+            )
+        ]

@@ -8,9 +8,12 @@ diffed.
 from __future__ import annotations
 
 from . import (  # noqa: F401
+    tier0_corpus,
+    tier0_generation,
     tier0_hygiene,
     tier0_structure,
     tier0_tokens,
+    tier1_atlas,
     tier1_content,
     tier1_dedup,
     tier1_language,

@@ -488,7 +488,10 @@ def test_html_report_uses_sans_serif_and_plots_atlas_coverage(tmp_path):
     assert "&#34;" not in page
     assert '<svg class="atlas-map"' in page
     assert page.count("<circle class=\"atlas-point") == atlas.n_regions
-    assert "Larger highlighted circles contain more sampled records" in page
+    # The map's accessible description has to explain both encodings, because it
+    # now carries two: size is record count and colour is level-0 subject area.
+    assert "Circle size is the number of sampled records" in page
+    assert "colour is the subject area" in page
 
 
 def test_category_counts_are_json_serialisable(tiny_atlas):
@@ -709,3 +712,107 @@ def test_region_counts_reach_the_coverage_report(tiny_atlas):
     from dropoutt.compat import json_dumps
 
     json_dumps(cov)  # keys must stay JSON-serialisable
+
+
+# -- reading the coverage, not merely reporting it ------------------------
+#
+# The atlas used to emit an occupancy count, a spread percentage and five
+# frequency terms per region, none of which a reader could act on. These cover
+# the numbers added to make it legible.
+
+
+def test_effective_regions_separates_breadth_from_occupancy(tiny_atlas):
+    """Occupancy counts a region holding one record the same as one holding half.
+
+    Two corpora that occupy the same four regions get the same occupancy number
+    and should not get the same breadth number.
+    """
+    even = np.array([0, 1, 2, 3] * 25, dtype=np.int32)
+    lopsided = np.array([0] * 97 + [1, 2, 3], dtype=np.int32)
+    cats = tiny_atlas.region_category
+
+    a = tiny_atlas.coverage(even, cats[even])
+    b = tiny_atlas.coverage(lopsided, cats[lopsided])
+
+    assert a["regions_occupied"] == b["regions_occupied"] == 4
+    assert a["effective_regions"] == pytest.approx(4.0, abs=0.05)
+    assert b["effective_regions"] < 1.3
+
+
+def test_coverage_names_the_subject_areas_the_corpus_never_reaches(tiny_atlas):
+    """The question a histogram of your own data cannot answer."""
+    regions = np.array([0, 1, 2, 3] * 25, dtype=np.int32)  # category 0 only
+    cov = tiny_atlas.coverage(regions, tiny_atlas.region_category[regions])
+
+    gaps = {int(g["category"]): g for g in cov["coverage_gaps"]}
+    assert set(gaps) == {1, 2}
+    assert gaps[1]["records"] == 0
+    assert gaps[1]["regions"] == 4
+    assert gaps[1]["regions_empty"] == 4
+    assert cov["categories_total"] == 3
+
+
+def test_a_category_the_corpus_covers_is_not_listed_as_a_gap(tiny_atlas):
+    regions = np.array(list(range(12)) * 30, dtype=np.int32)
+    cov = tiny_atlas.coverage(regions, tiny_atlas.region_category[regions])
+    assert cov["coverage_gaps"] == []
+
+
+def test_datasets_occupying_the_same_regions_are_reported_as_alike(tiny_atlas):
+    """Two datasets can share no wording and still cover identical ground."""
+    regions = np.array([0, 1] * 40 + [0, 1] * 40 + [7, 8] * 40, dtype=np.int32)
+    names = ["a"] * 80 + ["b"] * 80 + ["c"] * 80
+    cov = tiny_atlas.coverage(regions, tiny_atlas.region_category[regions],
+                              datasets=names)
+
+    block = cov["by_dataset_regions"]
+    assert set(block["datasets"]) == {"a", "b", "c"}
+    pairs = {frozenset((p["a"], p["b"])): p["similarity"] for p in block["most_alike"]}
+    assert pairs[frozenset(("a", "b"))] == pytest.approx(1.0, abs=1e-6)
+    assert pairs[frozenset(("a", "c"))] == pytest.approx(0.0, abs=1e-6)
+
+
+def test_off_atlas_records_are_left_out_of_the_per_dataset_signature(tiny_atlas):
+    """The signature describes where a dataset sits, so unplaced rows cannot count."""
+    regions = np.array([0] * 40 + [-1] * 40, dtype=np.int32)
+    names = ["a"] * 80
+    cov = tiny_atlas.coverage(regions, np.zeros(80, dtype=np.int32), datasets=names)
+    assert cov["by_dataset_regions"]["datasets"]["a"]["placed"] == 40
+
+
+def test_the_coverage_facet_carries_no_record_text(tiny_atlas):
+    """fingerprint.json is the shareable artifact; excerpts live in ctx.stats."""
+    regions = np.array([0, 1, 2, 3] * 25, dtype=np.int32)
+    cov = tiny_atlas.coverage(
+        regions, tiny_atlas.region_category[regions],
+        datasets=["a"] * 50 + ["b"] * 50,
+        texts=["gizli kayit metni burada duruyor ve paylasilmamali"] * 100,
+    )
+    assert "gizli kayit" not in json.dumps(cov, default=str)
+
+
+def test_a_gap_is_absolute_when_the_atlas_records_no_reference_mass(tiny_atlas):
+    """atlas-lite-v0 stores no reference distribution, so no share is invented."""
+    assert tiny_atlas.region_size is None
+    regions = np.array([0, 1, 2, 3] * 25, dtype=np.int32)
+    cov = tiny_atlas.coverage(regions, tiny_atlas.region_category[regions])
+    assert all("reference_share" not in g for g in cov["coverage_gaps"])
+
+
+def test_a_gap_becomes_relative_when_the_atlas_records_reference_mass(tiny_atlas):
+    """With a baseline, 'nothing of yours is here' gains 'and it holds 60% of the reference'."""
+    # Category 1 is four regions carrying most of the reference corpus;
+    # category 2 is four regions carrying almost none of it.
+    tiny_atlas.region_size = np.array(
+        [10] * 4 + [150] * 4 + [1] * 4, dtype=np.int32
+    )
+    regions = np.array([0, 1, 2, 3] * 25, dtype=np.int32)
+    cov = tiny_atlas.coverage(regions, tiny_atlas.region_category[regions])
+
+    gaps = {int(g["category"]): g for g in cov["coverage_gaps"]}
+    assert gaps[1]["reference_share"] == pytest.approx(600 / 644, abs=1e-3)
+    assert gaps[2]["reference_share"] == pytest.approx(4 / 644, abs=1e-3)
+    # The gap that matters most is the one the reference corpus fills, not the
+    # one with the most regions, so ordering follows the baseline when there is
+    # one.
+    assert cov["coverage_gaps"][0]["category"] == 1

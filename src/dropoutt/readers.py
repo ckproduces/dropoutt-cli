@@ -106,7 +106,21 @@ def read_json(path: str, *, compressed: bool = False, limit: int | None = None) 
 
 def read_text(path: str, *, compressed: bool = False, limit: int | None = None,
               paragraph_split: bool = False) -> Iterator[RawRecord]:
-    """Plain text. One document per file, or one per blank-line-separated block."""
+    """Plain text, unless it turns out not to be.
+
+    A ``.txt`` file holding JSON records is read as those records. Taking the
+    extension at its word instead is the quietest way this tool can be wrong:
+    every record collapses into one corpus document, the profile is inferred
+    from that, and the conversational checks are not skipped so much as never
+    considered. See :mod:`dropoutt.sniff` for how the decision is made.
+    """
+    from .sniff import sniff_file  # noqa: PLC0415
+
+    framing = sniff_file(path, compressed=compressed)
+    if framing.is_records:
+        yield from _read_embedded_records(path, compressed=compressed, limit=limit)
+        return
+
     with open_maybe_compressed(path, compressed) as fh:
         content = fh.read()
     if not content.strip():
@@ -118,6 +132,57 @@ def read_text(path: str, *, compressed: bool = False, limit: int | None = None,
         if limit is not None and idx >= limit:
             return
         yield RawRecord({"text": block}, path, idx, raw_text=block[:2000])
+
+
+#: Read size for the incremental span scanner. The buffer holds at most this
+#: plus one record, so a mislabelled multi-gigabyte dump costs bounded memory.
+_SPAN_CHUNK = 1 << 20
+
+
+def _read_embedded_records(
+    path: str, *, compressed: bool = False, limit: int | None = None
+) -> Iterator[RawRecord]:
+    """Yield the JSON records embedded in a text file.
+
+    Scans incrementally so the whole file is never held at once. A span that
+    fails to parse is yielded as an error record rather than dropped: those are
+    the malformed records, and reporting them is the point.
+    """
+    from .sniff import iter_json_spans  # noqa: PLC0415
+
+    idx = 0
+    buffer = ""
+    with open_maybe_compressed(path, compressed) as fh:
+        while True:
+            chunk = fh.read(_SPAN_CHUNK)
+            if not chunk:
+                break
+            buffer += chunk
+            spans = iter_json_spans(buffer)
+            if not spans:
+                continue
+            for start, end in spans:
+                if limit is not None and idx >= limit:
+                    return
+                raw = buffer[start:end]
+                try:
+                    yield RawRecord(json_loads(raw), path, idx, raw_text=raw[:2000])
+                except Exception as exc:
+                    yield RawRecord(None, path, idx, error=f"{type(exc).__name__}: {exc}",
+                                    raw_text=raw[:2000])
+                idx += 1
+            buffer = buffer[spans[-1][1]:]
+
+    for start, end in iter_json_spans(buffer):
+        if limit is not None and idx >= limit:
+            return
+        raw = buffer[start:end]
+        try:
+            yield RawRecord(json_loads(raw), path, idx, raw_text=raw[:2000])
+        except Exception as exc:
+            yield RawRecord(None, path, idx, error=f"{type(exc).__name__}: {exc}",
+                            raw_text=raw[:2000])
+        idx += 1
 
 
 def read_csv(path: str, *, compressed: bool = False, limit: int | None = None) -> Iterator[RawRecord]:

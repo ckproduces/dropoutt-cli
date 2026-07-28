@@ -9,6 +9,7 @@ and the cross-dataset overlap matrix is simply not produced rather than invented
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -52,6 +53,8 @@ class Discovery:
     skipped_files: list[tuple[str, str]] = field(default_factory=list)
     empty_files: list[str] = field(default_factory=list)
     total_bytes: int = 0
+    #: Dataset names produced by folding sharded siblings together.
+    shard_families: list[str] = field(default_factory=list)
 
     @property
     def format_counts(self) -> dict[str, int]:
@@ -63,6 +66,16 @@ class Discovery:
     @property
     def single_file(self) -> bool:
         return len(self.files) == 1
+
+
+#: A trailing shard number, with or without the Hugging Face ``-of-NNNNN`` tail.
+#: ``responses_0001``, ``train-00003-of-00042`` and ``part.7`` all reduce to
+#: their family name.
+SHARD_SUFFIX = re.compile(r"^(?P<stem>.*?)[._-]\d+(?:[._-]of[._-]\d+)?$", re.IGNORECASE)
+
+#: How many siblings must share a stem before they are treated as one sharded
+#: dataset. Two files are a coincidence; three are a naming convention.
+MIN_SHARD_FAMILY = 3
 
 
 def _dataset_name(root: Path, file_path: Path) -> str:
@@ -84,6 +97,46 @@ def _dataset_name(root: Path, file_path: Path) -> str:
     return "/".join(parts[:-1])
 
 
+def _shard_family(name: str) -> str | None:
+    """The family a sharded filename belongs to, or None if it is not sharded."""
+    m = SHARD_SUFFIX.match(name)
+    if not m:
+        return None
+    stem = m.group("stem").rstrip("._-")
+    return stem or None
+
+
+def _fold_shards(names: dict[str, list[Path]]) -> dict[str, str]:
+    """Map each dataset name to the family it should be merged into.
+
+    Sharded exports are the normal way large datasets arrive — ``train-00000-of
+    -00042.parquet`` from the Hub, ``responses_0001.txt`` from a generation run —
+    and naming each shard as its own dataset breaks more than cosmetics. Every
+    per-dataset statistic is then computed over one shard, the cross-dataset
+    overlap matrix compares a corpus against itself, and a folder of 251 shards
+    reports 251 datasets of one record each.
+
+    Only names that reduce to the same stem *and* appear at least
+    ``MIN_SHARD_FAMILY`` times are folded, so ``train.jsonl`` and ``valid.jsonl``
+    stay separate and a lone ``notes_2024.txt`` keeps its name.
+    """
+    families: dict[str, list[str]] = {}
+    for name in names:
+        family = _shard_family(name)
+        if family:
+            families.setdefault(family, []).append(name)
+
+    mapping: dict[str, str] = {}
+    for family, members in families.items():
+        if len(members) < MIN_SHARD_FAMILY:
+            continue
+        # An existing dataset already using the family name absorbs the shards
+        # rather than colliding with them.
+        for member in members:
+            mapping[member] = family
+    return mapping
+
+
 def discover(root: str, *, follow_symlinks: bool = False, max_files: int = 200_000) -> Discovery:
     """Walk a path and group what is found into datasets."""
     root_path = Path(root).resolve()
@@ -103,7 +156,9 @@ def discover(root: str, *, follow_symlinks: bool = False, max_files: int = 200_0
         ]
         return disc
 
-    by_dataset: dict[str, DatasetRef] = {}
+    # Collected first, grouped second: shard folding needs to see every sibling
+    # before it can tell a naming convention from a coincidence.
+    pending: list[tuple[str, Path, int]] = []
     count = 0
     for dirpath, dirnames, filenames in os.walk(root_path, followlinks=follow_symlinks):
         dirnames[:] = sorted(
@@ -133,13 +188,21 @@ def discover(root: str, *, follow_symlinks: bool = False, max_files: int = 200_0
             if size == 0:
                 disc.empty_files.append(rel)
 
-            ds_name = _dataset_name(root_path, fp)
-            ds = by_dataset.get(ds_name)
-            if ds is None:
-                ds = DatasetRef(name=ds_name, root=str(fp.parent))
-                by_dataset[ds_name] = ds
-            ds.files.append(str(fp))
-            ds.total_bytes += size
+            pending.append((_dataset_name(root_path, fp), fp, size))
+
+    folded = _fold_shards({name: [] for name, _, _ in pending})
+    if folded:
+        disc.shard_families = sorted({v for v in folded.values()})
+
+    by_dataset: dict[str, DatasetRef] = {}
+    for ds_name, fp, size in pending:
+        ds_name = folded.get(ds_name, ds_name)
+        ds = by_dataset.get(ds_name)
+        if ds is None:
+            ds = DatasetRef(name=ds_name, root=str(fp.parent))
+            by_dataset[ds_name] = ds
+        ds.files.append(str(fp))
+        ds.total_bytes += size
 
     disc.datasets = sorted(by_dataset.values(), key=lambda d: d.name)
     _attach_cards(root_path, disc)

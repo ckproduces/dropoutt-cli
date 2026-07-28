@@ -138,6 +138,8 @@ def render(
         ctx.stats.get("atlas_coverage"),
         ctx.stats.get("atlas_off_examples"),
         show_evidence=show_evidence,
+        region_examples=ctx.stats.get("atlas_region_examples"),
+        cohesion=ctx.stats.get("atlas_region_cohesion"),
     )
 
     # -- skipped ---------------------------------------------------------
@@ -181,6 +183,8 @@ def _render_coverage(
     examples: list[dict] | None = None,
     *,
     show_evidence: bool = True,
+    region_examples: dict | None = None,
+    cohesion: dict | None = None,
 ) -> None:
     """Where this corpus sits on the atlas, and what failed to sit anywhere.
 
@@ -211,33 +215,29 @@ def _render_coverage(
     off_rate = float(cov.get("off_atlas_rate", 0.0))
 
     if status == "ok":
-        occupied = cov.get("regions_occupied", 0)
-        total = cov.get("regions_total", 0)
+        occupied = int(cov.get("regions_occupied", 0))
+        total = int(cov.get("regions_total", 0))
+        effective = float(cov.get("effective_regions", 0.0))
         conc = concentration(cov)
         console.print(f"    Placed       {placed_n:,} of {records:,} sampled records "
                       f"[dim](shares below are over these {placed_n:,})[/dim]")
-        console.print(f"    Regions      {occupied} of {total} occupied")
+
+        # Occupancy on its own is unreadable: it counts a region holding one
+        # record the same as one holding a third of the corpus. The effective
+        # count says how many evenly-used regions this corpus is as spread out
+        # as, which is the number that can actually be judged.
+        line = f"    Breadth      {occupied} of {total} regions occupied"
+        if effective:
+            line += f", as spread out as {effective:.0f} even ones"
+        console.print(line)
         if conc is not None:
             shape = "specialised" if conc < 0.45 else ("broad" if conc > 0.75 else "mixed")
-            console.print(f"    Spread       {conc:.0%} of even coverage  [dim]({shape})[/dim]")
+            console.print(f"    Shape        {_m(_breadth_read(conc, shape, effective, total))}")
 
-        names = category_names()
-        raw = cov.get("by_category") or {}
-        denom = sum(int(v) for v in raw.values()) or 1
-        ranked = sorted(raw.items(), key=lambda kv: -int(kv[1]))[:5]
-        if ranked:
-            console.print("    [dim]Top categories[/dim]")
-            for cid, n in ranked:
-                key = names.get(int(cid), f"category {cid}")
-                console.print(f"      {_m(f'{key:<22}')} {int(n) / denom:>5.0%}")
-
-        tops = (cov.get("top_regions") or [])[:5]
-        if tops:
-            console.print("    [dim]Top regions[/dim]")
-            for r in tops:
-                label = str(r.get("terms", ""))
-                console.print(f"      {int(r['region']):>3}  {int(r['records']):>6,}  "
-                              f"[dim]{_m(label)}[/dim]")
+        _render_regions(console, cov, region_examples, show_evidence=show_evidence)
+        _render_categories(console, cov)
+        _render_gaps(console, cov)
+        _render_dataset_signature(console, cov)
 
     _render_off_atlas(console, cov, examples, show_evidence=show_evidence)
 
@@ -247,6 +247,113 @@ def _render_coverage(
                       f"{acc:.3f}; see docs/atlas.md[/dim]")
     if status == "ok":
         console.print("    [dim]Compare two datasets with `dropoutt diff a.json b.json`[/dim]")
+
+
+def _breadth_read(conc: float, shape: str, effective: float, total: int) -> str:
+    """Say what the spread number means, rather than printing it and stopping.
+
+    A percentage of even coverage is not something a reader can act on without
+    knowing what even coverage would be for their kind of dataset. Neither
+    direction is a fault, so this states the reading and names the case in which
+    each one is the wrong answer.
+    """
+    if shape == "specialised":
+        return (f"{conc:.0%} of even coverage — specialised. Expected for a single-task "
+                f"set; too narrow for a pretraining mixture")
+    if shape == "broad":
+        return (f"{conc:.0%} of even coverage — broad. Expected for a general corpus; "
+                f"unusually scattered for a single-task set")
+    return (f"{conc:.0%} of even coverage — mixed, covering roughly "
+            f"{effective / total:.0%} of the atlas evenly")
+
+
+def _render_regions(
+    console: Console, cov: dict, region_examples: dict | None, *, show_evidence: bool
+) -> None:
+    """The busiest regions, named by the user's own records where possible.
+
+    The five frequency terms shipped with each region describe it in the
+    *reference* corpus. They are a label, not a description of what landed there
+    from the corpus being scanned, and on their own they read as noise. The
+    record of the user's that sits closest to the region's centre is the thing
+    that makes the label mean something.
+    """
+    tops = (cov.get("top_regions") or [])[:5]
+    if not tops:
+        return
+    console.print("    [dim]Where the corpus sits[/dim]")
+    examples = region_examples or {}
+    for r in tops:
+        region = int(r["region"])
+        share = float(r.get("share", 0.0))
+        console.print(f"      {region:>3}  {int(r['records']):>6,}  {share:>4.0%}  "
+                      f"[dim]{_m(str(r.get('terms', '')))}[/dim]")
+        rows = examples.get(region) or examples.get(str(region)) or []
+        if show_evidence and rows:
+            snippet = str(rows[0].get("excerpt", "")).replace("\n", " ")[:70]
+            console.print(f"            [dim]yours: {_m(snippet)}[/dim]")
+
+
+def _render_categories(console: Console, cov: dict) -> None:
+    from ..atlas.compare import category_labels  # noqa: PLC0415
+
+    labels = category_labels()
+    raw = cov.get("by_category") or {}
+    denom = sum(int(v) for v in raw.values()) or 1
+    ranked = sorted(raw.items(), key=lambda kv: -int(kv[1]))[:5]
+    if not ranked:
+        return
+    console.print("    [dim]Subject areas[/dim]")
+    for cid, n in ranked:
+        key = labels.get(int(cid), f"category {cid}")
+        console.print(f"      {int(n) / denom:>5.0%}  {_m(key)}")
+
+
+def _render_gaps(console: Console, cov: dict) -> None:
+    """The subject areas the atlas covers and this corpus does not.
+
+    This is the part a histogram of your own data can never give you, and the
+    reason the atlas is worth having as a frozen artifact: it is a fixed list of
+    places, so the empty ones are as informative as the full ones.
+    """
+    from ..atlas.compare import category_labels  # noqa: PLC0415
+
+    gaps = cov.get("coverage_gaps") or []
+    if not gaps:
+        return
+    labels = category_labels()
+    total = int(cov.get("categories_total", 0)) or len(gaps)
+    console.print(f"    [dim]Not in this corpus[/dim] [dim]({len(gaps)} of {total} "
+                  f"subject areas the atlas covers are empty or near-empty here)[/dim]")
+    for g in gaps[:6]:
+        name = labels.get(int(g["category"]), f"category {g['category']}")
+        note = f"{int(g['regions'])} regions, {int(g['records'])} records here"
+        ref = g.get("reference_share")
+        if ref:
+            note += f"; {ref:.0%} of the reference corpus"
+        console.print(f"      {_m(f'{name[:44]:<44}')} [dim]{note}[/dim]")
+    if len(gaps) > 6:
+        console.print(f"      [dim]and {len(gaps) - 6} more[/dim]")
+
+
+def _render_dataset_signature(console: Console, cov: dict) -> None:
+    """Which datasets occupy the same ground.
+
+    Two datasets sharing no wording can still sit in the same regions, which is
+    what "we added a third source and gained no new coverage" looks like. The
+    near-duplicate matrix compares text and cannot see it.
+    """
+    block = cov.get("by_dataset_regions") or {}
+    alike = block.get("most_alike") or []
+    per = block.get("datasets") or {}
+    if len(per) < 2:
+        return
+    console.print("    [dim]Topical overlap between datasets[/dim]")
+    for pair in alike[:3]:
+        verdict = "same ground" if pair["similarity"] >= 0.8 else (
+            "partly overlapping" if pair["similarity"] >= 0.5 else "distinct")
+        console.print(f"      {pair['similarity']:>5.2f}  {_m(str(pair['a'])[:20])} vs "
+                      f"{_m(str(pair['b'])[:20])}  [dim]({verdict})[/dim]")
 
 
 #: How the off-atlas heading reads at each fit band. "poor" does not mean the

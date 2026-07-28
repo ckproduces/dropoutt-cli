@@ -258,9 +258,24 @@ class Degeneracy(Check):
             if prompt and len(answer) > 40:
                 a = normalize_ws(answer).lower()
                 p = normalize_ws(prompt).lower()
-                if a and (a in p or p in a):
+                # Containment alone is not degeneracy, and treating it as such
+                # misread 38 out of 38 flagged records on a real corpus. Every
+                # one was either a multiple-choice answer — necessarily a
+                # substring of the prompt that listed the options — or
+                # extractive QA, where the instruction was literally "quote the
+                # answer from the passage". Both are correct supervision, and
+                # calling them degenerate teaches the user to ignore the check.
+                #
+                # What makes a copy degenerate is that it accounts for nearly
+                # all of the other side: an answer that *is* the prompt, or a
+                # prompt restated as the whole answer. Picking one option out of
+                # five, or quoting one sentence from a passage, is neither.
+                if a and a in p and len(a) >= len(p) * self.copy_threshold:
                     self.copying += 1
-                    why = "response copies the prompt"
+                    why = "response repeats the prompt back"
+                elif a and p in a and len(p) >= len(a) * self.copy_threshold:
+                    self.copying += 1
+                    why = "response is the prompt with little added"
 
         if why:
             self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1

@@ -101,6 +101,12 @@ class Atlas:
     probe_classes: np.ndarray
     meta: dict[str, Any] = field(default_factory=dict)
     artifact_hash: str = ""
+    #: How the reference corpus itself spread across these regions, when the
+    #: artifact records it. ``atlas-lite-v0`` does not: the build computed the
+    #: assignment and discarded it, so a gap can only be reported as absence and
+    #: never as under-representation against a baseline. Optional rather than
+    #: required so v0 keeps loading.
+    region_size: np.ndarray | None = None
 
     @property
     def n_regions(self) -> int:
@@ -140,6 +146,9 @@ class Atlas:
             probe_classes=data["probe_classes"],
             meta=meta,
             artifact_hash=digest,
+            region_size=(
+                data["region_size"] if "region_size" in data.files else None
+            ),
         )
 
     # -- assignment -------------------------------------------------------
@@ -273,6 +282,13 @@ class Atlas:
             "regions_total": self.n_regions,
             "region_entropy": round(entropy, 4),
             "max_region_entropy": round(float(np.log(self.n_regions)), 4),
+            # The number that makes "34 of 258 occupied" readable. Occupancy
+            # counts a region the same whether it holds one record or a third of
+            # the corpus; this is the count of *evenly used* regions the corpus
+            # is as spread out as. A corpus touching 34 regions with 80% of its
+            # mass in two of them has an effective count near 3, and the gap
+            # between the two numbers is itself the finding.
+            "effective_regions": round(float(np.exp(entropy)), 2),
             #: Shares over `placed`, not over `records`.
             "by_category": cat_counts,
             # The full histogram, sparse. `top_regions` below is a display
@@ -286,12 +302,129 @@ class Atlas:
             },
             "top_regions": [
                 {"region": int(r), "records": int(region_counts[r]),
+                 "share": round(float(mass[r]), 4),
+                 "category": int(self.region_category[r]),
                  "terms": self.region_terms[r] if r < len(self.region_terms) else ""}
                 for r in np.argsort(-region_counts)[:12]
                 if region_counts[r] > 0
             ],
+            "coverage_gaps": self._gaps(region_counts),
+            # How many subject areas the atlas actually carries regions for.
+            # Not the size of the taxonomy: 31 categories are defined and only
+            # 20 drew enough reference data to be clustered, so a gap list
+            # measured against 31 would count 11 areas the atlas cannot see
+            # either.
+            "categories_total": len({int(c) for c in self.region_category}),
         })
+        if datasets is not None and len(datasets) == total:
+            result["by_dataset_regions"] = self._per_dataset(regions, datasets)
         return result
+
+    # -- what the corpus does *not* cover ---------------------------------
+
+    #: A category holding less than this share of placed records is reported as
+    #: a gap rather than as coverage. It is not zero, because the level-0 probe
+    #: is 86% accurate on held-out reference data, so a category with a handful
+    #: of records is as likely to be probe error as to be real presence.
+    GAP_SHARE = 0.005
+
+    def _gaps(self, region_counts: np.ndarray) -> list[dict[str, Any]]:
+        """Regions the atlas knows about that this corpus never reaches.
+
+        This is the question a coverage histogram cannot answer by itself. A
+        histogram tells you what is in the corpus; it takes a fixed reference
+        coordinate system to tell you what is *missing* from it, and that is the
+        entire reason the atlas is a frozen artifact rather than a clustering of
+        whatever was scanned.
+
+        Grouped by level-0 category, because 258 empty region ids is a list and
+        20 named subject areas is an answer. Each entry carries the atlas's own
+        terms for the largest empty region in that category, so the reader can
+        see what they are missing rather than being told a number.
+        """
+        total = max(int(region_counts.sum()), 1)
+        cats = np.asarray(self.region_category)
+        terms = self.region_terms
+        out: list[dict[str, Any]] = []
+
+        for cid in sorted({int(c) for c in cats}):
+            members = np.where(cats == cid)[0]
+            held = int(region_counts[members].sum())
+            share = held / total
+            if share > self.GAP_SHARE:
+                continue
+            empty = [int(r) for r in members if region_counts[r] == 0]
+            # Name the gap by its largest region, which is a stand-in for the
+            # part of the category the corpus is furthest from covering.
+            sample = ""
+            if empty:
+                sample = terms[empty[0]] if empty[0] < len(terms) else ""
+            entry: dict[str, Any] = {
+                "category": cid,
+                "regions": len(members),
+                "regions_empty": len(empty),
+                "records": held,
+                "share": round(share, 5),
+                "terms": sample,
+            }
+            # When the artifact records how the reference corpus was spread, an
+            # absolute gap becomes a relative one: not merely "nothing of yours
+            # is here" but "the reference corpus put 8% of itself here". v0
+            # carries no such record, so the key is simply absent rather than
+            # filled with a guess.
+            if self.region_size is not None:
+                ref = np.asarray(self.region_size, dtype=float)
+                ref_total = float(ref.sum()) or 1.0
+                entry["reference_share"] = round(float(ref[members].sum()) / ref_total, 5)
+            out.append(entry)
+        return sorted(out, key=lambda g: (-g.get("reference_share", 0.0), -g["regions"]))
+
+    def _per_dataset(
+        self, regions: np.ndarray, datasets: list[str]
+    ) -> dict[str, Any]:
+        """Each dataset's own region histogram, and how alike they are.
+
+        Two datasets can look entirely different at the record level and occupy
+        the same handful of regions, which is what "we merged three sources and
+        got no new coverage" looks like from the outside. The overlap matrix
+        cannot see it, because it compares text and these share none.
+        """
+        arr = np.asarray(datasets, dtype=object)
+        reg = np.asarray(regions)
+        out: dict[str, dict[str, Any]] = {}
+        for name in sorted(set(datasets)):
+            sel = (arr == name) & (reg >= 0)
+            n = int(sel.sum())
+            if n < 20:
+                continue
+            counts = np.bincount(reg[sel], minlength=self.n_regions)
+            out[str(name)] = {
+                "placed": n,
+                "regions_occupied": int((counts > 0).sum()),
+                "top_regions": [
+                    {"region": int(r), "share": round(float(counts[r] / n), 4)}
+                    for r in np.argsort(-counts)[:5] if counts[r] > 0
+                ],
+                "_mass": (counts / n).tolist(),
+            }
+
+        names = list(out)
+        pairs: list[dict[str, Any]] = []
+        for i, a in enumerate(names):
+            va = np.asarray(out[a]["_mass"])
+            for b in names[i + 1:]:
+                vb = np.asarray(out[b]["_mass"])
+                denom = float(np.linalg.norm(va) * np.linalg.norm(vb))
+                if denom <= 0:
+                    continue
+                pairs.append({"a": a, "b": b,
+                              "similarity": round(float(va @ vb / denom), 4)})
+        for entry in out.values():
+            del entry["_mass"]
+        if pairs:
+            pairs.sort(key=lambda p: -p["similarity"])
+            return {"datasets": out, "most_alike": pairs[:5]}
+        return {"datasets": out, "most_alike": []}
 
     # -- the off-atlas set ------------------------------------------------
 

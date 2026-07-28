@@ -419,3 +419,202 @@ def test_a_private_eval_index_does_not_hide_the_shipped_ones(tmp_path):
     assert names == {"gsm8k", "my-holdout"}, (
         f"both locations must be searched, got {names}"
     )
+
+
+# -- generation integrity ------------------------------------------------
+#
+# Calibrated against a real 6,097-record Turkish generation run. Each check gets
+# a fixture built to trip it and one built not to, and the "not to" case matters
+# more here than usual: two of these checks are meant to stay silent on that
+# corpus, and a check that fires on everything is worse than no check.
+
+
+def test_content_in_a_key_the_layout_never_reads_is_reported(tmp_path):
+    """The orphaned assistant turn: 26 records lost their answer this way."""
+    records = [chat(f"Soru {i} nedir acaba diye merak ediyorum", f"{LONG} {i}")
+               for i in range(60)]
+    for r in records[:12]:
+        r["assistant"] = [{"role": "assistant", "content": f"{LONG} gercek cevap burada"}]
+    write_jsonl(tmp_path / "d" / "train.jsonl", records)
+    found = findings_by_id(run(tmp_path))
+    assert "T0-SCHEMA-005" in found
+    assert found["T0-SCHEMA-005"].count == 12
+    assert "assistant" in found["T0-SCHEMA-005"].data["keys"]
+
+
+def test_bookkeeping_columns_are_not_mistaken_for_lost_content(tmp_path):
+    """id, source and language ride along on purpose and must stay quiet."""
+    records = []
+    for i in range(60):
+        r = chat(f"Soru {i} nedir acaba diye merak ediyorum", f"{LONG} {i}")
+        r.update({"id": f"rec-{i}", "language": "tr",
+                  "source": "a fairly long provenance string naming the origin dataset"})
+        records.append(r)
+    write_jsonl(tmp_path / "d" / "train.jsonl", records)
+    assert "T0-SCHEMA-005" not in findings_by_id(run(tmp_path))
+
+
+def test_a_mixture_of_reasoning_and_plain_responses_is_reported(tmp_path):
+    records = [chat(f"Soru {i} nedir acaba diye merak ediyorum", f"{LONG} {i}")
+               for i in range(400)]
+    for r in records[:48]:  # 12%, the share measured on the real corpus
+        r["messages"][1]["content"] = f"<think>once dusunelim</think>\n\n{LONG}"
+    write_jsonl(tmp_path / "d" / "train.jsonl", records)
+    found = findings_by_id(run(tmp_path))
+    assert "T0-REASON-001" in found
+    assert 0.10 < found["T0-REASON-001"].data["share_with_reasoning"] < 0.14
+
+
+def test_reasoning_on_every_record_is_a_decision_not_a_finding(tmp_path):
+    write_jsonl(tmp_path / "d" / "train.jsonl", [
+        {"messages": [{"role": "user", "content": f"Soru {i} nedir acaba diye"},
+                      {"role": "assistant", "content": f"<think>dusun</think>\n\n{LONG} {i}"}]}
+        for i in range(400)
+    ])
+    assert "T0-REASON-001" not in findings_by_id(run(tmp_path))
+
+
+def test_responses_piling_up_at_one_length_are_read_as_a_cap(tmp_path):
+    body = "a" * 900
+    records = [chat(f"Soru {i} nedir acaba diye merak ediyorum", body[:900 - i % 3])
+               for i in range(300)]
+    write_jsonl(tmp_path / "d" / "train.jsonl", records)
+    found = findings_by_id(run(tmp_path))
+    assert "T0-TRUNC-002" in found
+    assert found["T0-TRUNC-002"].data["pileup_share"] > 0.9
+
+
+def test_varied_response_lengths_are_not_read_as_a_cap(tmp_path):
+    """Silent on the real corpus, whose most common exact length held 1.2%."""
+    write_jsonl(tmp_path / "d" / "train.jsonl", [
+        chat(f"Soru {i} nedir acaba diye merak ediyorum", LONG * (1 + i % 17))
+        for i in range(400)
+    ])
+    assert "T0-TRUNC-002" not in findings_by_id(run(tmp_path))
+
+
+def test_one_prompt_with_two_different_answers_is_a_contradiction(tmp_path):
+    records = [chat(f"Soru {i} nedir acaba diye merak ediyorum", f"{LONG} {i}")
+               for i in range(60)]
+    records.append(chat("Soru 0 nedir acaba diye merak ediyorum", f"{LONG} bambaska bir cevap"))
+    write_jsonl(tmp_path / "d" / "train.jsonl", records)
+    found = findings_by_id(run(tmp_path))
+    assert "T1-DUP-002" in found
+    assert found["T1-DUP-002"].count == 1
+
+
+def test_an_exactly_repeated_record_is_redundancy_not_contradiction(tmp_path):
+    """T0-DUP-001 owns this case; the contradiction check must not double-report."""
+    records = [chat(f"Soru {i} nedir acaba diye merak ediyorum", f"{LONG} {i}")
+               for i in range(60)]
+    records.append(records[0].copy())
+    write_jsonl(tmp_path / "d" / "train.jsonl", records)
+    found = findings_by_id(run(tmp_path))
+    assert "T0-DUP-001" in found
+    assert "T1-DUP-002" not in found
+
+
+# -- corpus quality filters ----------------------------------------------
+
+
+def _corpus(tmp_path, texts: list[str]) -> None:
+    write_jsonl(tmp_path / "c" / "docs.jsonl", [{"text": t} for t in texts])
+
+
+#: Nine distinct sentences. An earlier version of this fixture repeated three
+#: lines three times and tripped the duplicated-line filter, which was that
+#: filter working correctly on a fixture that was wrong.
+PARAGRAPH = "\n".join(
+    f"Bu {n}. satir yeterince uzun bir cumledir ve dogru noktalama ile sona erer."
+    for n in range(1, 10)
+)
+
+
+def test_navigation_shaped_documents_are_reported(tmp_path):
+    """Lines that do not end in punctuation: the shape of an extracted menu."""
+    menu = "\n".join(f"Kategori {i} baglantisi" for i in range(40))
+    _corpus(tmp_path, [menu] * 60 + [PARAGRAPH] * 60)
+    found = findings_by_id(run(tmp_path, profile=Profile.CORPUS))
+    assert "T0-QUAL-001" in found
+    assert found["T0-QUAL-001"].count == 60
+
+
+def test_short_line_documents_are_reported(tmp_path):
+    listy = "\n".join(f"Madde {i}." for i in range(60))
+    _corpus(tmp_path, [listy] * 60 + [PARAGRAPH] * 60)
+    found = findings_by_id(run(tmp_path, profile=Profile.CORPUS))
+    assert "T0-QUAL-002" in found
+
+
+def test_documents_repeating_their_own_lines_are_reported(tmp_path):
+    repeated = ("Tekrar eden bir alt bilgi satiri burada yer aliyor ve devam ediyor.\n" * 12)
+    _corpus(tmp_path, [repeated] * 60 + [PARAGRAPH] * 60)
+    found = findings_by_id(run(tmp_path, profile=Profile.CORPUS))
+    assert "T0-QUAL-003" in found
+
+
+def test_ordinary_prose_trips_none_of_the_corpus_filters(tmp_path):
+    _corpus(tmp_path, [PARAGRAPH + f" Belge {i}." for i in range(120)])
+    ids = set(findings_by_id(run(tmp_path, profile=Profile.CORPUS)))
+    assert not ids & {"T0-QUAL-001", "T0-QUAL-002", "T0-QUAL-003"}
+
+
+def test_corpus_filters_do_not_run_against_conversational_data(tmp_path):
+    """They measure line shape, which says nothing about a chat record."""
+    write_jsonl(tmp_path / "d" / "train.jsonl", [
+        chat(f"Soru {i} nedir acaba", f"{LONG} {i}") for i in range(120)
+    ])
+    ids = set(findings_by_id(run(tmp_path, profile=Profile.SFT)))
+    assert not ids & {"T0-QUAL-001", "T0-QUAL-002", "T0-QUAL-003"}
+
+
+def test_a_multiple_choice_answer_is_not_a_prompt_copy(tmp_path):
+    """All 38 prompt-copy hits on a real corpus were this shape or extractive QA.
+
+    The answer is necessarily a substring of a prompt that listed the options.
+    That is correct supervision, not degeneracy.
+    """
+    options = ("A) birinci secenek metni B) ikinci secenek metni "
+               "C) ucuncu secenek metni D) dorduncu secenek metni")
+    write_jsonl(tmp_path / "d" / "train.jsonl", [
+        chat(f"Soru {i} icin dogru siki sec. {options}", "C) ucuncu secenek metni")
+        for i in range(60)
+    ])
+    found = findings_by_id(run(tmp_path))
+    assert found.get("T0-DEGEN-001") is None or found["T0-DEGEN-001"].data["copying"] == 0
+
+
+def test_extractive_qa_is_not_a_prompt_copy(tmp_path):
+    passage = ("Izlanda'nin baskenti Reykjavik jeotermal isitma kullanir. "
+               "Donus suyu sicakligi genellikle 35 derece civarindadir. "
+               "Bu su kaldirim buz cozme sistemlerinde yeniden kullanilir. ") * 3
+    write_jsonl(tmp_path / "d" / "train.jsonl", [
+        chat(f"Metne dayanarak cevapla, alintila. Metin: {passage} Soru {i}?",
+             "Donus suyu sicakligi genellikle 35 derece civarindadir.")
+        for i in range(60)
+    ])
+    found = findings_by_id(run(tmp_path))
+    assert found.get("T0-DEGEN-001") is None or found["T0-DEGEN-001"].data["copying"] == 0
+
+
+def test_an_answer_that_is_the_whole_prompt_is_still_a_copy(tmp_path):
+    """The case the check was written for has to keep firing."""
+    prompt = "Bu cumleyi aynen tekrar et ve baska hicbir sey ekleme lutfen efendim"
+    write_jsonl(tmp_path / "d" / "train.jsonl",
+                [chat(f"{prompt} {i}", f"{prompt} {i}") for i in range(60)])
+    found = findings_by_id(run(tmp_path))
+    assert found["T0-DEGEN-001"].data["copying"] == 60
+
+
+def test_a_classification_set_of_short_labels_is_not_a_length_cap(tmp_path):
+    """Every answer is one of three labels: 100% in the top bucket, nothing beneath.
+
+    Both the share test and the wall test pass, and the dataset is fine. Nobody
+    sets max_tokens to twelve characters.
+    """
+    labels = ["olumlu", "olumsuz", "notr"]
+    write_jsonl(tmp_path / "d" / "train.jsonl", [
+        chat(f"Bu yorumun duygusunu siniflandir numara {i} icin lutfen", labels[i % 3])
+        for i in range(400)
+    ])
+    assert "T0-TRUNC-002" not in findings_by_id(run(tmp_path))

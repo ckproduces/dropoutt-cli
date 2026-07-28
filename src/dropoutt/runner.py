@@ -142,6 +142,7 @@ def scan(
     if phase is not None:
         phase("Inferring dataset layouts")
     verdicts: dict[str, SchemaVerdict] = {}
+    ctx.stats["text_framing"] = _sniff_text_files(disc)
     for ds in disc.datasets:
         sample = list(_iter_dataset_records(ds.files, limit=induction_sample))[:induction_sample]
         verdict = induce(sample)
@@ -252,6 +253,51 @@ def scan(
         ctx=ctx, discovery=disc, findings=findings, skipped=skipped,
         verdicts=verdicts, elapsed=time.time() - started, records_scanned=scanned,
     )
+
+
+#: How many text files per dataset to sniff. The framing of a generation run is
+#: a property of the run, not of the file, so a sample settles it; sniffing 250
+#: shards to learn the same thing 250 times is wasted IO.
+SNIFF_FILES_PER_DATASET = 12
+
+
+def _sniff_text_files(disc: Discovery) -> dict[str, dict]:
+    """Work out which datasets keep their records inside .txt or .md files.
+
+    Runs before induction because it changes what induction sees: without it a
+    folder of JSON-bearing .txt files induces as one bare-text document per
+    file, and the profile is inferred from that.
+    """
+    from .sniff import sniff_file  # noqa: PLC0415
+
+    out: dict[str, dict] = {}
+    for ds in disc.datasets:
+        candidates = [f for f in ds.files if Path(f).suffix.lower() in (".txt", ".md")]
+        if not candidates:
+            continue
+        hits: dict[str, dict] = {}
+        for path in candidates[:SNIFF_FILES_PER_DATASET]:
+            framing = sniff_file(path)
+            if not framing.is_records:
+                continue
+            entry = hits.setdefault(framing.kind, {
+                "kind": framing.kind, "matched": 0, "scaffolding": [],
+                "parse_rate": round(framing.parse_rate, 4),
+            })
+            entry["matched"] += 1
+            for s in framing.scaffolding:
+                if s not in entry["scaffolding"] and len(entry["scaffolding"]) < 5:
+                    entry["scaffolding"].append(s)
+        if not hits:
+            continue
+        # One entry per dataset, naming the framing that dominated. A dataset
+        # mixing framings is unusual enough that the majority plus the sample
+        # size is more useful than a breakdown nobody asked for.
+        best = max(hits.values(), key=lambda h: h["matched"])
+        best["files"] = len(candidates)
+        best["sampled"] = min(len(candidates), SNIFF_FILES_PER_DATASET)
+        out[ds.name] = best
+    return out
 
 
 def _update_content_hash(hasher, doc: Document) -> None:
@@ -409,6 +455,44 @@ def _compute_coverage(
     # the artifact meant to be shareable, and record text is exactly what does
     # not belong there. The report reads these from ctx.stats instead.
     if keep_examples:
+        # What a region actually contains, in the user's own words. The atlas
+        # ships five frequency terms per region, which name the region in the
+        # reference corpus and say nothing about what landed there from *this*
+        # corpus. A region called "film, movie, films, filmi, best" is opaque
+        # until you see the record of yours that sits closest to its centre.
+        #
+        # Held in ctx.stats rather than in the coverage facet, for the same
+        # reason as the off-atlas excerpts: the facet is copied into
+        # fingerprint.json, and record text must never reach a shareable file.
+        by_region: dict[int, list[tuple[float, int]]] = {}
+        for i, r in enumerate(regions):
+            if r < 0:
+                continue
+            by_region.setdefault(int(r), []).append((float(scores[i]), i))
+        ctx.stats["atlas_region_examples"] = {
+            region: [
+                {"score": round(s, 4), "excerpt": texts[i][:160], "dataset": datasets[i]}
+                for s, i in sorted(rows, reverse=True)[:2]
+            ]
+            for region, rows in by_region.items()
+        }
+        # How alike the records inside each crowded region are. A region holding
+        # a third of the corpus is not a problem; a region holding a third of
+        # the corpus whose records are 0.9 alike is the same document written
+        # out many times, and the near-duplicate check will miss it whenever the
+        # wording varies more than the shingles tolerate.
+        from .atlas.apply import _mean_pairwise  # noqa: PLC0415
+
+        import numpy as _np
+
+        unit = _np.asarray(emb, dtype=_np.float32)
+        unit = unit / (_np.linalg.norm(unit, axis=1, keepdims=True) + 1e-9)
+        ctx.stats["atlas_region_cohesion"] = {
+            region: _mean_pairwise(unit[[i for _s, i in rows]])
+            for region, rows in by_region.items()
+            if len(rows) >= 20
+        }
+
         off_idx = [i for i, r in enumerate(regions) if r < 0]
         off_idx.sort(key=lambda i: float(scores[i]))
         ctx.stats["atlas_off_examples"] = [

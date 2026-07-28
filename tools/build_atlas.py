@@ -289,11 +289,28 @@ def main() -> int:
     purity_topic = region_purity(assign, y)
     print(f"  mean region purity by taxonomy label: {purity_topic:.3f}")
 
+    # -- the reference distribution ---------------------------------------
+    # How the reference corpus itself spread across the regions it produced.
+    # v0 computed `assign` here and then discarded it, which cost the atlas the
+    # ability to answer the question users actually ask: not "which regions am I
+    # in" but "am I over- or under-represented in them relative to a general
+    # corpus". Without this, a coverage gap can only be reported as absolute
+    # absence. It is a few hundred integers.
+    #
+    # Read it as a property of *this reference corpus*, which is stratified and
+    # deliberately Turkish-weighted, not as a natural population. It is a
+    # baseline to compare against, not a target to match.
+    region_size = np.bincount(assign, minlength=C.shape[0]).astype(np.int32)
+    empty = int((region_size == 0).sum())
+    print(f"  reference mass per region: median {int(np.median(region_size))}, "
+          f"max {int(region_size.max())}, {empty} region(s) drew nothing")
+
     args.out.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
         args.out,
         centroids=C,
         region_category=np.array(region_category, dtype=np.int32),
+        region_size=region_size,
         coords=coords,
         probe_coef=probe.coef_.astype(np.float32),
         probe_intercept=probe.intercept_.astype(np.float32),

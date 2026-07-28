@@ -27,8 +27,13 @@ from typing import Any
 #: effective CLI configuration. 0.1.4 stops discarding the coverage facet above a
 #: 10% off-atlas rate and counts `by_category` over placed records only, so both
 #: the presence and the denominator of that facet changed. Fingerprints from
-#: earlier versions describe something different and must not collide.
-PIPELINE_VERSION = "0.1.4"
+#: earlier versions describe something different and must not collide. 0.1.5
+#: reads JSON records out of .txt and .md files instead of treating each file as
+#: one document, and folds sharded siblings into one dataset — so record counts,
+#: dataset counts and the inferred profile all change for those inputs — and adds
+#: coverage gaps, effective region count and the per-dataset region signature to
+#: the atlas facet.
+PIPELINE_VERSION = "0.1.5"
 FINGERPRINT_SCHEMA_VERSION = "fp-v0.1"
 
 

@@ -1,5 +1,115 @@
 # Changelog
 
+## 0.1.5
+
+Three things, all of which came out of running the tool on real data and not
+liking the answer.
+
+### A folder of records read as a folder of documents
+
+A scan of 248 `.txt` files reported **251 records** across **251 datasets**, at
+one document each, and inferred the `corpus` profile. The files held **6,097 SFT
+records**. Every conversational check was skipped — and not skipped visibly, in
+the "not checked, and why" list, but never considered, because as far as the
+scanner was concerned there were no conversations. Five findings came back where
+there were fifteen.
+
+Two independent causes, both fixed:
+
+- **`.txt` and `.md` files are now sniffed rather than assumed.** A new brace-
+  balanced scanner (`dropoutt.sniff`) finds every top-level JSON object in a
+  file, which collapses line-delimited, blank-separated and ```json-fenced
+  framings into one algorithm and makes the text *between* records fall out for
+  free. Two rules keep it off real prose: most spans must parse as objects, and
+  the spans must cover most of the file's non-whitespace bytes — so a blog post
+  quoting one JSON snippet stays a blog post. Reading is incremental, so a
+  mislabelled multi-gigabyte dump costs bounded memory.
+- **Sharded siblings fold into one dataset.** `responses_0001.txt` … and
+  `train-00000-of-00042.parquet` reduce to their family name when at least three
+  siblings share it. Naming each shard as its own dataset made every per-dataset
+  statistic a statistic about one shard, and made the overlap matrix compare a
+  corpus against itself.
+
+### The atlas produced a panel, not an answer
+
+It printed an occupancy count, a spread percentage, and five frequency terms per
+region — none of which a reader could act on, and none of which could ever reach
+the findings table.
+
+- **Effective region count.** Occupancy counts a region holding one record the
+  same as one holding a third of the corpus. The exponential of the region
+  entropy says how many *evenly used* regions the corpus is as spread out as, and
+  the gap between the two numbers is the size of the tail.
+- **Coverage gaps — the part that needed a frozen atlas to exist.** A histogram
+  of your own data says what is present. Only a fixed coordinate system can say
+  what is *absent*. Subject areas the atlas covers and the corpus does not are
+  now listed by name. On the corpus above: no code generation, no reading
+  comprehension, no arithmetic, no SQL, nothing on religion or ethics.
+- **Regions named by your own records.** The five shipped terms label a region
+  *in the reference corpus*. The scan now shows the user's own record sitting
+  closest to each busy region's centre, which is what makes the label mean
+  anything. Kept in `ctx.stats`, never in `fingerprint.json`.
+- **Topical overlap between datasets.** Cosine between each pair's region
+  histograms. Two datasets can share no wording and still occupy identical
+  ground, which `T1-OVERLAP-001` compares text and cannot see.
+- **The map is coloured by subject area** rather than by occupied-or-not, which
+  the occupancy metric already said.
+- **`tools/build_atlas.py` now records the reference distribution.** v0 computed
+  it and threw it away, which is why gaps can only be reported as absence and not
+  as under-representation. The loader reads it when present and says nothing when
+  it is not; `atlas-lite-v0` is unchanged and still loads.
+
+### Eleven checks added, taking the catalog from 27 to 38
+
+Synthetic SFT data fails fluently: the file parses, the records are well-formed,
+the text reads well, and something is still wrong. Every threshold below was
+measured on a 6,097-record Turkish generation run before the check was written,
+and two of them are deliberately silent on it.
+
+| id | what it caught there |
+| --- | --- |
+| `T0-FORMAT-001` | 248 text files holding records |
+| `T0-SCHEMA-005` | 37 records whose answer sat in a top-level key the layout never reads |
+| `T0-REASON-001` | 17.9% of responses opened a `<think>` block and 82.1% did not |
+| `T0-GEN-001` | 5 runs of generator scaffolding between records, including a leaked `<thinking_mode>off</thinking_mode>` |
+| `T0-TRUNC-002` | nothing — correctly, the corpus is not capped |
+| `T1-DUP-002` | nothing — correctly, no prompt is answered two ways |
+| `T0-QUAL-001/002/003` | the three FineWeb line-shape filters, at FineWeb's thresholds, for the `corpus` profile |
+| `T1-ATLAS-001/002` | topical narrowness and template-shaped crowding |
+
+`T0-SCHEMA-005` is the one worth reading twice. A record can be well-formed and
+still lose its answer: a complete assistant turn sitting in a top-level
+`assistant` key *beside* `messages` rather than inside it. Every key the trainer
+reads is valid, nothing complains, and the conversation ends on a user turn and
+trains on nothing.
+
+Both silent checks were made silent by evidence rather than by luck.
+`T0-TRUNC-002` first fired on any distribution with few discrete response
+lengths; it now requires the top length bucket to hold at least three times as
+many records as any bucket within 250 characters beneath it, because a real cap
+is a wall and a coarse distribution is not. `T1-ATLAS-001` first reported a
+corpus touching 195 regions with an effective spread of 63 as concentrated,
+which it is not; it now tests absolute narrowness instead of a ratio that every
+long-tailed distribution satisfies.
+
+### Existing checks made more precise
+
+**`T0-DEGEN-001` no longer calls extraction degenerate.** It flagged a response
+as copying the prompt whenever one contained the other. On a real corpus that
+was wrong 38 times out of 38: every hit was either a multiple-choice answer —
+necessarily a substring of the prompt that listed the options — or extractive QA,
+where the instruction was literally "quote the answer from the passage". Both are
+correct supervision. Containment now has to account for at least 90% of the other
+side, so picking one option out of five, or quoting one sentence from a passage,
+no longer counts, while a response that simply repeats the prompt still does.
+
+### Compatibility
+
+`PIPELINE_VERSION` moves to 0.1.5. Record counts, dataset counts and the inferred
+profile all change for inputs holding records in text files, and the coverage
+facet gains keys, so fingerprints from 0.1.4 describe something different and
+must not be compared against these.
+
 ## 0.1.4
 
 An off-atlas rate above 10% used to discard the entire coverage report and print

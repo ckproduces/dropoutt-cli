@@ -21,6 +21,71 @@ from .schema_induction import ROLE_ALIASES
 
 MAX_CONTENT_CHARS = 200_000
 
+#: The keys each layout actually reads. Anything else in a record is carried by
+#: the file but never reaches the model, and a key holding a real answer is a
+#: silent data loss rather than a harmless extra column.
+LAYOUT_KEYS: dict[str, tuple[str, ...]] = {
+    "chatml": ("messages", "system", "system_prompt", "systemprompt"),
+    "openai_chat": ("messages", "system", "system_prompt", "systemprompt"),
+    "sharegpt": ("conversations", "system", "system_prompt", "systemprompt"),
+    "alpaca": ("instruction", "input", "output", "response"),
+    "prompt_completion": ("prompt", "completion", "response", "answer", "output"),
+    "preference": ("prompt", "question", "instruction", "chosen", "rejected"),
+    "qa": ("question", "answer", "answers", "output", "context", "passage"),
+    "translation": ("translation",),
+    "source_target": ("source", "target"),
+}
+
+#: Bookkeeping columns that are supposed to be along for the ride. Flagging
+#: these would bury the one key that matters under a dozen that never did.
+BENIGN_KEYS = frozenset({
+    "id", "uuid", "idx", "index", "source", "origin", "dataset", "split",
+    "_split", "meta", "metadata", "lang", "language", "locale", "score",
+    "rating", "quality", "category", "topic", "tags", "label", "labels",
+    "model", "created", "created_at", "timestamp", "date", "url", "title",
+    "license", "licence", "n_turns", "num_turns", "token_count", "length",
+    "hash", "checksum", "version", "seed", "temperature", "difficulty",
+})
+
+#: An unread key has to hold at least this much text before it is worth a word.
+#: Short leftovers are flags and enum values; a paragraph is an answer.
+UNREAD_KEY_MIN_CHARS = 40
+
+
+def _text_size(value: Any) -> int:
+    """Roughly how much text a value carries, in characters."""
+    if isinstance(value, str):
+        return len(value.strip())
+    if isinstance(value, list):
+        return sum(_text_size(v) for v in value)
+    if isinstance(value, dict):
+        return sum(_text_size(v) for v in value.values())
+    return 0
+
+
+def _unread_keys(payload: dict, layout_id: str) -> list[tuple[str, int]]:
+    """Keys carrying real text that this layout will never read.
+
+    Measured on the Delta generation corpus: 26 records had their entire
+    assistant answer sitting in a top-level ``assistant`` key beside ``messages``
+    rather than inside it. The conversation then ends on a user turn, the record
+    trains on nothing, and no existing check notices, because every key it does
+    look at is perfectly well-formed.
+    """
+    known = LAYOUT_KEYS.get(layout_id)
+    if known is None:
+        return []
+    known_set = {k.lower() for k in known}
+    out: list[tuple[str, int]] = []
+    for key, value in payload.items():
+        name = str(key).lower()
+        if name in known_set or name in BENIGN_KEYS or name.startswith("_"):
+            continue
+        size = _text_size(value)
+        if size >= UNREAD_KEY_MIN_CHARS:
+            out.append((str(key), size))
+    return sorted(out, key=lambda kv: -kv[1])
+
 
 def _coerce_content(value: Any) -> tuple[str, bool]:
     """Return text and whether coercion was needed."""
@@ -187,6 +252,10 @@ def to_document(
             system = first_system.content
 
     flat = "\n".join(t.content for t in turns)
+    meta: dict[str, Any] = {}
+    unread = _unread_keys(payload, layout_id)
+    if unread:
+        meta["unread_keys"] = unread
     return Document(
         doc_id=content_hash(flat) if flat else content_hash(f"{rec.source_file}:{index}"),
         text=flat,
@@ -196,6 +265,7 @@ def to_document(
         source_index=rec.source_index,
         dataset=dataset,
         raw_keys=keys,
+        meta=meta,
     )
 
 
