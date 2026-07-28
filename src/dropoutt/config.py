@@ -34,15 +34,24 @@ CONFIG_NAME = "dropoutt.toml"
 def cache_dir() -> Path:
     """Where downloaded artifacts live.
 
-    Honours ``DROPOUTT_CACHE`` then ``XDG_CACHE_HOME``, and falls back to a temp
-    directory when the home directory is read-only, which is common on cluster
-    compute nodes.
+    Honours ``DROPOUTT_CACHE``, then ``XDG_CACHE_HOME``, then the platform
+    default (``%LOCALAPPDATA%/dropoutt`` on Windows, ``~/.cache/dropoutt``
+    elsewhere). Falls back to a temp directory when that location is
+    read-only, which is common on cluster compute nodes.
     """
     explicit = os.environ.get("DROPOUTT_CACHE")
     if explicit:
         return Path(explicit)
     base = os.environ.get("XDG_CACHE_HOME")
-    candidate = Path(base) / "dropoutt" if base else Path.home() / ".cache" / "dropoutt"
+    if base:
+        candidate = Path(base) / "dropoutt"
+    elif sys.platform == "win32":
+        local = os.environ.get("LOCALAPPDATA")
+        candidate = (
+            Path(local) / "dropoutt" if local else Path.home() / "AppData" / "Local" / "dropoutt"
+        )
+    else:
+        candidate = Path.home() / ".cache" / "dropoutt"
     try:
         candidate.mkdir(parents=True, exist_ok=True)
         probe = candidate / ".writable"

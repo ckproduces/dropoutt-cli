@@ -15,15 +15,19 @@ requires-python = ">=3.10"
 authors = [{ name = "Cisimcik AI Labs" }]
 keywords = ["llm", "training-data", "dataset", "deduplication", "contamination", "sft"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
 ]
 
 # Core stays deliberately small. NumPy is the only compiled core dependency.
@@ -78,9 +82,21 @@ dropoutt = "dropoutt.cli:run"
 
 [project.urls]
 Homepage = "https://dropoutt.com"
+Documentation = "https://dropoutt.com"
 
 [tool.hatch.version]
 path = "src/dropoutt/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/docs",
+    "/LICENSE",
+    "/README.md",
+    "/CHANGELOG.md",
+    "/pyproject.toml",
+]
 
 [tool.hatch.build.targets.wheel]
 # `packages` already carries everything under src/dropoutt, including data/.
