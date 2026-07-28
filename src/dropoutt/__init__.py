@@ -17,7 +17,11 @@ everything that degraded says so.
 
 from __future__ import annotations
 
-__version__ = "0.1.3"
+#: The single source of truth for the package version. `pyproject.toml` reads it
+#: from here via `[tool.hatch.version]`, so bump it in this file only. Carrying
+#: the number in both places let them drift: 0.1.4 was tagged in pyproject while
+#: `dropoutt doctor` still reported 0.1.3 from this constant.
+__version__ = "0.1.4"
 
 from .models import (  # noqa: F401
     Confidence,

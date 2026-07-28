@@ -200,3 +200,40 @@ def test_evidence_free_structured_data_drops_nested_witness_paths():
     assert cleaned == {
         "results": {"private-eval": {"witnesses": [{"instance": 4}]}}
     }
+
+
+def test_declared_version_has_exactly_one_source():
+    """`pyproject.toml` reads the version from the package, so they cannot drift.
+
+    They did drift once: 0.1.4 was tagged in pyproject while `dropoutt doctor`
+    still reported 0.1.3 from the constant, because both carried a literal.
+    """
+    import re
+    from pathlib import Path
+
+    import dropoutt
+
+    pyproject = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
+    assert 'dynamic = ["version"]' in pyproject
+    assert re.search(r'^\[tool\.hatch\.version\]\npath = "src/dropoutt/__init__\.py"',
+                     pyproject, re.M)
+    assert not re.search(r'^version = "', pyproject, re.M), (
+        "a literal version in pyproject would shadow the package constant again"
+    )
+    assert re.fullmatch(r"\d+\.\d+\.\d+", dropoutt.__version__)
+
+
+def test_doctor_names_the_interpreter_it_probed():
+    """Every status in `doctor` is an import against one specific Python.
+
+    Without the path, installing with a `pip` from a different environment looks
+    like the tool ignoring the install. uv venvs ship no pip, so this is the
+    default way to hit it.
+    """
+    import sys
+    from pathlib import Path
+
+    result = CliRunner().invoke(app, ["doctor"])
+    assert result.exit_code == 0
+    # rich wraps long paths, so compare on the basename rather than the whole path.
+    assert Path(sys.executable).name in result.output.replace("\n", "")

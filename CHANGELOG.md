@@ -93,6 +93,22 @@ junk; a coordinate system will happily give nonsense a coordinate.
   earlier. The labels also use the first 150 members in corpus order, not a
   random sample, which the docs did not say.
 
+### Fixed (packaging and diagnostics)
+
+- **`dropoutt doctor` now names the interpreter it probed.** Every status in that
+  table is an import against one specific Python, and the common way to be
+  confused by it is to install with a `pip` belonging to a different one. A venv
+  created by `uv` ships no `pip`, so an activated shell falls through to whatever
+  `pip` is next on `PATH` and installs somewhere the tool cannot see — the package
+  installs successfully and the status stays `no`. `doctor` prints the interpreter
+  path, and when anything is missing it prints an install command targeting that
+  interpreter (`uv pip install` when the running Python has no `pip`).
+- **The version had two sources and they drifted.** `pyproject.toml` and
+  `src/dropoutt/__init__.py` each carried a literal, so 0.1.4 was tagged in one
+  while `dropoutt doctor` reported 0.1.3 from the other. `pyproject.toml` now
+  reads the version from the package via `[tool.hatch.version]`; bump
+  `__init__.py` only.
+
 `PIPELINE_VERSION` is bumped because both the presence and the denominator of the
 coverage facet changed.
 

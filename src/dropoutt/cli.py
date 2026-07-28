@@ -823,20 +823,53 @@ def fetch(
 @app.command()
 def doctor() -> None:
     """Show what is installed and what each missing piece costs."""
+    import sys  # noqa: PLC0415
+
     table = Table(show_header=True, header_style="dim", box=None, padding=(0, 2))
     table.add_column("component")
     table.add_column("status")
     table.add_column("without it")
     table.add_column("install", style="dim")
+    missing = False
     for name, info in capability_report().items():
         status = "[green]yes[/green]" if info["available"] else "[yellow]no[/yellow]"
         # Escape the extras syntax: rich would read `[fast]` as a style tag
         # and silently drop it, turning the install hint into a wrong command.
         hint = "" if info["available"] else escape(str(info["install"]))
+        missing = missing or not info["available"]
         table.add_row(name, status, str(info["impact"]), hint)
     console.print(table)
-    console.print(f"\n  cache: [dim]{cache_dir()}[/dim]")
-    console.print(f"  version: [dim]{__version__}[/dim]\n")
+
+    # The interpreter, not just the version. Every status above is an import
+    # against *this* Python, and the common way to be confused by this table is
+    # to install a package with a `pip` belonging to a different one. A venv
+    # created by `uv` ships no `pip`, so an activated shell falls through to
+    # whichever pip is next on PATH and installs somewhere this process cannot
+    # see. Printing the path makes that visible instead of baffling.
+    console.print(f"\n  python:  [dim]{escape(sys.executable)}[/dim]")
+    console.print(f"  cache:   [dim]{escape(str(cache_dir()))}[/dim]")
+    console.print(f"  version: [dim]{escape(__version__)}[/dim]")
+
+    if missing:
+        console.print(f"\n  [dim]Install into the interpreter above, or the status "
+                      f"here will not change:[/dim]\n    [dim]{escape(_install_prefix())} "
+                      f"{escape('<package>')}[/dim]")
+    console.print()
+
+
+def _install_prefix() -> str:
+    """The installer command that targets *this* interpreter.
+
+    `pip install` is wrong advice whenever the running interpreter has no pip,
+    which is the default for venvs created by uv. In that case the shell's `pip`
+    belongs to some other Python and the install silently lands out of reach.
+    """
+    import importlib.util  # noqa: PLC0415
+    import sys  # noqa: PLC0415
+
+    if importlib.util.find_spec("pip") is not None:
+        return f"{sys.executable} -m pip install"
+    return "uv pip install"
 
 
 @app.callback()

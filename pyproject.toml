@@ -4,7 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dropoutt"
-version = "0.1.4"
+# Read from src/dropoutt/__init__.py so there is one place to bump. Carrying the
+# number here as well let the two drift: 0.1.4 was tagged here while `dropoutt
+# doctor` still reported 0.1.3 from the constant in the package.
+dynamic = ["version"]
 description = "Pre-flight checks and comparable fingerprints for LLM training datasets."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -75,6 +78,9 @@ dropoutt = "dropoutt.cli:run"
 
 [project.urls]
 Homepage = "https://dropoutt.com"
+
+[tool.hatch.version]
+path = "src/dropoutt/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 # `packages` already carries everything under src/dropoutt, including data/.
