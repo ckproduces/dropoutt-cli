@@ -40,6 +40,11 @@ from .readers import RawRecord, read_file
 from .schema_induction import SchemaVerdict, induce
 from .tokenizer_panel import CHARS_PER_TOKEN_FALLBACK, TokenizerHandle
 
+#: Minimum characters for a record to be placed on the atlas. Below this the
+#: embedding is dominated by noise, for the same reason language identification
+#: is gated on length.
+ATLAS_MIN_CHARS = 80
+
 
 @dataclass
 class ScanResult:
@@ -166,11 +171,19 @@ def scan(
                 budget_sample.append(doc.text[:4000])
                 sampled_here += 1
                 if ctx.atlas is not None:
-                    # Coverage is computed from the same stratified sample. The
-                    # atlas describes a distribution, and a sample of a few
-                    # hundred thousand records describes it as well as all of
-                    # them at a fraction of the embedding cost.
-                    atlas_sample.append((doc.text[:2000], doc.meta.get(F_LANG) or "unknown"))
+                    # Coverage comes from the same stratified sample: the atlas
+                    # describes a distribution, and a sample describes it as
+                    # well as every record at a fraction of the embedding cost.
+                    #
+                    # Records below ATLAS_MIN_CHARS are excluded rather than
+                    # placed. A twenty-character record cannot be positioned on
+                    # a topical map, and including it inflates the off-atlas
+                    # rate with records that were never placeable. The count of
+                    # exclusions is reported, not hidden.
+                    if len(doc.text) >= ATLAS_MIN_CHARS:
+                        atlas_sample.append((doc.text[:2000], doc.meta.get(F_LANG) or "unknown"))
+                    else:
+                        ctx.stats["atlas_too_short"] = ctx.stats.get("atlas_too_short", 0) + 1
             for check in active:
                 try:
                     check.observe(doc, ctx)
@@ -326,5 +339,9 @@ def _compute_coverage(ctx: ScanContext, sample: list[tuple[str, str]]) -> None:
 
     coverage = ctx.atlas.coverage(regions, categories, langs)
     coverage["sampled_records"] = len(texts)
+    too_short = ctx.stats.get("atlas_too_short", 0)
+    if too_short:
+        coverage["excluded_too_short"] = too_short
+        coverage["min_chars"] = ATLAS_MIN_CHARS
     coverage["atlas_hash"] = ctx.atlas.artifact_hash
     ctx.stats["atlas_coverage"] = coverage

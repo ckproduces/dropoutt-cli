@@ -156,9 +156,10 @@ class Atlas:
 
         on = regions[regions >= 0]
         region_counts = np.bincount(on, minlength=self.n_regions)
-        cat_counts: dict[int, int] = {}
+        cat_counts: dict[str, int] = {}
         for c in categories:
-            cat_counts[int(c)] = cat_counts.get(int(c), 0) + 1
+            key = str(int(c))
+            cat_counts[key] = cat_counts.get(key, 0) + 1
 
         nonzero = int((region_counts > 0).sum())
         mass = region_counts / max(region_counts.sum(), 1)

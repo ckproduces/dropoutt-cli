@@ -105,6 +105,18 @@ coverage without adding topical coverage, or the reverse.
 Under an unfactorised atlas the two would be separated by script alone and the
 topical relationship would be invisible.
 
+## Records too short to place
+
+A record below 80 characters is **excluded from placement**, not assigned. Its
+embedding is dominated by noise, for the same reason language identification is
+gated on length. Including such records would inflate the off-atlas rate with
+records that were never placeable in the first place.
+
+The number excluded is reported alongside the coverage figures. On a typical
+short-form instruction corpus this can be most of the records, and that is worth
+knowing rather than hiding: it means coverage describes the long tail of your
+data, not all of it.
+
 ## Off-atlas data, and when coverage is withheld
 
 If a corpus consists of text the reference corpus contains nothing like, every
@@ -138,7 +150,20 @@ index would fragment. Coarse mass is exactly the sum of the fine masses beneath
 it, so a free-tier fingerprint and a paid-tier fingerprint remain comparable and
 upgrading re-aggregates existing history rather than invalidating it.
 
-This release ships level 0 plus level 1 (256 regions) in the package.
+This release ships level 0 plus level 1 in the package:
+
+| property | value |
+| --- | --- |
+| regions | 258 |
+| reference records | 152,622 |
+| level-0 categories | 20 (of 31 defined; under-populated ones are dropped and named at build time) |
+| level-0 held-out accuracy | 0.864 |
+| region purity by taxonomy | 0.785 |
+| artifact size | 271 KB |
+| off-atlas cutoff | 0.392 cosine |
+
+Measured on 3,000 real Turkish instruction records: **6.3% off-atlas**, 93 of 258
+regions occupied, region entropy 3.91 of a possible 5.55.
 
 ## Hand intervention
 

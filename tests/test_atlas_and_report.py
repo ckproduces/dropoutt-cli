@@ -76,7 +76,8 @@ def test_coverage_is_reported_when_records_land_on_the_map(tiny_atlas):
     assert cov["status"] == "ok"
     assert cov["regions_occupied"] == 4
     assert cov["regions_total"] == tiny_atlas.n_regions
-    assert cov["by_category"] == {0: 80, 1: 60}
+    # Keys are strings: numpy int keys are refused by orjson.
+    assert cov["by_category"] == {"0": 80, "1": 60}
 
 
 def test_off_atlas_rate_is_reported_per_language(tiny_atlas):
@@ -172,3 +173,42 @@ def test_html_report_escapes_markup_from_the_corpus(tmp_path):
     fp = build_fingerprint(result.ctx, result.findings, total_chars=100, total_words=20)
     page = html_report.render(result, fp, None)
     assert "<script>alert" not in page
+
+
+def test_category_counts_are_json_serialisable(tiny_atlas):
+    """Regression: numpy int keys are refused by orjson and broke the writer."""
+    from dropoutt.compat import json_dumps
+
+    cov = tiny_atlas.coverage(
+        np.array([1] * 50, dtype=np.int32), np.zeros(50, dtype=np.int32)
+    )
+    assert all(isinstance(k, str) for k in cov["by_category"])
+    json_dumps(cov)  # must not raise
+
+
+def test_short_records_are_excluded_from_the_atlas_and_the_count_reported(tmp_path):
+    """A 20-character record cannot be placed on a topical map.
+
+    Including it would inflate the off-atlas rate with records that were never
+    placeable, so they are excluded. The exclusion is reported, not hidden.
+    """
+    import json as _json
+
+    from dropoutt.runner import ATLAS_MIN_CHARS
+
+    assert ATLAS_MIN_CHARS >= 40, "the gate must be at least as strict as language ID"
+
+    data = tmp_path / "d"
+    data.mkdir()
+    with open(data / "train.jsonl", "w", encoding="utf-8") as fh:
+        for i in range(30):
+            fh.write(_json.dumps({"messages": [
+                {"role": "user", "content": f"kisa {i}"},
+                {"role": "assistant", "content": "evet"},
+            ]}) + "\n")
+    # Every record here is far below the gate, so none may be placed.
+    from dropoutt.langid import LanguageDetector
+    from dropoutt.runner import scan
+
+    result = scan(str(tmp_path), detector=LanguageDetector())
+    assert result.ctx.stats.get("atlas_coverage") is None
