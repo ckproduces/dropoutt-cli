@@ -417,8 +417,6 @@ def diff(
     console.print("\n  [bold]Atlas comparison[/bold]")
     if not result.comparable:
         console.print(f"    [yellow]not comparable[/yellow] [dim]{escape(result.reason)}[/dim]")
-        console.print("    [dim]Coverage is withheld rather than estimated when records "
-                      "did not land on the atlas.[/dim]")
         raise typer.Exit(EXIT_OK)
 
     console.print(f"    Similarity   {result.similarity:.2f}  "
@@ -427,6 +425,16 @@ def diff(
                   f"right also occupies")
     console.print(f"    New          [bold]{result.added_mass:.0%}[/bold] of left sits "
                   f"in regions right never reaches")
+    if min(result.a_placed_share, result.b_placed_share) < 0.999:
+        # Restated over every record the left side sampled, so the three lines
+        # account for all of it. The two above are shares of the placed part
+        # only, which is the right denominator for a distribution and the wrong
+        # one for "how much of this dataset are we talking about".
+        console.print(f"    [dim]Of all left  {result.shared_of_all:.0%} shared, "
+                      f"{result.added_of_all:.0%} new, {result.a_unplaced:.0%} the atlas "
+                      f"cannot place[/dim]")
+        console.print(f"    [dim]Placed       {result.a_placed_share:.0%} of left and "
+                      f"{result.b_placed_share:.0%} of right landed on the atlas[/dim]")
 
     if result.a_only:
         console.print("\n    [bold]Only in left[/bold] [dim]— what adding it would "
@@ -460,6 +468,9 @@ def diff(
             table.add_row(key, f"{sa:.0%}", f"{sb:.0%}",
                           f"[{style}]{delta:+.0%}[/{style}]")
         console.print(table)
+
+    for caveat in result.caveats:
+        console.print(f"\n  [yellow]note[/yellow] {escape(caveat)}")
 
     partial = min(result.a_head_coverage, result.b_head_coverage)
     if partial < 0.999:

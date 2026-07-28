@@ -11,7 +11,7 @@ import json
 import numpy as np
 import pytest
 
-from dropoutt.atlas.apply import OFF_ATLAS_SUPPRESS, Atlas
+from dropoutt.atlas.apply import Atlas
 from dropoutt.report.escaping import json_script_payload, safe_snippet, visible_controls
 from dropoutt.report.terminal import _m
 
@@ -59,15 +59,112 @@ def test_distant_records_are_off_atlas(tiny_atlas):
     assert (regions == -1).sum() > 0
 
 
-def test_coverage_is_suppressed_when_off_atlas_rate_is_high(tiny_atlas):
-    """Better to withhold a number than to publish a misleading one."""
+def test_a_high_off_atlas_rate_does_not_withhold_the_histogram(tiny_atlas):
+    """The placed records stay measured however many others failed to place.
+
+    Off-atlas records are filtered out of the histogram before it is counted, so
+    the histogram was never contaminated by them and withholding it discarded a
+    correct measurement. This pins the replacement of that behaviour.
+    """
+    # 60 placed, 140 off-atlas: a 70% rate, far above anything the old
+    # suppression rule tolerated.
+    regions = np.concatenate([
+        np.array([1, 2, 3] * 20, dtype=np.int32),
+        np.full(140, -1, dtype=np.int32),
+    ])
+    categories = np.zeros(200, dtype=np.int32)
+    cov = tiny_atlas.coverage(regions, categories)
+
+    assert cov["status"] == "ok"
+    assert cov["off_atlas_rate"] == 0.7
+    assert cov["fit"] == "poor"
+    assert cov["placed"] == 60
+    assert cov["regions_occupied"] == 3
+    assert sum(cov["region_counts"].values()) == 60
+    # Category counts share the region histogram's denominator. Counting them
+    # over all 200 records put two denominators in one panel.
+    assert sum(cov["by_category"].values()) == 60
+
+
+def test_coverage_reports_none_placed_only_when_nothing_placed(tiny_atlas):
+    """The one case where the numbers genuinely do not exist."""
     regions = np.full(200, -1, dtype=np.int32)
     categories = np.zeros(200, dtype=np.int32)
     cov = tiny_atlas.coverage(regions, categories)
-    assert cov["status"] == "suppressed"
+    assert cov["status"] == "none placed"
     assert cov["off_atlas_rate"] == 1.0
-    assert "does not fit this corpus" in cov["reason"]
-    assert "by_category" not in cov, "no coverage detail may leak when suppressed"
+    assert "region_counts" not in cov
+
+
+def test_off_atlas_records_are_described_not_merely_counted(tiny_atlas):
+    """A count says how much failed to place; the description says what and why."""
+    rng = np.random.default_rng(3)
+    placed = np.tile(tiny_atlas.centroids[4], (60, 1)).astype(np.float32)
+    stray = rng.normal(size=(40, tiny_atlas.dim)).astype(np.float32)
+    emb = np.vstack([placed, stray])
+    regions, scores, nearest = tiny_atlas.assign_full(emb)
+    assert (regions < 0).sum() == 40, "fixture must produce exactly the stray rows"
+
+    cov = tiny_atlas.coverage(
+        regions, np.zeros(100, dtype=np.int32),
+        ["en"] * 60 + ["tr"] * 40,
+        scores=scores, nearest=nearest, embeddings=emb,
+        lengths=[900] * 60 + [90] * 40,
+        datasets=["big"] * 60 + ["small"] * 40,
+    )
+    detail = cov["off_atlas_detail"]
+
+    assert detail["score"]["off_median"] < detail["score"]["placed_median"]
+    assert detail["length"]["off_median_chars"] == 90
+    assert detail["length"]["placed_median_chars"] == 900
+    assert "short records" in detail["diagnosis"]
+    # Every off-atlas record still has a nearest region. `assign` replaces it
+    # with -1; the description exists to give it back.
+    # `nearest_regions` is a top-six head, so it accounts for some but not
+    # necessarily all of the off-atlas records; `nearest_region_spread` carries
+    # the rest of the story.
+    assert detail["nearest_regions"]
+    assert 0 < sum(r["records"] for r in detail["nearest_regions"]) <= 40
+    assert detail["nearest_region_spread"] >= len(detail["nearest_regions"])
+    assert detail["by_dataset"]["small"]["rate"] == 1.0
+    assert "big" not in detail["by_dataset"]
+
+
+def test_coherent_off_atlas_set_is_diagnosed_as_a_gap_not_as_junk(tiny_atlas):
+    """Records alike to each other but unlike the atlas are a missing subject."""
+    rng = np.random.default_rng(11)
+    placed = np.repeat(tiny_atlas.centroids[:6], 10, axis=0).astype(np.float32)
+    # One tight cluster far from every centroid: high internal coherence.
+    axis = -tiny_atlas.centroids[0].astype(np.float32)
+    stray = (np.tile(axis, (40, 1))
+             + rng.normal(scale=0.01, size=(40, tiny_atlas.dim))).astype(np.float32)
+
+    emb = np.vstack([placed, stray])
+    regions, scores, nearest = tiny_atlas.assign_full(emb)
+    assert (regions < 0).sum() == 40, "fixture must produce exactly the stray rows"
+
+    cov = tiny_atlas.coverage(
+        regions, np.zeros(len(emb), dtype=np.int32), None,
+        scores=scores, nearest=nearest, embeddings=emb,
+        # Equal lengths, so the length branch cannot fire and the coherence
+        # branch is what is under test.
+        lengths=[500] * len(emb),
+    )
+    detail = cov["off_atlas_detail"]
+    assert detail["coherence"]["off"] > detail["coherence"]["placed"]
+    assert "coherent group" in detail["diagnosis"]
+
+
+def test_mean_pairwise_matches_the_naive_matrix(tiny_atlas):
+    """The linear-time identity must equal the quadratic definition exactly."""
+    from dropoutt.atlas.apply import _mean_pairwise
+
+    rng = np.random.default_rng(5)
+    v = rng.normal(size=(50, 8)).astype(np.float32)
+    v /= np.linalg.norm(v, axis=1, keepdims=True)
+    sim = v @ v.T
+    naive = (sim.sum() - np.trace(sim)) / (len(v) * (len(v) - 1))
+    assert _mean_pairwise(v) == pytest.approx(float(naive), abs=1e-4)
 
 
 def test_coverage_is_reported_when_records_land_on_the_map(tiny_atlas):
@@ -425,8 +522,13 @@ def test_a_corpus_compared_with_itself_is_identical():
     assert not result.a_only
 
 
-def test_comparison_refuses_when_either_side_was_suppressed():
-    """Two unreliable histograms must not produce a confident-looking answer."""
+def test_comparison_refuses_a_pre_0_1_4_suppressed_fingerprint():
+    """A fingerprint whose histogram was discarded has nothing left to compare.
+
+    This is not the old "too much off-atlas, refuse" rule, which is gone. It is
+    the narrower fact that a fingerprint written before 0.1.4 does not carry the
+    histogram at all, and the only fix is re-scanning.
+    """
     from dropoutt.atlas.compare import compare
 
     good = _coverage({1: 100})
@@ -435,7 +537,69 @@ def test_comparison_refuses_when_either_side_was_suppressed():
 
     assert not compare(good, bad).comparable
     assert not compare(bad, good).comparable
-    assert "78%" in compare(good, bad).reason
+    reason = compare(good, bad).reason
+    assert "78%" in reason, "the stored rate is the useful part; do not drop it"
+    assert "dropoutt scan" in reason, "say what would fix it"
+
+
+def test_comparison_proceeds_with_a_high_off_atlas_rate_and_states_the_bound():
+    """A partial right side biases novelty upward. Report the bound, do not refuse."""
+    from dropoutt.atlas.compare import compare
+
+    left = _coverage({1: 60, 2: 40})
+    left.update(records=100, placed=100, off_atlas=0, off_atlas_rate=0.0)
+    # Right placed only half its records, so regions it appears to miss may be
+    # covered by the half that never placed.
+    right = _coverage({1: 50})
+    right.update(records=100, placed=50, off_atlas=50, off_atlas_rate=0.5)
+
+    result = compare(left, right)
+    assert result.comparable
+    assert result.added_mass == pytest.approx(0.4)
+    assert result.b_placed_share == pytest.approx(0.5)
+    assert result.caveats, "an incomplete side must state its effect"
+    assert "upper bound" in " ".join(result.caveats)
+
+
+def test_the_three_way_partition_of_the_left_side_always_sums_to_one():
+    """shared + new + unplaceable accounts for every record the left side sampled.
+
+    `shared_mass` and `added_mass` are shares of the placed part, which is the
+    right denominator for a distribution and the wrong one for "how much of this
+    dataset are we talking about". These three are the second question.
+    """
+    from dropoutt.atlas.compare import compare
+
+    left = _coverage({1: 60, 2: 40})
+    left.update(records=200, placed=100, off_atlas=100, off_atlas_rate=0.5)
+    right = _coverage({1: 50})
+    right.update(records=100, placed=100, off_atlas=0, off_atlas_rate=0.0)
+
+    r = compare(left, right)
+    assert r.shared_of_all + r.added_of_all + r.a_unplaced == pytest.approx(1.0)
+    assert r.a_unplaced == pytest.approx(0.5)
+    assert r.shared_of_all == pytest.approx(0.3)  # 60% of the placed half
+    assert r.added_of_all == pytest.approx(0.2)
+
+
+def test_off_atlas_mass_never_enters_the_similarity():
+    """Two corpora unplaceable in different directions are not therefore alike.
+
+    Off-atlas is the complement of the atlas, an undifferentiated set. Carried as
+    a shared coordinate it would push any two badly-fitting corpora toward 1.0
+    however unrelated their placed halves are.
+    """
+    from dropoutt.atlas.compare import compare
+
+    left = _coverage({1: 10})
+    left.update(records=100, placed=10, off_atlas=90, off_atlas_rate=0.9)
+    right = _coverage({2: 10})
+    right.update(records=100, placed=10, off_atlas=90, off_atlas_rate=0.9)
+
+    r = compare(left, right)
+    assert r.comparable
+    assert r.similarity == pytest.approx(0.0), "disjoint regions, whatever the off-atlas rate"
+    assert r.added_mass == pytest.approx(1.0)
 
 
 def test_comparison_refuses_across_atlas_versions():

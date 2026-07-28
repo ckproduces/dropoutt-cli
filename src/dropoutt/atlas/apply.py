@@ -12,9 +12,29 @@ reported per language as well as globally. For a language the embedding model
 represents poorly, topical assignment is unreliable no matter how good the
 clustering is, and averaging that away would hide it.
 
-Above the off-atlas threshold, coverage numbers are **suppressed rather than
-displayed**, because a coverage histogram over records that did not really land
-anywhere is worse than no histogram.
+Off-atlas records are **described, never used as grounds for withholding the
+rest**. Until 0.1.4 a rate above 10% discarded the whole coverage report and
+printed a sentence in its place. That was wrong twice over. The region histogram
+never contained off-atlas records to begin with — they are filtered out by
+``regions >= 0`` before counting — so suppression threw away a measurement that
+was correct for every record it covered. And the off-atlas set is itself the most
+useful thing the atlas produces on an ill-fitting corpus: it is a list of the
+records that do not look like anything in the reference corpus, which is either a
+gap in the atlas or a problem in the data, and the tool can tell those apart.
+
+What it cannot do is let the reader confuse the denominators. Every share over
+regions or categories is a share of **placed** records, and the placed count is
+printed beside it.
+
+One caveat governs how the off-atlas number should be read, and it is measured,
+not assumed: similarity to the nearest centroid rises steeply with record length.
+The same English paragraph scores 0.363 truncated to 20 characters and 0.787 at
+2000, landing in the same region throughout. Across a real corpus the correlation
+between log length and similarity is about 0.49, and off-atlas rate falls from
+33% for records under 80 characters to 0% above 150. A high off-atlas rate is
+therefore first a statement about record length, second about language, and only
+third about topic. ``_diagnose`` below attributes it in that order rather than
+letting the reader assume the third.
 """
 
 from __future__ import annotations
@@ -26,8 +46,28 @@ from typing import Any
 
 import numpy as np
 
-#: Above this share of off-atlas records, coverage is suppressed for that group.
-OFF_ATLAS_SUPPRESS = 0.10
+#: Off-atlas rate bands. These grade how much of the corpus the atlas actually
+#: describes; they never gate whether the numbers are shown.
+#:
+#: The lower bound is not arbitrary. The cutoff itself was set at the 2nd
+#: percentile of the atlas's own reference records, so a corpus drawn from the
+#: same distribution as the atlas sits near 2%. Ten percent is five times that
+#: and is the point where "some records did not place" becomes worth a sentence.
+#: Above 35% the placed half is a minority report about the corpus, and the
+#: heading says so.
+OFF_ATLAS_NOTABLE = 0.10
+OFF_ATLAS_HIGH = 0.35
+
+#: An off-atlas set whose records are this much shorter than the placed ones is
+#: explained by length before anything else. Measured: off-atlas rate is 33% for
+#: records under 80 characters and 0% above 150.
+SHORT_RECORD_RATIO = 0.6
+
+#: Mean pairwise cosine inside the off-atlas set has to beat the placed set by
+#: this margin before it counts as one coherent thing rather than scattered
+#: leftovers. On a corpus whose off-atlas records were filler tokens the two came
+#: out at 0.383 against 0.434, i.e. scattered.
+COHERENCE_MARGIN = 0.05
 
 
 @dataclass
@@ -88,15 +128,31 @@ class Atlas:
     def assign(self, embeddings: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Return (region index, cosine similarity) for each row.
 
-        A region index of -1 means off-atlas.
+        A region index of -1 means off-atlas. Use :meth:`assign_full` when the
+        nearest region of an off-atlas record matters, which it usually does.
+        """
+        best, score, _ = self.assign_full(embeddings)
+        return best, score
+
+    def assign_full(
+        self, embeddings: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Return (region or -1, cosine similarity, nearest region regardless).
+
+        The third value is the region a record would have landed in had the
+        cutoff not applied. ``assign`` computes it and then throws it away, which
+        costs the caller the one thing that makes an off-atlas record legible:
+        a record sitting just under the cutoff next to a Python region is a
+        different problem from one that is nearest to a region of Arabic
+        Wikipedia and 0.2 away from it.
         """
         emb = np.asarray(embeddings, dtype=np.float32)
         emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-9)
         sims = emb @ self.centroids.T
-        best = sims.argmax(axis=1)
+        nearest = sims.argmax(axis=1)
         score = sims.max(axis=1)
-        best = np.where(score >= self.off_threshold, best, -1)
-        return best, score
+        best = np.where(score >= self.off_threshold, nearest, -1)
+        return best, score, nearest
 
     def categorize(self, embeddings: np.ndarray) -> np.ndarray:
         """Level-0 taxonomy category per row, from the supervised probe."""
@@ -112,21 +168,38 @@ class Atlas:
         regions: np.ndarray,
         categories: np.ndarray,
         languages: list[str] | None = None,
+        *,
+        scores: np.ndarray | None = None,
+        nearest: np.ndarray | None = None,
+        embeddings: np.ndarray | None = None,
+        lengths: list[int] | None = None,
+        datasets: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Build the coverage report, suppressing it where it would mislead."""
+        """Build the coverage report.
+
+        Always returns a histogram when anything was placed. The keyword
+        arguments are what turns an off-atlas count into an off-atlas
+        description; each is optional so that a caller holding only regions and
+        categories still gets a valid, if thinner, report.
+        """
         total = int(len(regions))
         if total == 0:
             return {"status": "no records"}
 
-        off = int((regions < 0).sum())
+        off_mask = np.asarray(regions) < 0
+        off = int(off_mask.sum())
         off_rate = off / total
+        placed = total - off
 
         result: dict[str, Any] = {
             "records": total,
+            "placed": placed,
             "off_atlas": off,
             "off_atlas_rate": round(off_rate, 4),
+            "fit": _fit_band(off_rate),
             "atlas_version": self.meta.get("version"),
             "embed_model": self.embed_model,
+            "off_atlas_cutoff": round(self.off_threshold, 5),
             "l0_holdout_accuracy": self.meta.get("l0_holdout_accuracy"),
             "region_purity_by_taxonomy": self.meta.get("region_purity_by_taxonomy"),
         }
@@ -141,23 +214,31 @@ class Atlas:
                 per_lang[lang] = {
                     "records": len(idx),
                     "off_atlas_rate": round(lang_off, 4),
-                    "reliable": lang_off <= OFF_ATLAS_SUPPRESS,
+                    "reliable": lang_off <= OFF_ATLAS_NOTABLE,
                 }
             result["per_language"] = per_lang
 
-        if off_rate > OFF_ATLAS_SUPPRESS:
-            result["status"] = "suppressed"
-            result["reason"] = (
-                f"{off_rate:.0%} of records are off-atlas, above the "
-                f"{OFF_ATLAS_SUPPRESS:.0%} threshold. This atlas does not fit this corpus, "
-                f"so coverage numbers would be misleading and have been withheld."
+        if off:
+            result["off_atlas_detail"] = self._describe_off_atlas(
+                off_mask, scores=scores, nearest=nearest, embeddings=embeddings,
+                lengths=lengths, datasets=datasets, languages=languages,
             )
+
+        if placed == 0:
+            # Nothing landed anywhere, so there is no histogram to report. This
+            # is the one case where the numbers genuinely do not exist, as
+            # opposed to being judged unfit to show.
+            result["status"] = "none placed"
             return result
 
         on = regions[regions >= 0]
         region_counts = np.bincount(on, minlength=self.n_regions)
+        # Categories are counted over placed records only. Counting them over
+        # every record while the region histogram covers only placed ones put
+        # two different denominators in the same panel, so a category share and
+        # a region share could not be read against each other.
         cat_counts: dict[str, int] = {}
-        for c in categories:
+        for c in np.asarray(categories)[~off_mask]:
             key = str(int(c))
             cat_counts[key] = cat_counts.get(key, 0) + 1
 
@@ -171,6 +252,7 @@ class Atlas:
             "regions_total": self.n_regions,
             "region_entropy": round(entropy, 4),
             "max_region_entropy": round(float(np.log(self.n_regions)), 4),
+            #: Shares over `placed`, not over `records`.
             "by_category": cat_counts,
             # The full histogram, sparse. `top_regions` below is a display
             # convenience capped at twelve, and comparing two fingerprints on
@@ -189,6 +271,187 @@ class Atlas:
             ],
         })
         return result
+
+    # -- the off-atlas set ------------------------------------------------
+
+    def _describe_off_atlas(
+        self,
+        off_mask: np.ndarray,
+        *,
+        scores: np.ndarray | None,
+        nearest: np.ndarray | None,
+        embeddings: np.ndarray | None,
+        lengths: list[int] | None,
+        datasets: list[str] | None,
+        languages: list[str] | None,
+    ) -> dict[str, Any]:
+        """Say what the off-atlas records are, not merely how many.
+
+        Everything here is derived from arrays the scan already has in memory,
+        so the description costs one pass over an existing sample and no extra
+        embedding work.
+        """
+        detail: dict[str, Any] = {}
+        on_mask = ~off_mask
+
+        if scores is not None:
+            s = np.asarray(scores, dtype=float)
+            off_s = s[off_mask]
+            detail["score"] = {
+                "cutoff": round(self.off_threshold, 5),
+                "off_median": round(float(np.median(off_s)), 4),
+                "off_p10": round(float(np.percentile(off_s, 10)), 4),
+                "off_max": round(float(off_s.max()), 4),
+                "placed_median": (
+                    round(float(np.median(s[on_mask])), 4) if on_mask.any() else None
+                ),
+                # Records within 0.05 of the cutoff were near misses. A set made
+                # mostly of near misses is a threshold effect; one sitting far
+                # below is genuinely unlike the reference corpus.
+                "near_miss_share": round(
+                    float((off_s >= self.off_threshold - 0.05).mean()), 4
+                ),
+            }
+
+        if lengths is not None and len(lengths) == len(off_mask):
+            ln = np.asarray(lengths, dtype=float)
+            detail["length"] = {
+                "off_median_chars": int(np.median(ln[off_mask])),
+                "placed_median_chars": (
+                    int(np.median(ln[on_mask])) if on_mask.any() else None
+                ),
+            }
+
+        if embeddings is not None and int(off_mask.sum()) >= 2:
+            emb = np.asarray(embeddings, dtype=np.float32)
+            emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-9)
+            detail["coherence"] = {
+                "off": _mean_pairwise(emb[off_mask]),
+                "placed": _mean_pairwise(emb[on_mask]) if on_mask.sum() >= 2 else None,
+            }
+
+        if nearest is not None:
+            near = np.asarray(nearest)[off_mask]
+            counts = np.bincount(near, minlength=self.n_regions)
+            detail["nearest_regions"] = [
+                {"region": int(r), "records": int(counts[r]),
+                 "terms": self.region_terms[r] if r < len(self.region_terms) else ""}
+                for r in np.argsort(-counts)[:6] if counts[r] > 0
+            ]
+            detail["nearest_region_spread"] = int((counts > 0).sum())
+
+        for key, values in (("by_language", languages), ("by_dataset", datasets)):
+            if not values or len(values) != len(off_mask):
+                continue
+            arr = np.asarray(values, dtype=object)
+            share: dict[str, dict[str, Any]] = {}
+            for name in sorted(set(values)):
+                sel = arr == name
+                n_off = int((sel & off_mask).sum())
+                if not n_off:
+                    continue
+                share[str(name)] = {
+                    "off_atlas": n_off,
+                    "records": int(sel.sum()),
+                    # Rate within this group, which is the number that says
+                    # whether the group is responsible or merely large.
+                    "rate": round(n_off / int(sel.sum()), 4),
+                    "share_of_off_atlas": round(n_off / int(off_mask.sum()), 4),
+                }
+            if share:
+                detail[key] = share
+
+        detail["diagnosis"] = _diagnose(detail)
+        return detail
+
+
+def _fit_band(off_rate: float) -> str:
+    """How much of the corpus the atlas describes, as a word.
+
+    Graded rather than pass/fail, because the underlying quantity is continuous
+    and a corpus at 10.1% is not meaningfully different from one at 9.9%.
+    """
+    if off_rate <= OFF_ATLAS_NOTABLE:
+        return "good"
+    if off_rate <= OFF_ATLAS_HIGH:
+        return "partial"
+    return "poor"
+
+
+def _mean_pairwise(vectors: np.ndarray) -> float:
+    """Mean cosine between every pair of rows, for L2-normalised input.
+
+    Computed from the sum of the vectors rather than an n-by-n matrix: for unit
+    rows, ``sum(V @ V.T) == ||sum(V)||^2`` and the diagonal contributes exactly
+    n, so the mean over ordered pairs is ``(||sum(V)||^2 - n) / (n(n-1))``. Exact,
+    and linear in n instead of quadratic, which matters because the atlas sample
+    can carry tens of thousands of rows.
+    """
+    n = int(len(vectors))
+    if n < 2:
+        return float("nan")
+    total = float(np.linalg.norm(vectors.sum(axis=0)) ** 2)
+    return round(max(-1.0, min(1.0, (total - n) / (n * (n - 1)))), 4)
+
+
+def _diagnose(detail: dict[str, Any]) -> str:
+    """One sentence naming the most likely reason records went off-atlas.
+
+    Ordered by how strongly each cause was measured to drive the similarity
+    score, not by how interesting it would be. Length dominates, so it is tested
+    first; a corpus of short records reads as off-atlas whatever it is about.
+    """
+    length = detail.get("length") or {}
+    off_len = length.get("off_median_chars")
+    placed_len = length.get("placed_median_chars")
+    if off_len and placed_len and off_len < placed_len * SHORT_RECORD_RATIO:
+        return (
+            f"mostly short records: the off-atlas half has a median of {off_len} "
+            f"characters against {placed_len} for the placed half. Similarity to a "
+            f"region rises with length, so short records read as off-atlas whatever "
+            f"they are about"
+        )
+
+    coh = detail.get("coherence") or {}
+    off_coh, placed_coh = coh.get("off"), coh.get("placed")
+    if (
+        off_coh is not None and placed_coh is not None
+        and off_coh > placed_coh + COHERENCE_MARGIN
+    ):
+        return (
+            f"one coherent group the atlas does not cover: the off-atlas records "
+            f"resemble each other more ({off_coh:.2f} mean pairwise cosine) than the "
+            f"placed records do ({placed_coh:.2f}). This looks like a real subject "
+            f"area missing from the reference corpus"
+        )
+
+    for key, noun in (("by_dataset", "dataset"), ("by_language", "language")):
+        groups = detail.get(key) or {}
+        if not groups:
+            continue
+        name, stats = max(groups.items(), key=lambda kv: kv[1]["share_of_off_atlas"])
+        if stats["share_of_off_atlas"] >= 0.6 and len(groups) > 1:
+            return (
+                f"concentrated in one {noun}: {stats['share_of_off_atlas']:.0%} of the "
+                f"off-atlas records are {noun} {name!r}, where the rate is "
+                f"{stats['rate']:.0%}"
+            )
+
+    score = detail.get("score") or {}
+    near_miss = score.get("near_miss_share")
+    if near_miss is not None and near_miss >= 0.5:
+        return (
+            f"near misses: {near_miss:.0%} of the off-atlas records sit within 0.05 of "
+            f"the cutoff. This is a threshold effect more than a real gap"
+        )
+
+    if off_coh is not None and placed_coh is not None:
+        return (
+            f"scattered: the off-atlas records are no more alike ({off_coh:.2f}) than "
+            f"the placed ones ({placed_coh:.2f}), so they share no single subject. "
+            f"Usually filler, boilerplate or markup rather than a missing topic"
+        )
+    return "no single cause identified"
 
 
 def bundled_atlas_path() -> Path | None:

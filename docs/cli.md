@@ -53,17 +53,26 @@ online one. Populate the cache first with `dropoutt fetch`. If no cached chat
 template is found, the run says so before the report rather than counting raw
 text silently.
 
-Atlas coverage appears in the terminal report and in `report.html`: how many of
-the atlas regions the corpus occupies, its spread as a share of even coverage,
-the off-atlas rate, the top categories and the top regions with their terms.
-The HTML report also plots occupied regions on the atlas's frozen 2D
-coordinates; circle size encodes sampled record count. The level-0 probe
-accuracy is printed underneath it. Above a 10% off-atlas rate the
-numbers are withheld and the reason is printed instead, because an atlas that
-does not fit the corpus produces a histogram that looks precise and is not.
+Atlas coverage appears in the terminal report and in `report.html`: how many
+records were placed and out of how many, the regions occupied, the spread as a
+share of even coverage, the top categories and the top regions with their terms.
+Every share is over the placed records, and the placed count is printed next to
+it. The HTML report also plots occupied regions on the atlas's frozen 2D
+coordinates; circle size encodes sampled record count. The level-0 probe accuracy
+is printed underneath it.
+
+Records that did not place are described rather than merely counted: the most
+likely reason, the similarity distribution against the cutoff, the regions they
+were nearest to anyway, the rate broken down by language and by dataset, and the
+few furthest excerpts. Similarity to a region rises steeply with record length, so
+a high off-atlas rate is usually a statement about how short the records are
+before it is one about their subject; the reported reason says which. See
+[atlas.md](atlas.md#off-atlas-data).
+
 `--no-atlas` skips the assignment step and the block with it. When coverage is
 computed, the full region histogram also goes into `fingerprint.json`, which is
-what `dropoutt diff` reads.
+what `dropoutt diff` reads. Record excerpts stay out of `fingerprint.json`, which
+is the artifact meant to be shareable.
 
 By default, terminal examples, `findings.jsonl`, and `report.html` contain
 bounded record excerpts and source locations so findings can be inspected.
@@ -156,19 +165,26 @@ categories that differ by at least 2 points, again capped at 8 rows without
 If the two fingerprints were written by different pipeline versions the run says
 so and continues.
 
-The comparison refuses when it would have to invent an answer:
+When either side placed less than 90% of its records, the run prints the placed
+shares under the headline numbers and states which way the bias runs. A partial
+**right** side means regions it appears not to reach may be reached by records it
+could not place, so `New` is an upper bound. A partial **left** side means the
+shares describe only the part that placed. Both are reported; neither stops the
+comparison.
+
+The comparison refuses only when it would have to invent an answer:
 
 ```
   Atlas comparison
     not comparable left side: coverage status is 'not computed (no atlas available)'
-    Coverage is withheld rather than estimated when records did not land on the atlas.
 ```
 
-That happens when either side's coverage was suppressed or never computed, and
-when the two fingerprints were built against different atlas versions, where the
-region ids do not refer to the same regions. The exit code is 0 in every case
-above, including this one. A missing or unreadable fingerprint file is a usage
-error and exits 2.
+That happens when a side's coverage was never computed, when the two fingerprints
+were built against different atlas versions, where the region ids do not refer to
+the same regions, and when a fingerprint predates 0.1.4 and had its histogram
+discarded by the old suppression rule — re-scanning fixes that one. The exit code
+is 0 in every case above, including this one. A missing or unreadable fingerprint
+file is a usage error and exits 2.
 
 ## `dropoutt init [PATH]`
 

@@ -24,9 +24,11 @@ from typing import Any
 #: `total_chars` and a hardcoded 0 words. 0.1.2 added the full `region_counts`
 #: histogram. 0.1.3 makes `content_hash` cover normalized record content and
 #: structure rather than only file sizes and record counts, and hashes the
-#: effective CLI configuration. Fingerprints from earlier versions describe
-#: something different and must not collide.
-PIPELINE_VERSION = "0.1.3"
+#: effective CLI configuration. 0.1.4 stops discarding the coverage facet above a
+#: 10% off-atlas rate and counts `by_category` over placed records only, so both
+#: the presence and the denominator of that facet changed. Fingerprints from
+#: earlier versions describe something different and must not collide.
+PIPELINE_VERSION = "0.1.4"
 FINGERPRINT_SCHEMA_VERSION = "fp-v0.1"
 
 

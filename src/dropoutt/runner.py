@@ -198,7 +198,16 @@ def scan(
                     # rate with records that were never placeable. The count of
                     # exclusions is reported, not hidden.
                     if len(doc.text) >= ATLAS_MIN_CHARS:
-                        atlas_sample.append((doc.text[:2000], doc.meta.get(F_LANG) or "unknown"))
+                        # The embedder sees the first 2000 characters; the length
+                        # kept here is the record's real one, because the
+                        # off-atlas attribution is a statement about the data,
+                        # not about what was fed to the model.
+                        atlas_sample.append((
+                            doc.text[:2000],
+                            doc.meta.get(F_LANG) or "unknown",
+                            ds.name,
+                            len(doc.text),
+                        ))
                     else:
                         ctx.stats["atlas_too_short"] = ctx.stats.get("atlas_too_short", 0) + 1
             for check in active:
@@ -349,7 +358,11 @@ def _compute_features(doc: Document, ctx: ScanContext) -> None:
 
 
 def _compute_coverage(
-    ctx: ScanContext, sample: list[tuple[str, str]], *, offline: bool = False
+    ctx: ScanContext,
+    sample: list[tuple[str, str, str, int]],
+    *,
+    offline: bool = False,
+    keep_examples: bool = True,
 ) -> None:
     """Place a sample of records on the atlas and build the coverage report.
 
@@ -372,18 +385,43 @@ def _compute_coverage(
         )
         return
 
-    texts = [t for t, _ in sample]
-    langs = [lang for _, lang in sample]
+    texts = [row[0] for row in sample]
+    langs = [row[1] for row in sample]
+    datasets = [row[2] for row in sample]
+    lengths = [row[3] for row in sample]
     try:
         emb = embedder.encode(texts)
-        regions, _scores = ctx.atlas.assign(emb)
+        regions, scores, nearest = ctx.atlas.assign_full(emb)
         categories = ctx.atlas.categorize(emb)
     except Exception as exc:  # noqa: BLE001
         ctx.degraded(f"atlas assignment failed: {type(exc).__name__}")
         return
 
-    coverage = ctx.atlas.coverage(regions, categories, langs)
+    coverage = ctx.atlas.coverage(
+        regions, categories, langs,
+        scores=scores, nearest=nearest, embeddings=emb,
+        lengths=lengths, datasets=datasets,
+    )
     coverage["sampled_records"] = len(texts)
+
+    # Excerpts of the furthest off-atlas records, kept out of the coverage facet
+    # on purpose. The facet is copied verbatim into fingerprint.json, which is
+    # the artifact meant to be shareable, and record text is exactly what does
+    # not belong there. The report reads these from ctx.stats instead.
+    if keep_examples:
+        off_idx = [i for i, r in enumerate(regions) if r < 0]
+        off_idx.sort(key=lambda i: float(scores[i]))
+        ctx.stats["atlas_off_examples"] = [
+            {
+                "score": round(float(scores[i]), 4),
+                "chars": lengths[i],
+                "dataset": datasets[i],
+                "language": langs[i],
+                "nearest_region": int(nearest[i]),
+                "excerpt": texts[i][:160],
+            }
+            for i in off_idx[:5]
+        ]
     too_short = ctx.stats.get("atlas_too_short", 0)
     if too_short:
         coverage["excluded_too_short"] = too_short

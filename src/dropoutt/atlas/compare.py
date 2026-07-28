@@ -6,10 +6,14 @@ something actually puts them side by side, which is what this module is for.
 
 Two rules are enforced here rather than left to callers.
 
-**Suppressed coverage stays suppressed.** If either side of a comparison had too
-many off-atlas records, its region histogram describes records that did not
-really land anywhere. Comparing against it would manufacture a precise-looking
-answer out of two unreliable ones, so the comparison refuses instead.
+**Off-atlas mass is carried, not used as grounds for refusing.** Every number
+here is computed over the records each side actually placed, and both placed
+counts travel with the result so the reader always knows the denominator. A high
+off-atlas rate on the *right* side biases novelty in one direction and only one:
+regions the right side appears not to reach may in fact be reached by records it
+could not place, so `added_mass` is an upper bound on what the left side adds.
+That bound is reported. Refusing to compare, which is what this module did before
+0.1.4, told the user less than the bound does.
 
 **Nothing here ranks datasets.** `added_mass` says what share of A sits in
 regions B does not reach. Whether that is good depends on what you are training,
@@ -102,8 +106,33 @@ def concentration(coverage: dict[str, Any]) -> float | None:
 
 
 def is_usable(coverage: dict[str, Any] | None) -> bool:
-    """Whether a coverage facet carries a histogram worth comparing."""
-    return bool(coverage) and coverage.get("status") == "ok"
+    """Whether a coverage facet carries a histogram worth comparing.
+
+    A high off-atlas rate does not make a facet unusable; it makes it partial,
+    which `placed_share` quantifies and the comparison reports. The only genuinely
+    unusable cases are an absent facet, one from a scan where nothing was placed,
+    and one written by a version that suppressed the histogram outright.
+    """
+    if not coverage or coverage.get("status") != "ok":
+        return False
+    return bool(coverage.get("region_counts") or coverage.get("top_regions"))
+
+
+def placed_share(coverage: dict[str, Any] | None) -> float:
+    """Share of the sampled records this facet's histogram is built from.
+
+    1.0 when everything placed. The complement is the off-atlas rate, and it is
+    the factor by which a comparison against this side is partial.
+    """
+    if not coverage:
+        return 0.0
+    records = int(coverage.get("records", 0))
+    if records <= 0:
+        return 0.0
+    placed = coverage.get("placed")
+    if placed is None:
+        placed = records - int(coverage.get("off_atlas", 0))
+    return max(0.0, min(1.0, int(placed) / records))
 
 
 def unusable_reason(coverage: dict[str, Any] | None) -> str:
@@ -111,9 +140,22 @@ def unusable_reason(coverage: dict[str, Any] | None) -> str:
         return "no atlas coverage was computed"
     status = coverage.get("status")
     if status == "suppressed":
-        return str(coverage.get("reason") or "coverage was suppressed")
+        # Written by 0.1.3 or earlier, which discarded the histogram above a 10%
+        # off-atlas rate. The stored reason survived and carries the rate that
+        # caused it, so it is repeated rather than replaced; the histogram did
+        # not survive, so re-scanning is the only fix.
+        stored = str(coverage.get("reason") or "coverage was suppressed")
+        return (
+            f"{stored.rstrip('. ')}. That was written by a dropoutt before 0.1.4, "
+            f"which discarded the region histogram instead of describing the "
+            f"off-atlas records. Re-run `dropoutt scan` to get a comparable fingerprint"
+        )
+    if status == "none placed":
+        return "no records were placed on the atlas, so there is no histogram"
     if status == "no records":
-        return "no records were placed on the atlas"
+        return "no records reached the atlas"
+    if status == "ok":
+        return "coverage carries no region histogram"
     return f"coverage status is {status!r}"
 
 
@@ -136,6 +178,19 @@ class Comparison:
     a_head_coverage: float = 0.0
     b_head_coverage: float = 0.0
     category_shift: list[tuple[int, str, float, float]] = field(default_factory=list)
+    #: Share of each side's sampled records that placed at all. Every mass above
+    #: is a share of these, not of the whole corpus.
+    a_placed_share: float = 1.0
+    b_placed_share: float = 1.0
+    #: The same shared/added split rescaled onto *all* of A's sampled records
+    #: rather than only the placed ones. These two plus `a_unplaced` sum to 1 by
+    #: construction, which `shared_mass` and `added_mass` do not.
+    shared_of_all: float = 0.0
+    added_of_all: float = 0.0
+    a_unplaced: float = 0.0
+    #: Set when either side placed little enough that the numbers need reading
+    #: with a stated bias rather than at face value.
+    caveats: list[str] = field(default_factory=list)
 
 
 def compare(a: dict[str, Any] | None, b: dict[str, Any] | None) -> Comparison:
@@ -160,6 +215,8 @@ def compare(a: dict[str, Any] | None, b: dict[str, Any] | None) -> Comparison:
     ma, mb = region_mass(a), region_mass(b)
     if not ma or not mb:
         return Comparison(False, "no region histogram was stored on one side")
+
+    placed_a, placed_b = placed_share(a), placed_share(b)
 
     terms = {**region_terms(b), **region_terms(a)}
     shared_keys = set(ma) & set(mb)
@@ -203,7 +260,43 @@ def compare(a: dict[str, Any] | None, b: dict[str, Any] | None) -> Comparison:
         a_head_coverage=_head_coverage(a),
         b_head_coverage=_head_coverage(b),
         category_shift=shift,
+        a_placed_share=placed_a,
+        b_placed_share=placed_b,
+        # A three-way partition of everything the left side sampled. Off-atlas is
+        # deliberately kept out of the *similarity* — it is the complement of the
+        # atlas, an undifferentiated set, and two corpora that are off-atlas in
+        # orthogonal directions would score near-identical if it were carried as
+        # a shared coordinate. It is safe as a mass term and misleading as a
+        # dimension.
+        shared_of_all=shared_mass * placed_a,
+        added_of_all=added_mass * placed_a,
+        a_unplaced=1.0 - placed_a,
+        caveats=_caveats(placed_a, placed_b, added_mass),
     )
+
+
+def _caveats(placed_a: float, placed_b: float, added_mass: float) -> list[str]:
+    """What an incomplete side does to the numbers, and in which direction.
+
+    Stated as a bound rather than a warning, because "treat this with caution"
+    tells the reader nothing they can act on. The two sides bias different
+    quantities, so they get separate sentences.
+    """
+    from .apply import OFF_ATLAS_NOTABLE  # noqa: PLC0415
+
+    out: list[str] = []
+    if placed_b < 1 - OFF_ATLAS_NOTABLE:
+        out.append(
+            f"the right side placed only {placed_b:.0%} of its records, so regions it "
+            f"appears not to reach may be reached by records it could not place. "
+            f"Read {added_mass:.0%} new as an upper bound"
+        )
+    if placed_a < 1 - OFF_ATLAS_NOTABLE:
+        out.append(
+            f"the left side placed only {placed_a:.0%} of its records, so these shares "
+            f"describe that {placed_a:.0%} and say nothing about the rest"
+        )
+    return out
 
 
 def _head_coverage(coverage: dict[str, Any]) -> float:

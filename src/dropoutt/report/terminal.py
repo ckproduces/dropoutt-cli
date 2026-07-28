@@ -133,7 +133,12 @@ def render(
             console.print(f"    [dim]{_m(note)}[/dim]")
 
     # -- atlas coverage --------------------------------------------------
-    _render_coverage(console, ctx.stats.get("atlas_coverage"))
+    _render_coverage(
+        console,
+        ctx.stats.get("atlas_coverage"),
+        ctx.stats.get("atlas_off_examples"),
+        show_evidence=show_evidence,
+    )
 
     # -- skipped ---------------------------------------------------------
     if result.skipped:
@@ -170,13 +175,21 @@ def render(
     console.print()
 
 
-def _render_coverage(console: Console, cov: dict | None) -> None:
-    """Where this corpus sits on the atlas.
+def _render_coverage(
+    console: Console,
+    cov: dict | None,
+    examples: list[dict] | None = None,
+    *,
+    show_evidence: bool = True,
+) -> None:
+    """Where this corpus sits on the atlas, and what failed to sit anywhere.
 
     Printed with the atlas's own accuracy numbers beside it, because a coverage
     histogram built on a weak taxonomy probe looks exactly as precise as one
-    built on a strong probe. Suppressed coverage prints the reason instead of the
-    numbers.
+    built on a strong probe.
+
+    Every share here is over *placed* records, and the placed count is printed
+    next to the heading so the denominator is never implied.
     """
     from ..atlas.compare import category_names, concentration
 
@@ -186,44 +199,138 @@ def _render_coverage(console: Console, cov: dict | None) -> None:
     console.print()
     console.print(f"  [bold]Atlas coverage[/bold] [dim]({_m(cov.get('atlas_version', '?'))})[/dim]")
 
-    if cov.get("status") != "ok":
+    status = cov.get("status")
+    if status not in ("ok", "suppressed", "none placed"):
         from ..atlas.compare import unusable_reason
 
-        console.print(f"    [yellow]withheld[/yellow] [dim]{_m(unusable_reason(cov))}[/dim]")
+        console.print(f"    [dim]{_m(unusable_reason(cov))}[/dim]")
         return
 
-    occupied = cov.get("regions_occupied", 0)
-    total = cov.get("regions_total", 0)
-    conc = concentration(cov)
-    console.print(f"    Regions      {occupied} of {total} occupied")
-    if conc is not None:
-        shape = "specialised" if conc < 0.45 else ("broad" if conc > 0.75 else "mixed")
-        console.print(f"    Spread       {conc:.0%} of even coverage  [dim]({shape})[/dim]")
-    console.print(f"    Off-atlas    {cov.get('off_atlas_rate', 0):.1%}")
+    records = int(cov.get("records", 0))
+    placed_n = int(cov.get("placed", records - int(cov.get("off_atlas", 0))))
+    off_rate = float(cov.get("off_atlas_rate", 0.0))
 
-    names = category_names()
-    raw = cov.get("by_category") or {}
-    placed = sum(int(v) for v in raw.values()) or 1
-    ranked = sorted(raw.items(), key=lambda kv: -int(kv[1]))[:5]
-    if ranked:
-        console.print("    [dim]Top categories[/dim]")
-        for cid, n in ranked:
-            key = names.get(int(cid), f"category {cid}")
-            console.print(f"      {_m(f'{key:<22}')} {int(n) / placed:>5.0%}")
+    if status == "ok":
+        occupied = cov.get("regions_occupied", 0)
+        total = cov.get("regions_total", 0)
+        conc = concentration(cov)
+        console.print(f"    Placed       {placed_n:,} of {records:,} sampled records "
+                      f"[dim](shares below are over these {placed_n:,})[/dim]")
+        console.print(f"    Regions      {occupied} of {total} occupied")
+        if conc is not None:
+            shape = "specialised" if conc < 0.45 else ("broad" if conc > 0.75 else "mixed")
+            console.print(f"    Spread       {conc:.0%} of even coverage  [dim]({shape})[/dim]")
 
-    tops = (cov.get("top_regions") or [])[:5]
-    if tops:
-        console.print("    [dim]Top regions[/dim]")
-        for r in tops:
-            label = str(r.get("terms", ""))
-            console.print(f"      {int(r['region']):>3}  {int(r['records']):>6,}  "
-                          f"[dim]{_m(label)}[/dim]")
+        names = category_names()
+        raw = cov.get("by_category") or {}
+        denom = sum(int(v) for v in raw.values()) or 1
+        ranked = sorted(raw.items(), key=lambda kv: -int(kv[1]))[:5]
+        if ranked:
+            console.print("    [dim]Top categories[/dim]")
+            for cid, n in ranked:
+                key = names.get(int(cid), f"category {cid}")
+                console.print(f"      {_m(f'{key:<22}')} {int(n) / denom:>5.0%}")
+
+        tops = (cov.get("top_regions") or [])[:5]
+        if tops:
+            console.print("    [dim]Top regions[/dim]")
+            for r in tops:
+                label = str(r.get("terms", ""))
+                console.print(f"      {int(r['region']):>3}  {int(r['records']):>6,}  "
+                              f"[dim]{_m(label)}[/dim]")
+
+    _render_off_atlas(console, cov, examples, show_evidence=show_evidence)
 
     acc = cov.get("l0_holdout_accuracy")
-    if acc is not None:
+    if acc is not None and status == "ok":
         console.print(f"    [dim]category labels are approximate: level-0 probe accuracy "
                       f"{acc:.3f}; see docs/atlas.md[/dim]")
-    console.print("    [dim]Compare two datasets with `dropoutt diff a.json b.json`[/dim]")
+    if status == "ok":
+        console.print("    [dim]Compare two datasets with `dropoutt diff a.json b.json`[/dim]")
+
+
+#: How the off-atlas heading reads at each fit band. "poor" does not mean the
+#: data is poor; it means the atlas describes little of it.
+_FIT_NOTE = {
+    "good": "the atlas covers this corpus",
+    "partial": "the atlas covers most of this corpus",
+    "poor": "the atlas covers a minority of this corpus",
+}
+
+
+def _render_off_atlas(
+    console: Console,
+    cov: dict,
+    examples: list[dict] | None,
+    *,
+    show_evidence: bool = True,
+) -> None:
+    """Describe the records that did not land anywhere.
+
+    This used to be the point where the whole panel was replaced by a sentence
+    explaining that it had been withheld. The records that fail to place are the
+    most informative thing an ill-fitting atlas produces, and the scan already
+    knows what they are.
+    """
+    off = int(cov.get("off_atlas", 0))
+    records = int(cov.get("records", 0)) or 1
+    if not off:
+        console.print("    Off-atlas    none")
+        return
+
+    rate = float(cov.get("off_atlas_rate", off / records))
+    fit = str(cov.get("fit", ""))
+    note = _FIT_NOTE.get(fit, "")
+    tag = "yellow" if fit == "partial" else ("red" if fit == "poor" else "dim")
+    console.print(f"    Off-atlas    [{tag}]{rate:.1%}[/{tag}]  {off:,} records "
+                  f"[dim]({note})[/dim]")
+
+    detail = cov.get("off_atlas_detail") or {}
+    if not detail:
+        return
+
+    diagnosis = str(detail.get("diagnosis", ""))
+    if diagnosis:
+        console.print(f"      [dim]Why:[/dim] {_m(diagnosis)}")
+
+    score = detail.get("score") or {}
+    if score.get("off_median") is not None:
+        placed_med = score.get("placed_median")
+        line = (f"      [dim]Distance    off-atlas median {score['off_median']:.2f}"
+                f" similarity, cutoff {score.get('cutoff', 0):.2f}")
+        if placed_med is not None:
+            line += f", placed median {placed_med:.2f}"
+        console.print(line + "[/dim]")
+
+    near = detail.get("nearest_regions") or []
+    if near:
+        spread = detail.get("nearest_region_spread")
+        extra = f", spread over {spread} regions" if spread else ""
+        console.print(f"      [dim]Nearest regions despite missing the cutoff{extra}[/dim]")
+        for r in near[:3]:
+            console.print(f"        {int(r['region']):>3}  {int(r['records']):>6,}  "
+                          f"[dim]{_m(str(r.get('terms', '')))}[/dim]")
+
+    for key, label in (("by_dataset", "dataset"), ("by_language", "language")):
+        groups = detail.get(key) or {}
+        if len(groups) < 2:
+            continue
+        # Ranked by the rate within each group, not by how many off-atlas
+        # records it contributes. The largest group contributes the most simply
+        # by being largest; the rate is what identifies the group responsible.
+        ranked = sorted(groups.items(), key=lambda kv: -kv[1]["rate"])[:3]
+        console.print(f"      [dim]Off-atlas rate by {label}[/dim]")
+        for name, st in ranked:
+            console.print(f"        {_m(f'{str(name)[:22]:<22}')} {st['rate']:>5.0%} "
+                          f"[dim]({int(st['off_atlas']):,} of "
+                          f"{int(st['records']):,} records)[/dim]")
+
+    if show_evidence and examples:
+        console.print("      [dim]Furthest from the atlas[/dim]")
+        for ex in examples[:3]:
+            excerpt = str(ex.get("excerpt", "")).replace("\n", " ")[:64]
+            console.print(f"        {float(ex.get('score', 0)):.2f}  "
+                          f"[dim]{_m(excerpt)}[/dim]")
 
 
 def _finding_order(f: Finding) -> tuple[int, str]:

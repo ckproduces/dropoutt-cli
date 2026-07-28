@@ -1,5 +1,76 @@
 # Changelog
 
+## 0.1.4
+
+An off-atlas rate above 10% used to discard the entire coverage report and print
+a sentence in its place:
+
+```
+    withheld 15% of records are off-atlas, above the 10% threshold. This atlas
+    does not fit this corpus, so coverage numbers would be misleading and have
+    been withheld.
+```
+
+That was wrong twice over. Off-atlas records are filtered out of the region
+histogram *before* it is counted, so the histogram was never contaminated by them
+and withholding it discarded a measurement that was correct for every record it
+covered. And the off-atlas set is the most useful thing the atlas produces on a
+corpus that does not fit it — it is a list of the records unlike anything in the
+reference corpus — which the scan already knew and then threw away.
+
+### Changed
+
+- **Coverage is never withheld.** The histogram is reported whenever anything
+  placed. Every share is over the **placed** records and the placed count is
+  printed beside it, so the denominator is never implied. The only remaining
+  no-numbers case is `none placed`, where the numbers genuinely do not exist.
+- **Fit is graded, not passed or failed**: `good` at or below 10% off-atlas,
+  `partial` to 35%, `poor` above. The underlying quantity is continuous and a
+  corpus at 10.1% is not meaningfully different from one at 9.9%. Ten percent is
+  five times the 2% an atlas-distributed corpus sits at by construction, since the
+  cutoff is the 2nd percentile of the atlas's own reference records.
+- **`dropoutt diff` no longer refuses a corpus with a high off-atlas rate.** It
+  prints both placed shares and states which way the bias runs: a partial *right*
+  side means regions it appears not to reach may be reached by records it could
+  not place, so `New` is an upper bound. It still refuses across atlas versions,
+  and for fingerprints written before this release whose histogram is already gone.
+
+### Added
+
+- **Off-atlas records are described rather than counted.** The report gives the
+  similarity distribution against the cutoff, the regions they were nearest to
+  anyway, the rate broken down by language and by dataset, the furthest excerpts,
+  and a one-line reason.
+- **The reason is attributed in measured order.** Similarity to a region rises
+  steeply with record length: the same English paragraph scores **0.363 truncated
+  to 20 characters and 0.787 at 2000**, landing in the same region throughout;
+  across a real corpus the correlation between log length and similarity is about
+  **0.49**, and the off-atlas rate falls from **33% under 80 characters to 0% above
+  150**. So length is tested first, then whether the off-atlas set is *coherent*
+  (mean pairwise cosine higher than the placed set, which means a real subject
+  area the atlas lacks) rather than scattered, then concentration in one dataset
+  or language, then whether they are simply near misses at the threshold.
+- `Atlas.assign_full` returns the nearest region alongside the placement.
+  `assign` computed it and threw it away, which cost the caller the one thing that
+  makes an off-atlas record legible.
+
+### Fixed
+
+- **`by_category` counted every record while `region_counts` counted only placed
+  ones**, putting two denominators in the same panel so a category share and a
+  region share could not be read against each other. Both are now over placed
+  records.
+- Off-atlas excerpts are kept out of `fingerprint.json`, which is the artifact
+  meant to be shareable, and respect `--no-evidence`.
+- `docs/atlas.md` described a "33-word stoplist" for region labels. The literal
+  has 38 entries and **only 16 of them do anything**: the other 22 are three
+  characters or fewer and were already dropped by the length filter one step
+  earlier. The labels also use the first 150 members in corpus order, not a
+  random sample, which the docs did not say.
+
+`PIPELINE_VERSION` is bumped because both the presence and the denominator of the
+coverage facet changed.
+
 ## 0.1.3
 
 ### Fixed

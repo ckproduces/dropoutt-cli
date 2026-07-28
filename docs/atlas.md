@@ -80,7 +80,8 @@ dropoutt scan ./my-corpus
 | --- | --- |
 | Regions occupied | how much of the map this corpus touches at all |
 | Spread | region entropy against the entropy of a corpus spread evenly. Low is not bad: a specialised corpus *should* be concentrated, and a pretraining mixture should not be. |
-| Off-atlas | records too far from every centroid to place. Above 10% the numbers are withheld. |
+| Placed | how many sampled records landed on the atlas. Every share below is over these. |
+| Off-atlas | the rest: records too far from every centroid to place. Described, never grounds for withholding the rest. |
 
 `--no-atlas` skips it. If it never appears, run `dropoutt doctor` — coverage
 needs the `atlas` extra.
@@ -125,9 +126,22 @@ cross-dataset overlap is. A small specialised corpus can sit wholly inside a
 large one while the large one is barely inside it; a symmetric score hides
 exactly the case worth acting on. Swap the arguments to ask the other question.
 
-**It refuses rather than guesses.** If either side had coverage suppressed, or
-the two fingerprints were computed against different atlas versions, `diff`
-says so and stops. Region ids only mean something within one atlas.
+**A partial side is carried, not refused.** Every number is over the records each
+side actually placed, and both placed shares are printed. A high off-atlas rate on
+the **right** side biases novelty in one direction only: regions the right side
+appears not to reach may in fact be reached by records it could not place, so the
+`New` figure is an upper bound. `diff` says so rather than refusing:
+
+```
+  note the right side placed only 62% of its records, so regions it appears not
+  to reach may be reached by records it could not place. Read 81% new as an
+  upper bound
+```
+
+It still refuses in two cases: when the two fingerprints were computed against
+different atlas versions, where region ids do not refer to the same regions, and
+when one fingerprint was written before 0.1.4 with its histogram already
+discarded. Re-scanning fixes the second.
 
 **It does not rank datasets.** `New 62%` is geometry. Whether new coverage helps
 depends on what you are training, which the tool does not know.
@@ -169,9 +183,14 @@ work.
 
 ### Where the labels come from
 
-After clustering, up to 150 member records per region are word-counted, words of
-three characters or fewer are dropped, a 33-word English and Turkish stoplist is
-applied, and the five most frequent survivors become the label.
+After clustering, the **first 150 members in corpus order** — not a random 150 —
+are word-counted, non-letters are stripped from inside each word, words of three
+characters or fewer are dropped, an English and Turkish stoplist is applied, and
+the five most frequent survivors become the label.
+
+The stoplist has 38 entries but **only 16 of them do anything**: the other 22
+(`the`, `and`, `bir`, `ve`, `bu`, …) are three characters or fewer and were
+already removed by the length filter one step earlier.
 
 ### Why they read like random words
 
@@ -179,10 +198,10 @@ Because that method is weak, and measurably so. Three defects compound:
 
 **No inverse-document weighting.** Frequency is counted within a region, not
 against the other regions, so a word that is common *everywhere* still floats to
-the top. Only a 33-word stoplist holds it back. `their` appears as a label word
-in **33 of 258 regions**, `they` in 21, `about` in 18. Across the whole atlas,
-**22% of label slots are filled by a word that appears in at least 8 regions** —
-words that by construction cannot distinguish anything.
+the top. Only those 16 effective stopwords hold it back. `their` appears as a
+label word in **33 of 258 regions**, `they` in 21, `about` in 18. Across the whole
+atlas, **21.6% of the 1,290 label slots are filled by a word that appears in at
+least 8 regions** — words that by construction cannot distinguish anything.
 
 **No lemmatisation, and Turkish is agglutinative.** Inflections of one stem are
 counted as separate words and eat multiple slots. **21% of regions spend two or
@@ -290,16 +309,88 @@ short-form instruction corpus this can be most of the records, and that is worth
 knowing rather than hiding: it means coverage describes the long tail of your
 data, not all of it.
 
-## Off-atlas data, and when coverage is withheld
+## Off-atlas data
 
-If a corpus consists of text the reference corpus contains nothing like, every
-record collapses into one or two distant bins and the coverage numbers become
-meaningless.
+A record is **off-atlas** when its cosine similarity to the nearest centroid
+falls below a threshold calibrated at build time, currently 0.392. Those records
+are excluded from the region histogram and the category counts, so every share
+the report prints is a share of the **placed** records, and the placed count is
+printed beside it.
 
-So the atlas reports an **off-atlas rate**: the share of records whose cosine
-similarity to their nearest centroid falls below a threshold calibrated at build
-time. Above 10%, coverage numbers are **suppressed rather than displayed**, with
-the reason stated.
+Until 0.1.4, an off-atlas rate above 10% discarded the whole coverage report and
+printed a sentence saying the numbers had been withheld. That was wrong twice
+over. The histogram never contained off-atlas records to begin with — they are
+filtered out before counting — so withholding it threw away a measurement that
+was correct for every record it covered. And the off-atlas set is the most useful
+thing the atlas produces on a corpus that does not fit it: it is a list of the
+records unlike anything in the reference corpus.
+
+So the report describes them instead:
+
+```
+    Off-atlas    11.0%  44 records (the atlas covers most of this corpus)
+      Why: mostly short records: the off-atlas half has a median of 120
+      characters against 363 for the placed half. Similarity to a region rises
+      with length, so short records read as off-atlas whatever they are about
+      Distance    off-atlas median 0.27 similarity, cutoff 0.39, placed median 0.59
+      Nearest regions despite missing the cutoff, spread over 17 regions
+         13       7  cümle, entryway, bench, kimya, önemli
+          9       5  cevap, frac, şimdi, adım, equation
+      Off-atlas rate by language
+        unknown                  39% (18 of 46 records)
+        tr                        8% (19 of 235 records)
+      Furthest from the atlas
+        0.11  N/A no yes N/A N/A no yes N/A N/A no yes N/A N/A no yes N/A
+```
+
+The fit is graded rather than passed or failed, because the underlying quantity
+is continuous and a corpus at 10.1% is not meaningfully different from one at
+9.9%:
+
+| rate | fit | what it means |
+| --- | --- | --- |
+| ≤ 10% | good | the atlas covers this corpus |
+| 10–35% | partial | the atlas covers most of this corpus |
+| > 35% | poor | the atlas covers a minority of this corpus |
+
+Ten percent is not arbitrary. The cutoff was set at the 2nd percentile of the
+atlas's own reference records, so a corpus drawn from the same distribution as
+the atlas sits near 2%. Ten percent is five times that.
+
+### Read the off-atlas rate as length first
+
+This is measured, not assumed. Similarity to the nearest centroid rises steeply
+with record length. The same English paragraph scores **0.363 truncated to 20
+characters and 0.787 at 2000**, landing in the same region throughout. Across a
+real corpus the correlation between log length and similarity is about **0.49**,
+and the off-atlas rate falls from **33% for records under 80 characters to 0%
+above 150**.
+
+A high off-atlas rate is therefore a statement about record length first,
+language second, and topic only third. The `Why:` line attributes it in that
+order rather than letting you assume the third. The causes it distinguishes:
+
+| diagnosis | how it is decided |
+| --- | --- |
+| mostly short records | off-atlas median length below 60% of the placed median |
+| one coherent group the atlas does not cover | mean pairwise cosine inside the off-atlas set exceeds the placed set by 0.05 |
+| concentrated in one dataset or language | one group holds ≥ 60% of the off-atlas records |
+| near misses | ≥ 50% of them sit within 0.05 of the cutoff, so it is a threshold effect |
+| scattered | none of the above: usually filler, boilerplate or markup rather than a missing topic |
+
+The coherence test separates the two cases worth acting on. Records that resemble
+**each other** more than the placed records do are a real subject area missing
+from the reference corpus. Records that resemble nothing, including each other,
+are junk.
+
+### What off-atlas does not mean
+
+It is not a quality score, and it does not run in the direction you might guess.
+Measured against this atlas: a base64 blob scores **0.441 and places on-atlas**,
+in a region of Turkish history. A string of nothing but the letter A scores
+**0.538**. A real Turkish sentence about training data scores **0.315 and goes
+off-atlas**. The cutoff separates *typical* from *atypical*, not *good* from
+*bad*, and short or non-English text is atypical whatever it says.
 
 The rate is reported **per language as well as globally**. For a language the
 embedding model represents poorly, topical assignment is unreliable no matter how
