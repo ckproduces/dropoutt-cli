@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.2.0
+
+Publish polish: atlas report storytelling, scan speed, packaging.
+
+### Atlas report
+
+Coverage panels (terminal + HTML) lead with what the atlas is for: what you
+cover, what you miss, and what sits off the map. User excerpts name regions
+before atlas captions; missing subject areas and off-map diagnosis are
+promoted; short-record exclusions and region cohesion appear when relevant.
+
+### Scan performance
+
+- Reuse the CLI discovery walk (no second filesystem scan).
+- Parallel layout induction across datasets (thread pool).
+- Chunked MinHash for long documents; one-pass surface features; batched
+  content hashing.
+
+### Packaging
+
+- `py.typed`, Beta / OS-independent / Typing classifiers, sdist includes,
+  GitHub Actions CI on Linux / macOS / Windows.
+- Windows cache under `%LOCALAPPDATA%\dropoutt`.
+- README rewritten with a full check-code catalog.
+
 ## 0.1.5
 
 Three things, all of which came out of running the tool on real data and not

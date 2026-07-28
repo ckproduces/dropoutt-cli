@@ -6,16 +6,24 @@ access at run time, or a specific Python patch version.
 
 ## Installing
 
-The package is not on PyPI. Install it from the checkout:
+Install from the checkout (or a built wheel):
 
 ```bash
 python3 -m venv .venv
+# Unix / macOS
 .venv/bin/pip install -e '.[all]'
+# Windows
+.venv\Scripts\pip install -e ".[all]"
 ```
 
 If the login node cannot build some of the optional wheels, drop `[all]` and add
 extras one at a time. `dropoutt doctor` reports what is missing and what its
 absence costs.
+
+Cache directory (tokenizers, atlas embedder): `DROPOUTT_CACHE`, else
+`XDG_CACHE_HOME/dropoutt`, else `%LOCALAPPDATA%\dropoutt` on Windows or
+`~/.cache/dropoutt` elsewhere. Falls back to the system temp directory when
+that location is not writable.
 
 ## Invoking it
 

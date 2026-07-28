@@ -28,7 +28,7 @@ Check it worked:
 ```
 
 ```
-0.1.3
+0.2.0
 ```
 
 Either activate the environment or use the full path. The rest of this document
@@ -78,7 +78,7 @@ dropoutt doctor
   model2vec              yes       atlas coverage
 
   cache: /Users/you/.cache/dropoutt
-  version: 0.1.3
+  version: 0.2.0
 ```
 
 Nothing here is required. A missing component removes checks; it never produces
