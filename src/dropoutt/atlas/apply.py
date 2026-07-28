@@ -64,10 +64,29 @@ OFF_ATLAS_HIGH = 0.35
 SHORT_RECORD_RATIO = 0.6
 
 #: Mean pairwise cosine inside the off-atlas set has to beat the placed set by
-#: this margin before it counts as one coherent thing rather than scattered
-#: leftovers. On a corpus whose off-atlas records were filler tokens the two came
-#: out at 0.383 against 0.434, i.e. scattered.
+#: this margin before it counts as one thing rather than scattered leftovers. On
+#: a corpus whose off-atlas records were random filler the two came out at 0.383
+#: against 0.434, i.e. scattered.
+#:
+#: High coherence means the records resemble each other and nothing more. It does
+#: *not* identify a missing subject area, and the wording must not imply that it
+#: does: measured against this atlas, minified JavaScript scores 0.969, HTML
+#: boilerplate 0.961, DNA 0.947, hex logs 0.875 and base64 0.871, against 0.277
+#: for real prose. A genuinely missing topic — Ottoman endowment-deed vocabulary
+#: — scores 0.886, squarely inside that range. Coherence cannot tell a subject
+#: from a template. The surface thresholds below are what separate those.
 COHERENCE_MARGIN = 0.05
+
+#: Machine formats are not written like prose, and this is what actually
+#: distinguishes them from a subject the atlas happens to lack. Measured shares
+#: over the same families: whitespace runs 0.158 for prose and 0.132 for the
+#: missing-topic case, against 0.000 for base64 and DNA, 0.037 for HTML and 0.041
+#: for minified JS. Non-letter characters run 0.048 for prose and 0.000 for the
+#: missing topic, against 0.191 for base64, 0.395 for minified JS and 0.556 for
+#: hex logs. Either test alone leaves a gap; together they caught all six machine
+#: formats and neither of the two prose cases.
+SURFACE_WHITESPACE_RATIO = 0.5
+SURFACE_NON_LETTER_MARGIN = 0.15
 
 
 @dataclass
@@ -174,6 +193,7 @@ class Atlas:
         embeddings: np.ndarray | None = None,
         lengths: list[int] | None = None,
         datasets: list[str] | None = None,
+        texts: list[str] | None = None,
     ) -> dict[str, Any]:
         """Build the coverage report.
 
@@ -222,6 +242,7 @@ class Atlas:
             result["off_atlas_detail"] = self._describe_off_atlas(
                 off_mask, scores=scores, nearest=nearest, embeddings=embeddings,
                 lengths=lengths, datasets=datasets, languages=languages,
+                texts=texts,
             )
 
         if placed == 0:
@@ -284,6 +305,7 @@ class Atlas:
         lengths: list[int] | None,
         datasets: list[str] | None,
         languages: list[str] | None,
+        texts: list[str] | None = None,
     ) -> dict[str, Any]:
         """Say what the off-atlas records are, not merely how many.
 
@@ -328,6 +350,22 @@ class Atlas:
             detail["coherence"] = {
                 "off": _mean_pairwise(emb[off_mask]),
                 "placed": _mean_pairwise(emb[on_mask]) if on_mask.sum() >= 2 else None,
+            }
+
+        if texts is not None and len(texts) == len(off_mask):
+            # Shares only, never the text. Whether a record is written like prose
+            # or like a machine format is the signal coherence cannot supply.
+            ws = np.array([_whitespace_share(t) for t in texts])
+            nl = np.array([_non_letter_share(t) for t in texts])
+            detail["surface"] = {
+                "off_whitespace": round(float(np.mean(ws[off_mask])), 4),
+                "placed_whitespace": (
+                    round(float(np.mean(ws[on_mask])), 4) if on_mask.any() else None
+                ),
+                "off_non_letter": round(float(np.mean(nl[off_mask])), 4),
+                "placed_non_letter": (
+                    round(float(np.mean(nl[on_mask])), 4) if on_mask.any() else None
+                ),
             }
 
         if nearest is not None:
@@ -378,6 +416,16 @@ def _fit_band(off_rate: float) -> str:
     return "poor"
 
 
+def _whitespace_share(text: str) -> float:
+    return sum(c.isspace() for c in text) / len(text) if text else 0.0
+
+
+def _non_letter_share(text: str) -> float:
+    if not text:
+        return 0.0
+    return sum(not (c.isalpha() or c.isspace()) for c in text) / len(text)
+
+
 def _mean_pairwise(vectors: np.ndarray) -> float:
     """Mean cosine between every pair of rows, for L2-normalised input.
 
@@ -401,6 +449,26 @@ def _diagnose(detail: dict[str, Any]) -> str:
     score, not by how interesting it would be. Length dominates, so it is tested
     first; a corpus of short records reads as off-atlas whatever it is about.
     """
+    # Surface first. A machine format is a more specific and more actionable
+    # answer than "short", and short base64 is not usefully described as short.
+    surface = detail.get("surface") or {}
+    off_ws, placed_ws = surface.get("off_whitespace"), surface.get("placed_whitespace")
+    off_nl, placed_nl = surface.get("off_non_letter"), surface.get("placed_non_letter")
+    if placed_ws is not None and placed_nl is not None:
+        thin = off_ws < placed_ws * SURFACE_WHITESPACE_RATIO
+        symbolic = off_nl > placed_nl + SURFACE_NON_LETTER_MARGIN
+        if thin or symbolic:
+            how = []
+            if thin:
+                how.append(f"{off_ws:.0%} whitespace against {placed_ws:.0%}")
+            if symbolic:
+                how.append(f"{off_nl:.0%} non-letter characters against {placed_nl:.0%}")
+            return (
+                f"not written like prose: {' and '.join(how)}. This is the profile of "
+                f"markup, minified code, encoded blobs or log lines rather than of a "
+                f"subject the atlas is missing"
+            )
+
     length = detail.get("length") or {}
     off_len = length.get("off_median_chars")
     placed_len = length.get("placed_median_chars")
@@ -418,11 +486,16 @@ def _diagnose(detail: dict[str, Any]) -> str:
         off_coh is not None and placed_coh is not None
         and off_coh > placed_coh + COHERENCE_MARGIN
     ):
+        # Deliberately stops at what was measured. An earlier version of this
+        # sentence called it "a real subject area missing from the reference
+        # corpus", which the measurements do not support: templated junk scores
+        # 0.87 to 0.97 here, above real prose at 0.28. Alike is all this means.
         return (
-            f"one coherent group the atlas does not cover: the off-atlas records "
-            f"resemble each other more ({off_coh:.2f} mean pairwise cosine) than the "
-            f"placed records do ({placed_coh:.2f}). This looks like a real subject "
-            f"area missing from the reference corpus"
+            f"one kind of thing, not scattered: the off-atlas records resemble each "
+            f"other closely ({off_coh:.2f} mean pairwise cosine against "
+            f"{placed_coh:.2f} for the placed records), and their surface looks like "
+            f"prose. That is consistent with a subject the atlas does not cover; the "
+            f"nearest-region words below are what tells you which subject"
         )
 
     for key, noun in (("by_dataset", "dataset"), ("by_language", "language")):

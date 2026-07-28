@@ -400,7 +400,7 @@ def _compute_coverage(
     coverage = ctx.atlas.coverage(
         regions, categories, langs,
         scores=scores, nearest=nearest, embeddings=emb,
-        lengths=lengths, datasets=datasets,
+        lengths=lengths, datasets=datasets, texts=texts,
     )
     coverage["sampled_records"] = len(texts)
 

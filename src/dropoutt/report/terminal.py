@@ -302,6 +302,18 @@ def _render_off_atlas(
             line += f", placed median {placed_med:.2f}"
         console.print(line + "[/dim]")
 
+    coh = detail.get("coherence") or {}
+    surf = detail.get("surface") or {}
+    if coh.get("off") is not None and coh.get("placed") is not None:
+        console.print(f"      [dim]Alike       {coh['off']:.2f} mean pairwise cosine "
+                      f"within the off-atlas set, {coh['placed']:.2f} within the "
+                      f"placed set[/dim]")
+    if surf.get("placed_whitespace") is not None:
+        console.print(f"      [dim]Surface     {surf['off_whitespace']:.0%} whitespace "
+                      f"and {surf['off_non_letter']:.0%} non-letter, against "
+                      f"{surf['placed_whitespace']:.0%} and "
+                      f"{surf['placed_non_letter']:.0%} placed[/dim]")
+
     near = detail.get("nearest_regions") or []
     if near:
         spread = detail.get("nearest_region_spread")

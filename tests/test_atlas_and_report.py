@@ -130,29 +130,72 @@ def test_off_atlas_records_are_described_not_merely_counted(tiny_atlas):
     assert "big" not in detail["by_dataset"]
 
 
-def test_coherent_off_atlas_set_is_diagnosed_as_a_gap_not_as_junk(tiny_atlas):
-    """Records alike to each other but unlike the atlas are a missing subject."""
+def _coherent_off_atlas_fixture(atlas):
+    """60 placed rows, plus 40 that are far from every centroid and near each other."""
     rng = np.random.default_rng(11)
-    placed = np.repeat(tiny_atlas.centroids[:6], 10, axis=0).astype(np.float32)
-    # One tight cluster far from every centroid: high internal coherence.
-    axis = -tiny_atlas.centroids[0].astype(np.float32)
+    placed = np.repeat(atlas.centroids[:6], 10, axis=0).astype(np.float32)
+    axis = -atlas.centroids[0].astype(np.float32)
     stray = (np.tile(axis, (40, 1))
-             + rng.normal(scale=0.01, size=(40, tiny_atlas.dim))).astype(np.float32)
-
+             + rng.normal(scale=0.01, size=(40, atlas.dim))).astype(np.float32)
     emb = np.vstack([placed, stray])
-    regions, scores, nearest = tiny_atlas.assign_full(emb)
+    regions, scores, nearest = atlas.assign_full(emb)
     assert (regions < 0).sum() == 40, "fixture must produce exactly the stray rows"
+    return emb, regions, scores, nearest
+
+
+def test_a_coherent_off_atlas_set_that_reads_as_prose_is_reported_as_one_thing(
+    tiny_atlas,
+):
+    """Alike plus prose-like surface is as far as the measurement goes.
+
+    The claim stops at "one kind of thing". It deliberately does not assert a
+    missing subject area, because coherence cannot support that — see the
+    template test below.
+    """
+    emb, regions, scores, nearest = _coherent_off_atlas_fixture(tiny_atlas)
+    prose = "the committee approved the proposal after a lengthy debate on funding "
 
     cov = tiny_atlas.coverage(
         regions, np.zeros(len(emb), dtype=np.int32), None,
         scores=scores, nearest=nearest, embeddings=emb,
-        # Equal lengths, so the length branch cannot fire and the coherence
-        # branch is what is under test.
-        lengths=[500] * len(emb),
+        # Equal lengths and identical surface on both sides, so only the
+        # coherence branch can fire.
+        lengths=[500] * len(emb), texts=[prose] * len(emb),
     )
     detail = cov["off_atlas_detail"]
     assert detail["coherence"]["off"] > detail["coherence"]["placed"]
-    assert "coherent group" in detail["diagnosis"]
+    assert "one kind of thing" in detail["diagnosis"]
+    assert "missing" not in detail["diagnosis"], (
+        "coherence does not identify a missing subject area; templates score higher "
+        "than prose on it"
+    )
+
+
+def test_a_coherent_off_atlas_set_of_machine_format_is_not_called_a_missing_topic(
+    tiny_atlas,
+):
+    """The regression this test exists for.
+
+    Minified JS scores 0.969 mean pairwise cosine against 0.277 for real prose,
+    so a coherence-only rule labels every template a missing subject area. The
+    surface test has to win over the coherence test.
+    """
+    emb, regions, scores, nearest = _coherent_off_atlas_fixture(tiny_atlas)
+    prose = "the committee approved the proposal after a lengthy debate on funding "
+    minified = "a.b.c=function(g){return h(g)};for(i=0;i<n;i++){e[i]=f}if(!c){d()}"
+
+    cov = tiny_atlas.coverage(
+        regions, np.zeros(len(emb), dtype=np.int32), None,
+        scores=scores, nearest=nearest, embeddings=emb,
+        lengths=[500] * len(emb),
+        texts=[prose] * 60 + [minified] * 40,
+    )
+    detail = cov["off_atlas_detail"]
+    # Still highly coherent, so the coherence branch would have fired.
+    assert detail["coherence"]["off"] > detail["coherence"]["placed"]
+    assert detail["surface"]["off_whitespace"] < detail["surface"]["placed_whitespace"]
+    assert "not written like prose" in detail["diagnosis"]
+    assert "one kind of thing" not in detail["diagnosis"]
 
 
 def test_mean_pairwise_matches_the_naive_matrix(tiny_atlas):
@@ -359,6 +402,39 @@ def test_fingerprint_omits_contamination_witness_paths():
     values = fp.facets["contamination"].values
     assert "witnesses" not in values["private-eval"]
     assert "/secret/eval.jsonl" not in json.dumps(fp.to_dict())
+
+
+def test_off_atlas_excerpts_never_reach_the_fingerprint(tiny_atlas):
+    """The fingerprint is the shareable artifact. Record text is not shareable.
+
+    Off-atlas excerpts are the one part of the new coverage output that is raw
+    corpus content, so they are held in scan stats and rendered from there rather
+    than being written into the coverage facet.
+    """
+    from dropoutt.context import ScanContext
+    from dropoutt.fingerprint import build as build_fingerprint
+    from dropoutt.models import Profile
+
+    ctx = ScanContext(root="/secret", profile=Profile.SFT)
+    ctx.atlas = tiny_atlas
+    ctx.stats["atlas_coverage"] = {
+        "status": "ok", "records": 10, "placed": 8, "off_atlas": 2,
+        "off_atlas_rate": 0.2, "fit": "partial",
+        "region_counts": {"1": 8},
+        "off_atlas_detail": {"diagnosis": "scattered", "score": {"off_median": 0.2}},
+    }
+    ctx.stats["atlas_off_examples"] = [
+        {"score": 0.11, "excerpt": "PROPRIETARY-CUSTOMER-TEXT", "chars": 40,
+         "dataset": "d", "language": "en", "nearest_region": 3},
+    ]
+
+    fp = build_fingerprint(ctx, [], total_chars=0, total_words=0)
+    dumped = json.dumps(fp.to_dict())
+
+    assert "PROPRIETARY-CUSTOMER-TEXT" not in dumped
+    assert "atlas_off_examples" not in dumped
+    # The statistics that describe those records must survive, though.
+    assert fp.facets["coverage"].values["off_atlas_detail"]["diagnosis"] == "scattered"
 
 
 def test_html_report_escapes_markup_from_the_corpus(tmp_path):

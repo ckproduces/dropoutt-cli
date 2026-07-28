@@ -372,16 +372,62 @@ order rather than letting you assume the third. The causes it distinguishes:
 
 | diagnosis | how it is decided |
 | --- | --- |
+| not written like prose | off-atlas whitespace share below half the placed share, or non-letter share more than 0.15 above it |
 | mostly short records | off-atlas median length below 60% of the placed median |
-| one coherent group the atlas does not cover | mean pairwise cosine inside the off-atlas set exceeds the placed set by 0.05 |
+| one kind of thing, not scattered | mean pairwise cosine inside the off-atlas set exceeds the placed set by 0.05, and the surface test did not fire |
 | concentrated in one dataset or language | one group holds ≥ 60% of the off-atlas records |
 | near misses | ≥ 50% of them sit within 0.05 of the cutoff, so it is a threshold effect |
-| scattered | none of the above: usually filler, boilerplate or markup rather than a missing topic |
+| scattered | none of the above |
 
-The coherence test separates the two cases worth acting on. Records that resemble
-**each other** more than the placed records do are a real subject area missing
-from the reference corpus. Records that resemble nothing, including each other,
-are junk.
+#### Why coherence alone is not enough
+
+Coherence — how much the off-atlas records resemble **each other** — sounds like
+it should identify a missing subject area. It does not, and the reason is
+measured. Against this atlas:
+
+| off-atlas set | coherence | what it is |
+| --- | --- | --- |
+| minified JavaScript | 0.969 | template |
+| HTML boilerplate | 0.961 | template |
+| DNA strings | 0.947 | template |
+| Ottoman endowment-deed vocabulary | 0.886 | **a genuinely missing topic** |
+| hex log lines | 0.875 | template |
+| base64 blobs | 0.871 | template |
+| real English prose | 0.277 | the baseline |
+
+Every machine format scores far above prose, and the one real missing topic sits
+in the middle of them. **High coherence means the records are alike and nothing
+more.**
+
+What separates them is how the text is written. Whitespace share runs 0.158 for
+prose and 0.132 for the missing-topic case, against 0.000 for base64 and DNA,
+0.037 for HTML and 0.041 for minified JavaScript. Non-letter share runs 0.048 for
+prose and 0.000 for the missing topic, against 0.191 for base64, 0.395 for
+minified JavaScript and 0.556 for hex logs. Either test alone leaves a gap;
+together they caught all six machine formats and neither prose case.
+
+So the report prints both numbers and says "not written like prose" when the
+surface test fires, and reserves the coherence reading for the case where the
+surface looks like prose. Even then it stops at what was measured and points at
+the nearest-region words, which are what actually name the subject.
+
+#### Off-atlas is not the garbage detector
+
+This is worth stating plainly, because the new output invites the opposite
+reading. Machine formats usually **place**, confidently and wrongly, rather than
+going off-atlas. On a corpus of 400 records where 100 were base64 blobs and
+minified JavaScript, the off-atlas count was **zero** — the blobs landed in
+regions labelled `return, denklemin, array, tdrow, function` and `data, should,
+technology, provide, their`.
+
+Those 100 records were caught, but by `T1-LANG-001` (language composition and
+detection confidence), which flagged exactly 100 of 400. The encoding and
+degeneracy checks are the instrument for junk. The atlas is a coordinate system,
+and a coordinate system will happily give nonsense a coordinate.
+
+The "not written like prose" diagnosis therefore fires only when machine-format
+records *also* happen to fall below the cutoff, which is a narrower case than it
+sounds. When it fires it is right; it is not a substitute for the checks.
 
 ### What off-atlas does not mean
 

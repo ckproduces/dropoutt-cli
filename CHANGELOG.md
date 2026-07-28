@@ -46,13 +46,38 @@ reference corpus — which the scan already knew and then threw away.
   to 20 characters and 0.787 at 2000**, landing in the same region throughout;
   across a real corpus the correlation between log length and similarity is about
   **0.49**, and the off-atlas rate falls from **33% under 80 characters to 0% above
-  150**. So length is tested first, then whether the off-atlas set is *coherent*
-  (mean pairwise cosine higher than the placed set, which means a real subject
-  area the atlas lacks) rather than scattered, then concentration in one dataset
-  or language, then whether they are simply near misses at the threshold.
+  150**.
+
+  The order of tests is: whether the records are written like prose at all, then
+  length, then whether the off-atlas set is *coherent* rather than scattered, then
+  concentration in one dataset or language, then whether they are simply near
+  misses at the threshold.
+
+  **Coherence deliberately does not claim a missing subject area.** It sounds like
+  it should, and the measurements say otherwise: minified JavaScript scores 0.969
+  mean pairwise cosine, HTML boilerplate 0.961, DNA 0.947, base64 0.871, against
+  **0.277 for real prose** — and a genuinely missing topic (Ottoman
+  endowment-deed vocabulary) scores 0.886, in the middle of the templates. High
+  coherence means the records are alike, full stop. What separates a template from
+  a subject is how the text is written, so the surface test runs first and the
+  coherence sentence stops at what was measured.
+- **Whitespace and non-letter share** of the off-atlas set against the placed set,
+  which is what actually distinguishes markup, minified code, encoded blobs and
+  log lines from a subject the atlas lacks. Measured shares: whitespace 0.158 for
+  prose and 0.132 for the missing-topic case, against 0.000 for base64 and DNA and
+  0.037 for HTML; non-letter 0.048 for prose and 0.000 for the missing topic,
+  against 0.191 for base64 and 0.556 for hex logs.
 - `Atlas.assign_full` returns the nearest region alongside the placement.
   `assign` computed it and threw it away, which cost the caller the one thing that
   makes an off-atlas record legible.
+
+`docs/atlas.md` also now states plainly that **off-atlas is not the garbage
+detector**. Machine formats usually place, confidently and wrongly, rather than
+going off-atlas: on a corpus of 400 records where 100 were base64 and minified
+JavaScript, the off-atlas count was zero and the blobs landed in a region labelled
+`return, denklemin, array, tdrow, function`. Those records were caught by
+`T1-LANG-001`, which flagged exactly 100 of 400. The checks are the instrument for
+junk; a coordinate system will happily give nonsense a coordinate.
 
 ### Fixed
 
