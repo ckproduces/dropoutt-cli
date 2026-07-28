@@ -1,0 +1,197 @@
+"""Terminal output.
+
+The layout is deliberate. Discovery, then schema induction, then the hypothesis
+about what is being built, then findings, then the token budget, then what could
+not be checked and the single flag that unlocks each one.
+
+That last section is a feature rather than an apology: it is the progressive
+disclosure ladder made visible, and it is the reason the first run on a folder
+with no flags is still worth reading.
+"""
+
+from __future__ import annotations
+
+from rich.console import Console
+from rich.table import Table
+from rich.text import Text
+
+from ..models import Confidence, Finding, Severity
+from ..runner import ScanResult
+from ..tokenizer_panel import BudgetReport
+from .escaping import safe_snippet
+
+SEV_STYLE = {
+    Severity.BLOCKING: "bold red",
+    Severity.WARNING: "yellow",
+    Severity.INFO: "cyan",
+}
+
+
+def render(
+    console: Console,
+    result: ScanResult,
+    *,
+    budget: BudgetReport | None = None,
+    show_evidence: bool = True,
+) -> None:
+    ctx = result.ctx
+    disc = result.discovery
+
+    console.print()
+    console.rule("[bold]dropoutt scan[/bold]", style="dim")
+
+    # -- discovery -------------------------------------------------------
+    fmt = ", ".join(f"{k.lstrip('.')} {v}" for k, v in sorted(disc.format_counts.items()))
+    console.print(f"  [dim]Discovered[/dim]  {len(disc.files):,} files, "
+                  f"{len(disc.datasets):,} datasets, {disc.total_bytes / 1e6:,.1f} MB")
+    console.print(f"  [dim]Formats[/dim]     {fmt or 'none'}")
+    if disc.empty_files:
+        console.print(f"  [dim]Empty files[/dim] {len(disc.empty_files)}")
+
+    # -- schema ----------------------------------------------------------
+    real = {n: v for n, v in result.verdicts.items() if not v.not_training_data}
+    logs = {n: v for n, v in result.verdicts.items() if v.not_training_data}
+    if real:
+        console.print()
+        console.print("  [bold]Schema induction[/bold]")
+        counts: dict[str, int] = {}
+        for v in real.values():
+            counts[v.layout_id] = counts.get(v.layout_id, 0) + 1
+        for layout, n in sorted(counts.items(), key=lambda kv: -kv[1])[:8]:
+            console.print(f"    {layout:<22} {n} dataset(s)")
+    if logs:
+        console.print()
+        console.print("  [bold yellow]Not training data[/bold yellow]")
+        for name, v in list(logs.items())[:6]:
+            console.print(f"    {name:<40} {v.not_training_data}")
+        if len(logs) > 6:
+            console.print(f"    [dim]and {len(logs) - 6} more[/dim]")
+
+    # -- hypothesis ------------------------------------------------------
+    console.print()
+    console.print("  [bold]Best guess at what you are building[/bold]")
+    console.print(f"    Stage      {ctx.profile.value}")
+    lang = _language_summary(result)
+    if lang:
+        console.print(f"    Language   {lang}")
+    console.print("    [dim]Confidence: medium. Confirm with `dropoutt init`.[/dim]")
+
+    # -- findings --------------------------------------------------------
+    console.print()
+    if result.findings:
+        console.print("  [bold]Findings[/bold]")
+        table = Table(show_header=True, header_style="dim", box=None, pad_edge=False,
+                      padding=(0, 2, 0, 2))
+        table.add_column("check", style="dim", no_wrap=True)
+        table.add_column("")
+        table.add_column("count", justify="right")
+        table.add_column("detail")
+        for f in sorted(result.findings, key=_finding_order):
+            marker = Text("●", style=SEV_STYLE.get(f.severity, ""))
+            count = f"{f.count:,}" if f.count else "-"
+            table.add_row(f.check_id, marker, count, _detail_text(f))
+        console.print(table)
+    else:
+        console.print("  [green]No findings.[/green]")
+
+    if show_evidence:
+        _render_evidence(console, result.findings)
+
+    # -- token budget ----------------------------------------------------
+    if budget is not None and budget.estimates:
+        console.print()
+        title = ("Token budget" if ctx.tokenizer is not None
+                 else "Token budget (estimated, no --model given)")
+        console.print(f"  [bold]{title}[/bold]")
+        cheapest = budget.cheapest
+        for est in sorted(budget.estimates, key=lambda e: e.total_tokens_est):
+            if est.failed:
+                console.print(f"    {est.name:<14} [dim]tokenizer unavailable[/dim]")
+                continue
+            premium = budget.premium_vs_cheapest(est)
+            extra = f"  (+{premium:.0%})" if cheapest and est is not cheapest and premium > 0 else ""
+            console.print(
+                f"    {est.name:<14} ~{est.total_tokens_est / 1e6:>8,.2f}M tokens   "
+                f"{est.tokens_per_word:.2f} tok/word{extra}"
+            )
+        for note in budget.notes:
+            console.print(f"    [dim]{note}[/dim]")
+
+    # -- skipped ---------------------------------------------------------
+    if result.skipped:
+        console.print()
+        console.print("  [bold]Not checked, and why[/bold]")
+        seen: set[str] = set()
+        for s in result.skipped:
+            if s.reason in seen:
+                continue
+            seen.add(s.reason)
+            console.print(f"    {s.title:<46} [dim]{s.reason}[/dim]")
+            if s.unlock:
+                console.print(f"      [dim]→ {s.unlock}[/dim]")
+
+    # -- degradations ----------------------------------------------------
+    if ctx.degradations:
+        console.print()
+        console.print("  [bold]Degraded[/bold]")
+        for d in ctx.degradations[:8]:
+            console.print(f"    [dim]{d}[/dim]")
+
+    # -- footer ----------------------------------------------------------
+    console.print()
+    unverified = sum(1 for f in result.findings if f.confidence is Confidence.UNVERIFIED)
+    if unverified:
+        console.print(
+            "  [dim]All findings in this build are unverified: no measured effect size is "
+            "attached to acting on them. They are structural observations, not predictions.[/dim]"
+        )
+    if not ctx.blocking_enabled:
+        console.print("  [dim]No blocking verdict issued: no target declared. "
+                      "Run `dropoutt init` or pass --target.[/dim]")
+    console.print(f"  [dim]{result.records_scanned:,} records in {result.elapsed:.1f}s[/dim]")
+    console.print()
+
+
+def _finding_order(f: Finding) -> tuple[int, str]:
+    rank = {Severity.BLOCKING: 0, Severity.WARNING: 1, Severity.INFO: 2}
+    return (rank.get(f.severity, 3), f.check_id)
+
+
+def _detail_text(f: Finding) -> Text:
+    text = Text(f.detail)
+    if f.wasted_tokens:
+        text.append(f"  [{f.wasted_tokens / 1e6:.2f}M tokens]", style="dim")
+    if f.would_block_under and not f.is_blocking:
+        text.append(f"  would block under {', '.join(f.would_block_under)}", style="dim")
+    return text
+
+
+def _render_evidence(console: Console, findings: list[Finding]) -> None:
+    with_evidence = [f for f in findings if f.evidence]
+    if not with_evidence:
+        return
+    console.print()
+    console.print("  [bold]Examples[/bold]")
+    for f in sorted(with_evidence, key=_finding_order)[:5]:
+        console.print(f"    [dim]{f.check_id}[/dim] {f.title}")
+        for ev in f.evidence[:2]:
+            loc = f"{_short(ev.source_file)}:{ev.source_index}"
+            console.print(f"      [dim]{loc}[/dim]  {safe_snippet(ev.excerpt, 150)}")
+            if ev.partner_excerpt:
+                score = f" [{ev.score:.2f}]" if ev.score is not None else ""
+                console.print(f"      [dim]matches{score}[/dim]  "
+                              f"{safe_snippet(ev.partner_excerpt, 150)}")
+
+
+def _short(path: str, keep: int = 48) -> str:
+    return path if len(path) <= keep else "…" + path[-(keep - 1):]
+
+
+def _language_summary(result: ScanResult) -> str:
+    for f in result.findings:
+        if f.check_id == "T1-LANG-001":
+            comp = f.data.get("composition", {})
+            total = sum(comp.values()) or 1
+            top = sorted(comp.items(), key=lambda kv: -kv[1])[:3]
+            return ", ".join(f"{k} {v / total:.0%}" for k, v in top)
+    return ""

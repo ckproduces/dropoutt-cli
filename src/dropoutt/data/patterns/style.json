@@ -1,0 +1,36 @@
+{
+  "_comment": [
+    "Style tics: opening phrases and formatting habits characteristic of distilled data.",
+    "Unlike identity leakage, these are NOT wrong in themselves. A single 'Certainly!' is a",
+    "sentence; 'Certainly!' opening 40% of responses is a style your model will inherit.",
+    "So these are counted and reported as a rate, and only flagged when the rate exceeds a",
+    "corpus-relative threshold. Frequency is the finding, not presence."
+  ],
+  "_schema_version": "1",
+  "flag_when_rate_exceeds": 0.15,
+  "openers": [
+    {"id": "certainly", "lang": "en", "regex": "(?i)^\\s*(?:Certainly|Sure|Of course|Absolutely)[!,.]"},
+    {"id": "great_question", "lang": "en", "regex": "(?i)^\\s*(?:That's a |What a )?[Gg]reat question"},
+    {"id": "im_happy_to", "lang": "en", "regex": "(?i)^\\s*I(?:'d| would) be happy to"},
+    {"id": "lets_dive", "lang": "en", "regex": "(?i)\\bLet(?:'s| us) dive (?:in|into)\\b"},
+    {"id": "in_conclusion", "lang": "en", "regex": "(?i)^\\s*In conclusion,"},
+    {"id": "its_important_to_note", "lang": "en", "regex": "(?i)\\bIt(?:'s| is) important to note that\\b"},
+    {"id": "elbette", "lang": "tr", "regex": "(?i)^\\s*(?:Elbette|Tabii ki|Kesinlikle)[!,.]"},
+    {"id": "harika_soru", "lang": "tr", "regex": "(?i)^\\s*(?:Harika|G[uü]zel) bir soru"},
+    {"id": "belirtmek_gerekir", "lang": "tr", "regex": "(?i)\\bbelirtmek gerekir ki\\b"}
+  ],
+  "formatting": [
+    {"id": "bold_header_spam", "label": "Bold pseudo-headers", "regex": "\\*\\*[^*\\n]{2,60}\\*\\*\\s*:?\\s*\\n", "min_hits": 3},
+    {"id": "emoji_dense", "label": "High emoji density", "kind": "emoji_ratio", "threshold": 0.01},
+    {"id": "bullet_collapse", "label": "Answer is only bullets", "regex": "^\\s*[-*•]\\s", "min_fraction_of_lines": 0.8},
+    {"id": "em_dash_heavy", "label": "Em-dash heavy prose", "kind": "char_ratio", "char": "—", "threshold": 0.002},
+    {"id": "horizontal_rules", "label": "Horizontal rule spam", "regex": "^\\s*(?:---|___|\\*\\*\\*)\\s*$", "min_hits": 3}
+  ],
+  "degeneracy": {
+    "min_assistant_chars": 2,
+    "single_token_answer_max_chars": 3,
+    "repetition_ngram": 10,
+    "repetition_ratio_threshold": 0.5,
+    "prompt_copy_similarity": 0.9
+  }
+}

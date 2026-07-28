@@ -1,0 +1,112 @@
+{
+  "_comment": [
+    "Chat template delimiter registry, verified against live tokenizer_config.json files on 2026-07-28.",
+    "Used to detect which template a dataset was already formatted with, so we can tell the user",
+    "when their data carries Llama-3 headers but they are training a Qwen model.",
+    "Note eos_token is NOT always the end-of-turn marker: Gemma-2 ends turns with <end_of_turn>",
+    "but declares <eos> as eos_token, and Phi-3 ends turns with <|end|> but declares <|endoftext|>.",
+    "Training on a corpus formatted for one and masked for the other is a silent failure."
+  ],
+  "_schema_version": "1",
+  "families": [
+    {
+      "id": "chatml", "label": "ChatML", "style": "chatml",
+      "delimiters": ["<|im_start|>", "<|im_end|>"],
+      "end_of_turn": "<|im_end|>", "eos_token": "<|im_end|>",
+      "roles": ["system", "user", "assistant"],
+      "used_by": ["Qwen2.5", "Qwen3", "Yi-1.5", "SmolLM2", "SmolLM3"],
+      "verified_from": "https://huggingface.co/Qwen/Qwen3-8B/raw/main/tokenizer_config.json",
+      "collision_note": "Qwen, Yi and SmolLM are byte-identical here. They cannot be told apart from delimiters alone; only BOS differs (Yi uses <|startoftext|>, SmolLM2 uses <|im_start|> as BOS)."
+    },
+    {
+      "id": "llama3", "label": "Llama 3.x", "style": "header",
+      "delimiters": ["<|begin_of_text|>", "<|start_header_id|>", "<|end_header_id|>", "<|eot_id|>"],
+      "end_of_turn": "<|eot_id|>", "eos_token": "<|eot_id|>",
+      "extra_tokens": ["<|eom_id|>", "<|python_tag|>"],
+      "roles": ["system", "user", "assistant", "ipython"],
+      "used_by": ["Llama-3.1", "Llama-3.2", "Llama-3.3"],
+      "verified_from": "https://huggingface.co/unsloth/Meta-Llama-3.1-8B-Instruct/raw/main/tokenizer_config.json"
+    },
+    {
+      "id": "gemma", "label": "Gemma 2 / 3", "style": "turn_tag",
+      "delimiters": ["<start_of_turn>", "<end_of_turn>"],
+      "end_of_turn": "<end_of_turn>", "eos_token": "<eos>",
+      "roles": ["user", "model"],
+      "used_by": ["Gemma-2", "Gemma-3"],
+      "verified_from": "https://huggingface.co/unsloth/gemma-2-9b-it/raw/main/tokenizer_config.json",
+      "collision_note": "Assistant role is named 'model', not 'assistant'. Gemma-3 changed eos_token to <end_of_turn>; Gemma-2 kept <eos>."
+    },
+    {
+      "id": "mistral", "label": "Mistral / Mixtral", "style": "bracket_instruct",
+      "delimiters": ["[INST]", "[/INST]"],
+      "end_of_turn": "</s>", "eos_token": "</s>",
+      "extra_tokens": ["[AVAILABLE_TOOLS]", "[TOOL_CALLS]", "[TOOL_RESULTS]", "[SYSTEM_PROMPT]"],
+      "roles": ["user", "assistant"],
+      "used_by": ["Mistral-7B-Instruct", "Mixtral-8x7B-Instruct", "Mistral-Small-24B"],
+      "verified_from": "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3/raw/main/tokenizer_config.json",
+      "no_generation_tag": true
+    },
+    {
+      "id": "deepseek", "label": "DeepSeek V3 / R1", "style": "fullwidth_pipe",
+      "delimiters": ["<｜begin▁of▁sentence｜>", "<｜User｜>", "<｜Assistant｜>"],
+      "end_of_turn": "<｜end▁of▁sentence｜>", "eos_token": "<｜end▁of▁sentence｜>",
+      "extra_tokens": ["<think>", "</think>"],
+      "roles": ["user", "assistant"],
+      "used_by": ["DeepSeek-V3", "DeepSeek-R1"],
+      "verified_from": "https://huggingface.co/deepseek-ai/DeepSeek-V3/raw/main/tokenizer_config.json",
+      "collision_note": "Uses fullwidth vertical bars U+FF5C, not ASCII pipes. A corpus using ASCII <|User|> was formatted by something else."
+    },
+    {
+      "id": "phi3", "label": "Phi-3", "style": "role_tag",
+      "delimiters": ["<|system|>", "<|user|>", "<|assistant|>", "<|end|>"],
+      "end_of_turn": "<|end|>", "eos_token": "<|endoftext|>",
+      "roles": ["system", "user", "assistant"],
+      "used_by": ["Phi-3-mini", "Phi-3-small", "Phi-3-medium"],
+      "verified_from": "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct/raw/main/tokenizer_config.json",
+      "collision_note": "Shares role tags with OLMo 2. Disambiguate on <|end|>: present means Phi-3, absent means OLMo 2."
+    },
+    {
+      "id": "phi4", "label": "Phi-4", "style": "chatml_variant",
+      "delimiters": ["<|im_start|>", "<|im_sep|>", "<|im_end|>"],
+      "end_of_turn": "<|im_end|>", "eos_token": "<|im_end|>",
+      "roles": ["system", "user", "assistant"],
+      "used_by": ["Phi-4"],
+      "verified_from": "https://huggingface.co/microsoft/phi-4/raw/main/tokenizer_config.json",
+      "collision_note": "ChatML with <|im_sep|> instead of a newline after the role."
+    },
+    {
+      "id": "olmo2", "label": "OLMo 2", "style": "role_tag",
+      "delimiters": ["<|system|>", "<|user|>", "<|assistant|>"],
+      "end_of_turn": "<|endoftext|>", "eos_token": "<|endoftext|>",
+      "roles": ["system", "user", "assistant"],
+      "used_by": ["OLMo-2-1124-7B-Instruct", "OLMo-2-1124-13B-Instruct"],
+      "verified_from": "https://huggingface.co/allenai/OLMo-2-1124-7B-Instruct/raw/main/tokenizer_config.json",
+      "collision_note": "Same role tags as Phi-3 but no <|end|>; the assistant turn is closed by eos_token."
+    },
+    {
+      "id": "command_r", "label": "Command-R", "style": "cohere_token_pair",
+      "delimiters": ["<BOS_TOKEN>", "<|START_OF_TURN_TOKEN|>", "<|SYSTEM_TOKEN|>", "<|USER_TOKEN|>", "<|CHATBOT_TOKEN|>", "<|END_OF_TURN_TOKEN|>"],
+      "end_of_turn": "<|END_OF_TURN_TOKEN|>", "eos_token": "<|END_OF_TURN_TOKEN|>",
+      "roles": ["system", "user", "chatbot"],
+      "used_by": ["c4ai-command-r-v01", "c4ai-command-r7b"],
+      "verified_from": "https://huggingface.co/Xenova/c4ai-command-r-v01-tokenizer/raw/main/tokenizer_config.json"
+    },
+    {
+      "id": "alpaca", "label": "Alpaca (plain text)", "style": "text_marker",
+      "delimiters": ["### Instruction:", "### Input:", "### Response:"],
+      "end_of_turn": null, "eos_token": null,
+      "roles": [],
+      "used_by": ["stanford_alpaca and its many derivatives"],
+      "verified_from": "https://github.com/tatsu-lab/stanford_alpaca/blob/main/train.py",
+      "note": "No special tokens at all. Detected purely from the literal markers."
+    },
+    {
+      "id": "vicuna", "label": "Vicuna v1.1 (plain text)", "style": "text_marker",
+      "delimiters": ["USER:", "ASSISTANT:"],
+      "end_of_turn": "</s>", "eos_token": "</s>",
+      "roles": [],
+      "used_by": ["Vicuna", "FastChat-served models"],
+      "verified_from": "https://github.com/lm-sys/FastChat/blob/main/fastchat/conversation.py"
+    }
+  ]
+}

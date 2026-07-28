@@ -1,0 +1,39 @@
+{
+  "_comment": [
+    "Assistant-identity leakage and refusal boilerplate.",
+    "This is one of the few checks where a fixed pattern list is genuinely correct rather than",
+    "lazy: 'As an AI language model' is not a phrase that becomes acceptable at low frequency.",
+    "Generic style tics are handled differently, by corpus frequency, in style.json.",
+    "Turkish variants are included because the market this was built for trains Turkish models",
+    "and every English-only list misses them entirely."
+  ],
+  "_schema_version": "1",
+  "identity_leakage": {
+    "label": "Assistant identity leakage",
+    "note": "Training on these teaches your model to claim it is someone else's product.",
+    "patterns": [
+      {"id": "as_an_ai_en", "lang": "en", "regex": "(?i)\\bas an AI (?:language )?(?:model|assistant)\\b"},
+      {"id": "as_a_language_model_en", "lang": "en", "regex": "(?i)\\bas a large language model\\b"},
+      {"id": "im_chatgpt", "lang": "en", "regex": "(?i)\\bI(?:'m| am) ChatGPT\\b"},
+      {"id": "im_claude", "lang": "en", "regex": "(?i)\\bI(?:'m| am) Claude\\b"},
+      {"id": "im_gemini", "lang": "en", "regex": "(?i)\\bI(?:'m| am) (?:Gemini|Bard)\\b"},
+      {"id": "trained_by", "lang": "en", "regex": "(?i)\\b(?:trained|created|developed|made) by (?:OpenAI|Anthropic|Google|Meta|Mistral)\\b"},
+      {"id": "knowledge_cutoff", "lang": "en", "regex": "(?i)\\bmy (?:knowledge|training data) (?:cutoff|cut-off|only goes up to)\\b"},
+      {"id": "as_an_ai_tr", "lang": "tr", "regex": "(?i)\\bbir yapay zek[aâ] (?:dil )?modeli olarak\\b"},
+      {"id": "im_an_ai_tr", "lang": "tr", "regex": "(?i)\\bben bir yapay zek[aâ]\\b"},
+      {"id": "trained_by_tr", "lang": "tr", "regex": "(?i)\\b(?:OpenAI|Anthropic|Google) taraf[iı]ndan (?:e[gğ]itil|geli[sş]tiril)"}
+    ]
+  },
+  "refusal_boilerplate": {
+    "label": "Refusal boilerplate",
+    "note": "Not inherently wrong. It is reported so you can decide whether the rate matches your intent, because an SFT set full of refusals produces a model that refuses.",
+    "patterns": [
+      {"id": "cannot_assist_en", "lang": "en", "regex": "(?i)\\bI (?:cannot|can't|am unable to) (?:assist|help|provide|comply)\\b"},
+      {"id": "sorry_but_en", "lang": "en", "regex": "(?i)\\bI(?:'m| am) sorry,? but I (?:cannot|can't)\\b"},
+      {"id": "not_appropriate_en", "lang": "en", "regex": "(?i)\\b(?:that would not be|I don't think it's) appropriate\\b"},
+      {"id": "against_guidelines_en", "lang": "en", "regex": "(?i)\\b(?:against|violates) my (?:guidelines|programming|principles)\\b"},
+      {"id": "cannot_assist_tr", "lang": "tr", "regex": "(?i)\\b(?:bu konuda )?(?:size )?yard[iı]mc[iı] olamam\\b"},
+      {"id": "sorry_but_tr", "lang": "tr", "regex": "(?i)\\b[uü]zg[uü]n[uü]m,? (?:ancak|ama|fakat)\\b"}
+    ]
+  }
+}

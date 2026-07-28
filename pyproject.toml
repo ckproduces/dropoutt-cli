@@ -1,0 +1,83 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dropoutt"
+version = "0.1.0"
+description = "Pre-flight checks and comparable fingerprints for LLM training datasets."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [{ name = "Cisimcik AI Labs" }]
+keywords = ["llm", "training-data", "dataset", "deduplication", "contamination", "sft"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# Core stays deliberately small. The only compiled wheel here is `tokenizers`,
+# which is the one that still ships manylinux_2_17 and therefore installs on old
+# cluster images. Everything faster than pure Python is an optional accelerator
+# with an identical-output fallback. See docs/portability.md.
+dependencies = [
+    "typer>=0.12",
+    "rich>=13.0",
+    "jinja2>=3.1",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+# Rust accelerators. Same results, faster. Skipped automatically if unavailable.
+fast = [
+    "orjson>=3.9",
+    "rensa>=0.4.1",
+]
+# Exact token counting and chat-template rendering against a real tokenizer.
+tokenizer = [
+    "tokenizers>=0.15",
+    "huggingface_hub>=0.23",
+]
+# Parquet. Heaviest single dependency (35-50 MB) so it is never in core.
+parquet = [
+    "pyarrow>=14.0",
+]
+# Language identification. lid.176.ftz is a 938 KB model.
+lid = [
+    "fasttext-langdetect>=1.0",
+]
+# Atlas coverage. Static CPU embeddings, no torch.
+atlas = [
+    "model2vec>=0.4",
+]
+all = [
+    "dropoutt[fast,tokenizer,parquet,lid,atlas]",
+]
+dev = [
+    "dropoutt[all]",
+    "pytest>=8.0",
+    "scikit-learn>=1.3",
+]
+
+[project.scripts]
+dropoutt = "dropoutt.cli:app"
+
+[project.urls]
+Homepage = "https://dropoutt.com"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dropoutt"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/dropoutt/data" = "dropoutt/data"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]

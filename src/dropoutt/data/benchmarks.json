@@ -1,0 +1,239 @@
+{
+  "_comment": [
+    "Benchmark registry. Every row was verified against the live Hugging Face API on 2026-07-28.",
+    "The `eval_split` field is the one that matters and the one most tools get wrong: for",
+    "HellaSwag, PIQA, WinoGrande and CommonsenseQA the `test` split exists but its labels are",
+    "blanked, so scoring happens on `validation`. IFEval's only split is `train` and it IS the",
+    "eval set. GPQA is gated and has no test split at all.",
+    "`license` is null where the Hub repo carries no license tag. We do not substitute the",
+    "license from the original paper, because that would be a guess presented as a fact.",
+    "`shippable` marks whether we prebuild and distribute a hashed 8-gram index for it."
+  ],
+  "_schema_version": "1",
+  "benchmarks": [
+    {
+      "id": "mmlu", "name": "MMLU", "hf_id": "cais/mmlu", "config": "all",
+      "eval_split": "test", "n_eval": 14042,
+      "question_fields": ["question", "choices"], "answer_field": "answer",
+      "public": true, "license": "mit", "shippable": true,
+      "verified_from": "https://huggingface.co/api/datasets/cais/mmlu"
+    },
+    {
+      "id": "mmlu_pro", "name": "MMLU-Pro", "hf_id": "TIGER-Lab/MMLU-Pro", "config": "default",
+      "eval_split": "test", "n_eval": 12032,
+      "question_fields": ["question", "options"], "answer_field": "answer",
+      "public": true, "license": "mit", "shippable": true,
+      "verified_from": "https://huggingface.co/api/datasets/TIGER-Lab/MMLU-Pro"
+    },
+    {
+      "id": "gsm8k", "name": "GSM8K", "hf_id": "openai/gsm8k", "config": "main",
+      "eval_split": "test", "n_eval": 1319,
+      "question_fields": ["question"], "answer_field": "answer",
+      "public": true, "license": "mit", "shippable": true,
+      "verified_from": "https://huggingface.co/api/datasets/openai/gsm8k"
+    },
+    {
+      "id": "math", "name": "MATH", "hf_id": "EleutherAI/hendrycks_math", "config": "algebra",
+      "eval_split": "test", "n_eval": 5000,
+      "question_fields": ["problem"], "answer_field": "solution",
+      "public": true, "license": "mit", "shippable": true,
+      "note": "seven subject configs; hendrycks/competition_math is disabled on the Hub",
+      "verified_from": "https://huggingface.co/api/datasets/EleutherAI/hendrycks_math"
+    },
+    {
+      "id": "hellaswag", "name": "HellaSwag", "hf_id": "Rowan/hellaswag", "config": "default",
+      "eval_split": "validation", "n_eval": 10042,
+      "question_fields": ["ctx", "endings"], "answer_field": "label",
+      "public": true, "license": null, "shippable": false,
+      "note": "test split exists but label is blank; no license tag on the Hub so we do not ship an index",
+      "verified_from": "https://huggingface.co/api/datasets/Rowan/hellaswag"
+    },
+    {
+      "id": "arc_easy", "name": "ARC-Easy", "hf_id": "allenai/ai2_arc", "config": "ARC-Easy",
+      "eval_split": "test", "n_eval": 2376,
+      "question_fields": ["question", "choices"], "answer_field": "answerKey",
+      "public": true, "license": "cc-by-sa-4.0", "shippable": true,
+      "verified_from": "https://huggingface.co/api/datasets/allenai/ai2_arc"
+    },
+    {
+      "id": "arc_challenge", "name": "ARC-Challenge", "hf_id": "allenai/ai2_arc",
+      "config": "ARC-Challenge", "eval_split": "test", "n_eval": 1172,
+      "question_fields": ["question", "choices"], "answer_field": "answerKey",
+      "public": true, "license": "cc-by-sa-4.0", "shippable": true,
+      "verified_from": "https://huggingface.co/api/datasets/allenai/ai2_arc"
+    },
+    {
+      "id": "piqa", "name": "PIQA", "hf_id": "baber/piqa", "config": "default",
+      "eval_split": "validation", "n_eval": 1838,
+      "question_fields": ["goal", "sol1", "sol2"], "answer_field": "label",
+      "public": true, "license": null, "shippable": false,
+      "note": "ybisk/piqa is a loading-script repo; baber/piqa is the parquet mirror. test labels are -1",
+      "verified_from": "https://huggingface.co/api/datasets/baber/piqa"
+    },
+    {
+      "id": "winogrande", "name": "WinoGrande", "hf_id": "allenai/winogrande",
+      "config": "winogrande_xl", "eval_split": "validation", "n_eval": 1267,
+      "question_fields": ["sentence", "option1", "option2"], "answer_field": "answer",
+      "public": true, "license": null, "shippable": false,
+      "note": "test split answers are blank",
+      "verified_from": "https://huggingface.co/api/datasets/allenai/winogrande"
+    },
+    {
+      "id": "truthfulqa", "name": "TruthfulQA", "hf_id": "truthfulqa/truthful_qa",
+      "config": "generation", "eval_split": "validation", "n_eval": 817,
+      "question_fields": ["question"], "answer_field": "best_answer",
+      "public": true, "license": "apache-2.0", "shippable": true,
+      "note": "validation is the only split",
+      "verified_from": "https://huggingface.co/api/datasets/truthfulqa/truthful_qa"
+    },
+    {
+      "id": "humaneval", "name": "HumanEval", "hf_id": "openai/openai_humaneval",
+      "config": "openai_humaneval", "eval_split": "test", "n_eval": 164,
+      "question_fields": ["prompt"], "answer_field": "canonical_solution",
+      "public": true, "license": "mit", "shippable": true,
+      "verified_from": "https://huggingface.co/api/datasets/openai/openai_humaneval"
+    },
+    {
+      "id": "mbpp", "name": "MBPP", "hf_id": "google-research-datasets/mbpp", "config": "full",
+      "eval_split": "test", "n_eval": 500,
+      "question_fields": ["text"], "answer_field": "code",
+      "public": true, "license": "cc-by-4.0", "shippable": true,
+      "verified_from": "https://huggingface.co/api/datasets/google-research-datasets/mbpp"
+    },
+    {
+      "id": "ifeval", "name": "IFEval", "hf_id": "google/IFEval", "config": "default",
+      "eval_split": "train", "n_eval": 541,
+      "question_fields": ["prompt"], "answer_field": null,
+      "public": true, "license": "apache-2.0", "shippable": true,
+      "note": "train is the only split and it is the eval set; answers are verified programmatically",
+      "verified_from": "https://huggingface.co/api/datasets/google/IFEval"
+    },
+    {
+      "id": "bbh", "name": "BIG-Bench Hard", "hf_id": "lukaemon/bbh", "config": null,
+      "eval_split": "test", "n_eval": 6511,
+      "question_fields": ["input"], "answer_field": "target",
+      "public": true, "license": null, "shippable": false,
+      "note": "27 task configs; no license tag on the Hub",
+      "verified_from": "https://huggingface.co/api/datasets/lukaemon/bbh"
+    },
+    {
+      "id": "gpqa", "name": "GPQA", "hf_id": "Idavidrein/gpqa", "config": "gpqa_diamond",
+      "eval_split": "train", "n_eval": null,
+      "question_fields": ["Question"], "answer_field": "Correct Answer",
+      "public": false, "license": "cc-by-4.0", "shippable": false,
+      "note": "gated, and there is no test split; field names are space-separated and capitalised",
+      "verified_from": "https://huggingface.co/api/datasets/Idavidrein/gpqa"
+    },
+    {
+      "id": "drop", "name": "DROP", "hf_id": "ucinlp/drop", "config": "default",
+      "eval_split": "validation", "n_eval": 9535,
+      "question_fields": ["passage", "question"], "answer_field": "answers_spans",
+      "public": true, "license": "cc-by-sa-4.0", "shippable": true,
+      "verified_from": "https://huggingface.co/api/datasets/ucinlp/drop"
+    },
+    {
+      "id": "boolq", "name": "BoolQ", "hf_id": "google/boolq", "config": "default",
+      "eval_split": "validation", "n_eval": 3270,
+      "question_fields": ["question", "passage"], "answer_field": "answer",
+      "public": true, "license": "cc-by-sa-3.0", "shippable": true,
+      "verified_from": "https://huggingface.co/api/datasets/google/boolq"
+    },
+    {
+      "id": "commonsenseqa", "name": "CommonsenseQA", "hf_id": "tau/commonsense_qa",
+      "config": "default", "eval_split": "validation", "n_eval": 1221,
+      "question_fields": ["question", "choices"], "answer_field": "answerKey",
+      "public": true, "license": "mit", "shippable": true,
+      "note": "test split answerKey is blank",
+      "verified_from": "https://huggingface.co/api/datasets/tau/commonsense_qa"
+    },
+    {
+      "id": "openbookqa", "name": "OpenBookQA", "hf_id": "allenai/openbookqa", "config": "main",
+      "eval_split": "test", "n_eval": 500,
+      "question_fields": ["question_stem", "choices"], "answer_field": "answerKey",
+      "public": true, "license": null, "shippable": false,
+      "verified_from": "https://huggingface.co/api/datasets/allenai/openbookqa"
+    },
+    {
+      "id": "mt_bench", "name": "MT-Bench", "hf_id": "HuggingFaceH4/mt_bench_prompts",
+      "config": "default", "eval_split": "train", "n_eval": 80,
+      "question_fields": ["prompt"], "answer_field": "reference",
+      "public": true, "license": "apache-2.0", "shippable": true,
+      "verified_from": "https://huggingface.co/api/datasets/HuggingFaceH4/mt_bench_prompts"
+    },
+    {
+      "id": "alpaca_eval", "name": "AlpacaEval", "hf_id": "tatsu-lab/alpaca_eval",
+      "config": "alpaca_eval", "eval_split": "eval", "n_eval": 805,
+      "question_fields": ["instruction"], "answer_field": "output",
+      "public": true, "license": "cc-by-nc-4.0", "shippable": false,
+      "note": "loading-script repo, viewer disabled, non-commercial license",
+      "verified_from": "https://huggingface.co/api/datasets/tatsu-lab/alpaca_eval"
+    },
+    {
+      "id": "turkish_mmlu", "name": "TurkishMMLU", "hf_id": "AYueksel/TurkishMMLU",
+      "config": "All", "eval_split": "test", "n_eval": null,
+      "question_fields": ["question", "choices"], "answer_field": "answer",
+      "public": true, "license": null, "shippable": false,
+      "note": "wrapped by CETVEL; no license tag on the Hub",
+      "verified_from": "https://huggingface.co/api/datasets/AYueksel/TurkishMMLU"
+    }
+  ],
+  "suites": {
+    "cetvel": {
+      "name": "CETVEL",
+      "kind": "harness",
+      "repo": "https://github.com/KUIS-AI/cetvel",
+      "space": "https://huggingface.co/spaces/KUIS-AI/Cetvel",
+      "paper": "https://arxiv.org/abs/2508.16431",
+      "license": null,
+      "note": "Not a single dataset. A fork of lm-evaluation-harness that wraps the datasets below. The GitHub repo declares no license; the Space is MIT, which covers the leaderboard app only.",
+      "wraps": [
+        {"task": "turkishmmlu_*", "hf_id": "AYueksel/TurkishMMLU", "split": "test"},
+        {"task": "belebele_tr", "hf_id": "facebook/belebele", "config": "tur_Latn", "split": "test"},
+        {"task": "exams_tr", "hf_id": "exams", "config": "crosslingual_tr", "split": "validation"},
+        {"task": "xcopa_tr", "hf_id": "xcopa", "config": "tr", "split": "test"},
+        {"task": "turkish_plu_goal_inference", "hf_id": "mcemilg/turkish-plu-goal-inference"},
+        {"task": "turkish_plu_next_event_prediction", "hf_id": "mcemilg/turkish-plu-next-event-prediction"},
+        {"task": "turkish_plu_step_inference", "hf_id": "mcemilg/turkish-plu-step-inference"},
+        {"task": "turkish_plu_step_ordering", "hf_id": "mcemilg/turkish-plu-step-ordering"},
+        {"task": "xquad_tr", "hf_id": "xquad", "config": "xquad.tr"},
+        {"task": "tquad", "hf_id": "mcemilg/tquad"},
+        {"task": "mkqa_tr", "hf_id": "mcemilg/mkqa_tr", "split": "train"},
+        {"task": "xnli_tr", "hf_id": "xnli", "config": "tr", "split": "test"},
+        {"task": "snli_tr", "hf_id": "nli_tr", "config": "snli_tr", "split": "test"},
+        {"task": "mnli_tr", "hf_id": "nli_tr", "config": "multinli_tr", "split": "validation_matched"},
+        {"task": "ironytr", "hf_id": "mcemilg/IronyTR", "split": "validation"},
+        {"task": "news_cat", "hf_id": "mcemilg/news-cat", "split": "test"},
+        {"task": "offenseval_tr", "hf_id": "offenseval2020_tr", "split": "test"},
+        {"task": "sts_tr", "hf_id": "emrecan/stsb-mt-turkish", "split": "test"},
+        {"task": "xfact_tr", "hf_id": "mcemilg/x-fact", "config": "tr", "split": "test"},
+        {"task": "check_worthiness", "hf_id": "mcemilg/TrClaim19", "split": "train"},
+        {"task": "relevance_judgment", "hf_id": "mcemilg/TrClaim19", "split": "train"},
+        {"task": "mlsum_tr", "hf_id": "mlsum", "config": "tu", "split": "test"},
+        {"task": "xlsum_tr", "hf_id": "csebuetnlp/xlsum", "config": "turkish", "split": "test"},
+        {"task": "tr-wikihow-summ", "hf_id": "ardauzunoglu/tr-wikihow-summ", "split": "test"},
+        {"task": "wiki_lingua_tr", "hf_id": "GEM/wiki_lingua", "config": "tr", "split": "test"},
+        {"task": "wmt-tr-en", "hf_id": "wmt16", "config": "tr-en", "split": "validation"},
+        {"task": "gecturk_generation", "hf_id": "mcemilg/GECTurk-generation", "split": "test"},
+        {"task": "bilmecebench", "hf_id": "abrek/bilmecebench-lm-evaluation-harness", "split": "test"},
+        {"task": "turkce_atasozleri", "hf_id": "abrek/turkce-atasozleri-lm-evaluation-harness", "split": "train"},
+        {"task": "circumflex_tr", "hf_id": "abrek/circumflex_tr", "split": "train"}
+      ]
+    },
+    "turkbench": {
+      "name": "TurkBench",
+      "kind": "private_leaderboard",
+      "space": "https://huggingface.co/spaces/TurkBench/TurkBench",
+      "paper": "https://arxiv.org/abs/2601.07020",
+      "hf_id": null,
+      "note": "There is no downloadable TurkBench dataset. The org has zero public datasets; the requests and results repos are private. It is a submission-only leaderboard with a hidden test set, so we cannot build a contamination index for it and neither can anyone else.",
+      "n_samples": 8151,
+      "subtasks": [
+        "TURKISH_GENERAL_KNOWLEDGE", "MMLU", "READING_COMPREHENSION_OE", "NLI",
+        "SUMMARIZATION", "STS", "MATH", "COMPLEX_REASONING", "COMMONSENSE_REASONING",
+        "SENTIMENT_ANALYSIS", "TOPIC_DETECTION", "TOXICITY", "BIAS_MC", "TRUTHFULNESS",
+        "FAITHFULNESS", "TURKISH_VOCABULARY", "NER", "POS", "METAPHORS_AND_IDIOMS",
+        "INSTRUCTION_FOLLOWING"
+      ]
+    }
+  }
+}

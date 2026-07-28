@@ -1,0 +1,126 @@
+{
+  "_comment": [
+    "PII and secret patterns. Two rules govern this file.",
+    "First, patterns that have a checksum MUST use it. A bare 11-digit regex for a Turkish",
+    "national ID matches every 11-digit number in the corpus and makes the check useless.",
+    "Second, no matched value is ever written into a report or a findings file. The check emits",
+    "a masked form plus offsets. A dataset linter that leaks secrets into a shareable HTML file",
+    "is worse than no linter."
+  ],
+  "_schema_version": "1",
+  "patterns": [
+    {
+      "id": "email",
+      "label": "Email address",
+      "severity": "warning",
+      "regex": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b",
+      "mask": "local_domain",
+      "validator": null
+    },
+    {
+      "id": "iban",
+      "label": "IBAN",
+      "severity": "blocking",
+      "regex": "\\b[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}\\b",
+      "mask": "tail4",
+      "validator": "iban_mod97"
+    },
+    {
+      "id": "tckn",
+      "label": "Turkish national ID (TCKN)",
+      "severity": "blocking",
+      "regex": "\\b[1-9][0-9]{10}\\b",
+      "mask": "tail4",
+      "validator": "tckn_checksum"
+    },
+    {
+      "id": "phone_intl",
+      "label": "Phone number",
+      "severity": "info",
+      "regex": "\\+(?:[0-9][ \\-]?){9,14}[0-9]\\b",
+      "mask": "tail4",
+      "validator": null
+    },
+    {
+      "id": "credit_card",
+      "label": "Payment card number",
+      "severity": "blocking",
+      "regex": "\\b(?:4[0-9]{3}|5[1-5][0-9]{2}|2[2-7][0-9]{2}|3[47][0-9]{2}|6011|65[0-9]{2}|35[0-9]{2})(?:[ -]?[0-9]{4}){2,4}\\b",
+      "mask": "tail4",
+      "validator": "luhn",
+      "note": "issuer prefix + Luhn; Luhn alone false-positives on ~10% of random digit runs"
+    },
+    {
+      "id": "openai_key",
+      "label": "OpenAI API key",
+      "severity": "blocking",
+      "regex": "\\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\\b",
+      "mask": "prefix6",
+      "validator": null
+    },
+    {
+      "id": "anthropic_key",
+      "label": "Anthropic API key",
+      "severity": "blocking",
+      "regex": "\\bsk-ant-[A-Za-z0-9_-]{20,}\\b",
+      "mask": "prefix6",
+      "validator": null
+    },
+    {
+      "id": "aws_key",
+      "label": "AWS access key id",
+      "severity": "blocking",
+      "regex": "\\b(?:AKIA|ASIA|AGPA|AIDA|AROA|ANPA)[0-9A-Z]{16}\\b",
+      "mask": "prefix6",
+      "validator": null
+    },
+    {
+      "id": "github_token",
+      "label": "GitHub token",
+      "severity": "blocking",
+      "regex": "\\bgh[pousr]_[A-Za-z0-9]{36,}\\b",
+      "mask": "prefix6",
+      "validator": null
+    },
+    {
+      "id": "hf_token",
+      "label": "Hugging Face token",
+      "severity": "blocking",
+      "regex": "\\bhf_[A-Za-z0-9]{30,}\\b",
+      "mask": "prefix6",
+      "validator": null
+    },
+    {
+      "id": "google_key",
+      "label": "Google API key",
+      "severity": "blocking",
+      "regex": "\\bAIza[0-9A-Za-z_-]{35}\\b",
+      "mask": "prefix6",
+      "validator": null
+    },
+    {
+      "id": "slack_token",
+      "label": "Slack token",
+      "severity": "blocking",
+      "regex": "\\bxox[baprs]-[A-Za-z0-9-]{10,}\\b",
+      "mask": "prefix6",
+      "validator": null
+    },
+    {
+      "id": "private_key",
+      "label": "Private key block",
+      "severity": "blocking",
+      "regex": "-----BEGIN (?:RSA |EC |OPENSSH |PGP )?PRIVATE KEY-----",
+      "mask": "full",
+      "validator": null
+    },
+    {
+      "id": "jwt",
+      "label": "JSON Web Token",
+      "severity": "warning",
+      "regex": "\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b",
+      "mask": "prefix6",
+      "validator": null
+    }
+  ]
+}
