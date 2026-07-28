@@ -132,6 +132,9 @@ def render(
         for note in budget.notes:
             console.print(f"    [dim]{_m(note)}[/dim]")
 
+    # -- atlas coverage --------------------------------------------------
+    _render_coverage(console, ctx.stats.get("atlas_coverage"))
+
     # -- skipped ---------------------------------------------------------
     if result.skipped:
         console.print()
@@ -165,6 +168,62 @@ def render(
                       "Run `dropoutt init` or pass --target.[/dim]")
     console.print(f"  [dim]{result.records_scanned:,} records in {result.elapsed:.1f}s[/dim]")
     console.print()
+
+
+def _render_coverage(console: Console, cov: dict | None) -> None:
+    """Where this corpus sits on the atlas.
+
+    Printed with the atlas's own accuracy numbers beside it, because a coverage
+    histogram built on a weak taxonomy probe looks exactly as precise as one
+    built on a strong probe. Suppressed coverage prints the reason instead of the
+    numbers.
+    """
+    from ..atlas.compare import category_names, concentration
+
+    if not cov:
+        return
+
+    console.print()
+    console.print(f"  [bold]Atlas coverage[/bold] [dim]({_m(cov.get('atlas_version', '?'))})[/dim]")
+
+    if cov.get("status") != "ok":
+        from ..atlas.compare import unusable_reason
+
+        console.print(f"    [yellow]withheld[/yellow] [dim]{_m(unusable_reason(cov))}[/dim]")
+        return
+
+    occupied = cov.get("regions_occupied", 0)
+    total = cov.get("regions_total", 0)
+    conc = concentration(cov)
+    console.print(f"    Regions      {occupied} of {total} occupied")
+    if conc is not None:
+        shape = "specialised" if conc < 0.45 else ("broad" if conc > 0.75 else "mixed")
+        console.print(f"    Spread       {conc:.0%} of even coverage  [dim]({shape})[/dim]")
+    console.print(f"    Off-atlas    {cov.get('off_atlas_rate', 0):.1%}")
+
+    names = category_names()
+    raw = cov.get("by_category") or {}
+    placed = sum(int(v) for v in raw.values()) or 1
+    ranked = sorted(raw.items(), key=lambda kv: -int(kv[1]))[:5]
+    if ranked:
+        console.print("    [dim]Top categories[/dim]")
+        for cid, n in ranked:
+            key = names.get(int(cid), f"category {cid}")
+            console.print(f"      {_m(f'{key:<22}')} {int(n) / placed:>5.0%}")
+
+    tops = (cov.get("top_regions") or [])[:5]
+    if tops:
+        console.print("    [dim]Top regions[/dim]")
+        for r in tops:
+            label = str(r.get("terms", ""))
+            console.print(f"      {int(r['region']):>3}  {int(r['records']):>6,}  "
+                          f"[dim]{_m(label)}[/dim]")
+
+    acc = cov.get("l0_holdout_accuracy")
+    if acc is not None:
+        console.print(f"    [dim]category labels are approximate: level-0 probe accuracy "
+                      f"{acc:.3f}; see docs/atlas.md[/dim]")
+    console.print("    [dim]Compare two datasets with `dropoutt diff a.json b.json`[/dim]")
 
 
 def _finding_order(f: Finding) -> tuple[int, str]:

@@ -44,6 +44,7 @@ th{text-align:left;color:var(--dim);font-weight:500;font-size:.78rem;text-transf
 letter-spacing:.04em;padding:.4rem .6rem;border-bottom:1px solid var(--line)}
 td{padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
 .scroll{overflow-x:auto}
+.note{color:var(--dim);font-size:.84rem;margin:.6rem 0 1rem;max-width:70ch}
 .sev{display:inline-block;width:.55rem;height:.55rem;border-radius:50%;margin-right:.4rem}
 .blocking{background:var(--red)}.warning{background:var(--amber)}.info{background:var(--blue)}
 code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.84em}
@@ -161,6 +162,58 @@ counts are exact; tokens-per-character comes from a stratified sample.</p>
 </div>
 {% endif %}
 
+{% if coverage %}
+<h2>Atlas coverage</h2>
+{% if coverage.withheld %}
+<p class="note">Withheld: {{ coverage.reason }}</p>
+<p class="note">Coverage is withheld rather than estimated when records did not
+land on the atlas. A histogram over records that landed nowhere is worse than no
+histogram.</p>
+{% else %}
+<p class="note">Where this corpus sits on <span class="mono">{{ coverage.version }}</span>,
+a shared coordinate system. It carries no notion of good or bad.</p>
+<div class="scroll">
+<table>
+<tr><th>regions occupied</th><th>spread</th><th>off-atlas</th></tr>
+<tr>
+<td class="mono">{{ coverage.occupied }} of {{ coverage.total }}</td>
+<td class="mono">{% if coverage.concentration is not none %}{{ "%.0f%%"|format(coverage.concentration * 100) }} of even{% else %}—{% endif %}</td>
+<td class="mono">{{ "%.1f%%"|format(coverage.off_atlas_rate * 100) }}</td>
+</tr>
+</table>
+</div>
+{% if coverage.categories %}
+<div class="scroll">
+<table>
+<tr><th>category</th><th>share</th></tr>
+{% for c in coverage.categories %}
+<tr><td>{{ c.name }}</td><td class="mono">{{ "%.0f%%"|format(c.share * 100) }}</td></tr>
+{% endfor %}
+</table>
+</div>
+{% endif %}
+{% if coverage.regions %}
+<div class="scroll">
+<table>
+<tr><th>region</th><th>records</th><th>label words</th></tr>
+{% for r in coverage.regions %}
+<tr><td class="mono">{{ r.id }}</td><td class="mono">{{ r.records }}</td>
+<td>{{ r.terms }}</td></tr>
+{% endfor %}
+</table>
+</div>
+<p class="note">Label words are a caption computed from word frequency, not a
+membership rule. Records are placed by embedding similarity to a region centroid
+and never tested against these words.{% if coverage.l0_accuracy %} Category names
+are approximate: the level-0 probe scores
+{{ "%.3f"|format(coverage.l0_accuracy) }} against labels inherited from dataset
+provenance.{% endif %} See docs/atlas.md.</p>
+{% endif %}
+<p class="note">Compare two corpora with
+<span class="mono">dropoutt diff a.json b.json</span>.</p>
+{% endif %}
+{% endif %}
+
 <h2>Datasets</h2>
 <div class="scroll">
 <table>
@@ -211,6 +264,50 @@ found. Personal data matched by the PII check is masked, but surrounding text is
 """
 
 
+def _coverage_view(cov: dict | None) -> dict | None:
+    """Flatten a coverage facet into what the template needs.
+
+    Returns None when there is nothing to show, and a dict carrying only
+    ``withheld`` plus a reason when coverage was suppressed. Category ids are
+    resolved to names here, because "10: 59" in a shareable report is not
+    information.
+    """
+    if not cov:
+        return None
+
+    from ..atlas.compare import (  # noqa: PLC0415
+        category_names,
+        concentration,
+        unusable_reason,
+    )
+
+    if cov.get("status") != "ok":
+        return {"withheld": True, "reason": unusable_reason(cov),
+                "version": cov.get("atlas_version")}
+
+    names = category_names()
+    raw = cov.get("by_category") or {}
+    placed = sum(int(v) for v in raw.values()) or 1
+    return {
+        "withheld": False,
+        "version": cov.get("atlas_version"),
+        "occupied": cov.get("regions_occupied", 0),
+        "total": cov.get("regions_total", 0),
+        "off_atlas_rate": cov.get("off_atlas_rate", 0.0),
+        "concentration": concentration(cov),
+        "l0_accuracy": cov.get("l0_holdout_accuracy"),
+        "categories": [
+            {"name": names.get(int(cid), f"category {cid}"), "share": int(n) / placed}
+            for cid, n in sorted(raw.items(), key=lambda kv: -int(kv[1]))[:8]
+        ],
+        "regions": [
+            {"id": int(r["region"]), "records": int(r["records"]),
+             "terms": str(r.get("terms", ""))}
+            for r in (cov.get("top_regions") or [])[:10]
+        ],
+    }
+
+
 def render(result: ScanResult, fp: Fingerprint, budget: Any = None) -> str:
     env = Environment(autoescape=True, undefined=StrictUndefined,
                       trim_blocks=True, lstrip_blocks=True)
@@ -256,6 +353,7 @@ def render(result: ScanResult, fp: Fingerprint, budget: Any = None) -> str:
     root = result.ctx.root
     return tpl.render(
         css=_CSS,
+        coverage=_coverage_view(result.ctx.stats.get("atlas_coverage")),
         root=root,
         root_short=root.split("/")[-1] or root,
         records=result.records_scanned,

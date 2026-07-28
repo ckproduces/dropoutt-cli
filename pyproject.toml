@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dropoutt"
-version = "0.1.1"
+version = "0.1.2"
 description = "Pre-flight checks and comparable fingerprints for LLM training datasets."
 readme = "README.md"
 license = { file = "LICENSE" }

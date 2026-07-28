@@ -28,7 +28,7 @@ Check it worked:
 ```
 
 ```
-0.1.0
+0.1.1
 ```
 
 Either activate the environment or use the full path. The rest of this document
@@ -78,7 +78,7 @@ dropoutt doctor
   model2vec              yes       atlas coverage
 
   cache: /Users/you/.cache/dropoutt
-  version: 0.1.0
+  version: 0.1.1
 ```
 
 Nothing here is required. A missing component removes checks; it never produces
@@ -180,7 +180,7 @@ elsewhere.
 
 ## 3. Reading the output
 
-The screen is one argument in seven parts, top to bottom.
+The screen is one argument, top to bottom.
 
 ### Discovered
 
@@ -229,6 +229,11 @@ did not think to ask.
 Look at the fixture: the same Turkish text is **78% more tokens** under Mistral
 than under Llama-3.1. That is a real difference in what a run costs, and for
 non-English corpora it is routinely this large.
+
+### Atlas coverage
+
+Where your records land on `atlas-lite-v0`, a shared coordinate system. Covered
+in [section 7](#7-comparing-two-datasets).
 
 ### Not checked, and why
 
@@ -409,7 +414,53 @@ the tool cannot verify for you. Full schema in
 
 ---
 
-## 7. Browsing what it knows
+## 7. Comparing two datasets
+
+Every scan places your records on `atlas-lite-v0`, a shared coordinate system,
+and prints where they landed:
+
+```
+  Atlas coverage (atlas-lite-v0)
+    Regions      24 of 258 occupied
+    Spread       40% of even coverage  (specialised)
+    Off-atlas    0.0%
+    Top categories
+      general_chat            46%
+      code_explanation        31%
+```
+
+That describes one corpus. The question worth asking involves two — **what does
+this dataset cover that the one I already have does not?**
+
+```bash
+dropoutt scan ./candidate --out ./fp/candidate
+dropoutt scan ./have      --out ./fp/have
+dropoutt diff ./fp/candidate/fingerprint.json ./fp/have/fingerprint.json
+```
+
+```
+    Similarity   0.02  (1.0 = same distribution over regions)
+    Shared       38% of left sits in regions right also occupies
+    New          62% of left sits in regions right never reaches
+
+    Only in left — what adding it would bring
+      151    12%  import, python, return, data, create
+      157    11%  return, function, list, write, given
+```
+
+Read it left against right. It is directional on purpose: a small specialised
+corpus can sit wholly inside a large one while the large one is barely inside
+it. Swap the arguments for the other question.
+
+If either side had too many off-atlas records, `diff` refuses instead of
+producing a confident-looking number from two unreliable ones.
+
+Details, including what the five label words are and are not, in
+[atlas.md](atlas.md).
+
+---
+
+## 8. Browsing what it knows
 
 These need no data and no network:
 
@@ -443,7 +494,7 @@ Every check carries a `Fix`.
 
 ---
 
-## 8. What to do about the common findings
+## 9. What to do about the common findings
 
 | finding | what it means | what to do |
 | --- | --- | --- |
@@ -473,7 +524,7 @@ every run rather than implying a confidence it has not earned.
 
 ---
 
-## 9. Running on a cluster
+## 10. Running on a cluster
 
 Two constraints usually apply: no network on compute nodes, and a read-only
 home.
@@ -496,7 +547,7 @@ Full detail in [portability.md](portability.md).
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 **`command not found: dropoutt`** — the venv's `bin/` is not on `PATH`. Use
 `python -m dropoutt`.

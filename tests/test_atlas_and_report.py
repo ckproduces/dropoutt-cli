@@ -255,3 +255,108 @@ def test_short_records_are_excluded_from_the_atlas_and_the_count_reported(tmp_pa
 
     result = scan(str(tmp_path), detector=LanguageDetector())
     assert result.ctx.stats.get("atlas_coverage") is None
+
+
+# -- atlas comparison ----------------------------------------------------
+
+
+def _coverage(counts: dict[int, int], *, cats: dict[str, int] | None = None,
+              version: str = "tiny-test", status: str = "ok") -> dict:
+    """A coverage facet shaped like the one the fingerprint carries."""
+    total = sum(counts.values())
+    return {
+        "status": status,
+        "records": total,
+        "off_atlas": 0,
+        "atlas_version": version,
+        "region_counts": {str(k): v for k, v in counts.items()},
+        "by_category": cats or {},
+        "top_regions": [
+            {"region": r, "records": n, "terms": f"region {r}"}
+            for r, n in sorted(counts.items(), key=lambda kv: -kv[1])[:12]
+        ],
+        "region_entropy": 1.0,
+        "max_region_entropy": 2.0,
+    }
+
+
+def test_comparison_is_directional():
+    """A small corpus inside a large one is contained; the reverse is not.
+
+    A symmetric similarity score hides exactly the case worth acting on, which
+    is the same reason cross-dataset overlap is directional.
+    """
+    from dropoutt.atlas.compare import compare
+
+    small = _coverage({1: 100})
+    large = _coverage({1: 100, 2: 400, 3: 500})
+
+    assert compare(small, large).added_mass == 0.0, "small is wholly inside large"
+    assert compare(large, small).added_mass > 0.85, "large is mostly outside small"
+
+
+def test_disjoint_corpora_report_all_of_it_as_new():
+    from dropoutt.atlas.compare import compare
+
+    result = compare(_coverage({1: 50, 2: 50}), _coverage({8: 50, 9: 50}))
+    assert result.comparable
+    assert result.added_mass == 1.0
+    assert result.similarity == 0.0
+    assert {r for r, _, _ in result.a_only} == {1, 2}
+
+
+def test_a_corpus_compared_with_itself_is_identical():
+    from dropoutt.atlas.compare import compare
+
+    cov = _coverage({1: 10, 4: 30, 7: 60})
+    result = compare(cov, cov)
+    assert result.added_mass == 0.0
+    assert result.shared_mass == pytest.approx(1.0)
+    assert result.similarity == pytest.approx(1.0)
+    assert not result.a_only
+
+
+def test_comparison_refuses_when_either_side_was_suppressed():
+    """Two unreliable histograms must not produce a confident-looking answer."""
+    from dropoutt.atlas.compare import compare
+
+    good = _coverage({1: 100})
+    bad = _coverage({1: 100}, status="suppressed")
+    bad["reason"] = "78% of records are off-atlas"
+
+    assert not compare(good, bad).comparable
+    assert not compare(bad, good).comparable
+    assert "78%" in compare(good, bad).reason
+
+
+def test_comparison_refuses_across_atlas_versions():
+    """Region ids are only meaningful within one atlas."""
+    from dropoutt.atlas.compare import compare
+
+    result = compare(_coverage({1: 10}), _coverage({1: 10}, version="atlas-lite-v9"))
+    assert not result.comparable
+    assert "atlas version" in result.reason
+
+
+def test_full_histogram_is_used_rather_than_the_display_head():
+    """Comparing on the top-twelve head computes shares over a fraction of the data.
+
+    On real corpora the head covered 88% of one side and 36% of the other, which
+    overstated novelty at 100% where the true figure was 62%.
+    """
+    from dropoutt.atlas.compare import compare, region_mass
+
+    counts = {r: 10 for r in range(30)}
+    cov = _coverage(counts)
+    assert len(region_mass(cov)) == 30, "all regions must be read, not just the head"
+    assert compare(cov, cov).a_head_coverage == 1.0
+
+
+def test_region_counts_reach_the_coverage_report(tiny_atlas):
+    """Regression: only the top twelve regions were stored, so diff was partial."""
+    regions = np.array([1, 1, 2, 3, 3, 3, 5] * 20, dtype=np.int32)
+    cov = tiny_atlas.coverage(regions, np.zeros(140, dtype=np.int32))
+    assert cov["region_counts"] == {"1": 40, "2": 20, "3": 60, "5": 20}
+    from dropoutt.compat import json_dumps
+
+    json_dumps(cov)  # keys must stay JSON-serialisable

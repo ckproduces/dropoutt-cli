@@ -44,6 +44,111 @@ online one. Populate the cache first with `dropoutt fetch`. If no cached chat
 template is found, the run says so before the report rather than counting raw
 text silently.
 
+Atlas coverage appears in the terminal report and in `report.html`: how many of
+the atlas regions the corpus occupies, its spread as a share of even coverage,
+the off-atlas rate, the top categories and the top regions with their terms. The
+level-0 probe accuracy is printed underneath it. Above a 10% off-atlas rate the
+numbers are withheld and the reason is printed instead, because an atlas that
+does not fit the corpus produces a histogram that looks precise and is not.
+`--no-atlas` skips the assignment step and the block with it. When coverage is
+computed, the full region histogram also goes into `fingerprint.json`, which is
+what `dropoutt diff` reads.
+
+## `dropoutt diff LEFT RIGHT`
+
+Compare two fingerprints against the shared atlas.
+
+| flag | default | meaning |
+| --- | --- | --- |
+| `--full` | off | list every differing region instead of truncating to the top few |
+
+Both arguments are `fingerprint.json` files written by `dropoutt scan`.
+
+The comparison is directional and reads left against right: **what does LEFT
+cover that RIGHT does not**. It is not symmetric. A small specialised corpus can
+sit wholly inside a large one while the large one is barely inside it, so run it
+with the dataset you are considering on the left and the mixture you already
+have on the right.
+
+```bash
+dropoutt diff ./candidate/.dropoutt/fingerprint.json ./mixture/.dropoutt/fingerprint.json
+dropoutt diff ./candidate/.dropoutt/fingerprint.json ./mixture/.dropoutt/fingerprint.json --full
+```
+
+```
+──────────────────────────────────── dropoutt diff ─────────────────────────────────────
+  left  /private/tmp/fp-code
+  right /private/tmp/fp-turkish_instructions
+
+  Shape
+                 left      right
+records         1,500      1,500
+datasets            1          1
+characters    908,255    568,510
+
+  Atlas comparison
+    Similarity   0.02  (1.0 = same distribution over regions)
+    Shared       38% of left sits in regions right also occupies
+    New          62% of left sits in regions right never reaches
+
+    Only in left — what adding it would bring
+      151    12%  import, python, return, data, create
+      157    11%  return, function, list, write, given
+      149     9%  return, function, write, given, else
+      153     8%  list, return, python, function, write
+      147     5%  class, return, name, initself, python
+      155     5%  import, model, data, python, create
+      156     4%  random, import, password, python, generate
+      158     2%  import, return, none, class, assert
+      and 16 more; --full to list them
+
+    Only in right
+       94     5%  yardımcı, nasıl, şekilde, olabilir, sahip
+       98     4%  makine, algoritma, öğrenimi, oluşturun, etmek
+       89     4%  olduğunu, büyük, film, ortaya, şekilde
+        7     4%  cümle, cümlenin, cümleyi, adım, doğru
+       92     3%  uygulama, yazılım, kullanıcı, windows, şekilde
+
+    Category mix
+category            left    right    delta
+code_generation      94%       0%     +94%
+general_chat          3%      95%     -92%
+turkish_culture       0%       3%      -3%
+code_explanation      3%       0%      +3%
+  This is geometry, not a recommendation. Whether new coverage helps depends on what you
+are training.
+```
+
+The Shape table is read straight from the two fingerprints: records, datasets,
+characters, and the near- and exact-duplicate rates when both sides recorded
+them.
+
+Similarity is the cosine of the two region-mass vectors over their union, so
+1.0 means the same distribution across regions and not the same records.
+**Shared** is the share of left's placed mass sitting in regions right also
+occupies; **New** is the share sitting in regions right never reaches at all.
+The two region lists are shares of their own side's placed mass, truncated to
+the top 8 and top 5 unless `--full` is given. The category mix table lists only
+categories that differ by at least 2 points, again capped at 8 rows without
+`--full`.
+
+If the two fingerprints were written by different pipeline versions the run says
+so and continues.
+
+The comparison refuses when it would have to invent an answer:
+
+```
+  Atlas comparison
+    not comparable left side: coverage status is 'not computed (no atlas available)'
+    Coverage is withheld rather than estimated when records did not land on the atlas.
+```
+
+That happens when either side's coverage was suppressed or never computed, and
+when the two fingerprints were built against different atlas versions, where the
+region ids do not refer to the same regions. The exit code is 0 in every case
+above, including this one. A missing or unreadable fingerprint file is a usage
+error and exits 2.
+
 ## `dropoutt init [PATH]`
 
 Infer configuration and write `dropoutt.toml`. `PATH` defaults to `.`.

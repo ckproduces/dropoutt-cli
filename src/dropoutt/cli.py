@@ -21,7 +21,13 @@ from rich.markup import escape
 from rich.table import Table
 
 from . import __version__
-from .compat import HAVE_MODEL2VEC, HAVE_TOKENIZERS, capability_report, json_dumps
+from .compat import (
+    HAVE_MODEL2VEC,
+    HAVE_TOKENIZERS,
+    capability_report,
+    json_dumps,
+    json_loads,
+)
 from .config import CONFIG_NAME, Config, cache_dir, parse_profile, resolve_model
 from .models import Profile
 from .registry_data import resolve_model_alias
@@ -191,6 +197,139 @@ def init(
     console.print(f"  Detected profile: [bold]{profile.value}[/bold] "
                   f"from {len(verdicts)} dataset(s)")
     console.print("  [dim]Edit the file to declare a target if you want findings to block.[/dim]")
+
+
+@app.command()
+def diff(
+    left: Path = typer.Argument(..., help="Fingerprint of the dataset you are considering."),
+    right: Path = typer.Argument(..., help="Fingerprint of what you already have."),
+    full: bool = typer.Option(False, "--full", help="List every differing region."),
+) -> None:
+    """Compare two fingerprints against the shared atlas.
+
+    Directional, and read left-against-right: "what does LEFT cover that RIGHT
+    does not". That is the question worth asking before adding a dataset to a
+    mixture, and it is not symmetric — a small specialised corpus can be wholly
+    inside a large one while the large one is barely inside it.
+
+    Both arguments are fingerprint.json files written by `dropoutt scan`.
+    """
+    from .atlas.compare import compare
+
+    fps = []
+    for p in (left, right):
+        if not p.exists():
+            console.print(f"[red]No such file:[/red] {p}")
+            raise typer.Exit(EXIT_USAGE)
+        try:
+            fps.append(json_loads(p.read_text(encoding="utf-8")))
+        except Exception as exc:  # noqa: BLE001
+            console.print(f"[red]Could not read {p}:[/red] {type(exc).__name__}: {exc}")
+            raise typer.Exit(EXIT_USAGE) from exc
+
+    a, b = fps
+    console.print()
+    console.rule("[bold]dropoutt diff[/bold]", style="dim")
+    console.print(f"  [dim]left [/dim] {escape(str(a.get('root', left)))}")
+    console.print(f"  [dim]right[/dim] {escape(str(b.get('root', right)))}")
+
+    if a.get("pipeline_version") != b.get("pipeline_version"):
+        console.print(f"\n  [yellow]note[/yellow] different pipeline versions "
+                      f"({escape(str(a.get('pipeline_version')))} against "
+                      f"{escape(str(b.get('pipeline_version')))}); measurements may "
+                      f"not mean the same thing")
+
+    _diff_shape(a, b)
+
+    cov_a = (a.get("facets", {}).get("coverage") or {}).get("values")
+    cov_b = (b.get("facets", {}).get("coverage") or {}).get("values")
+    result = compare(cov_a, cov_b)
+
+    console.print("\n  [bold]Atlas comparison[/bold]")
+    if not result.comparable:
+        console.print(f"    [yellow]not comparable[/yellow] [dim]{escape(result.reason)}[/dim]")
+        console.print("    [dim]Coverage is withheld rather than estimated when records "
+                      "did not land on the atlas.[/dim]")
+        raise typer.Exit(EXIT_OK)
+
+    console.print(f"    Similarity   {result.similarity:.2f}  "
+                  f"[dim](1.0 = same distribution over regions)[/dim]")
+    console.print(f"    Shared       {result.shared_mass:.0%} of left sits in regions "
+                  f"right also occupies")
+    console.print(f"    New          [bold]{result.added_mass:.0%}[/bold] of left sits "
+                  f"in regions right never reaches")
+
+    if result.a_only:
+        console.print("\n    [bold]Only in left[/bold] [dim]— what adding it would "
+                      "bring[/dim]")
+        for r, share, terms in (result.a_only if full else result.a_only[:8]):
+            console.print(f"      {r:>3}  {share:>5.0%}  [dim]{escape(terms)}[/dim]")
+        if not full and len(result.a_only) > 8:
+            console.print(f"      [dim]and {len(result.a_only) - 8} more; --full to "
+                          f"list them[/dim]")
+    else:
+        console.print("\n    [dim]Every region left occupies is already covered by "
+                      "right.[/dim]")
+
+    if result.b_only:
+        console.print("\n    [bold]Only in right[/bold]")
+        for r, share, terms in (result.b_only if full else result.b_only[:5]):
+            console.print(f"      {r:>3}  {share:>5.0%}  [dim]{escape(terms)}[/dim]")
+
+    shifts = [row for row in result.category_shift if abs(row[2] - row[3]) >= 0.02]
+    if shifts:
+        console.print("\n    [bold]Category mix[/bold]")
+        table = Table(show_header=True, header_style="dim", box=None, padding=(0, 2),
+                      pad_edge=False)
+        table.add_column("category")
+        table.add_column("left", justify="right")
+        table.add_column("right", justify="right")
+        table.add_column("delta", justify="right")
+        for _cid, key, sa, sb in (shifts if full else shifts[:8]):
+            delta = sa - sb
+            style = "green" if delta > 0 else "red"
+            table.add_row(key, f"{sa:.0%}", f"{sb:.0%}",
+                          f"[{style}]{delta:+.0%}[/{style}]")
+        console.print(table)
+
+    partial = min(result.a_head_coverage, result.b_head_coverage)
+    if partial < 0.999:
+        console.print(f"\n  [yellow]note[/yellow] one side predates the full region "
+                      f"histogram, so shares are computed over the stored top regions: "
+                      f"{result.a_head_coverage:.0%} of left, "
+                      f"{result.b_head_coverage:.0%} of right. Re-scan for exact numbers.")
+    console.print("  [dim]This is geometry, not a recommendation. Whether new coverage "
+                  "helps depends on what you are training.[/dim]\n")
+    raise typer.Exit(EXIT_OK)
+
+
+def _diff_shape(a: dict, b: dict) -> None:
+    """Size and redundancy, side by side."""
+    sa = (a.get("facets", {}).get("shape") or {}).get("values", {})
+    sb = (b.get("facets", {}).get("shape") or {}).get("values", {})
+    ra = (a.get("facets", {}).get("redundancy") or {}).get("values", {})
+    rb = (b.get("facets", {}).get("redundancy") or {}).get("values", {})
+    if not sa and not sb:
+        return
+
+    table = Table(show_header=True, header_style="dim", box=None, padding=(0, 2),
+                  pad_edge=False)
+    table.add_column("")
+    table.add_column("left", justify="right")
+    table.add_column("right", justify="right")
+    rows = [
+        ("records", f"{sa.get('records', 0):,}", f"{sb.get('records', 0):,}"),
+        ("datasets", f"{sa.get('datasets', 0):,}", f"{sb.get('datasets', 0):,}"),
+        ("characters", f"{sa.get('total_chars', 0):,}", f"{sb.get('total_chars', 0):,}"),
+    ]
+    for label, key in (("near-duplicate rate", "near_duplicate_rate"),
+                       ("exact-duplicate rate", "exact_duplicate_rate")):
+        if key in ra or key in rb:
+            rows.append((label, f"{ra.get(key, 0):.1%}", f"{rb.get(key, 0):.1%}"))
+    console.print("\n  [bold]Shape[/bold]")
+    for label, x, y in rows:
+        table.add_row(label, x, y)
+    console.print(table)
 
 
 @app.command("index-eval")

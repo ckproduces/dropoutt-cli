@@ -17,7 +17,7 @@ everything that degraded says so.
 
 from __future__ import annotations
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 from .models import (  # noqa: F401
     Confidence,

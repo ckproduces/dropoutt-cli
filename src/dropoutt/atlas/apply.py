@@ -172,6 +172,15 @@ class Atlas:
             "region_entropy": round(entropy, 4),
             "max_region_entropy": round(float(np.log(self.n_regions)), 4),
             "by_category": cat_counts,
+            # The full histogram, sparse. `top_regions` below is a display
+            # convenience capped at twelve, and comparing two fingerprints on
+            # that head alone silently computes shares over a fraction of each
+            # corpus. Only occupied regions are stored, so this costs a few
+            # hundred small integers and makes `dropoutt diff` exact.
+            "region_counts": {
+                str(int(r)): int(region_counts[r])
+                for r in np.nonzero(region_counts)[0]
+            },
             "top_regions": [
                 {"region": int(r), "records": int(region_counts[r]),
                  "terms": self.region_terms[r] if r < len(self.region_terms) else ""}

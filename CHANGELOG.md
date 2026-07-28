@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.1.2
+
+The atlas was computed on every scan and then displayed nowhere. Coverage went
+into `fingerprint.json` and never reached the terminal or the HTML report, and
+there was no way to put two datasets side by side, which is the only thing a
+shared coordinate system is for.
+
+### Added
+
+- **Atlas coverage in the scan output**, in the terminal and in `report.html`:
+  regions occupied, spread against even coverage, off-atlas rate, top categories
+  by name, and top regions with their label words. Suppressed coverage prints
+  the reason rather than the numbers.
+- **`dropoutt diff LEFT RIGHT`** compares two fingerprints across the shared
+  atlas and answers "what does LEFT cover that RIGHT does not". Reports
+  similarity, shared and new mass, the regions unique to each side, and the
+  category mix with deltas.
+
+  Directional, read left against right, for the same reason cross-dataset
+  overlap is: a small specialised corpus can sit wholly inside a large one while
+  the large one is barely inside it, and a symmetric score hides exactly the
+  case worth acting on.
+
+  It refuses rather than guesses. If either side had coverage suppressed, or the
+  two fingerprints were built against different atlas versions, it says so and
+  stops. It also does not rank datasets: whether new coverage helps depends on
+  what you are training.
+- **The full region histogram in the coverage facet.** `top_regions` is a
+  display head capped at twelve, and comparing on it computed shares over a
+  fraction of each corpus. On two real corpora the head covered 88% of one side
+  and 36% of the other, overstating novelty as 100% where the true figure was
+  62%. Only occupied regions are stored, so this costs a few hundred small
+  integers.
+- Category ids are resolved to names everywhere they are shown. `"10": 59` is
+  not information.
+
+`PIPELINE_VERSION` is bumped because the coverage facet changed.
+
 ## 0.1.1
 
 Everything here was found by writing [docs/getting-started.md](docs/getting-started.md)

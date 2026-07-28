@@ -49,6 +49,89 @@ sources were used and which were unavailable.
 Total build cost is a few minutes of CPU and well under $20 of compute even at
 full scale.
 
+## Putting your data on it
+
+Coverage is computed on every `dropoutt scan` that has the atlas extra
+installed. It appears in the terminal, in `report.html`, and in the `coverage`
+facet of `fingerprint.json`.
+
+```bash
+dropoutt scan ./my-corpus
+```
+
+```
+  Atlas coverage (atlas-lite-v0)
+    Regions      24 of 258 occupied
+    Spread       40% of even coverage  (specialised)
+    Off-atlas    0.0%
+    Top categories
+      general_chat            46%
+      code_explanation        31%
+      news_current_events     12%
+      code_generation          9%
+      sql_data                 1%
+    Top regions
+      160      49  import, return, file, license, version
+      161      47  import, return, class, none, name
+       62      32  return, şekilde, code, codeprep, kullanarak
+```
+
+| line | how to read it |
+| --- | --- |
+| Regions occupied | how much of the map this corpus touches at all |
+| Spread | region entropy against the entropy of a corpus spread evenly. Low is not bad: a specialised corpus *should* be concentrated, and a pretraining mixture should not be. |
+| Off-atlas | records too far from every centroid to place. Above 10% the numbers are withheld. |
+
+`--no-atlas` skips it. If it never appears, run `dropoutt doctor` — coverage
+needs the `atlas` extra.
+
+## Comparing two corpora
+
+One corpus on the map is a description. Two is a decision, and that is the
+question the atlas exists to answer: **what does this dataset cover that the one
+I already have does not?**
+
+```bash
+dropoutt scan ./candidate  --out ./fp/candidate
+dropoutt scan ./have       --out ./fp/have
+dropoutt diff ./fp/candidate/fingerprint.json ./fp/have/fingerprint.json
+```
+
+Real output, Python code instructions against Turkish general instructions:
+
+```
+  Atlas comparison
+    Similarity   0.02  (1.0 = same distribution over regions)
+    Shared       38% of left sits in regions right also occupies
+    New          62% of left sits in regions right never reaches
+
+    Only in left — what adding it would bring
+      151    12%  import, python, return, data, create
+      157    11%  return, function, list, write, given
+      149     9%  return, function, write, given, else
+
+    Only in right
+       94     5%  yardımcı, nasıl, şekilde, olabilir, sahip
+       98     4%  makine, algoritma, öğrenimi, oluşturun, etmek
+
+    Category mix
+category            left    right    delta
+code_generation      94%       0%     +94%
+general_chat          3%      95%     -92%
+```
+
+**The comparison is directional**, read left against right, for the same reason
+cross-dataset overlap is. A small specialised corpus can sit wholly inside a
+large one while the large one is barely inside it; a symmetric score hides
+exactly the case worth acting on. Swap the arguments to ask the other question.
+
+**It refuses rather than guesses.** If either side had coverage suppressed, or
+the two fingerprints were computed against different atlas versions, `diff`
+says so and stops. Region ids only mean something within one atlas.
+
+**It does not rank datasets.** `New 62%` is geometry. Whether new coverage helps
+depends on what you are training, which the tool does not know.
+
 ## Region labels: the five words
 
 Each region prints with five words next to it:
