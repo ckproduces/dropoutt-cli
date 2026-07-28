@@ -22,10 +22,11 @@ from typing import Any
 #:
 #: 0.1.1 corrected the shape facet, which reported bytes on disk as
 #: `total_chars` and a hardcoded 0 words. 0.1.2 added the full `region_counts`
-#: histogram to the coverage facet, which is what makes `dropoutt diff` exact
-#: rather than computed over a twelve-region display head. Fingerprints from
-#: earlier versions describe something different and must not collide.
-PIPELINE_VERSION = "0.1.2"
+#: histogram. 0.1.3 makes `content_hash` cover normalized record content and
+#: structure rather than only file sizes and record counts, and hashes the
+#: effective CLI configuration. Fingerprints from earlier versions describe
+#: something different and must not collide.
+PIPELINE_VERSION = "0.1.3"
 FINGERPRINT_SCHEMA_VERSION = "fp-v0.1"
 
 

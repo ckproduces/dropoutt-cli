@@ -41,6 +41,30 @@
       "verified_from": "https://huggingface.co/api/datasets/EleutherAI/hendrycks_math"
     },
     {
+      "id": "math_500", "name": "MATH-500", "hf_id": "HuggingFaceH4/MATH-500", "config": "default",
+      "eval_split": "test", "n_eval": 500,
+      "question_fields": ["problem"], "answer_field": "answer",
+      "public": true, "license": null, "shippable": false,
+      "note": "no license tag on the Hub; split, row count and fields verified through Dataset Viewer",
+      "verified_from": "https://datasets-server.huggingface.co/splits?dataset=HuggingFaceH4%2FMATH-500"
+    },
+    {
+      "id": "aime_2024", "name": "AIME 2024", "hf_id": "HuggingFaceH4/aime_2024", "config": "default",
+      "eval_split": "train", "n_eval": 30,
+      "question_fields": ["problem"], "answer_field": "answer",
+      "public": true, "license": null, "shippable": false,
+      "note": "train is the only split; no license tag on the Hub",
+      "verified_from": "https://datasets-server.huggingface.co/splits?dataset=HuggingFaceH4%2Faime_2024"
+    },
+    {
+      "id": "aime_2025", "name": "AIME 2025", "hf_id": "MathArena/aime_2025", "config": "default",
+      "eval_split": "train", "n_eval": 30,
+      "question_fields": ["problem"], "answer_field": "answer",
+      "public": true, "license": null, "shippable": false,
+      "note": "train is the only split; no license tag on the Hub",
+      "verified_from": "https://datasets-server.huggingface.co/splits?dataset=MathArena%2Faime_2025"
+    },
+    {
       "id": "hellaswag", "name": "HellaSwag", "hf_id": "Rowan/hellaswag", "config": "default",
       "eval_split": "validation", "n_eval": 10042,
       "question_fields": ["ctx", "endings"], "answer_field": "label",
@@ -92,6 +116,14 @@
       "question_fields": ["prompt"], "answer_field": "canonical_solution",
       "public": true, "license": "mit", "shippable": true,
       "verified_from": "https://huggingface.co/api/datasets/openai/openai_humaneval"
+    },
+    {
+      "id": "bigcodebench", "name": "BigCodeBench", "hf_id": "bigcode/bigcodebench",
+      "config": "default", "eval_split": "v0.1.4", "n_eval": 1140,
+      "question_fields": ["instruct_prompt", "complete_prompt"], "answer_field": "canonical_solution",
+      "public": true, "license": "apache-2.0", "shippable": true,
+      "note": "uses the latest versioned split exposed by Dataset Viewer at verification time",
+      "verified_from": "https://datasets-server.huggingface.co/splits?dataset=bigcode%2Fbigcodebench"
     },
     {
       "id": "mbpp", "name": "MBPP", "hf_id": "google-research-datasets/mbpp", "config": "full",
@@ -175,6 +207,15 @@
       "public": true, "license": null, "shippable": false,
       "note": "wrapped by CETVEL; no license tag on the Hub",
       "verified_from": "https://huggingface.co/api/datasets/AYueksel/TurkishMMLU"
+    },
+    {
+      "id": "mmlu_redux_2", "name": "MMLU-Redux 2.0",
+      "hf_id": "edinburgh-dawg/mmlu-redux-2.0", "config": null,
+      "eval_split": "test", "n_eval": 5700,
+      "question_fields": ["question", "choices"], "answer_field": "answer",
+      "public": true, "license": null, "shippable": false,
+      "note": "57 subject configs with 100 test rows each; no license tag on the Hub",
+      "verified_from": "https://datasets-server.huggingface.co/splits?dataset=edinburgh-dawg%2Fmmlu-redux-2.0"
     }
   ],
   "suites": {

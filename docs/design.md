@@ -79,15 +79,18 @@ that the small dataset can be dropped.
 The matrix is therefore computed and rendered as "this share of *row* also
 appears in *column*", and a test asserts it is not symmetric.
 
-## 6. The scan output must be safe to share
+## 6. The scan output must state its trust boundary
 
-The report exists to be pasted into a pull request. So:
+Findings need concrete examples to be inspectable, which means the default
+report is not generically safe to move outside the dataset's trust boundary.
+The CLI warns at write time and `--no-evidence` removes record excerpts and
+source locations. Independently:
 
 - PII matches are masked before they reach any output file. The check emits
   `ah***@***.com`, never the address, and deliberately omits the surrounding
   excerpt that would put the value back.
-- A test plants a secret in a fixture and fails if it appears in the generated
-  report.
+- A test plants values matched by the PII catalog and fails if they appear in
+  the generated report. This is not presented as a general secret scanner.
 - Control characters are mapped into the Unicode Control Pictures block rather
   than stripped, because a tool that reports control characters and then renders
   them invisibly has told the user nothing.

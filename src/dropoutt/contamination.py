@@ -2,8 +2,10 @@
 
 What ships is an **index, not the benchmark**. For each evaluation instance we
 extract its word 8-grams, hash each to 64 bits, and store a mapping from hash to
-the instance ids containing it. The benchmark text is not recoverable from that,
-and the index for a ten-thousand-instance benchmark is a couple of megabytes.
+the instance ids containing it. Raw text is not stored, but known candidate
+phrases can be tested against the unkeyed hashes. Private indices therefore stay
+inside the evaluation set's trust boundary. An index for a ten-thousand-instance
+benchmark is a couple of megabytes.
 
 Mapping to instance ids rather than to mere presence is required, because the
 Tulu 3 rule is evaluated per evaluation instance:

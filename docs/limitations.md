@@ -89,6 +89,8 @@ region purity are recorded inside the artifact and printed by
   problem with mature tools. dropoutt checks the quality of their output.
 - **Fixing your data.** Every finding names a fix; none of them are applied.
   A tool that both diagnoses and silently rewrites is a tool nobody can audit.
-- **Anything that phones home.** The scan makes network calls in exactly two
-  places: resolving `--model` against the Hub, and fetching an embedding model
-  for the atlas. Both are cached and both are disabled by `--offline`.
+- **Anything that phones home.** There is no telemetry or hosted scan service.
+  Network access is limited to fetching tokenizers, tokenizer configuration,
+  and the atlas embedding model from the Hugging Face Hub. These are cached and
+  all access is disabled by `--offline`, `DROPOUTT_OFFLINE=1`, or
+  `HF_HUB_OFFLINE=1`.

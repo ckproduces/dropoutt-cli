@@ -8,13 +8,16 @@ behaviour: the point of the tool is to report what is wrong with the data.
 
 from __future__ import annotations
 
+import bz2
 import csv
 import gzip
 import io
+import lzma
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Iterator
 
-from .compat import HAVE_PYARROW, json_loads
+from .compat import HAVE_PYARROW, HAVE_ZSTANDARD, json_loads
 
 
 @dataclass(slots=True)
@@ -31,6 +34,18 @@ class RawRecord:
 def open_maybe_compressed(path: str, compressed: bool) -> io.TextIOBase:
     if compressed and path.endswith(".gz"):
         return io.TextIOWrapper(gzip.open(path, "rb"), encoding="utf-8", errors="replace")
+    if compressed and path.endswith(".bz2"):
+        return io.TextIOWrapper(bz2.open(path, "rb"), encoding="utf-8", errors="replace")
+    if compressed and path.endswith(".xz"):
+        return io.TextIOWrapper(lzma.open(path, "rb"), encoding="utf-8", errors="replace")
+    if compressed and path.endswith(".zst"):
+        if not HAVE_ZSTANDARD:
+            raise RuntimeError("zstd support not installed; pip install 'dropoutt[zstd]'")
+        import zstandard  # noqa: PLC0415
+
+        raw = open(path, "rb")
+        stream = zstandard.ZstdDecompressor().stream_reader(raw)
+        return io.TextIOWrapper(stream, encoding="utf-8", errors="replace")
     return open(path, "r", encoding="utf-8", errors="replace")
 
 
@@ -106,7 +121,10 @@ def read_text(path: str, *, compressed: bool = False, limit: int | None = None,
 
 
 def read_csv(path: str, *, compressed: bool = False, limit: int | None = None) -> Iterator[RawRecord]:
-    delimiter = "\t" if path.endswith((".tsv", ".tsv.gz")) else ","
+    effective = Path(path)
+    if effective.suffix.lower() in {".gz", ".bz2", ".xz", ".zst"}:
+        effective = effective.with_suffix("")
+    delimiter = "\t" if effective.suffix.lower() == ".tsv" else ","
     with open_maybe_compressed(path, compressed) as fh:
         try:
             reader = csv.DictReader(fh, delimiter=delimiter)
@@ -143,18 +161,105 @@ def read_parquet(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
             idx += 1
 
 
+def read_arrow(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
+    """Arrow IPC file/stream or Feather table."""
+    if not HAVE_PYARROW:
+        yield RawRecord(
+            None, path, 0,
+            error="Arrow/Feather support not installed; pip install 'dropoutt[parquet]'",
+        )
+        return
+
+    try:
+        import pyarrow as pa  # noqa: PLC0415
+        import pyarrow.ipc as ipc  # noqa: PLC0415
+
+        source = pa.memory_map(path, "r")
+        try:
+            reader = ipc.open_file(source)
+            batches = (
+                reader.get_batch(i) for i in range(reader.num_record_batches)
+            )
+        except Exception:
+            source.seek(0)
+            try:
+                batches = ipc.open_stream(source)
+            except Exception:
+                # Feather V1 predates the Arrow IPC file layout.
+                import pyarrow.feather as feather  # noqa: PLC0415
+
+                batches = feather.read_table(path).to_batches(max_chunksize=4096)
+
+        idx = 0
+        try:
+            for batch in batches:
+                for row in batch.to_pylist():
+                    if limit is not None and idx >= limit:
+                        return
+                    yield RawRecord(row, path, idx)
+                    idx += 1
+        finally:
+            source.close()
+    except Exception as exc:
+        yield RawRecord(None, path, 0, error=f"{type(exc).__name__}: {exc}")
+
+
+def read_orc(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
+    """Apache ORC, using the same optional pyarrow dependency as Parquet."""
+    if not HAVE_PYARROW:
+        yield RawRecord(
+            None, path, 0,
+            error="ORC support not installed; pip install 'dropoutt[parquet]'",
+        )
+        return
+    import pyarrow.orc as orc  # noqa: PLC0415
+
+    try:
+        source = orc.ORCFile(path)
+        idx = 0
+        for stripe in range(source.nstripes):
+            for row in source.read_stripe(stripe).to_pylist():
+                if limit is not None and idx >= limit:
+                    return
+                yield RawRecord(row, path, idx)
+                idx += 1
+    except Exception as exc:
+        yield RawRecord(None, path, 0, error=f"{type(exc).__name__}: {exc}")
+
+
 def read_file(path: str, suffix: str, *, compressed: bool = False,
               limit: int | None = None) -> Iterator[RawRecord]:
     """Dispatch on suffix."""
-    if suffix in (".jsonl", ".ndjson"):
-        yield from read_jsonl(path, compressed=compressed, limit=limit)
-    elif suffix == ".json":
-        yield from read_json(path, compressed=compressed, limit=limit)
-    elif suffix == ".parquet":
-        yield from read_parquet(path, limit=limit)
-    elif suffix in (".csv", ".tsv"):
-        yield from read_csv(path, compressed=compressed, limit=limit)
-    elif suffix in (".txt", ".md"):
-        yield from read_text(path, compressed=compressed, limit=limit)
-    else:
-        return
+    try:
+        if compressed and suffix in {".parquet", ".arrow", ".feather", ".orc"}:
+            yield RawRecord(
+                None,
+                path,
+                0,
+                error=(
+                    f"external compression is not supported for {suffix}; "
+                    "decompress the file first"
+                ),
+            )
+            return
+        if suffix in (".jsonl", ".ndjson"):
+            yield from read_jsonl(path, compressed=compressed, limit=limit)
+        elif suffix == ".json":
+            yield from read_json(path, compressed=compressed, limit=limit)
+        elif suffix == ".parquet":
+            yield from read_parquet(path, limit=limit)
+        elif suffix in (".arrow", ".feather"):
+            yield from read_arrow(path, limit=limit)
+        elif suffix == ".orc":
+            yield from read_orc(path, limit=limit)
+        elif suffix in (".csv", ".tsv"):
+            yield from read_csv(path, compressed=compressed, limit=limit)
+        elif suffix in (".txt", ".md"):
+            yield from read_text(path, compressed=compressed, limit=limit)
+    except Exception as exc:  # noqa: BLE001
+        yield RawRecord(
+            None,
+            path,
+            0,
+            error=f"{type(exc).__name__}: {exc}",
+        )

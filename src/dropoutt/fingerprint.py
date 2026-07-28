@@ -2,7 +2,8 @@
 
 A fingerprint is a fixed-schema description of a dataset that can be compared
 with any other fingerprint produced by the same pipeline version. It contains no
-recoverable records, which is what makes it safe to paste into a pull request.
+record excerpts, but it does contain paths, dataset names, aggregate metadata,
+and stable hashes. Export policy still applies.
 
 The identifier covers every input that can change the numbers. Pipeline version,
 config, content hash and tokenizer hash are the obvious ones; the atlas, the
@@ -91,9 +92,9 @@ def build(
     """Assemble a fingerprint from a completed scan."""
     by_id = {f.check_id: f for f in findings}
 
-    content_hash = hash_many(
+    content_hash = str(ctx.stats.get("content_hash") or hash_many(
         [f"{d.name}:{d.total_bytes}:{d.record_count}" for d in ctx.datasets]
-    )
+    ))
     tokenizer_hash = ctx.tokenizer.tokenizer_hash if ctx.tokenizer else ""
     atlas_hash = getattr(ctx.atlas, "artifact_hash", "") if ctx.atlas else ""
     langid_hash = ctx.detector.backend if ctx.detector else ""
@@ -218,7 +219,14 @@ def build(
     contamination: dict[str, Any] = {}
     contam = by_id.get("T1-CONTAM-001")
     if contam is not None:
-        contamination = contam.data.get("results", {})
+        contamination = {
+            name: {
+                key: value
+                for key, value in result.items()
+                if key != "witnesses"
+            }
+            for name, result in contam.data.get("results", {}).items()
+        }
         contamination["_rule"] = contam.data.get("rule")
     elif ctx.contamination is None:
         contamination["status"] = "not computed (no benchmark index available)"

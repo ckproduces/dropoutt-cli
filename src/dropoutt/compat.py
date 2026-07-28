@@ -1,9 +1,9 @@
 """Optional-dependency shims.
 
-Every accelerator in this package is optional. The rule from the design is that
-the core scan must run with no compiled dependency other than ``tokenizers``,
-because that is the only one still shipping ``manylinux_2_17`` and therefore the
-only one that reliably installs on older cluster images.
+Every accelerator in this package is optional. NumPy is the only compiled core
+dependency. Tokenizers, Parquet, language identification, atlas embeddings, and
+the Rust accelerators are optional so an older cluster image can still run the
+structural scan.
 
 Each shim exposes a ``HAVE_*`` flag plus a working fallback that produces the
 same answers, only slower or less accurate. When a fallback is less accurate
@@ -74,6 +74,17 @@ except ImportError:
 
 
 # --------------------------------------------------------------------------
+# Zstandard. gzip, bzip2 and xz are in the standard library; zstd is optional.
+# --------------------------------------------------------------------------
+try:
+    import zstandard as _zstandard  # noqa: F401
+
+    HAVE_ZSTANDARD = True
+except ImportError:
+    HAVE_ZSTANDARD = False
+
+
+# --------------------------------------------------------------------------
 # MinHash. rensa is a Rust implementation; the fallback in minhash.py is a
 # numpy-vectorised implementation using the same permutation scheme and banding,
 # so cluster membership agrees. It is slower, not different.
@@ -127,8 +138,13 @@ def capability_report() -> dict[str, dict[str, Any]]:
         },
         "pyarrow": {
             "available": HAVE_PYARROW,
-            "impact": "reading .parquet files",
+            "impact": "reading .parquet, .arrow, .feather, and .orc files",
             "install": "pip install 'dropoutt[parquet]'",
+        },
+        "zstandard": {
+            "available": HAVE_ZSTANDARD,
+            "impact": "reading .zst-compressed files",
+            "install": "pip install 'dropoutt[zstd]'",
         },
         "rensa": {
             "available": HAVE_RENSA,

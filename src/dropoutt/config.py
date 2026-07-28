@@ -25,8 +25,8 @@ from .tokenizer_panel import TokenizerHandle, load_tokenizer
 
 if sys.version_info >= (3, 11):
     import tomllib
-else:  # pragma: no cover
-    tomllib = None
+else:  # pragma: no cover - exercised on supported Python 3.10
+    import tomli as tomllib
 
 CONFIG_NAME = "dropoutt.toml"
 
@@ -71,18 +71,38 @@ class Config:
         return hash_many([
             str(self.model), self.profile, str(self.target), str(self.seq_len),
             str(self.tier), self.minhash_preset, ",".join(sorted(self.mute)),
+            ",".join(sorted(self.eval_sets)),
         ])
 
     @classmethod
     def load(cls, root: Path) -> "Config":
         path = root / CONFIG_NAME if root.is_dir() else root.parent / CONFIG_NAME
-        if not path.exists() or tomllib is None:
+        if not path.exists():
             return cls()
         try:
             data = tomllib.loads(path.read_text(encoding="utf-8"))
-        except Exception:
-            return cls()
+        except Exception as exc:
+            raise ValueError(
+                f"could not parse {path}: {type(exc).__name__}: {exc}"
+            ) from exc
+        if not isinstance(data, dict) or not isinstance(data.get("scan", {}), dict):
+            raise ValueError(f"{path}: [scan] must be a TOML table")
+        if not isinstance(data.get("mute", {}), dict):
+            raise ValueError(f"{path}: [mute] must be a TOML table")
         scan = data.get("scan", {})
+        mute_checks = data.get("mute", {}).get("checks", [])
+        eval_sets = scan.get("eval_sets", [])
+        if not isinstance(mute_checks, list) or not all(
+            isinstance(value, str) for value in mute_checks
+        ):
+            raise ValueError(f"{path}: mute.checks must be an array of strings")
+        if not isinstance(eval_sets, list) or not all(
+            isinstance(value, str) for value in eval_sets
+        ):
+            raise ValueError(f"{path}: scan.eval_sets must be an array of strings")
+        offline = scan.get("offline", False)
+        if not isinstance(offline, bool):
+            raise ValueError(f"{path}: scan.offline must be true or false")
         return cls(
             model=scan.get("model"),
             profile=scan.get("profile", "auto"),
@@ -90,9 +110,9 @@ class Config:
             seq_len=scan.get("seq_len"),
             tier=scan.get("tier", 1),
             minhash_preset=scan.get("minhash_preset", "fineweb"),
-            mute=list(data.get("mute", {}).get("checks", [])),
-            eval_sets=list(scan.get("eval_sets", [])),
-            offline=scan.get("offline", False),
+            mute=list(mute_checks),
+            eval_sets=list(eval_sets),
+            offline=offline,
         )
 
     def to_toml(self, *, inferred_notes: dict[str, str] | None = None) -> str:
@@ -120,6 +140,8 @@ class Config:
             f"tier = {self.tier}",
             f'minhash_preset = "{self.minhash_preset}"',
         ]
+        if self.offline:
+            lines.append("offline = true")
         if self.eval_sets:
             lines.append(f"eval_sets = {self.eval_sets!r}")
         lines += [

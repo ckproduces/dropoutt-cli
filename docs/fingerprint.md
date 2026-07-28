@@ -1,9 +1,11 @@
 # Fingerprint schema
 
 A fingerprint is a fixed-schema description of a dataset that can be compared
-with any other fingerprint produced by the same pipeline version, and that
-contains no recoverable records. That last property is what makes it safe to
-paste into a pull request.
+with any other fingerprint produced by the same pipeline version. It contains
+no record excerpts or recoverable records. It does contain the scan root,
+dataset names, aggregate measurements, and stable hashes, so apply the same
+metadata policy used for build manifests before pasting it into a pull request
+outside the VPC.
 
 ```bash
 dropoutt scan ./data          # writes .dropoutt/fingerprint.json
@@ -49,7 +51,7 @@ to structural validity and contamination.
 {
   "fingerprint_id": "fp_...",
   "schema_version": "fp-v0.1",
-  "pipeline_version": "0.1.0",
+  "pipeline_version": "0.1.3",
   "root": "/path/to/data",
   "profile": "sft",
   "facets": {
@@ -112,6 +114,6 @@ way.
 
 ## What is not in this release
 
-`coverage` is populated only when an atlas is available, and atlas assignment is
-not yet wired into `scan`. `difficulty` is not computed at all; it needs Tier 2.
-See [limitations.md](limitations.md).
+`coverage` is populated when the bundled atlas and its embedding backend are
+available. `difficulty` is not computed at all; it needs Tier 2. See
+[limitations.md](limitations.md).

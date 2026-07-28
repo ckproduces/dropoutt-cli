@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dropoutt"
-version = "0.1.2"
+version = "0.1.3"
 description = "Pre-flight checks and comparable fingerprints for LLM training datasets."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -23,15 +23,15 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
-# Core stays deliberately small. The only compiled wheel here is `tokenizers`,
-# which is the one that still ships manylinux_2_17 and therefore installs on old
-# cluster images. Everything faster than pure Python is an optional accelerator
-# with an identical-output fallback. See docs/portability.md.
+# Core stays deliberately small. NumPy is the only compiled core dependency.
+# Tokenizers, file-format support, model backends, and speed accelerators are
+# optional. See docs/portability.md.
 dependencies = [
     "typer>=0.12",
     "rich>=13.0",
     "jinja2>=3.1",
     "numpy>=1.24",
+    "tomli>=2.0; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]
@@ -45,9 +45,13 @@ tokenizer = [
     "tokenizers>=0.15",
     "huggingface_hub>=0.23",
 ]
-# Parquet. Heaviest single dependency (35-50 MB) so it is never in core.
+# Arrow columnar formats. Heaviest single dependency (35-50 MB), never in core.
 parquet = [
     "pyarrow>=14.0",
+]
+# Zstandard input. gzip, bzip2 and xz use the standard library.
+zstd = [
+    "zstandard>=0.22",
 ]
 # Language identification. lid.176.ftz is a 938 KB model.
 lid = [
@@ -58,7 +62,7 @@ atlas = [
     "model2vec>=0.4",
 ]
 all = [
-    "dropoutt[fast,tokenizer,parquet,lid,atlas]",
+    "dropoutt[fast,tokenizer,parquet,zstd,lid,atlas]",
 ]
 dev = [
     "dropoutt[all]",
@@ -67,7 +71,7 @@ dev = [
 ]
 
 [project.scripts]
-dropoutt = "dropoutt.cli:app"
+dropoutt = "dropoutt.cli:run"
 
 [project.urls]
 Homepage = "https://dropoutt.com"

@@ -28,7 +28,7 @@ Check it worked:
 ```
 
 ```
-0.1.1
+0.1.3
 ```
 
 Either activate the environment or use the full path. The rest of this document
@@ -54,7 +54,7 @@ what you need:
 | `'.[tokenizer]'` | moderate | exact token counts, chat-template rendering, loss-mask checks, packing |
 | `'.[lid]'` | 938 KB model | accurate language ID across 176 languages |
 | `'.[atlas]'` | ~500 MB model on first use | atlas coverage |
-| `'.[parquet]'` | 35–50 MB | reading `.parquet` files |
+| `'.[parquet]'` | 35–50 MB | reading `.parquet`, `.arrow`, `.feather`, and `.orc` files |
 | `'.[fast]'` | small | speed only, identical results |
 
 Ask the tool rather than guessing:
@@ -69,7 +69,7 @@ dropoutt doctor
   tokenizers             yes       exact token counts, chat
                                    template render, loss
                                    mask checks
-  pyarrow                yes       reading .parquet files
+  pyarrow                yes       reading Parquet, Arrow, Feather, and ORC
   rensa                  no        speed only, identical       pip install
                                    clusters                    'dropoutt[fast]'
   fasttext-langdetect    yes       accurate language
@@ -78,7 +78,7 @@ dropoutt doctor
   model2vec              yes       atlas coverage
 
   cache: /Users/you/.cache/dropoutt
-  version: 0.1.1
+  version: 0.1.3
 ```
 
 Nothing here is required. A missing component removes checks; it never produces
@@ -281,8 +281,9 @@ dropoutt index-eval ./my_holdout.jsonl --name my-eval --field question
 dropoutt scan ./data --model qwen3
 ```
 
-The index stores hashed 8-grams and never the text, so it is safe to keep beside
-your data, and your held-out set never leaves the machine.
+The index stores hashed 8-grams rather than raw text. Keep it beside the held-out
+data: unkeyed hashes can still be tested against candidate phrases, so the index
+is not safe to publish.
 
 Contamination uses the Tülu 3 rule: an eval instance counts as contaminated when
 more than 50% of its tokens are covered by 8-gram matches against a single
@@ -371,7 +372,7 @@ Every scan writes to `.dropoutt/`:
 
 | file | what it is |
 | --- | --- |
-| `report.html` | one self-contained file — no server, no CDN. `scp` it off a cluster and open it anywhere. |
+| `report.html` | one self-contained file — no server, no CDN. Contains excerpts and paths unless the scan used `--no-evidence`. |
 | `fingerprint.json` | the comparable description of the dataset |
 | `findings.jsonl` | one JSON object per finding, for scripting |
 
@@ -532,16 +533,18 @@ home.
 ```bash
 # on the login node, where there is network
 export DROPOUTT_CACHE=/scratch/$USER/dropoutt
+export HF_HOME=/scratch/$USER/hf
 dropoutt fetch --all
 
 # on the compute node
 export DROPOUTT_CACHE=/scratch/$USER/dropoutt
+export HF_HOME=/scratch/$USER/hf
 python -m dropoutt scan /scratch/$USER/data --model qwen3 --offline
 ```
 
-`--offline` never touches the network and fails with a clear message rather than
-hanging. `DROPOUTT_CACHE` honours `XDG_CACHE_HOME` and falls back to a temp
-directory when home is not writable.
+`--offline` never touches the network. Missing cached components are reported as
+skipped or degraded rather than triggering a download. `DROPOUTT_CACHE` honours
+`XDG_CACHE_HOME` and falls back to a temp directory when home is not writable.
 
 Full detail in [portability.md](portability.md).
 

@@ -23,6 +23,9 @@ than author.
 dropoutt init ./data --model qwen3
 ```
 
+On a node without egress, use `--offline` with a local model directory or
+prefetched caches.
+
 With `--model` it also renders two records and shows the exact trainable span:
 
 ```
@@ -53,7 +56,8 @@ profile = "sft"               # inferred from 83 dataset(s)
 seq_len = 4096                # from the model config
 tier = 1
 minhash_preset = "fineweb"
-eval_sets = []
+# offline = true
+# eval_sets = ["gsm8k", "internal-eval"]
 
 [mute]
 # Check ids to silence, with a reason. Muting is a decision worth reviewing.
@@ -70,6 +74,8 @@ checks = []
 | `seq_len` | training sequence length, for the truncation forecast |
 | `tier` | highest check tier to run |
 | `minhash_preset` | `fineweb` or `hf-neardedup`; the report always states which |
+| `offline` | never access the network during `scan`; resolve models and atlas assets from local files and caches |
+| `eval_sets` | optional allowlist of bundled or locally indexed benchmark names; absent means use every available index |
 | `mute.checks` | check ids to silence |
 
 Command-line flags override the file.
@@ -103,6 +109,7 @@ the one you least want to leave your machine.
 dropoutt index-eval ./my_holdout.jsonl --name my-eval --field question
 ```
 
-This builds a hashed 8-gram index locally. The text is not stored and cannot be
-recovered from the index. Subsequent scans check contamination against it
-alongside the bundled public benchmarks.
+This builds a hashed 8-gram index locally without storing raw text. The hashes
+are unkeyed, so a party with candidate phrases can still test them against the
+index. Keep it inside the held-out set's trust boundary. Subsequent scans check
+contamination against it alongside the bundled public benchmarks.

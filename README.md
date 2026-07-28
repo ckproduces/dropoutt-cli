@@ -56,9 +56,9 @@ Full catalog: `dropoutt checks`, or [docs/checks.md](docs/checks.md).
   model than the data it kept. So this tool reports cluster sizes and lets you
   decide. Every finding in this release is labelled `unverified`, because no
   calibration corpus exists yet.
-- **It will not put your secrets in the report.** PII matches are masked before
-  they reach any output file, and there is a test that fails if a planted secret
-  appears in a generated report.
+- **It will not write detected PII values into the report.** Matches are masked
+  before output. Other excerpts remain inspectable by default; use
+  `--no-evidence` before exporting reports outside the dataset's trust boundary.
 - **It will not extract text from PDFs.** Use trafilatura or docling and point
   dropoutt at the output. Checking extraction quality is in scope; writing
   another PDF parser is not.
@@ -86,10 +86,9 @@ be used in CI, which is why these are distinct.
 
 ## Installation
 
-The core install has one compiled dependency, `tokenizers`, chosen because it is
-the one that still ships `manylinux_2_17` and therefore installs on old cluster
-images. Everything faster is an optional accelerator with a fallback that
-produces the same answers.
+The core install requires NumPy but not `tokenizers`. Token-dependent checks,
+columnar format support, language identification, atlas embeddings, and speed
+accelerators are optional extras.
 
 Not on PyPI yet, so install from the checkout:
 
@@ -98,11 +97,16 @@ python3 -m venv .venv
 .venv/bin/pip install -e '.'              # core
 .venv/bin/pip install -e '.[lid]'         # language identification, 938 KB model
 .venv/bin/pip install -e '.[tokenizer]'   # exact token counts and template checks
-.venv/bin/pip install -e '.[parquet]'     # .parquet input
+.venv/bin/pip install -e '.[parquet]'     # .parquet, .arrow, .feather, .orc
+.venv/bin/pip install -e '.[zstd]'        # .zst-compressed input
 .venv/bin/pip install -e '.[all]'         # everything
 ```
 
 Run `dropoutt doctor` to see what is installed and what each missing piece costs.
+
+Supported inputs are JSON, JSONL/NDJSON, TXT, Markdown, CSV/TSV, Parquet,
+Arrow IPC, Feather, and ORC. JSON, JSONL/NDJSON, TXT, Markdown, and CSV/TSV may
+also be compressed with gzip, bzip2, xz, or zstd.
 
 If `dropoutt` is not on your `PATH` — common under module systems and batch
 schedulers — `python -m dropoutt` does the same thing.

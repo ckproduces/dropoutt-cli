@@ -11,6 +11,7 @@ Checks that need global state accumulate during the pass and resolve in
 
 from __future__ import annotations
 
+import hashlib
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -86,10 +87,12 @@ def scan(
     contamination=None,
     atlas=None,
     max_tier: int = 1,
+    minhash_preset: str = "fineweb",
     muted: tuple[str, ...] = (),
     limit_per_file: int | None = None,
     induction_sample: int = 2000,
     progress: Callable[[str, int], None] | None = None,
+    phase: Callable[[str], None] | None = None,
     offline: bool = False,
 ) -> ScanResult:
     """Run a full scan and return findings plus context.
@@ -117,11 +120,13 @@ def scan(
     )
     ctx.stats["not_training_data"] = {}
     ctx.stats["mixed_schemas"] = {}
+    ctx.stats["minhash_preset"] = minhash_preset
     # Stratified sample for the cross-tokenizer budget estimate. Capped per
     # dataset so one huge dataset cannot dominate the ratio.
     ctx.stats["budget_sample"] = []
     ctx.stats["total_chars"] = 0
     ctx.stats["total_words"] = 0
+    content_hasher = hashlib.blake2b(digest_size=16)
     budget_sample: list[str] = ctx.stats["budget_sample"]
     atlas_sample: list[tuple[str, str]] = []
     per_dataset_cap = max(200, 20_000 // max(len(disc.datasets), 1))
@@ -134,6 +139,8 @@ def scan(
             ctx.stats["eos_token_id"] = ids[0]
 
     # ---- phase 1: induce the layout of each dataset -----------------------
+    if phase is not None:
+        phase("Inferring dataset layouts")
     verdicts: dict[str, SchemaVerdict] = {}
     for ds in disc.datasets:
         sample = list(_iter_dataset_records(ds.files, limit=induction_sample))[:induction_sample]
@@ -160,6 +167,8 @@ def scan(
     active, skipped = REGISTRY.resolve(ctx, max_tier=max_tier, muted=muted)
 
     # ---- phase 2: one streaming pass -------------------------------------
+    if phase is not None:
+        phase("Scanning records")
     scanned = 0
     for ds in disc.datasets:
         verdict = verdicts[ds.name]
@@ -171,6 +180,7 @@ def scan(
         sampled_here = 0
         for idx, rec in enumerate(_iter_dataset_records(ds.files, limit=limit_per_file)):
             doc = to_document(rec, layout, ds.name, index=idx)
+            _update_content_hash(content_hasher, doc)
             _compute_features(doc, ctx)
             ctx.stats["total_chars"] += len(doc.text)
             ctx.stats["total_words"] += doc.text.count(" ") + 1 if doc.text else 0
@@ -202,12 +212,17 @@ def scan(
                 progress(ds.name, scanned)
 
     ctx.total_records = scanned
+    ctx.stats["content_hash"] = content_hasher.hexdigest()
 
     # ---- atlas coverage --------------------------------------------------
     if atlas is not None and atlas_sample:
+        if phase is not None:
+            phase("Mapping atlas coverage")
         _compute_coverage(ctx, atlas_sample, offline=offline)
 
     # ---- phase 3: resolve ------------------------------------------------
+    if phase is not None:
+        phase("Finalizing checks")
     findings: list[Finding] = []
     for check in active:
         try:
@@ -220,7 +235,7 @@ def scan(
     if ctx.blocking_enabled:
         for f in findings:
             f.is_blocking = (
-                f.severity.value == "blocking" and ctx.profile.value in f.would_block_under
+                f.severity.value == "blocking" and ctx.target in f.would_block_under
             )
 
     findings.sort(key=lambda f: (f.check_id,))
@@ -228,6 +243,27 @@ def scan(
         ctx=ctx, discovery=disc, findings=findings, skipped=skipped,
         verdicts=verdicts, elapsed=time.time() - started, records_scanned=scanned,
     )
+
+
+def _update_content_hash(hasher, doc: Document) -> None:
+    """Hash normalized content plus the structure that changes scan results."""
+    parts = [
+        doc.dataset,
+        doc.text,
+        doc.system or "",
+        "\x1f".join(doc.raw_keys),
+    ]
+    for turn in doc.turns:
+        parts.extend([
+            turn.role,
+            turn.raw_role or "",
+            turn.content,
+            "1" if turn.coerced else "0",
+        ])
+    for part in parts:
+        raw = part.encode("utf-8", "surrogatepass")
+        hasher.update(len(raw).to_bytes(8, "little"))
+        hasher.update(raw)
 
 
 def _infer_profile(verdicts: dict[str, SchemaVerdict]) -> Profile:

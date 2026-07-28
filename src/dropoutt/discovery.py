@@ -21,7 +21,10 @@ SKIP_DIRS = {
     ".vscode", "site-packages", ".cache",
 }
 
-DATA_SUFFIXES = {".jsonl", ".ndjson", ".json", ".parquet", ".txt", ".md", ".csv", ".tsv"}
+DATA_SUFFIXES = {
+    ".jsonl", ".ndjson", ".json", ".parquet", ".arrow", ".feather", ".orc",
+    ".txt", ".md", ".csv", ".tsv",
+}
 COMPRESSED = {".gz", ".zst", ".bz2", ".xz"}
 
 #: Filenames that indicate the directory is a Hugging Face dataset.
@@ -103,7 +106,9 @@ def discover(root: str, *, follow_symlinks: bool = False, max_files: int = 200_0
     by_dataset: dict[str, DatasetRef] = {}
     count = 0
     for dirpath, dirnames, filenames in os.walk(root_path, followlinks=follow_symlinks):
-        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS and not d.startswith(".")]
+        dirnames[:] = sorted(
+            d for d in dirnames if d not in SKIP_DIRS and not d.startswith(".")
+        )
         for name in sorted(filenames):
             if count >= max_files:
                 disc.skipped_files.append((name, "file limit reached"))

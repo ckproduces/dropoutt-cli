@@ -3,7 +3,8 @@
 One file, no network, no CDN, no web fonts, opens from ``file://``. That matters
 because the users this was built for work on clusters where standing up a server
 and forwarding a port is awkward: a single file can be produced inside a batch
-job, copied off with ``scp``, and attached to a pull request.
+job and copied with ``scp`` when policy permits. By default it contains record
+excerpts; ``--no-evidence`` removes excerpts and source locations.
 
 Autoescaping is on unconditionally and every corpus string additionally passes
 through :func:`safe_snippet`, because everything rendered here came from data we
@@ -12,6 +13,7 @@ did not write.
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 from jinja2 import Environment, StrictUndefined
@@ -22,42 +24,83 @@ from ..runner import ScanResult
 from .escaping import safe_snippet
 
 _CSS = """
-:root{--bg:#fbfbfa;--fg:#1a1a1a;--dim:#6b6b6b;--line:#e3e3e0;--card:#fff;
---red:#b3261e;--amber:#8a6100;--blue:#0b5cad;--green:#1f6b3a}
-@media(prefers-color-scheme:dark){:root{--bg:#141414;--fg:#e8e8e6;--dim:#9a9a97;
---line:#2b2b2b;--card:#1b1b1b;--red:#ef6a5f;--amber:#d9a441;--blue:#6fb3f2;--green:#65c98a}}
+:root{--bg:#fcfcfb;--fg:#1d1d1b;--muted:#666662;--line:#deded9;--soft:#f2f2ef;
+--danger:#b42318;--warning:#8a5d00;--accent:#1769aa;--atlas:#1769aa;--empty:#d8d8d2}
+@media(prefers-color-scheme:dark){:root{--bg:#151513;--fg:#e9e9e5;--muted:#aaa9a3;
+--line:#353531;--soft:#20201d;--danger:#ff7b70;--warning:#e4b04d;
+--accent:#76b8eb;--atlas:#76b8eb;--empty:#3d3d38}}
 *{box-sizing:border-box}
-body{margin:0;padding:2rem 1.25rem 4rem;background:var(--bg);color:var(--fg);
-font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:1000px;margin:0 auto}
-h1{font-size:1.5rem;margin:0 0 .25rem}
-h2{font-size:1.05rem;margin:2.25rem 0 .75rem;padding-bottom:.35rem;border-bottom:1px solid var(--line)}
-.sub{color:var(--dim);font-size:.9rem;margin-bottom:1.5rem}
-.banner{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--amber);
-padding:.75rem 1rem;border-radius:4px;margin:1rem 0;font-size:.9rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:.75rem .9rem}
-.stat .k{color:var(--dim);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
-.stat .v{font-size:1.25rem;font-weight:600;margin-top:.15rem}
-table{width:100%;border-collapse:collapse;font-size:.9rem}
-th{text-align:left;color:var(--dim);font-weight:500;font-size:.78rem;text-transform:uppercase;
-letter-spacing:.04em;padding:.4rem .6rem;border-bottom:1px solid var(--line)}
-td{padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+html{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{margin:0;padding:2.5rem 1.25rem 4rem;background:var(--bg);color:var(--fg);
+font-family:inherit;font-size:15px;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto}
+header{padding-bottom:1.5rem;border-bottom:1px solid var(--line)}
+h1{font-size:1.55rem;font-weight:650;letter-spacing:-.02em;margin:0}
+h2{font-size:1rem;font-weight:650;margin:0 0 1rem}
+h3{font-size:.95rem;font-weight:650;margin:0}
+p{margin:.45rem 0}
+.path{color:var(--muted);font-size:.85rem;overflow-wrap:anywhere;margin-top:.2rem}
+.summary{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-top:1.4rem}
+.summary div{min-width:92px}
+.label{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;
+letter-spacing:.06em}
+.value{display:block;font-size:1.05rem;font-weight:600;margin-top:.05rem}
+.notice{border-left:2px solid var(--warning);padding:.1rem 0 .1rem .8rem;
+color:var(--muted);font-size:.86rem;margin:1.25rem 0}
+.section{padding:2rem 0;border-bottom:1px solid var(--line)}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+.section-note,.note{color:var(--muted);font-size:.84rem;max-width:72ch}
+.finding{padding:1rem 0;border-top:1px solid var(--line)}
+.finding:first-of-type{border-top:0;padding-top:0}
+.finding-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.check-id{font-size:.78rem;color:var(--muted)}
+.count{margin-left:auto;color:var(--muted);font-size:.82rem}
+.severity{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;color:var(--muted)}
+.severity::before{content:"";width:.45rem;height:.45rem;border-radius:50%;background:var(--accent)}
+.severity.blocking::before{background:var(--danger)}
+.severity.warning::before{background:var(--warning)}
+.finding-detail{margin:.55rem 0 .25rem}
+.fix{color:var(--muted);font-size:.86rem}
+details{margin:.7rem 0}
+summary{cursor:pointer;color:var(--muted);font-size:.84rem}
+.evidence{margin:.6rem 0 0;padding:.65rem .75rem;background:var(--soft);
+white-space:pre-wrap;overflow-wrap:anywhere;font-size:.82rem}
+.location{display:block;color:var(--muted);font-size:.75rem;margin-bottom:.2rem;overflow-wrap:anywhere}
+code,.mono{font-family:inherit;font-size:inherit}
 .scroll{overflow-x:auto}
-.note{color:var(--dim);font-size:.84rem;margin:.6rem 0 1rem;max-width:70ch}
-.sev{display:inline-block;width:.55rem;height:.55rem;border-radius:50%;margin-right:.4rem}
-.blocking{background:var(--red)}.warning{background:var(--amber)}.info{background:var(--blue)}
-code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.84em}
-.ev{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:.5rem .7rem;
-margin:.35rem 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;
-white-space:pre-wrap;word-break:break-word}
-.loc{color:var(--dim);font-size:.75rem;margin-bottom:.2rem}
-.dim{color:var(--dim)}
-.pill{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:99px;
-padding:.05rem .5rem;font-size:.75rem;color:var(--dim)}
-details{margin:.5rem 0}summary{cursor:pointer;color:var(--dim);font-size:.85rem}
-footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--line);
-color:var(--dim);font-size:.8rem}
+table{width:100%;border-collapse:collapse;font-size:.87rem}
+th{text-align:left;color:var(--muted);font-weight:500;font-size:.72rem;text-transform:uppercase;
+letter-spacing:.055em;padding:.45rem .55rem;border-bottom:1px solid var(--line)}
+td{padding:.62rem .55rem;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.metrics{display:flex;flex-wrap:wrap;gap:.6rem 1.8rem;margin:1rem 0}
+.metric{min-width:120px}
+.atlas-map{display:block;width:100%;height:auto;margin:1rem 0 .6rem}
+.atlas-point{fill:var(--empty)}
+.atlas-point.occupied{fill:var(--atlas);fill-opacity:.78;stroke:var(--bg);stroke-width:1}
+.legend{display:flex;gap:1rem;color:var(--muted);font-size:.78rem}
+.legend span{display:inline-flex;align-items:center;gap:.35rem}
+.dot{width:.55rem;height:.55rem;border-radius:50%;background:var(--empty)}
+.dot.occupied{background:var(--atlas)}
+.coverage-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,.75fr);
+gap:1.75rem;margin-top:1.5rem}
+.bar-row{display:grid;grid-template-columns:minmax(100px,1fr) 3fr 3.2rem;
+gap:.65rem;align-items:center;margin:.55rem 0;font-size:.82rem}
+.bar{height:.38rem;background:var(--soft);overflow:hidden}
+.bar span{display:block;height:100%;background:var(--atlas)}
+.region-list{list-style:none;margin:.35rem 0 0;padding:0}
+.region-list li{display:grid;grid-template-columns:2.6rem 4.2rem 1fr;gap:.45rem;
+padding:.4rem 0;border-bottom:1px solid var(--line);font-size:.82rem}
+.region-list li:last-child{border-bottom:0}
+.dim{color:var(--muted)}
+ul.dim{padding-left:1.2rem}
+footer{padding-top:1.5rem;color:var(--muted);font-size:.78rem}
+@media(max-width:680px){
+body{padding:1.5rem 1rem 3rem}
+.coverage-grid{grid-template-columns:1fr}
+.count{margin-left:0;width:100%}
+th,td{padding-left:.35rem;padding-right:.35rem}
+}
 """
 
 _TEMPLATE = """<!-- generated by dropoutt {{ pipeline_version }} -->
@@ -66,199 +109,221 @@ _TEMPLATE = """<!-- generated by dropoutt {{ pipeline_version }} -->
 <meta http-equiv="Content-Security-Policy"
       content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
 <title>dropoutt scan — {{ root_short }}</title>
-<style>{{ css }}</style>
+<style>{{ css|safe }}</style>
 <div class="wrap">
-<h1>dropoutt scan</h1>
-<div class="sub mono">{{ root }}</div>
+<header>
+  <h1>dropoutt scan</h1>
+  <div class="path">{{ root }}</div>
+  <div class="summary" aria-label="Scan summary">
+    <div><span class="label">Records</span><span class="value">{{ "{:,}".format(records) }}</span></div>
+    <div><span class="label">Datasets</span><span class="value">{{ datasets|length }}</span></div>
+    <div><span class="label">Findings</span><span class="value">{{ findings|length }}</span></div>
+    <div><span class="label">Profile</span><span class="value">{{ profile }}</span></div>
+  </div>
+</header>
 
-<div class="grid">
-  <div class="stat"><div class="k">records</div><div class="v">{{ "{:,}".format(records) }}</div></div>
-  <div class="stat"><div class="k">datasets</div><div class="v">{{ datasets|length }}</div></div>
-  <div class="stat"><div class="k">findings</div><div class="v">{{ findings|length }}</div></div>
-  <div class="stat"><div class="k">profile</div><div class="v">{{ profile }}</div></div>
-</div>
-
-<div class="banner">
-  Every finding in this build is <strong>unverified</strong>. No measured effect size is
-  attached to acting on any of them, because no calibration corpus exists yet. These are
-  structural observations about your data, not predictions about your model.
-  {% if not blocking_enabled %}
-  No blocking verdict was issued because no target profile was declared.
-  {% endif %}
-</div>
+<p class="notice">
+  Findings are unverified structural observations, not model-quality predictions.
+  {% if not blocking_enabled %}No blocking verdict was issued because no target was declared.{% endif %}
+  {% if includes_evidence %} This file contains dataset excerpts and source locations; keep it
+  inside the dataset trust boundary.{% endif %}
+</p>
 
 {% if findings %}
-<h2>Findings</h2>
-<div class="scroll">
-<table>
-<tr><th>check</th><th>severity</th><th>count</th><th>detail</th><th>fix</th></tr>
-{% for f in findings %}
-<tr>
-  <td class="mono">{{ f.check_id }}<br><span class="dim">{{ f.title }}</span></td>
-  <td><span class="sev {{ f.severity.value }}"></span>{{ f.severity.value }}
+<section class="section">
+  <h2>Findings</h2>
+  {% for f in findings %}
+  <article class="finding">
+    <div class="finding-head">
+      <span class="severity {{ f.severity.value }}">{{ f.severity.value }}</span>
+      <h3>{{ f.title }}</h3>
+      <span class="check-id">{{ f.check_id }}</span>
+      <span class="count">
+        {{ "{:,}".format(f.count) if f.count else "—" }}
+        {% if f.total_considered %} · {{ "%.2f%%"|format(f.rate * 100) }}{% endif %}
+      </span>
+    </div>
+    <p class="finding-detail">{{ f.detail }}
+      {% if f.wasted_tokens %}<span class="dim"> · {{ "{:,}".format(f.wasted_tokens) }} tokens</span>{% endif %}
+    </p>
+    <p class="fix">Fix: {{ f.fix }}
       {% if f.would_block_under and not f.is_blocking %}
-      <br><span class="dim">would block under {{ f.would_block_under|join(', ') }}</span>
-      {% endif %}</td>
-  <td class="mono">{{ "{:,}".format(f.count) if f.count else "—" }}
-      {% if f.total_considered %}<br><span class="dim">{{ "%.2f%%"|format(f.rate * 100) }}</span>{% endif %}</td>
-  <td>{{ f.detail }}
-      {% if f.wasted_tokens %}<br><span class="dim">{{ "{:,}".format(f.wasted_tokens) }} tokens</span>{% endif %}</td>
-  <td class="dim">{{ f.fix }}</td>
-</tr>
-{% endfor %}
-</table>
-</div>
-
-<h2>Examples</h2>
-{% for f in findings if f.evidence %}
-<details {% if loop.first %}open{% endif %}>
-  <summary>{{ f.check_id }} — {{ f.title }} ({{ f.evidence|length }} shown)</summary>
-  {% for ev in f.evidence %}
-  <div class="loc mono">{{ ev.source_file }}:{{ ev.source_index }}</div>
-  <div class="ev">{{ ev.excerpt }}</div>
-  {% if ev.partner_excerpt %}
-  <div class="loc mono">matches{% if ev.score %} — Jaccard {{ "%.2f"|format(ev.score) }}{% endif %}</div>
-  <div class="ev">{{ ev.partner_excerpt }}</div>
-  {% endif %}
+      · Would block under {{ f.would_block_under|join(', ') }}
+      {% endif %}
+    </p>
+    {% if includes_evidence and f.evidence %}
+    <details>
+      <summary>{{ f.evidence|length }} example{% if f.evidence|length != 1 %}s{% endif %}</summary>
+      {% for ev in f.evidence %}
+      <div class="evidence">
+        <span class="location">{{ ev.source_file }}:{{ ev.source_index }}</span>{{ ev.excerpt }}
+      </div>
+      {% if ev.partner_excerpt %}
+      <div class="evidence">
+        <span class="location">matching record{% if ev.score %} · Jaccard {{ "%.2f"|format(ev.score) }}{% endif %}</span>{{ ev.partner_excerpt }}
+      </div>
+      {% endif %}
+      {% endfor %}
+    </details>
+    {% endif %}
+  </article>
   {% endfor %}
-</details>
-{% endfor %}
+</section>
 {% endif %}
 
 {% if overlap %}
-<h2>Cross-dataset overlap</h2>
-<p class="dim">Directional: read as “this share of <em>row</em> also appears in <em>column</em>”.
-Containment of a small dataset inside a large one is the actionable case, and a symmetric
-similarity score would hide it.</p>
-<div class="scroll">
-<table>
-<tr><th>from</th><th>appears in</th><th>matched</th><th>of</th><th>share</th></tr>
-{% for r in overlap %}
-<tr><td class="mono">{{ r["from"] }}</td><td class="mono">{{ r["to"] }}</td>
-<td class="mono">{{ "{:,}".format(r["matched"]) }}</td>
-<td class="mono">{{ "{:,}".format(r["of"]) }}</td>
-<td class="mono">{{ "%.1f%%"|format(r["fraction"] * 100) }}</td></tr>
-{% endfor %}
-</table>
-</div>
+<section class="section">
+  <h2>Cross-dataset overlap</h2>
+  <p class="section-note">Directional: the share of “from” that also appears in “appears in”.</p>
+  <div class="scroll">
+  <table>
+  <tr><th>from</th><th>appears in</th><th>matched</th><th>of</th><th>share</th></tr>
+  {% for r in overlap %}
+  <tr><td>{{ r["from"] }}</td><td>{{ r["to"] }}</td>
+  <td>{{ "{:,}".format(r["matched"]) }}</td><td>{{ "{:,}".format(r["of"]) }}</td>
+  <td>{{ "%.1f%%"|format(r["fraction"] * 100) }}</td></tr>
+  {% endfor %}
+  </table>
+  </div>
+</section>
 {% endif %}
 
 {% if budget %}
-<h2>Token budget</h2>
-{% if not has_tokenizer %}
-<p class="dim">Estimated from a sample, because no <code>--model</code> was given. Character
-counts are exact; tokens-per-character comes from a stratified sample.</p>
-{% endif %}
-<div class="scroll">
-<table>
-<tr><th>tokenizer</th><th>total tokens</th><th>tokens per word</th><th>premium</th></tr>
-{% for e in budget %}
-<tr><td class="mono">{{ e.name }}</td>
-<td class="mono">{{ "{:,}".format(e.total) }}</td>
-<td class="mono">{{ "%.2f"|format(e.tpw) }}</td>
-<td class="mono">{% if e.premium > 0 %}+{{ "%.0f%%"|format(e.premium * 100) }}{% else %}—{% endif %}</td></tr>
-{% endfor %}
-</table>
-</div>
+<section class="section">
+  <h2>Token budget</h2>
+  {% if not has_tokenizer %}
+  <p class="section-note">Estimated from a stratified sample because no <code>--model</code> was given.</p>
+  {% endif %}
+  <div class="scroll">
+  <table>
+  <tr><th>tokenizer</th><th>total tokens</th><th>tokens per word</th><th>premium</th></tr>
+  {% for e in budget %}
+  <tr><td>{{ e.name }}</td><td>{{ "{:,}".format(e.total) }}</td>
+  <td>{{ "%.2f"|format(e.tpw) }}</td>
+  <td>{% if e.premium > 0 %}+{{ "%.0f%%"|format(e.premium * 100) }}{% else %}—{% endif %}</td></tr>
+  {% endfor %}
+  </table>
+  </div>
+</section>
 {% endif %}
 
 {% if coverage %}
-<h2>Atlas coverage</h2>
-{% if coverage.withheld %}
-<p class="note">Withheld: {{ coverage.reason }}</p>
-<p class="note">Coverage is withheld rather than estimated when records did not
-land on the atlas. A histogram over records that landed nowhere is worse than no
-histogram.</p>
-{% else %}
-<p class="note">Where this corpus sits on <span class="mono">{{ coverage.version }}</span>,
-a shared coordinate system. It carries no notion of good or bad.</p>
-<div class="scroll">
-<table>
-<tr><th>regions occupied</th><th>spread</th><th>off-atlas</th></tr>
-<tr>
-<td class="mono">{{ coverage.occupied }} of {{ coverage.total }}</td>
-<td class="mono">{% if coverage.concentration is not none %}{{ "%.0f%%"|format(coverage.concentration * 100) }} of even{% else %}—{% endif %}</td>
-<td class="mono">{{ "%.1f%%"|format(coverage.off_atlas_rate * 100) }}</td>
-</tr>
-</table>
-</div>
-{% if coverage.categories %}
-<div class="scroll">
-<table>
-<tr><th>category</th><th>share</th></tr>
-{% for c in coverage.categories %}
-<tr><td>{{ c.name }}</td><td class="mono">{{ "%.0f%%"|format(c.share * 100) }}</td></tr>
-{% endfor %}
-</table>
-</div>
-{% endif %}
-{% if coverage.regions %}
-<div class="scroll">
-<table>
-<tr><th>region</th><th>records</th><th>label words</th></tr>
-{% for r in coverage.regions %}
-<tr><td class="mono">{{ r.id }}</td><td class="mono">{{ r.records }}</td>
-<td>{{ r.terms }}</td></tr>
-{% endfor %}
-</table>
-</div>
-<p class="note">Label words are a caption computed from word frequency, not a
-membership rule. Records are placed by embedding similarity to a region centroid
-and never tested against these words.{% if coverage.l0_accuracy %} Category names
-are approximate: the level-0 probe scores
-{{ "%.3f"|format(coverage.l0_accuracy) }} against labels inherited from dataset
-provenance.{% endif %} See docs/atlas.md.</p>
-{% endif %}
-<p class="note">Compare two corpora with
-<span class="mono">dropoutt diff a.json b.json</span>.</p>
-{% endif %}
+<section class="section">
+  <div class="section-head"><h2>Atlas coverage</h2><span class="section-note">{{ coverage.version or "" }}</span></div>
+  {% if coverage.withheld %}
+  <p class="note">Withheld: {{ coverage.reason }}</p>
+  <p class="note">Coverage is not estimated when records do not reliably land on the atlas.</p>
+  {% else %}
+  <p class="section-note">A shared coordinate system for comparing corpus coverage. It does not score quality.</p>
+  <div class="metrics">
+    <div class="metric"><span class="label">Occupied</span><span class="value">{{ coverage.occupied }} / {{ coverage.total }}</span></div>
+    <div class="metric"><span class="label">Spread</span><span class="value">{% if coverage.concentration is not none %}{{ "%.0f%%"|format(coverage.concentration * 100) }}{% else %}—{% endif %}</span></div>
+    <div class="metric"><span class="label">Off-atlas</span><span class="value">{{ "%.1f%%"|format(coverage.off_atlas_rate * 100) }}</span></div>
+  </div>
+  {% if coverage.points %}
+  <svg class="atlas-map" viewBox="0 0 720 270" role="img" aria-labelledby="atlas-title atlas-desc">
+    <title id="atlas-title">Atlas regions occupied by this corpus</title>
+    <desc id="atlas-desc">{{ coverage.occupied }} of {{ coverage.total }} regions are occupied. Larger highlighted circles contain more sampled records.</desc>
+    <g aria-hidden="true">
+    {% for p in coverage.points %}
+    <circle class="atlas-point{% if p.records %} occupied{% endif %}" cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.radius }}">
+      <title>Region {{ p.id }}{% if p.records %}: {{ "{:,}".format(p.records) }} records{% if p.terms %}; {{ p.terms }}{% endif %}{% else %}: not occupied{% endif %}</title>
+    </circle>
+    {% endfor %}
+    </g>
+  </svg>
+  <div class="legend" aria-hidden="true">
+    <span><i class="dot occupied"></i>occupied</span><span><i class="dot"></i>not occupied</span>
+  </div>
+  {% endif %}
+  <div class="coverage-grid">
+    {% if coverage.categories %}
+    <div>
+      <h3>Category mix</h3>
+      {% for c in coverage.categories %}
+      <div class="bar-row"><span>{{ c.name }}</span><span class="bar"><span style="width:{{ "%.1f"|format(c.share * 100) }}%"></span></span><span>{{ "%.0f%%"|format(c.share * 100) }}</span></div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if coverage.regions %}
+    <div>
+      <h3>Largest regions</h3>
+      <ul class="region-list">
+      {% for r in coverage.regions %}
+        <li><span>{{ r.id }}</span><span>{{ "{:,}".format(r.records) }}</span><span class="dim">{{ r.terms }}</span></li>
+      {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+  <p class="note">Circle size encodes sampled record count. Label words are captions, not placement rules.
+  {% if coverage.l0_accuracy %} Category labels are approximate; level-0 held-out accuracy is {{ "%.3f"|format(coverage.l0_accuracy) }}.{% endif %}
+  Compare corpora with <code>dropoutt diff left.json right.json</code>.</p>
+  {% endif %}
+</section>
 {% endif %}
 
-<h2>Datasets</h2>
-<div class="scroll">
-<table>
-<tr><th>name</th><th>layout</th><th>files</th><th>records</th><th>licence</th></tr>
-{% for d in datasets %}
-<tr><td class="mono">{{ d.name }}</td><td class="mono">{{ d.layout or "—" }}</td>
-<td class="mono">{{ d.files }}</td><td class="mono">{{ "{:,}".format(d.records) }}</td>
-<td>{% if d.licence %}{{ d.licence }}{% else %}<span class="dim">not recorded</span>{% endif %}</td></tr>
-{% endfor %}
-</table>
-</div>
+<section class="section">
+  <h2>Datasets</h2>
+  <div class="scroll">
+  <table>
+  <tr><th>name</th><th>layout</th><th>files</th><th>records</th><th>licence</th></tr>
+  {% for d in datasets %}
+  <tr><td>{{ d.name }}</td><td>{{ d.layout or "—" }}</td>
+  <td>{{ d.files }}</td><td>{{ "{:,}".format(d.records) }}</td>
+  <td>{% if d.licence %}{{ d.licence }}{% else %}<span class="dim">not recorded</span>{% endif %}</td></tr>
+  {% endfor %}
+  </table>
+  </div>
+</section>
 
 {% if skipped %}
-<h2>What you are not seeing yet</h2>
-<p class="dim">Each of these names the single thing that would unlock it.</p>
-<div class="scroll">
-<table>
-<tr><th>check</th><th>why not</th><th>unlock</th></tr>
-{% for s in skipped %}
-<tr><td class="mono">{{ s.check_id }}<br><span class="dim">{{ s.title }}</span></td>
-<td>{{ s.reason }}</td><td class="mono dim">{{ s.unlock }}</td></tr>
-{% endfor %}
-</table>
-</div>
+<section class="section">
+  <details>
+    <summary>{{ skipped|length }} unavailable check{% if skipped|length != 1 %}s{% endif %}</summary>
+    <div class="scroll">
+    <table>
+    <tr><th>check</th><th>why not</th><th>unlock</th></tr>
+    {% for s in skipped %}
+    <tr><td>{{ s.check_id }}<br><span class="dim">{{ s.title }}</span></td>
+    <td>{{ s.reason }}</td><td class="dim">{{ s.unlock }}</td></tr>
+    {% endfor %}
+    </table>
+    </div>
+  </details>
+</section>
 {% endif %}
 
 {% if degradations %}
-<h2>Degraded</h2>
-<ul class="dim">{% for d in degradations %}<li>{{ d }}</li>{% endfor %}</ul>
+<section class="section">
+  <h2>Degraded</h2>
+  <ul class="dim">{% for d in degradations %}<li>{{ d }}</li>{% endfor %}</ul>
+</section>
 {% endif %}
 
-<h2>Reproducibility</h2>
-<div class="scroll">
-<table>
-{% for k, v in provenance %}
-<tr><td class="dim">{{ k }}</td><td class="mono">{{ v }}</td></tr>
-{% endfor %}
-</table>
-</div>
+<section class="section">
+  <details>
+    <summary>Reproducibility metadata</summary>
+    <div class="scroll">
+    <table>
+    {% for k, v in provenance %}
+    <tr><td class="dim">{{ k }}</td><td>{{ v }}</td></tr>
+    {% endfor %}
+    </table>
+    </div>
+  </details>
+</section>
 
 <footer>
-dropoutt {{ pipeline_version }} · fingerprint <span class="mono">{{ fingerprint_id }}</span> ·
+dropoutt {{ pipeline_version }} · fingerprint <span>{{ fingerprint_id }}</span> ·
 {{ "{:,}".format(records) }} records in {{ "%.1f"|format(elapsed) }}s<br>
+{% if includes_evidence %}
 This report may contain excerpts of your data, including anything sensitive that the scan
 found. Personal data matched by the PII check is masked, but surrounding text is not.
+{% else %}
+Record excerpts and source locations were omitted with <span class="mono">--no-evidence</span>.
+Aggregate metadata, dataset names and the scan root remain.
+{% endif %}
 </footer>
 </div>
 """
@@ -288,6 +353,37 @@ def _coverage_view(cov: dict | None) -> dict | None:
     names = category_names()
     raw = cov.get("by_category") or {}
     placed = sum(int(v) for v in raw.values()) or 1
+    counts = {int(region): int(count) for region, count in
+              (cov.get("region_counts") or {}).items()}
+    points: list[dict[str, Any]] = []
+    try:
+        from ..atlas import load_bundled  # noqa: PLC0415
+
+        atlas = load_bundled()
+        if atlas is not None and atlas.meta.get("version") == cov.get("atlas_version"):
+            xs = atlas.coords[:, 0]
+            ys = atlas.coords[:, 1]
+            x_span = float(xs.max() - xs.min()) or 1.0
+            y_span = float(ys.max() - ys.min()) or 1.0
+            max_count = max(counts.values(), default=1)
+            for region in range(atlas.n_regions):
+                count = counts.get(region, 0)
+                radius = 1.8 if not count else 3.0 + 8.0 * (count / max_count) ** 0.5
+                points.append({
+                    "id": region,
+                    "x": round(18.0 + 684.0 * float(xs[region] - xs.min()) / x_span, 1),
+                    "y": round(18.0 + 234.0 * float(ys.max() - ys[region]) / y_span, 1),
+                    "radius": round(radius, 1),
+                    "records": count,
+                    "terms": (
+                        atlas.region_terms[region]
+                        if region < len(atlas.region_terms) else ""
+                    ),
+                })
+    except Exception:
+        # The aggregate coverage remains useful if a report is rendered without
+        # the matching atlas artifact. Omit the map rather than invent geometry.
+        points = []
     return {
         "withheld": False,
         "version": cov.get("atlas_version"),
@@ -296,6 +392,7 @@ def _coverage_view(cov: dict | None) -> dict | None:
         "off_atlas_rate": cov.get("off_atlas_rate", 0.0),
         "concentration": concentration(cov),
         "l0_accuracy": cov.get("l0_holdout_accuracy"),
+        "points": points,
         "categories": [
             {"name": names.get(int(cid), f"category {cid}"), "share": int(n) / placed}
             for cid, n in sorted(raw.items(), key=lambda kv: -int(kv[1]))[:8]
@@ -308,18 +405,27 @@ def _coverage_view(cov: dict | None) -> dict | None:
     }
 
 
-def render(result: ScanResult, fp: Fingerprint, budget: Any = None) -> str:
+def render(
+    result: ScanResult,
+    fp: Fingerprint,
+    budget: Any = None,
+    *,
+    include_evidence: bool = True,
+) -> str:
     env = Environment(autoescape=True, undefined=StrictUndefined,
                       trim_blocks=True, lstrip_blocks=True)
     tpl = env.from_string(_TEMPLATE)
 
-    findings = sorted(
+    findings = deepcopy(sorted(
         result.findings,
         key=lambda f: ({Severity.BLOCKING: 0, Severity.WARNING: 1, Severity.INFO: 2}
                        .get(f.severity, 3), f.check_id),
-    )
+    ))
     # Every excerpt goes through safe_snippet before Jinja sees it.
     for f in findings:
+        if not include_evidence:
+            f.evidence = []
+            continue
         for ev in f.evidence:
             ev.excerpt = safe_snippet(ev.excerpt)
             if ev.partner_excerpt:
@@ -353,6 +459,7 @@ def render(result: ScanResult, fp: Fingerprint, budget: Any = None) -> str:
     root = result.ctx.root
     return tpl.render(
         css=_CSS,
+        includes_evidence=include_evidence,
         coverage=_coverage_view(result.ctx.stats.get("atlas_coverage")),
         root=root,
         root_short=root.split("/")[-1] or root,

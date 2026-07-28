@@ -86,7 +86,8 @@ dropoutt scan ./data --model qwen3
 ```
 
 Adds contamination against *your* held-out set. The index stores hashed 8-grams,
-never text, and is built locally.
+not raw records, and is built locally. Keep it inside the held-out set's trust
+boundary because unkeyed hashes can be tested against candidate phrases.
 
 ```bash
 dropoutt scan ./data --model qwen3 --seq-len 4096 --target sft
@@ -100,9 +101,12 @@ Every scan writes three files to `.dropoutt/`:
 
 | file | what it is |
 | --- | --- |
-| `report.html` | one self-contained file, no server, no CDN. Copy it off a cluster with `scp` and open it anywhere. |
+| `report.html` | one self-contained file, no server, no CDN. Contains excerpts and paths unless the scan used `--no-evidence`. |
 | `fingerprint.json` | the comparable description of your dataset |
 | `findings.jsonl` | one record per finding, for scripting |
+
+Use `--no-evidence` before exporting reports from the dataset trust boundary.
+Aggregate metadata, dataset names, the scan root, and hashes still remain.
 
 ## Next
 

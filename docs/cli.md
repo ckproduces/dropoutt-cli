@@ -5,12 +5,19 @@ script lands in the environment's `bin/`, which module systems and batch
 schedulers often leave off `PATH`; the module form works from any interpreter
 that can import the package.
 
-`dropoutt` with no command prints the help. `dropoutt --version` prints the
-version and exits. Those are the only top-level options.
+`dropoutt` with no command prints the help. Commands with required arguments,
+such as `scan`, `diff`, and `index-eval`, also print their complete help and an
+example when run with no arguments. `dropoutt --version` prints the version and
+exits. Those are the only top-level options.
 
 ## `dropoutt scan PATH`
 
 Scan a file or directory.
+
+The CLI shows the active phase while it discovers files, infers layouts, scans
+records, maps atlas coverage, finalizes checks, and writes artifacts. In a
+terminal this is a spinner; redirected batch output receives stable phase lines
+and periodic record counts instead of control sequences.
 
 | flag | default | meaning |
 | --- | --- | --- |
@@ -18,12 +25,13 @@ Scan a file or directory.
 | `--profile`, `-p` | `auto` | `sft`, `corpus`, `preference`, or `auto` |
 | `--target` | none | declare what you are building. **This is what enables blocking.** |
 | `--seq-len` | from model config | training sequence length |
-| `--tier` | `1` | highest check tier to run |
+| `--tier` | config, then `1` | highest check tier to run |
 | `--out`, `-o` | `<path>/.dropoutt` | output directory |
 | `--offline` | off | never touch the network; resolve the model from the cache |
 | `--limit` | none | max records per file, for a fast look |
 | `--no-html` | off | skip the HTML report |
 | `--no-atlas` | off | skip atlas coverage |
+| `--no-evidence` | off | omit record excerpts and source locations from terminal output, `findings.jsonl`, and `report.html` |
 | `--quiet`, `-q` | off | suppress the terminal report; only the output path is printed |
 
 ```bash
@@ -32,11 +40,12 @@ dropoutt scan ./data --model qwen3 --seq-len 4096
 dropoutt scan ./data --model /scratch/models/qwen3-4b --offline
 dropoutt scan ./data --target sft --quiet          # CI gate
 dropoutt scan ./data --limit 1000                  # quick look at a huge corpus
+dropoutt scan ./data --offline --no-evidence       # VPC-safe network and evidence settings
 ```
 
-`--model`, `--profile`, `--target`, `--seq-len` and `--offline` fall back to
-`dropoutt.toml` when not given on the command line, and `--seq-len` falls back
-again to the model's own `model_max_length`.
+`--model`, `--profile`, `--target`, `--seq-len`, `--tier`, and `--offline` fall
+back to `dropoutt.toml` when not given on the command line, and `--seq-len`
+falls back again to the model's own `model_max_length`.
 
 `--offline` resolves the tokenizer and the chat template from the cache rather
 than refusing to load them, so an offline scan reports the same numbers as an
@@ -46,13 +55,22 @@ text silently.
 
 Atlas coverage appears in the terminal report and in `report.html`: how many of
 the atlas regions the corpus occupies, its spread as a share of even coverage,
-the off-atlas rate, the top categories and the top regions with their terms. The
-level-0 probe accuracy is printed underneath it. Above a 10% off-atlas rate the
+the off-atlas rate, the top categories and the top regions with their terms.
+The HTML report also plots occupied regions on the atlas's frozen 2D
+coordinates; circle size encodes sampled record count. The level-0 probe
+accuracy is printed underneath it. Above a 10% off-atlas rate the
 numbers are withheld and the reason is printed instead, because an atlas that
 does not fit the corpus produces a histogram that looks precise and is not.
 `--no-atlas` skips the assignment step and the block with it. When coverage is
 computed, the full region histogram also goes into `fingerprint.json`, which is
 what `dropoutt diff` reads.
+
+By default, terminal examples, `findings.jsonl`, and `report.html` contain
+bounded record excerpts and source locations so findings can be inspected.
+Detected PII is masked, but arbitrary proprietary text is not. Use
+`--no-evidence` before moving these artifacts outside the dataset's trust
+boundary. The fingerprint never contains record excerpts, but it does contain
+the scan root, dataset names, aggregate measurements, and stable hashes.
 
 ## `dropoutt diff LEFT RIGHT`
 
@@ -62,7 +80,10 @@ Compare two fingerprints against the shared atlas.
 | --- | --- | --- |
 | `--full` | off | list every differing region instead of truncating to the top few |
 
-Both arguments are `fingerprint.json` files written by `dropoutt scan`.
+Both arguments are `fingerprint.json` files written by `dropoutt scan`. The
+bundled `atlas-lite-v0.npz` is not an operand. If a binary atlas artifact,
+unrelated JSON file, or malformed fingerprint is passed, the command identifies
+the mismatch and prints the correct invocation.
 
 The comparison is directional and reads left against right: **what does LEFT
 cover that RIGHT does not**. It is not symmetric. A small specialised corpus can
@@ -156,12 +177,12 @@ Infer configuration and write `dropoutt.toml`. `PATH` defaults to `.`.
 | flag | meaning |
 | --- | --- |
 | `--model`, `-m` | resolve a model and show the template confirmation |
+| `--offline` | resolve model metadata only from local files and caches |
 | `--force` | overwrite an existing config |
 
 With `--model` it renders a two-turn probe conversation through the model's chat
 template and prints the exact trainable span, so a template or masking mismatch
-shows up immediately rather than after a run. `init` has no `--offline` flag and
-resolves the model against the Hub.
+shows up immediately rather than after a run.
 
 ## `dropoutt index-eval PATH --name NAME`
 
@@ -171,19 +192,22 @@ Build a contamination index from your own evaluation set.
 | --- | --- | --- |
 | `--name`, `-n` | required | name for this benchmark |
 | `--field`, `-f` | `text` | which field holds the text; falls back to joining all string fields |
+| `--force` | off | overwrite an existing private index with the same name |
 
 ```bash
 dropoutt index-eval ./holdout.jsonl --name internal-eval --field question
 ```
 
 The index stores hashed 8-grams and the per-instance gram count used as the
-coverage denominator. The text is not stored and cannot be recovered, so the
-index is safe to keep next to your data or commit.
+coverage denominator rather than raw text. It is not a disclosure-proof
+artifact: because hashes are unkeyed, someone with candidate phrases can test
+them against the index. Keep private indices inside the evaluation set's trust
+boundary.
 
-The output path is not configurable. The command prints where it wrote the
-index, which on a fresh machine is the installed package's own
-`data/contamination` directory rather than `DROPOUTT_CACHE`. See
-[portability.md](portability.md).
+The output path is `$DROPOUTT_CACHE/contamination`, or the resolved fallback
+cache when that variable is unset. The command prints the exact path. Bundled
+and private indices are both searched on later scans. Names must be filename-safe
+and an existing index is not overwritten without `--force`.
 
 ## `dropoutt checks [CHECK_ID]`
 
@@ -267,6 +291,10 @@ The atlas artifact and the shipped contamination indices are inside the package
 and are never downloaded. What this fetches is the atlas embedding model and
 tokenizers, which are too large to vendor.
 
+The command exits 1 when a tokenizer, chat template, or atlas embedding model
+could not be prepared. This makes the login-node step usable as a batch
+precondition instead of requiring someone to inspect colored output.
+
 See [portability.md](portability.md) for the login-node to compute-node
 workflow, and for which cache variable holds which file.
 
@@ -289,7 +317,7 @@ Show what is installed and what each missing component costs.
   model2vec              yes       atlas coverage
 
   cache: ~/.cache/dropoutt
-  version: 0.1.0
+  version: 0.1.3
 ```
 
 The last two lines are the resolved cache directory and the installed version,
@@ -313,9 +341,11 @@ be used in CI, which is why 1 is reserved for a genuine failure of the tool.
 | variable | meaning |
 | --- | --- |
 | `DROPOUTT_CACHE` | cache location; overrides `XDG_CACHE_HOME`. Holds the atlas embedding model and the cached `tokenizer_config.json` files. |
+| `DROPOUTT_OFFLINE` | when set to `1`, `true`, `yes`, or `on`, makes `scan` and `init` resolve only from local files and caches |
+| `DROPOUTT_DEBUG` | when truthy, show a traceback for an internal error instead of the concise exit-1 message |
 | `XDG_CACHE_HOME` | standard cache root; used as `$XDG_CACHE_HOME/dropoutt` when `DROPOUTT_CACHE` is unset |
 | `HF_HOME` | Hugging Face cache root. The tokenizers themselves are cached here, not under `DROPOUTT_CACHE`. |
-| `HF_HUB_OFFLINE` | set to `1` internally for the duration of an offline tokenizer load, so the Hub client resolves from the cache and raises instead of connecting |
+| `HF_HUB_OFFLINE` | honored as an offline request; also set internally for the duration of an offline tokenizer load |
 
 `HF_HOME` matters on a cluster: `DROPOUTT_CACHE` alone is not enough to make an
 offline run find its tokenizer. See [portability.md](portability.md).

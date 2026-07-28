@@ -1,5 +1,62 @@
 # Changelog
 
+## 0.1.3
+
+### Fixed
+
+- `dropoutt diff` now rejects atlas `.npz` files, unrelated JSON, and malformed
+  fingerprints with a command-specific explanation and example. Commands with
+  required arguments print full help when run empty.
+- Fingerprint `content_hash` now hashes normalized record content and structure.
+  It previously hashed only dataset names, byte sizes, and record counts, so
+  different same-sized corpora could receive the same fingerprint id.
+- Fingerprint ids now include the effective profile, sequence length, tier,
+  MinHash preset, and other runtime configuration after CLI overrides.
+- Blocking now follows the declared `target`, not the inferred data profile.
+- `tier` and `minhash_preset` from `dropoutt.toml` now reach the scanner.
+- `eval_sets` now acts as a benchmark-name allowlist and rejects unknown names;
+  it was previously parsed and then ignored.
+- Malformed TOML is a usage error instead of being silently ignored. Python
+  3.10 installs `tomli` so configuration works on every supported version.
+- `init` no longer writes into the current directory when its requested path
+  does not exist. `index-eval` rejects directories, unsupported extensions,
+  empty inputs, and path traversal in benchmark names, and requires `--force`
+  before overwriting an index.
+- `scan` now rejects paths with no supported data files instead of returning a
+  successful empty fingerprint.
+- `.bz2` and `.xz` inputs are now actually decompressed. They were classified
+  as supported but read as plain text. `.zst` input has an optional dependency
+  and produces an install hint instead of gibberish when it is absent.
+- Genuine internal failures exit 1 with a concise message. Set
+  `DROPOUTT_DEBUG=1` to retain a traceback.
+- `fetch` exits 1 when cache preparation is incomplete instead of printing a
+  failure and returning success.
+
+### Added
+
+- `--no-evidence` omits record excerpts and source locations from terminal
+  output, `findings.jsonl`, and `report.html`.
+- The HTML report now uses a minimal, system-sans layout and plots occupied
+  atlas regions on the frozen 2D atlas coordinates without scripts or network
+  resources.
+- Long CLI operations now show their active phase with a terminal spinner.
+  Redirected batch output receives stable phase lines and periodic record
+  counts.
+- Arrow IPC, Feather, and ORC inputs are supported through the existing
+  `pyarrow` extra. The model registry adds ten current model options and the
+  benchmark registry adds MATH-500, AIME 2024/2025, BigCodeBench, and
+  MMLU-Redux 2.0.
+- `DROPOUTT_OFFLINE=1` and an existing `HF_HUB_OFFLINE=1` are honored by
+  `scan` and `init`. `init` also accepts `--offline`.
+- Reports and write-time output now state their confidentiality boundary.
+- Fingerprints no longer carry contamination witness paths, and
+  `--no-evidence` removes nested witness locations from structured finding data.
+  Documentation no longer describes unkeyed private evaluation indices as safe
+  to publish. New private indices store the input basename rather than its
+  absolute path.
+
+`PIPELINE_VERSION` is bumped because fingerprint identity changed.
+
 ## 0.1.2
 
 The atlas was computed on every scan and then displayed nowhere. Coverage went

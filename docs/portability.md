@@ -34,10 +34,9 @@ because it is the invocation that always works.
 
 ## The dependency rule
 
-> The core scan runs with no compiled dependency other than `tokenizers`, which
-> is the only one that still ships `manylinux_2_17` and therefore installs on
-> old cluster images. Everything faster is an accelerator with a fallback that
-> produces the same answers.
+> The core scan requires NumPy but not `tokenizers`. Token-dependent checks are
+> an optional extra, and every other compiled component is either optional or an
+> accelerator with a fallback.
 
 | dependency | role | what happens without it |
 | --- | --- | --- |
@@ -47,7 +46,8 @@ because it is the invocation that always works.
 | `rensa` | Rust MinHash | falls back to numpy MinHash; same permutation scheme and banding, so clusters agree |
 | `fasttext-langdetect` | language identification | falls back to a small character-profile detector; **less accurate**, and every finding it produces is marked low-trust |
 | `model2vec` | atlas embeddings | atlas coverage is reported as skipped |
-| `pyarrow` | Parquet | `.parquet` files are reported as unreadable with an install hint |
+| `pyarrow` | Parquet, Arrow IPC, Feather, ORC | these columnar files are reported as unreadable with an install hint |
+| `zstandard` | `.zst` input | the file is reported as unreadable with an install hint; gzip, bzip2, and xz use the standard library |
 
 The language fallback is the only one where the difference is quality rather
 than speed, which is why its results are labelled rather than silently
@@ -63,7 +63,7 @@ dropoutt doctor
 
 `pyarrow` 25 and `numpy` 2.5 ship `manylinux_2_28` only. On an older CentOS-era
 login node, `pip install pyarrow` falls back to a source build and fails. That is
-why Parquet is an optional extra and why the package declares `numpy>=1.24`
+why columnar formats are an optional extra and why the package declares `numpy>=1.24`
 rather than pinning to the newest.
 
 `fasttext-predict`, which `fasttext-langdetect` depends on, has cp312 wheels but
@@ -140,20 +140,14 @@ That note matters. Without a template, records are counted as raw text, every
 token number shifts, and the loss-mask checks do not run at all, so the numbers
 must not be read as if the template had been applied.
 
-### The one gap
+The same offline flag gates atlas model loading. If its three files are absent
+from `$DROPOUTT_CACHE/embedder`, coverage is reported as unavailable without a
+connection attempt. `dropoutt index-eval` always writes private indices to
+`$DROPOUTT_CACHE/contamination`; it never writes into read-only site-packages.
 
-`--offline` covers model resolution. It does **not** gate the atlas embedding
-model: if that model is not already in `$DROPOUTT_CACHE/embedder`, coverage
-still attempts a download. The failure is handled, and coverage is reported as
-unavailable rather than aborting the scan, but the attempt happens. Either run
-`dropoutt fetch` first, which caches it, or pass `--no-atlas`.
-
-One more thing to know about the cache: `dropoutt index-eval` does not write to
-`DROPOUTT_CACHE` on a fresh machine. It writes into the installed package's own
-`data/contamination` directory, and only uses
-`$DROPOUTT_CACHE/contamination` once that directory already holds an `.idx`
-file. On a cluster with a read-only install tree, build your indices before
-deploying.
+`DROPOUTT_OFFLINE=1` and `HF_HUB_OFFLINE=1` are also honored by `scan` and
+`init`. This prevents a missed command-line flag in a batch script from changing
+the network contract.
 
 ### Local model directories
 
@@ -190,7 +184,8 @@ export DROPOUTT_CACHE=/scratch/$USER/dropoutt
 
 The HTML report is a single self-contained file with no server, no CDN and no
 web fonts. That is deliberate: it can be produced inside a Slurm job, copied off
-with `scp`, and read by someone who has never installed the tool.
+with `scp` when policy permits, and read by someone who has never installed the
+tool.
 
 ```bash
 #!/bin/bash
@@ -205,10 +200,35 @@ export HF_HOME=/scratch/$USER/hf
     --model /scratch/$USER/models/qwen3-4b \
     --seq-len 4096 \
     --offline \
+    --no-evidence \
     --out /scratch/$USER/scan-out
 ```
 
-Then `scp` `scan-out/report.html` to your laptop.
+Then apply the metadata policy described below before copying
+`scan-out/report.html`.
+
+### Output confidentiality
+
+No telemetry or hosted service is used. Network access is limited to fetching
+explicit model artifacts and the optional tokenizer panel described above.
+That does not make every output artifact safe to export.
+
+By default, terminal examples, `findings.jsonl`, and `report.html` contain
+bounded excerpts and source locations. Detected PII is masked, but arbitrary
+proprietary text and secrets outside the pattern catalog are not. Use:
+
+```bash
+python -m dropoutt scan /scratch/$USER/data \
+    --offline \
+    --no-evidence \
+    --out /scratch/$USER/scan-out
+```
+
+The resulting findings and HTML report omit record excerpts and source
+locations. They still contain dataset names, the scan root, aggregate
+measurements, and hashes. Treat those as metadata under the VPC's data
+classification policy. `fingerprint.json` never contains record excerpts but
+contains the same metadata.
 
 ## Using it as a gate
 

@@ -98,7 +98,7 @@ def concentration(coverage: dict[str, Any]) -> float | None:
     top = coverage.get("max_region_entropy")
     if ent is None or not top:
         return None
-    return float(ent) / float(top)
+    return max(0.0, min(1.0, float(ent) / float(top)))
 
 
 def is_usable(coverage: dict[str, Any] | None) -> bool:

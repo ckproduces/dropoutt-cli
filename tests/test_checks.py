@@ -242,6 +242,20 @@ def test_blocking_activates_only_with_a_target(tmp_path):
     assert result.blocking
 
 
+def test_blocking_uses_declared_target_not_inferred_data_profile(tmp_path):
+    write_jsonl(tmp_path / "d" / "train.jsonl",
+                [{"messages": [{"role": "user", "content": f"Sadece kullanici {i}"}]}
+                 for i in range(20)])
+    result = run(tmp_path, target="corpus", profile=Profile.SFT)
+    assert not result.blocking
+
+
+def test_minhash_preset_reaches_the_scan_context(tmp_path):
+    write_jsonl(tmp_path / "d" / "train.jsonl", [chat("Soru", LONG)])
+    result = run(tmp_path, minhash_preset="hf-neardedup")
+    assert result.ctx.stats["minhash_preset"] == "hf-neardedup"
+
+
 def test_every_finding_is_unverified_in_this_build(tmp_path):
     """v0.1 ships no measured effect sizes and must not imply otherwise."""
     write_jsonl(tmp_path / "d" / "train.jsonl",
@@ -290,6 +304,31 @@ def test_fingerprint_shape_counts_text_not_bytes_on_disk(tmp_path):
         "character count must exclude JSON syntax and multi-byte overhead; "
         f"got {values['total_chars']} against {on_disk} bytes on disk"
     )
+
+
+def test_fingerprint_content_hash_depends_on_content_not_only_size(tmp_path):
+    from dropoutt.fingerprint import build as build_fingerprint
+
+    left = tmp_path / "left"
+    right = tmp_path / "right"
+    write_jsonl(left / "d" / "train.jsonl", [chat("Soru", "AAAA")])
+    write_jsonl(right / "d" / "train.jsonl", [chat("Soru", "BBBB")])
+    assert (
+        (left / "d" / "train.jsonl").stat().st_size
+        == (right / "d" / "train.jsonl").stat().st_size
+    )
+
+    left_result = run(left)
+    right_result = run(right)
+    left_fp = build_fingerprint(
+        left_result.ctx, left_result.findings, total_chars=8, total_words=2
+    )
+    right_fp = build_fingerprint(
+        right_result.ctx, right_result.findings, total_chars=8, total_words=2
+    )
+
+    assert left_fp.provenance["content_hash"] != right_fp.provenance["content_hash"]
+    assert left_fp.fingerprint_id != right_fp.fingerprint_id
 
 
 def test_offline_reads_the_cache_instead_of_refusing(monkeypatch, tmp_path):

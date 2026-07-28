@@ -170,7 +170,7 @@ def test_snippets_are_length_bounded():
 
 
 def test_html_report_does_not_leak_planted_secrets(tmp_path):
-    """The report exists to be shared; it must be safe to share."""
+    """Values matched by the PII catalog must be masked before rendering."""
     from dropoutt.fingerprint import build as build_fingerprint
     from dropoutt.langid import LanguageDetector
     from dropoutt.report import html as html_report
@@ -196,6 +196,74 @@ def test_html_report_does_not_leak_planted_secrets(tmp_path):
     assert "T1-PII-001" in page, "but the finding itself must still be reported"
 
 
+def test_html_report_can_omit_all_record_evidence(tmp_path):
+    from dropoutt.fingerprint import build as build_fingerprint
+    from dropoutt.langid import LanguageDetector
+    from dropoutt.report import html as html_report
+    from dropoutt.runner import scan
+
+    planted = "private surrounding words that are not themselves PII"
+    data = tmp_path / "d"
+    data.mkdir()
+    with open(data / "train.jsonl", "w", encoding="utf-8") as fh:
+        for i in range(8):
+            fh.write(json.dumps({"messages": [
+                {"role": "user", "content": "Soru"},
+                {"role": "assistant", "content": planted},
+            ]}) + "\n")
+
+    result = scan(str(tmp_path), detector=LanguageDetector())
+    fp = build_fingerprint(result.ctx, result.findings, total_chars=100, total_words=20)
+    evidence_before = sum(len(f.evidence) for f in result.findings)
+    assert evidence_before
+    page = html_report.render(result, fp, None, include_evidence=False)
+
+    assert planted not in page
+    assert "Record excerpts and source locations were omitted" in page
+    assert sum(len(f.evidence) for f in result.findings) == evidence_before, (
+        "rendering a redacted report must not mutate the scan result"
+    )
+
+
+def test_fingerprint_omits_contamination_witness_paths():
+    from dropoutt.context import ScanContext
+    from dropoutt.fingerprint import build as build_fingerprint
+    from dropoutt.models import Confidence, Finding, Profile, Severity
+
+    finding = Finding(
+        check_id="T1-CONTAM-001",
+        title="overlap",
+        severity=Severity.WARNING,
+        confidence=Confidence.UNVERIFIED,
+        count=1,
+        total_considered=1,
+        detail="overlap",
+        fix="remove it",
+        data={
+            "results": {
+                "private-eval": {
+                    "n_instances": 1,
+                    "n_contaminated": 1,
+                    "witnesses": [
+                        {"instance": 0, "record": ("doc", "/secret/eval.jsonl", 2)}
+                    ],
+                },
+            },
+            "rule": "test",
+        },
+    )
+    fp = build_fingerprint(
+        ScanContext(root="/secret", profile=Profile.SFT),
+        [finding],
+        total_chars=0,
+        total_words=0,
+    )
+
+    values = fp.facets["contamination"].values
+    assert "witnesses" not in values["private-eval"]
+    assert "/secret/eval.jsonl" not in json.dumps(fp.to_dict())
+
+
 def test_html_report_escapes_markup_from_the_corpus(tmp_path):
     from dropoutt.fingerprint import build as build_fingerprint
     from dropoutt.langid import LanguageDetector
@@ -218,6 +286,38 @@ def test_html_report_escapes_markup_from_the_corpus(tmp_path):
     assert "<script>alert" not in page
 
 
+def test_html_report_uses_sans_serif_and_plots_atlas_coverage(tmp_path):
+    from dropoutt.atlas import load_bundled
+    from dropoutt.fingerprint import build as build_fingerprint
+    from dropoutt.langid import LanguageDetector
+    from dropoutt.report import html as html_report
+    from dropoutt.runner import scan
+
+    data = tmp_path / "d"
+    data.mkdir()
+    (data / "train.jsonl").write_text(
+        json.dumps({"text": "a sufficiently long atlas record for coverage"}) + "\n",
+        encoding="utf-8",
+    )
+    result = scan(str(tmp_path), detector=LanguageDetector())
+    atlas = load_bundled()
+    assert atlas is not None
+    result.ctx.stats["atlas_coverage"] = atlas.coverage(
+        np.array([0, 0, 2, 4], dtype=np.int32),
+        atlas.region_category[np.array([0, 0, 2, 4], dtype=np.int32)],
+    )
+    fp = build_fingerprint(result.ctx, result.findings, total_chars=100, total_words=20)
+
+    page = html_report.render(result, fp, None)
+
+    assert "Inter,ui-sans-serif,system-ui" in page
+    assert "ui-monospace" not in page
+    assert "&#34;" not in page
+    assert '<svg class="atlas-map"' in page
+    assert page.count("<circle class=\"atlas-point") == atlas.n_regions
+    assert "Larger highlighted circles contain more sampled records" in page
+
+
 def test_category_counts_are_json_serialisable(tiny_atlas):
     """Regression: numpy int keys are refused by orjson and broke the writer."""
     from dropoutt.compat import json_dumps
@@ -227,6 +327,15 @@ def test_category_counts_are_json_serialisable(tiny_atlas):
     )
     assert all(isinstance(k, str) for k in cov["by_category"])
     json_dumps(cov)  # must not raise
+
+
+def test_single_region_coverage_does_not_render_negative_zero():
+    from dropoutt.atlas.compare import concentration
+
+    value = concentration({"region_entropy": -0.0, "max_region_entropy": 5.5})
+
+    assert value == 0.0
+    assert f"{value:.0%}" == "0%"
 
 
 def test_short_records_are_excluded_from_the_atlas_and_the_count_reported(tmp_path):
