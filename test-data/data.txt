@@ -1,0 +1,17 @@
+SGML, RTF, HTML, XML, and TeX are examples of rich text fully represented as plain text streams, interspersing plain text data with sequences of characters that represent the additional data structures."
+According to other definitions, however, files that contain markup or other meta-data are generally considered plain text, so long as the markup is also in a directly human-readable form (as in HTML, XML, and so on). Thus, representations such as SGML, RTF, HTML, XML, wiki markup, and TeX, as well as nearly all programming language source code files, are considered plain text. The particular content is irrelevant to whether a file is plain text. For example, an SVG file can express drawings or even bitmapped graphics, but is still plain text.
+
+The use of plain text rather than binary files enables files to survive much better "in the wild", in part by making them largely immune to computer architecture incompatibilities. For example, with all data encoded as UTF-8 text, all the problems of endianness can be avoided.
+
+Usage
+The purpose of using plain text today is primarily independence from programs that require their very own special encoding or formatting or file format. Plain text files can be opened, read, and edited with ubiquitous text editors and utilities.
+
+A command-line interface allows people to give commands in plain text and get a response, also typically in plain text.
+
+Many other computer programs are also capable of processing or creating plain text, such as countless programs in DOS, Windows, classic Mac OS, and Unix and its kin; as well as web browsers (a few browsers such as Lynx and the Line Mode Browser produce only plain text for display) and other e-text readers.
+
+Plain text files are almost universal in programming; a source code file containing instructions in a programming language is almost always a plain text file. Plain text is also commonly used for configuration files, which are read for saved settings at the startup of a program.
+
+Plain text is used for much e-mail.
+
+A comment, a ".txt" file, or a TXT Record generally contains only plain text (without formatting) intended for humans to read.
