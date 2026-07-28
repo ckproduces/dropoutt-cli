@@ -12,6 +12,7 @@ with no flags is still worth reading.
 from __future__ import annotations
 
 from rich.console import Console
+from rich.markup import escape
 from rich.table import Table
 from rich.text import Text
 
@@ -25,6 +26,20 @@ SEV_STYLE = {
     Severity.WARNING: "yellow",
     Severity.INFO: "cyan",
 }
+
+
+def _m(value: object) -> str:
+    """Escape a value before it is interpolated into a rich markup string.
+
+    Two distinct things are handled by the same call. Install hints are written
+    as `pip install 'dropoutt[tokenizer]'`, and rich reads `[tokenizer]` as a
+    style tag and silently deletes it, so the user is told to install a package
+    that does not exist. Separately, dataset names and reasons come from scanned
+    data, and a folder named `[red]` would otherwise inject styling into our
+    own output. Anything derived from data or carrying an extras name goes
+    through here.
+    """
+    return escape(str(value))
 
 
 def render(
@@ -44,7 +59,7 @@ def render(
     fmt = ", ".join(f"{k.lstrip('.')} {v}" for k, v in sorted(disc.format_counts.items()))
     console.print(f"  [dim]Discovered[/dim]  {len(disc.files):,} files, "
                   f"{len(disc.datasets):,} datasets, {disc.total_bytes / 1e6:,.1f} MB")
-    console.print(f"  [dim]Formats[/dim]     {fmt or 'none'}")
+    console.print(f"  [dim]Formats[/dim]     {_m(fmt) or 'none'}")
     if disc.empty_files:
         console.print(f"  [dim]Empty files[/dim] {len(disc.empty_files)}")
 
@@ -58,22 +73,22 @@ def render(
         for v in real.values():
             counts[v.layout_id] = counts.get(v.layout_id, 0) + 1
         for layout, n in sorted(counts.items(), key=lambda kv: -kv[1])[:8]:
-            console.print(f"    {layout:<22} {n} dataset(s)")
+            console.print(f"    {_m(f'{layout:<22}')} {n} dataset(s)")
     if logs:
         console.print()
         console.print("  [bold yellow]Not training data[/bold yellow]")
         for name, v in list(logs.items())[:6]:
-            console.print(f"    {name:<40} {v.not_training_data}")
+            console.print(f"    {_m(f'{name:<40}')} {_m(v.not_training_data)}")
         if len(logs) > 6:
             console.print(f"    [dim]and {len(logs) - 6} more[/dim]")
 
     # -- hypothesis ------------------------------------------------------
     console.print()
     console.print("  [bold]Best guess at what you are building[/bold]")
-    console.print(f"    Stage      {ctx.profile.value}")
+    console.print(f"    Stage      {_m(ctx.profile.value)}")
     lang = _language_summary(result)
     if lang:
-        console.print(f"    Language   {lang}")
+        console.print(f"    Language   {_m(lang)}")
     console.print("    [dim]Confidence: medium. Confirm with `dropoutt init`.[/dim]")
 
     # -- findings --------------------------------------------------------
@@ -106,16 +121,16 @@ def render(
         cheapest = budget.cheapest
         for est in sorted(budget.estimates, key=lambda e: e.total_tokens_est):
             if est.failed:
-                console.print(f"    {est.name:<14} [dim]tokenizer unavailable[/dim]")
+                console.print(f"    {_m(f'{est.name:<14}')} [dim]tokenizer unavailable[/dim]")
                 continue
             premium = budget.premium_vs_cheapest(est)
             extra = f"  (+{premium:.0%})" if cheapest and est is not cheapest and premium > 0 else ""
             console.print(
-                f"    {est.name:<14} ~{est.total_tokens_est / 1e6:>8,.2f}M tokens   "
+                f"    {_m(f'{est.name:<14}')} ~{est.total_tokens_est / 1e6:>8,.2f}M tokens   "
                 f"{est.tokens_per_word:.2f} tok/word{extra}"
             )
         for note in budget.notes:
-            console.print(f"    [dim]{note}[/dim]")
+            console.print(f"    [dim]{_m(note)}[/dim]")
 
     # -- skipped ---------------------------------------------------------
     if result.skipped:
@@ -126,16 +141,16 @@ def render(
             if s.reason in seen:
                 continue
             seen.add(s.reason)
-            console.print(f"    {s.title:<46} [dim]{s.reason}[/dim]")
+            console.print(f"    {_m(f'{s.title:<46}')} [dim]{_m(s.reason)}[/dim]")
             if s.unlock:
-                console.print(f"      [dim]→ {s.unlock}[/dim]")
+                console.print(f"      [dim]→ {_m(s.unlock)}[/dim]")
 
     # -- degradations ----------------------------------------------------
     if ctx.degradations:
         console.print()
         console.print("  [bold]Degraded[/bold]")
         for d in ctx.degradations[:8]:
-            console.print(f"    [dim]{d}[/dim]")
+            console.print(f"    [dim]{_m(d)}[/dim]")
 
     # -- footer ----------------------------------------------------------
     console.print()
@@ -173,14 +188,14 @@ def _render_evidence(console: Console, findings: list[Finding]) -> None:
     console.print()
     console.print("  [bold]Examples[/bold]")
     for f in sorted(with_evidence, key=_finding_order)[:5]:
-        console.print(f"    [dim]{f.check_id}[/dim] {f.title}")
+        console.print(f"    [dim]{f.check_id}[/dim] {_m(f.title)}")
         for ev in f.evidence[:2]:
             loc = f"{_short(ev.source_file)}:{ev.source_index}"
-            console.print(f"      [dim]{loc}[/dim]  {safe_snippet(ev.excerpt, 150)}")
+            console.print(f"      [dim]{_m(loc)}[/dim]  {_m(safe_snippet(ev.excerpt, 150))}")
             if ev.partner_excerpt:
                 score = f" [{ev.score:.2f}]" if ev.score is not None else ""
-                console.print(f"      [dim]matches{score}[/dim]  "
-                              f"{safe_snippet(ev.partner_excerpt, 150)}")
+                console.print(f"      [dim]matches{_m(score)}[/dim]  "
+                              f"{_m(safe_snippet(ev.partner_excerpt, 150))}")
 
 
 def _short(path: str, keep: int = 48) -> str:

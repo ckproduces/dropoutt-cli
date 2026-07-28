@@ -16,7 +16,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-PIPELINE_VERSION = "0.1.0"
+#: Bumped whenever a measurement changes, not merely when the package version
+#: changes. It feeds the fingerprint id, so two fingerprints sharing an id have
+#: to mean the same thing. 0.1.1 corrected the shape facet, which reported bytes
+#: on disk as `total_chars` and a hardcoded 0 words, so fingerprints from 0.1.0
+#: describe something different and must not collide with later ones.
+PIPELINE_VERSION = "0.1.1"
 FINGERPRINT_SCHEMA_VERSION = "fp-v0.1"
 
 

@@ -4,6 +4,34 @@ This is built to run on arbitrary HPC and cloud clusters, not one particular
 one. That rules out assuming a modern glibc, a writable home directory, network
 access at run time, or a specific Python patch version.
 
+## Installing
+
+The package is not on PyPI. Install it from the checkout:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -e '.[all]'
+```
+
+If the login node cannot build some of the optional wheels, drop `[all]` and add
+extras one at a time. `dropoutt doctor` reports what is missing and what its
+absence costs.
+
+## Invoking it
+
+The console script lands in the environment's `bin/`, which module systems and
+batch schedulers frequently leave off `PATH`, and on a shared cluster you often
+cannot change that. Running the package as a module works from any interpreter
+that can import it:
+
+```bash
+python -m dropoutt --version
+python -m dropoutt scan /scratch/$USER/data --offline
+```
+
+Every command accepts both forms. Use `python -m dropoutt` in batch scripts,
+because it is the invocation that always works.
+
 ## The dependency rule
 
 > The core scan runs with no compiled dependency other than `tokenizers`, which
@@ -44,36 +72,115 @@ the `lid` extra and the fallback detector takes over.
 
 ## Offline operation
 
-Air-gapped compute nodes are normal. The scan makes network calls in exactly two
-places: resolving `--model` against the Hub, and fetching an embedding model for
-the atlas.
+Air-gapped compute nodes are normal. A scan reaches the network in exactly three
+places:
+
+1. the tokenizer for `--model`, or the five panel tokenizers when `--model` is
+   not given
+2. that model's `tokenizer_config.json`, which carries the chat template
+3. the atlas embedding model
+
+`dropoutt fetch` pulls all three ahead of time. Run it where there is egress.
+The atlas artifact itself and the shipped contamination indices are inside the
+package and are never downloaded.
+
+### The two-node workflow
+
+On the login node, with both cache variables pointing at shared storage:
 
 ```bash
-# On the login node, where there is egress:
-dropoutt scan ./data --model Qwen/Qwen3-8B   # populates the cache
+export DROPOUTT_CACHE=/scratch/$USER/dropoutt
+export HF_HOME=/scratch/$USER/hf
 
-# On the compute node:
-dropoutt scan ./data --model Qwen/Qwen3-8B --offline
+dropoutt fetch --model qwen3     # the tokenizer you will scan against
+dropoutt fetch                   # or: the whole panel, for scans with no --model
 ```
 
-`--offline` disables every network call. A model that is not already cached
-causes the token-dependent checks to skip with a clear reason rather than
-hanging on a connection attempt.
+On the compute node, with the same two variables:
 
-You can also point `--model` at a local directory containing `tokenizer.json`
-and `tokenizer_config.json`, which needs no network at all.
+```bash
+export DROPOUTT_CACHE=/scratch/$USER/dropoutt
+export HF_HOME=/scratch/$USER/hf
+
+python -m dropoutt scan /scratch/$USER/data \
+    --model qwen3 --seq-len 4096 --offline
+```
+
+Both variables matter, and this is the easy thing to get wrong. They hold
+different files:
+
+| file | variable that controls it | path |
+| --- | --- | --- |
+| tokenizer | `HF_HOME` | `$HF_HOME/hub` |
+| `tokenizer_config.json`, so the chat template | `DROPOUTT_CACHE` | `$DROPOUTT_CACHE/hub` |
+| atlas embedding model | `DROPOUTT_CACHE` | `$DROPOUTT_CACHE/embedder` |
+
+`DROPOUTT_CACHE` on its own is not enough. The tokenizer is loaded through the
+Hugging Face hub cache, which follows `HF_HOME`, so an offline run with only
+`DROPOUTT_CACHE` set reports `could not load a tokenizer` and skips every
+token-dependent check.
+
+### What `--offline` resolves
+
+`--offline` loads the tokenizer from the cache with `HF_HUB_OFFLINE=1` set for
+the duration of the call, and the `tokenizer_config.json` with
+`local_files_only=True`. It resolves from the cache rather than refusing, which
+is the point: against a populated cache, an offline scan produces findings
+identical to an online one, down to the token counts.
+
+If no cached chat template is found the run says so before the report:
+
+```
+  note no cached chat template for Qwen/Qwen3-8B; token counts exclude template overhead
+and loss-mask checks were skipped. Run `dropoutt fetch --model qwen3` on a node with
+network.
+```
+
+That note matters. Without a template, records are counted as raw text, every
+token number shifts, and the loss-mask checks do not run at all, so the numbers
+must not be read as if the template had been applied.
+
+### The one gap
+
+`--offline` covers model resolution. It does **not** gate the atlas embedding
+model: if that model is not already in `$DROPOUTT_CACHE/embedder`, coverage
+still attempts a download. The failure is handled, and coverage is reported as
+unavailable rather than aborting the scan, but the attempt happens. Either run
+`dropoutt fetch` first, which caches it, or pass `--no-atlas`.
+
+One more thing to know about the cache: `dropoutt index-eval` does not write to
+`DROPOUTT_CACHE` on a fresh machine. It writes into the installed package's own
+`data/contamination` directory, and only uses
+`$DROPOUTT_CACHE/contamination` once that directory already holds an `.idx`
+file. On a cluster with a read-only install tree, build your indices before
+deploying.
+
+### Local model directories
+
+You can also point `--model` at a local directory holding `tokenizer.json` and
+`tokenizer_config.json`. That path reads straight from disk and needs no network
+and no cache at all.
+
+```bash
+python -m dropoutt scan ./data --model /scratch/$USER/models/qwen3-4b --offline
+```
 
 ## Cache location
 
-Resolved in this order:
+`DROPOUTT_CACHE` is resolved first, and used exactly as given. Only when it is
+unset does the rest apply:
 
-1. `DROPOUTT_CACHE`
+1. `DROPOUTT_CACHE`, used as-is
 2. `$XDG_CACHE_HOME/dropoutt`
 3. `~/.cache/dropoutt`
-4. a temp directory, when the home directory is read-only
+4. `<tempdir>/dropoutt-cache`, when the directory from 2 or 3 cannot be created
+   or written to
 
 The fourth case matters: compute nodes frequently mount `$HOME` read-only, and a
-scanner that crashes on a cache write is a scanner that cannot run there.
+scanner that crashes on a cache write is a scanner that cannot run there. Note
+that it is a fallback for the unset case only. If you set `DROPOUTT_CACHE` to a
+path you cannot write, there is no fallback, which is the right behaviour for an
+explicit setting.
 
 ```bash
 export DROPOUTT_CACHE=/scratch/$USER/dropoutt
@@ -91,7 +198,10 @@ with `scp`, and read by someone who has never installed the tool.
 #SBATCH --time=00:30:00
 
 export DROPOUTT_CACHE=/scratch/$USER/dropoutt
-dropoutt scan /scratch/$USER/data \
+export HF_HOME=/scratch/$USER/hf
+
+/scratch/$USER/dropoutt-cli/.venv/bin/python -m dropoutt \
+    scan /scratch/$USER/data \
     --model /scratch/$USER/models/qwen3-4b \
     --seq-len 4096 \
     --offline \

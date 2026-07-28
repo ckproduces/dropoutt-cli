@@ -257,3 +257,126 @@ def test_skipped_checks_name_the_flag_that_unlocks_them(tmp_path):
     token_skips = [s for s in result.skipped if "model" in s.unlock]
     assert token_skips, "token checks must be skipped with an actionable unlock"
     assert all(s.reason for s in result.skipped)
+
+
+def test_fingerprint_shape_counts_text_not_bytes_on_disk(tmp_path):
+    """Regression: the shape facet reported file bytes and a hardcoded 0 words.
+
+    The fingerprint is the one artifact meant to be compared across datasets.
+    `total_bytes` includes JSON syntax, keys and metadata columns, and in UTF-8 a
+    Turkish corpus costs more bytes per character than an English one, so a
+    shape facet built from bytes varies with language and file format rather than
+    with the data. It must come from the normalised text the runner actually saw.
+    """
+    import json as _json
+    import subprocess
+    import sys
+
+    d = tmp_path / "d"
+    # Turkish diacritics are 2 bytes each in UTF-8 but 1 character.
+    text = "çğıöşü " * 40
+    write_jsonl(d / "train.jsonl", [chat(f"Soru {i}", text) for i in range(25)])
+
+    subprocess.run(
+        [sys.executable, "-m", "dropoutt", "scan", str(tmp_path), "--quiet", "--no-html"],
+        check=False, capture_output=True,
+    )
+    values = _json.loads((tmp_path / ".dropoutt" / "fingerprint.json").read_text(
+        encoding="utf-8"))["facets"]["shape"]["values"]
+
+    assert values["total_words"] > 0, "words were hardcoded to 0"
+    on_disk = sum(f.stat().st_size for f in d.rglob("*.jsonl"))
+    assert values["total_chars"] < on_disk, (
+        "character count must exclude JSON syntax and multi-byte overhead; "
+        f"got {values['total_chars']} against {on_disk} bytes on disk"
+    )
+
+
+def test_offline_reads_the_cache_instead_of_refusing(monkeypatch, tmp_path):
+    """Regression: --offline returned {} without ever consulting the cache.
+
+    The chat template decides how records render, which spans are trainable and
+    how many tokens a run costs. Dropping it on a compute node silently changed
+    every token number and disabled the loss-mask checks, which defeats the
+    whole point of `dropoutt fetch` on a login node.
+    """
+    import json as _json
+
+    import dropoutt.config as config_mod
+
+    cfg_file = tmp_path / "tokenizer_config.json"
+    cfg_file.write_text(_json.dumps({
+        "chat_template": "{% for m in messages %}{{ m['content'] }}{% endfor %}",
+        "eos_token": "<|im_end|>",
+    }), encoding="utf-8")
+
+    calls: list[dict] = []
+
+    def fake_download(repo_id, filename, **kwargs):
+        calls.append(kwargs)
+        return str(cfg_file)
+
+    import huggingface_hub
+
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", fake_download)
+
+    cfg = config_mod._load_tokenizer_config("Qwen/Qwen3-8B", offline=True)
+
+    assert calls, "offline gave up before it ever looked in the cache"
+    assert calls[0].get("local_files_only") is True, (
+        "offline must resolve from the cache without reaching the network"
+    )
+    assert cfg.get("chat_template"), "a cached template must still be usable offline"
+
+
+def test_offline_scan_makes_no_network_connection(tmp_path, monkeypatch):
+    """--offline is a promise, and the atlas embedder used to break it.
+
+    `scan()` took no offline argument at all, so `_compute_coverage` called
+    load_embedder unconditionally and tried to download a ~500 MB model on a
+    compute node with no egress. Any connection attempt fails this test.
+    """
+    import socket
+
+    from dropoutt.runner import scan as run_scan
+
+    write_jsonl(tmp_path / "d" / "train.jsonl",
+                [chat(f"Soru {i}", f"{LONG} {i}") for i in range(25)])
+
+    attempts: list[object] = []
+
+    def blocked(self, address):
+        attempts.append(address)
+        raise OSError("network access attempted under --offline")
+
+    monkeypatch.setattr(socket.socket, "connect", blocked)
+
+    from dropoutt.atlas import load_bundled
+
+    run_scan(str(tmp_path), atlas=load_bundled(), offline=True)
+    assert not attempts, f"--offline reached the network: {attempts}"
+
+
+def test_a_private_eval_index_does_not_hide_the_shipped_ones(tmp_path):
+    """Regression: index lookup returned one directory or the other, never both.
+
+    `_contamination_dir()` preferred the cache when it held any .idx, so the
+    first `index-eval` silently switched off all ten bundled benchmarks.
+    """
+    from dropoutt.contamination import BenchmarkIndex, load_indices
+
+    shipped, cache = tmp_path / "shipped", tmp_path / "cache"
+    shipped.mkdir()
+    cache.mkdir()
+
+    for directory, name in ((shipped, "gsm8k"), (cache, "my-holdout")):
+        idx = BenchmarkIndex(name=name, n_instances=0)
+        idx.add_instance(0, " ".join(f"word{i}" for i in range(40)))
+        idx.n_instances = 1
+        idx.save(directory / f"{name}.idx")
+
+    merged = load_indices(cache, shipped)
+    names = set(merged.benchmarks)
+    assert names == {"gsm8k", "my-holdout"}, (
+        f"both locations must be searched, got {names}"
+    )

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dropoutt"
-version = "0.1.0"
+version = "0.1.1"
 description = "Pre-flight checks and comparable fingerprints for LLM training datasets."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -73,10 +73,12 @@ dropoutt = "dropoutt.cli:app"
 Homepage = "https://dropoutt.com"
 
 [tool.hatch.build.targets.wheel]
+# `packages` already carries everything under src/dropoutt, including data/.
+# A force-include of data/ on top of this adds every file a second time and
+# hatchling refuses to build: "A second file is being added to the wheel
+# archive at the same path". Do not add one back.
 packages = ["src/dropoutt"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"src/dropoutt/data" = "dropoutt/data"
+exclude = ["**/.DS_Store"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

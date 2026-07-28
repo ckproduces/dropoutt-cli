@@ -90,8 +90,15 @@ def scan(
     limit_per_file: int | None = None,
     induction_sample: int = 2000,
     progress: Callable[[str, int], None] | None = None,
+    offline: bool = False,
 ) -> ScanResult:
-    """Run a full scan and return findings plus context."""
+    """Run a full scan and return findings plus context.
+
+    ``offline`` must be threaded all the way to the atlas embedder. It is the
+    only network call left inside a scan, and a promise of "never touches the
+    network" that still downloads a 500 MB model is worse than no promise on a
+    compute node with no egress.
+    """
     started = time.time()
     disc = discover(root)
 
@@ -198,7 +205,7 @@ def scan(
 
     # ---- atlas coverage --------------------------------------------------
     if atlas is not None and atlas_sample:
-        _compute_coverage(ctx, atlas_sample)
+        _compute_coverage(ctx, atlas_sample, offline=offline)
 
     # ---- phase 3: resolve ------------------------------------------------
     findings: list[Finding] = []
@@ -305,7 +312,9 @@ def _compute_features(doc: Document, ctx: ScanContext) -> None:
     doc.meta[F_TOKEN_COUNT] = ctx.tokenizer.count(text)
 
 
-def _compute_coverage(ctx: ScanContext, sample: list[tuple[str, str]]) -> None:
+def _compute_coverage(
+    ctx: ScanContext, sample: list[tuple[str, str]], *, offline: bool = False
+) -> None:
     """Place a sample of records on the atlas and build the coverage report.
 
     Degrades rather than failing: if the embedder cannot be loaded, coverage is
@@ -313,7 +322,7 @@ def _compute_coverage(ctx: ScanContext, sample: list[tuple[str, str]]) -> None:
     """
     from .atlas import load_embedder  # noqa: PLC0415
 
-    embedder = load_embedder(ctx.atlas.embed_model)
+    embedder = load_embedder(ctx.atlas.embed_model, offline=offline)
     if embedder is None:
         ctx.degraded(
             "atlas is present but its embedding model could not be loaded; "

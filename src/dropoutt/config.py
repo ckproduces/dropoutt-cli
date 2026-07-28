@@ -176,6 +176,16 @@ def resolve_model(model: str, *, offline: bool = False) -> ResolvedModel:
             notes.append(f"chat template failed to compile: {type(exc).__name__}: {exc}")
     elif cfg:
         notes.append(f"{model_id} declares no chat_template")
+    elif offline:
+        # Never let this be silent. Without a template, records are counted as
+        # raw text, every token number shifts, and the loss-mask checks do not
+        # run at all — the user must not read those numbers as if the template
+        # had been applied.
+        notes.append(
+            f"no cached chat template for {model_id}; token counts exclude "
+            f"template overhead and loss-mask checks were skipped. "
+            f"Run `dropoutt fetch --model {model}` on a node with network."
+        )
 
     seq_len = cfg.get("model_max_length")
     if isinstance(seq_len, int) and seq_len > 1_000_000:
@@ -200,13 +210,19 @@ def _load_tokenizer_config(model_id: str, *, offline: bool = False) -> dict[str,
             return json_loads(local.read_text(encoding="utf-8"))
         except Exception:
             return {}
-    if offline or not HAVE_HF_HUB:
+    if not HAVE_HF_HUB:
         return {}
     try:
         from huggingface_hub import hf_hub_download  # noqa: PLC0415
 
+        # Offline resolves from the cache rather than refusing outright. The
+        # chat template decides how records are rendered, which spans are
+        # trainable, and how many tokens a run costs, so dropping it on a
+        # compute node would silently change every token number and disable the
+        # loss-mask checks. `dropoutt fetch` populates the cache for this path.
         path = hf_hub_download(model_id, "tokenizer_config.json",
-                               cache_dir=str(cache_dir() / "hub"))
+                               cache_dir=str(cache_dir() / "hub"),
+                               local_files_only=offline)
         return json_loads(Path(path).read_text(encoding="utf-8"))
     except Exception:
         return {}

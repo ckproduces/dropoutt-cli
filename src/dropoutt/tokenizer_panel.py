@@ -83,9 +83,23 @@ def load_tokenizer(model_id: str, *, offline: bool = False) -> TokenizerHandle |
             tok = Tokenizer.from_file(os.path.join(model_id, "tokenizer.json"))
         elif os.path.isfile(model_id):
             tok = Tokenizer.from_file(model_id)
+        elif offline:
+            # Offline means "never reach the network", not "never use a
+            # tokenizer". The point of running `dropoutt fetch` on a login node
+            # is that the compute node can then work with no egress, so a
+            # tokenizer already in the cache must still load. HF_HUB_OFFLINE
+            # makes from_pretrained resolve purely from the local cache and
+            # raise rather than connect.
+            prior = os.environ.get("HF_HUB_OFFLINE")
+            os.environ["HF_HUB_OFFLINE"] = "1"
+            try:
+                tok = Tokenizer.from_pretrained(model_id)
+            finally:
+                if prior is None:
+                    os.environ.pop("HF_HUB_OFFLINE", None)
+                else:
+                    os.environ["HF_HUB_OFFLINE"] = prior
         else:
-            if offline:
-                return None
             tok = Tokenizer.from_pretrained(model_id)
     except Exception:
         return None

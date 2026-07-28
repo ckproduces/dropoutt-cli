@@ -6,13 +6,16 @@ Point it at a folder. It tells you what is wrong with your training data before
 you spend a run finding out.
 
 ```bash
-pip install dropoutt
+pip install -e '.[all]'
 dropoutt scan ./data
 ```
 
 No model, no configuration and no flags are required. Supplying them unlocks
 more checks, and the report always names the single flag that would unlock each
 one it skipped.
+
+**New here?** [docs/getting-started.md](docs/getting-started.md) walks from
+installation through reading the output to blocking a bad run in CI.
 
 ## What it catches
 
@@ -88,18 +91,25 @@ the one that still ships `manylinux_2_17` and therefore installs on old cluster
 images. Everything faster is an optional accelerator with a fallback that
 produces the same answers.
 
+Not on PyPI yet, so install from the checkout:
+
 ```bash
-pip install dropoutt                 # core
-pip install 'dropoutt[lid]'          # language identification, 938 KB model
-pip install 'dropoutt[tokenizer]'    # exact token counts and template checks
-pip install 'dropoutt[parquet]'      # .parquet input
-pip install 'dropoutt[all]'          # everything
+python3 -m venv .venv
+.venv/bin/pip install -e '.'              # core
+.venv/bin/pip install -e '.[lid]'         # language identification, 938 KB model
+.venv/bin/pip install -e '.[tokenizer]'   # exact token counts and template checks
+.venv/bin/pip install -e '.[parquet]'     # .parquet input
+.venv/bin/pip install -e '.[all]'         # everything
 ```
 
 Run `dropoutt doctor` to see what is installed and what each missing piece costs.
 
+If `dropoutt` is not on your `PATH` — common under module systems and batch
+schedulers — `python -m dropoutt` does the same thing.
+
 ## Documentation
 
+- [docs/getting-started.md](docs/getting-started.md) — **start here**: install to first scan
 - [docs/index.md](docs/index.md) — quickstart
 - [docs/cli.md](docs/cli.md) — every command and flag
 - [docs/checks.md](docs/checks.md) — the check catalog

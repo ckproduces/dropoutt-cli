@@ -1,11 +1,15 @@
 # Quickstart
 
 ```bash
-pip install dropoutt
+pip install -e '.[all]'
 dropoutt scan ./data
 ```
 
 That is the whole first run. No model, no config, no flags.
+
+For the longer version — installing, reading the output finding by finding, and
+blocking a bad run in CI — read [getting-started.md](getting-started.md). This
+page is the summary.
 
 ## What a zero-configuration run produces
 

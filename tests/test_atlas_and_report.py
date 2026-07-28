@@ -13,6 +13,7 @@ import pytest
 
 from dropoutt.atlas.apply import OFF_ATLAS_SUPPRESS, Atlas
 from dropoutt.report.escaping import json_script_payload, safe_snippet, visible_controls
+from dropoutt.report.terminal import _m
 
 
 @pytest.fixture
@@ -96,6 +97,48 @@ def test_atlas_quality_numbers_travel_with_the_artifact(tiny_atlas):
     cov = tiny_atlas.coverage(np.array([1] * 50), np.zeros(50, dtype=np.int32))
     assert cov["l0_holdout_accuracy"] == 0.9
     assert cov["region_purity_by_taxonomy"] == 0.8
+
+
+# -- terminal rendering --------------------------------------------------
+
+
+def test_install_hints_survive_rich_markup():
+    """Regression: rich reads `[tokenizer]` as a style tag and deletes it.
+
+    The user was told to run `pip install 'dropoutt'`, which installs the core
+    package they already have and not the extra they were missing. Every install
+    hint reaches the terminal through markup, so every one of them must be
+    escaped at the render site.
+    """
+    import io
+
+    from rich.console import Console
+
+    from dropoutt.compat import capability_report
+
+    for name, info in capability_report().items():
+        hint = str(info.get("install") or "")
+        if not hint:
+            continue
+        buf = io.StringIO()
+        Console(file=buf, width=120, no_color=True).print(f"[dim]{_m(hint)}[/dim]")
+        rendered = buf.getvalue()
+        extra = hint.split("[", 1)[1].split("]", 1)[0]
+        assert f"[{extra}]" in rendered, (
+            f"{name}: the extras name was eaten by rich markup; "
+            f"hint {hint!r} rendered as {rendered.strip()!r}"
+        )
+
+
+def test_dataset_names_cannot_inject_terminal_styling():
+    """A folder named `[red]` must not restyle our own output."""
+    import io
+
+    from rich.console import Console
+
+    buf = io.StringIO()
+    Console(file=buf, width=120, no_color=True).print(f"    {_m('[red]evil')} plain")
+    assert "[red]evil" in buf.getvalue()
 
 
 # -- report safety -------------------------------------------------------

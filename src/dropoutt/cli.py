@@ -21,9 +21,10 @@ from rich.markup import escape
 from rich.table import Table
 
 from . import __version__
-from .compat import capability_report, json_dumps
+from .compat import HAVE_MODEL2VEC, HAVE_TOKENIZERS, capability_report, json_dumps
 from .config import CONFIG_NAME, Config, cache_dir, parse_profile, resolve_model
 from .models import Profile
+from .registry_data import resolve_model_alias
 
 app = typer.Typer(
     name="dropoutt",
@@ -56,7 +57,8 @@ def scan(
     limit: Optional[int] = typer.Option(None, "--limit", help="Max records per file."),
     no_html: bool = typer.Option(False, "--no-html", help="Skip the HTML report."),
     no_atlas: bool = typer.Option(False, "--no-atlas", help="Skip atlas coverage."),
-    quiet: bool = typer.Option(False, "--quiet", "-q", help="Only print the summary table."),
+    quiet: bool = typer.Option(False, "--quiet", "-q",
+                               help="Suppress the report; write output files and exit."),
 ) -> None:
     """Scan a dataset directory."""
     if not path.exists():
@@ -91,7 +93,7 @@ def scan(
             console.print(f"  [yellow]note[/yellow] {note}")
 
     detector = LanguageDetector()
-    contamination = load_indices(_contamination_dir())
+    contamination = load_indices(*_contamination_dirs())
     atlas_obj = None if no_atlas else load_bundled()
 
     result = run_scan(
@@ -108,13 +110,25 @@ def scan(
         max_tier=tier,
         muted=tuple(cfg.mute),
         limit_per_file=limit,
+        offline=offline,
     )
 
-    total_chars = sum(d.total_bytes for d in result.ctx.datasets)
+    # Count the text that would actually be trained on, not the bytes on disk.
+    # `total_bytes` includes JSON syntax, keys and metadata columns, and in UTF-8
+    # a Turkish or Arabic corpus costs more bytes per character than an English
+    # one. Putting that number in a fingerprint would make the one artifact meant
+    # to be comparable across datasets vary with language and file format. The
+    # runner already accumulates real character and word counts over the
+    # normalised text; use those, and fall back to bytes only if it ran no
+    # records at all.
+    scanned_chars = int(result.ctx.stats.get("total_chars", 0))
+    total_chars = scanned_chars or sum(d.total_bytes for d in result.ctx.datasets)
+    total_words = int(result.ctx.stats.get("total_words", 0))
     budget = _budget(result, total_chars, offline=offline)
     fp = build_fingerprint(
         result.ctx, result.findings,
-        total_chars=total_chars, total_words=0, budget=budget, config_hash=cfg.hash(),
+        total_chars=total_chars, total_words=total_words,
+        budget=budget, config_hash=cfg.hash(),
     )
 
     if not quiet:
@@ -212,7 +226,11 @@ def index_eval(
         n += 1
     idx.n_instances = n
 
-    out_dir = _contamination_dir()
+    # Always the cache, never the install tree. Writing into the package would
+    # put a user's private eval index inside site-packages and fail outright
+    # wherever the install is read-only, which is the normal case on a shared
+    # cluster. Both locations are searched at scan time, so this stays visible.
+    out_dir = cache_dir() / "contamination"
     out_dir.mkdir(parents=True, exist_ok=True)
     dest = out_dir / f"{name}.idx"
     idx.save(dest)
@@ -266,7 +284,7 @@ def benchmarks() -> None:
     from .contamination import load_indices
     from .registry_data import benchmarks as bench_data
 
-    have = load_indices(_contamination_dir())
+    have = load_indices(*_contamination_dirs())
     table = Table(show_header=True, header_style="dim", box=None, padding=(0, 2))
     table.add_column("id", no_wrap=True)
     table.add_column("eval split")
@@ -344,6 +362,89 @@ def atlas() -> None:
 
 
 @app.command()
+def fetch(
+    model: str = typer.Option(
+        None, "--model", "-m", help="Also fetch this model's tokenizer."
+    ),
+    all_: bool = typer.Option(
+        False, "--all", help="Fetch the whole comparison panel, not just one tokenizer."
+    ),
+) -> None:
+    """Pre-download everything a later --offline run needs.
+
+    Written for the cluster shape where the login node has network and the
+    compute node has none. Run this there, point DROPOUTT_CACHE at shared
+    storage, and every subsequent scan can use --offline.
+
+    The atlas artifact and the contamination indices ship inside the package and
+    are never downloaded. What this fetches is the atlas embedding model and
+    tokenizers, which are too large to vendor.
+    """
+    from .atlas import embed as embed_mod
+
+    console.print()
+    console.print(f"  cache: [dim]{escape(str(cache_dir()))}[/dim]")
+
+    wanted: list[tuple[str, str]] = []
+    if model:
+        # The alias table only, not resolve_model(): that loads the tokenizer as
+        # a side effect and returns a dataclass, and here we want the id.
+        wanted.append((model, resolve_model_alias(model)))
+    if all_ or not model:
+        from .tokenizer_panel import PANEL
+
+        wanted.extend(PANEL)
+
+    console.print("\n  [bold]Tokenizers[/bold]")
+    if not HAVE_TOKENIZERS:
+        hint = escape("pip install 'dropoutt[tokenizer]'")
+        console.print("    [yellow]skipped[/yellow] "
+                      f"[dim]tokenizers not installed; {hint}[/dim]")
+    else:
+        from .tokenizer_panel import load_tokenizer
+
+        from .config import _load_tokenizer_config
+
+        seen: set[str] = set()
+        for name, model_id in wanted:
+            if model_id in seen:
+                continue
+            seen.add(model_id)
+            handle = load_tokenizer(model_id)
+            # Cache tokenizer_config.json in the same pass. It carries the chat
+            # template, and without it an --offline run counts raw text and
+            # skips the loss-mask checks entirely.
+            has_template = bool(_load_tokenizer_config(model_id).get("chat_template"))
+            if handle and has_template:
+                mark, extra = "[green]ok[/green]", ""
+            elif handle:
+                mark, extra = "[yellow]partial[/yellow]", "  [dim]no chat template[/dim]"
+            else:
+                mark, extra = "[red]failed[/red]", ""
+            console.print(f"    {mark:<22} {escape(name)}  "
+                          f"[dim]{escape(model_id)}[/dim]{extra}")
+
+    console.print("\n  [bold]Atlas embedding model[/bold]")
+    if not HAVE_MODEL2VEC:
+        hint = escape("pip install 'dropoutt[atlas]'")
+        console.print("    [yellow]skipped[/yellow] "
+                      f"[dim]model2vec not installed; {hint}[/dim]")
+    else:
+        emb = embed_mod.load()
+        if emb is None:
+            console.print("    [red]failed[/red] [dim]could not download "
+                          f"{escape(embed_mod.DEFAULT_MODEL)}[/dim]")
+        else:
+            console.print(f"    [green]ok[/green]  [dim]{escape(emb.name)} "
+                          f"({emb.dim} dims)[/dim]")
+
+    console.print("\n  [dim]Bundled in the package, nothing to fetch: the atlas "
+                  "artifact and the contamination indices.[/dim]")
+    console.print("  [dim]Now run scans with --offline. Keep DROPOUTT_CACHE set to "
+                  "this same path.[/dim]\n")
+
+
+@app.command()
 def doctor() -> None:
     """Show what is installed and what each missing piece costs."""
     table = Table(show_header=True, header_style="dim", box=None, padding=(0, 2))
@@ -378,13 +479,19 @@ def main(
 # --------------------------------------------------------------------------
 
 
-def _contamination_dir() -> Path:
+def _contamination_dirs() -> tuple[Path, Path]:
+    """Where contamination indices are read from, cache first.
+
+    Both locations are always searched. The cache holds whatever the user built
+    with `index-eval`; the package holds the ten shipped benchmarks. Returning
+    only one of them meant that building a private index switched off every
+    bundled benchmark without saying so. Cache comes first so a user index can
+    intentionally shadow a shipped one of the same name.
+    """
     from importlib import resources
 
-    shipped = resources.files("dropoutt.data") / "contamination"
-    local = cache_dir() / "contamination"
-    # Prefer local indices (which include the user's own) and fall back to shipped.
-    return local if local.exists() and any(local.glob("*.idx")) else Path(str(shipped))
+    shipped = Path(str(resources.files("dropoutt.data") / "contamination"))
+    return cache_dir() / "contamination", shipped
 
 
 def _budget(result, total_chars: int, *, offline: bool):

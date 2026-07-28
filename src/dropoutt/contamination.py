@@ -182,13 +182,31 @@ class ContaminationIndex:
         return out
 
 
-def load_indices(directory: Path) -> ContaminationIndex:
+def load_indices(*directories: Path) -> ContaminationIndex:
+    """Load every index found across the given directories.
+
+    Takes several directories rather than one because the shipped benchmarks and
+    a user's own `index-eval` output live in different places: the first inside
+    the package, the second in the cache, which is the only writable location on
+    a read-only install. Choosing one directory over the other would mean that
+    building a private index silently switched off all ten bundled benchmarks.
+
+    Earlier directories win on name collisions, so passing the cache before the
+    package lets a user deliberately shadow a shipped index by giving theirs the
+    same name.
+    """
     idx = ContaminationIndex()
-    if not directory.exists():
-        return idx
-    for path in sorted(directory.glob("*.idx")):
-        try:
-            idx.add(BenchmarkIndex.load(path))
-        except Exception:
+    seen: set[str] = set()
+    for directory in directories:
+        if directory is None or not directory.exists():
             continue
+        for path in sorted(directory.glob("*.idx")):
+            if path.stem in seen:
+                continue
+            try:
+                bench = BenchmarkIndex.load(path)
+            except Exception:
+                continue
+            seen.add(path.stem)
+            idx.add(bench)
     return idx
