@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterator
@@ -94,6 +95,7 @@ def scan(
     progress: Callable[[str, int], None] | None = None,
     phase: Callable[[str], None] | None = None,
     offline: bool = False,
+    discovery: Discovery | None = None,
 ) -> ScanResult:
     """Run a full scan and return findings plus context.
 
@@ -101,9 +103,12 @@ def scan(
     only network call left inside a scan, and a promise of "never touches the
     network" that still downloads a 500 MB model is worse than no promise on a
     compute node with no egress.
+
+    Pass ``discovery`` when the caller already walked the tree (the CLI does),
+    so the filesystem is not scanned twice.
     """
     started = time.time()
-    disc = discover(root)
+    disc = discovery if discovery is not None else discover(root)
 
     ctx = ScanContext(
         root=disc.root,
@@ -143,9 +148,30 @@ def scan(
         phase("Inferring dataset layouts")
     verdicts: dict[str, SchemaVerdict] = {}
     ctx.stats["text_framing"] = _sniff_text_files(disc)
+
+    def _induce_dataset(ds_name: str, files: list[str]) -> tuple[str, SchemaVerdict]:
+        sample = list(_iter_dataset_records(files, limit=induction_sample))[:induction_sample]
+        return ds_name, induce(sample)
+
+    # Induction is I/O-bound and independent per dataset. Threads share no
+    # check state yet, so this is safe and skips serial waiting on slow disks.
+    workers = min(8, max(1, len(disc.datasets)))
+    if workers == 1 or len(disc.datasets) <= 1:
+        induced = [
+            _induce_dataset(ds.name, ds.files) for ds in disc.datasets
+        ]
+    else:
+        induced = []
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = [
+                pool.submit(_induce_dataset, ds.name, ds.files) for ds in disc.datasets
+            ]
+            for fut in as_completed(futures):
+                induced.append(fut.result())
+
+    by_name = {name: verdict for name, verdict in induced}
     for ds in disc.datasets:
-        sample = list(_iter_dataset_records(ds.files, limit=induction_sample))[:induction_sample]
-        verdict = induce(sample)
+        verdict = by_name[ds.name]
         verdicts[ds.name] = verdict
         ds.schema_id = verdict.layout_id
         ds.schema_mix = verdict.distribution
@@ -315,10 +341,13 @@ def _update_content_hash(hasher, doc: Document) -> None:
             turn.content,
             "1" if turn.coerced else "0",
         ])
+    # One hasher.update beats many small ones for the same bytes.
+    buf = bytearray()
     for part in parts:
         raw = part.encode("utf-8", "surrogatepass")
-        hasher.update(len(raw).to_bytes(8, "little"))
-        hasher.update(raw)
+        buf.extend(len(raw).to_bytes(8, "little"))
+        buf.extend(raw)
+    hasher.update(buf)
 
 
 def _infer_profile(verdicts: dict[str, SchemaVerdict]) -> Profile:

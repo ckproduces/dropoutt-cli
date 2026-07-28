@@ -56,7 +56,11 @@ class _ProgressDisplay:
         self._last_phase = ""
 
     def __enter__(self) -> "_ProgressDisplay":
-        if self.enabled and console.is_terminal:
+        # Rich's Console is created at import time; under CliRunner / pipes
+        # `console.is_terminal` can stay True while stdout is not a TTY. Gate
+        # the spinner on the live stream so redirected output gets stable phase
+        # lines (what CI and tests assert on).
+        if self.enabled and console.is_terminal and sys.stdout.isatty():
             self._status = console.status("", spinner="dots")
             self._status.start()
         return self
@@ -234,6 +238,7 @@ def scan(
             progress=activity.records,
             phase=activity.phase,
             offline=offline,
+            discovery=preflight,
         )
 
         # Count the text that would actually be trained on, not the bytes on disk.

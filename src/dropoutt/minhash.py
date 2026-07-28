@@ -85,8 +85,19 @@ class MinHasher:
         # Broadcast to (n_shingles, num_perm) then take the column minimum.
         # uint64 multiply overflows deliberately; we mask back to 32 bits, which
         # is the same construction rensa uses.
-        vals = (sh[:, None] * self._a[None, :] + self._b[None, :]) & np.uint64(_MAX32)
-        return vals.min(axis=0).astype(np.uint32)
+        #
+        # Chunk long documents so the temporary (n_shingles, num_perm) matrix
+        # stays cache-friendly. Column-wise min over chunks equals min over all.
+        chunk = 4096
+        if len(sh) <= chunk:
+            vals = (sh[:, None] * self._a[None, :] + self._b[None, :]) & np.uint64(_MAX32)
+            return vals.min(axis=0).astype(np.uint32)
+        mins = np.full(self.preset.num_perm, np.iinfo(np.uint32).max, dtype=np.uint64)
+        for i in range(0, len(sh), chunk):
+            part = sh[i : i + chunk]
+            vals = (part[:, None] * self._a[None, :] + self._b[None, :]) & np.uint64(_MAX32)
+            mins = np.minimum(mins, vals.min(axis=0))
+        return mins.astype(np.uint32)
 
 
 class LSHIndex:

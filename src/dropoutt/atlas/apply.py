@@ -488,8 +488,11 @@ class Atlas:
         if texts is not None and len(texts) == len(off_mask):
             # Shares only, never the text. Whether a record is written like prose
             # or like a machine format is the signal coherence cannot supply.
-            ws = np.array([_whitespace_share(t) for t in texts])
-            nl = np.array([_non_letter_share(t) for t in texts])
+            # One pass per string for both shares (same numbers as two helpers).
+            ws = np.empty(len(texts), dtype=np.float64)
+            nl = np.empty(len(texts), dtype=np.float64)
+            for i, t in enumerate(texts):
+                ws[i], nl[i] = _surface_shares(t)
             detail["surface"] = {
                 "off_whitespace": round(float(np.mean(ws[off_mask])), 4),
                 "placed_whitespace": (
@@ -549,14 +552,27 @@ def _fit_band(off_rate: float) -> str:
     return "poor"
 
 
+def _surface_shares(text: str) -> tuple[float, float]:
+    """Whitespace share and non-letter share in one pass."""
+    if not text:
+        return 0.0, 0.0
+    ws = 0
+    non = 0
+    for c in text:
+        if c.isspace():
+            ws += 1
+        elif not c.isalpha():
+            non += 1
+    n = len(text)
+    return ws / n, non / n
+
+
 def _whitespace_share(text: str) -> float:
-    return sum(c.isspace() for c in text) / len(text) if text else 0.0
+    return _surface_shares(text)[0]
 
 
 def _non_letter_share(text: str) -> float:
-    if not text:
-        return 0.0
-    return sum(not (c.isalpha() or c.isspace()) for c in text) / len(text)
+    return _surface_shares(text)[1]
 
 
 def _mean_pairwise(vectors: np.ndarray) -> float:
