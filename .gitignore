@@ -1,10 +1,64 @@
+# Virtual environments
 .venv/
+venv/
+env/
+.env/
+
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+.secrets/
+*.token
+
+# Python bytecode / packaging
 __pycache__/
-*.pyc
-.dropoutt/
-.pytest_cache/
-artifacts/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.eggs/
 dist/
 build/
-*.egg-info/
+wheelhouse/
+*.whl
+*.tar.gz
+
+# Test / type / lint caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.hypothesis/
+.cache/
+
+# Local dropoutt / tool state
+.dropoutt/
+.code-review-graph/
+artifacts/
+
+# OS / editor
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs and temp
+*.log
+tmp/
+temp/
+*.tmp
