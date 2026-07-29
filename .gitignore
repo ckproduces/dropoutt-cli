@@ -48,6 +48,9 @@ coverage.xml
 .code-review-graph/
 artifacts/
 
+# Local atlas source catalog (links only; never commit)
+.atlas-sources/
+
 # OS / editor
 .DS_Store
 Thumbs.db
