@@ -335,23 +335,6 @@ def semantic_dedup(emb: np.ndarray, threshold: float = SEMANTIC_COSINE) -> np.nd
     return keep
 
 
-def build_idf(texts: list[str], embedder) -> tuple[dict[int, float], np.ndarray, np.ndarray]:
-    """Token unigram log-probs over the reference corpus for SIF pooling."""
-    tokenizer = embedder._model.tokenizer
-    counts: Counter[int] = Counter()
-    total = 0
-    for t in texts:
-        ids = tokenizer.encode(t, add_special_tokens=False).ids[:512]
-        counts.update(ids)
-        total += len(ids)
-    total = max(total, 1)
-    most = counts.most_common(IDF_TOP_TOKENS)
-    token_log_prob = {tid: float(np.log(c / total)) for tid, c in most}
-    ids_arr = np.array([t for t, _ in most], dtype=np.int32)
-    lps_arr = np.array([token_log_prob[t] for t, _ in most], dtype=np.float32)
-    return token_log_prob, ids_arr, lps_arr
-
-
 def top_terms(texts: list[str], k: int = 5, df: Counter[str] | None = None) -> str:
     """Distinctive terms: in-region frequency against document frequency."""
     stop = {
@@ -466,23 +449,27 @@ def main() -> int:
         return 1
     weight_hash = embedder.weight_hash or embedding_weight_hash(DEFAULT_MODEL)
 
-    print("Building IDF table from reference corpus...")
+    print("Batch-tokenizing reference corpus once...")
     t0 = time.time()
-    token_log_prob, idf_ids, idf_lps = build_idf(texts, embedder)
+    tokenized = embedder.tokenize(texts)
+    timings["tokenize_s"] = time.time() - t0
+    print(
+        f"  {tokenized.n_tokens:,} token occurrences in "
+        f"{timings['tokenize_s']:.1f}s"
+    )
+
+    print("Fitting IDF table from cached token IDs...")
+    t0 = time.time()
+    token_log_prob, idf_ids, idf_lps = embedder.token_log_prob(
+        tokenized, max_tokens=IDF_TOP_TOKENS
+    )
     timings["idf_s"] = time.time() - t0
-    print(f"  {len(token_log_prob):,} tokens in {timings['idf_s']:.1f}s")
+    print(f"  {len(token_log_prob):,} token types in {timings['idf_s']:.1f}s")
     embedder = embedder.bind_idf(token_log_prob)
 
     print(f"\nEmbedding {len(texts):,} records (SIF-weighted, dim={EMBED_DIM}) ...")
     t0 = time.time()
-    # Batched weighted encode in chunks so progress is visible
-    emb_parts: list[np.ndarray] = []
-    bs = 512
-    for i in range(0, len(texts), bs):
-        emb_parts.append(embedder.encode(texts[i : i + bs], weighted=True))
-        if (i // bs) % 20 == 0:
-            print(f"  {min(i + bs, len(texts)):,}/{len(texts):,}", flush=True)
-    emb_raw = np.vstack(emb_parts).astype(np.float32)
+    emb_raw = embedder.encode_tokenized(tokenized)
     timings["embed_s"] = time.time() - t0
     print(
         f"  {emb_raw.shape} in {timings['embed_s']:.1f}s "
@@ -698,6 +685,7 @@ def main() -> int:
     print(
         f"\n=== TIMING SUMMARY ===\n"
         f"  collect:          {timings['collect_s']:.1f}s\n"
+        f"  tokenize once:    {timings['tokenize_s']:.1f}s\n"
         f"  idf:              {timings['idf_s']:.1f}s\n"
         f"  embed (SIF):      {timings['embed_s']:.1f}s\n"
         f"  normalize fit:    {timings['normalize_s']:.1f}s\n"

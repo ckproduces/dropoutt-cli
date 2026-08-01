@@ -67,6 +67,7 @@ lid = [
 # Atlas coverage. Static CPU embeddings, no torch.
 atlas = [
     "model2vec>=0.4",
+    "scipy>=1.10",
 ]
 all = [
     "dropoutt[fast,tokenizer,parquet,zstd,lid,atlas]",

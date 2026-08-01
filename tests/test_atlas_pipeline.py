@@ -8,6 +8,7 @@ import numpy as np
 
 from dropoutt.atlas.apply import Atlas
 from dropoutt.atlas.chunk import chunk_text
+from dropoutt.atlas.embed import Embedder
 from dropoutt.atlas.extract import detect_format, extract_text
 from dropoutt.atlas.normalize import fit_norm
 from dropoutt.atlas.pipeline import pipeline_hash
@@ -112,6 +113,65 @@ def test_soft_assign_puts_mass_on_multiple_regions(tmp_path):
 def test_pipeline_hash_is_stable():
     assert pipeline_hash() == pipeline_hash()
     assert len(pipeline_hash()) == 32
+
+
+class _Encoding:
+    def __init__(self, ids):
+        self.ids = ids
+
+
+class _Tokenizer:
+    def __init__(self):
+        self.calls = 0
+
+    def encode_batch(self, texts, add_special_tokens=False):
+        assert not add_special_tokens
+        self.calls += 1
+        return [_Encoding([int(part) for part in text.split()]) for text in texts]
+
+
+class _StaticModel:
+    def __init__(self):
+        self.tokenizer = _Tokenizer()
+        self.embedding = np.arange(40, dtype=np.float32).reshape(10, 4)
+        self.dim = 4
+
+
+def test_sparse_sif_pool_matches_weighted_token_average():
+    model = _StaticModel()
+    base = Embedder(model, "fake", out_dim=3)
+    tokens = base.tokenize(["1 1 2", "", "2 3"], batch_size=2, max_length=8)
+    probs, ids, log_probs = base.token_log_prob(tokens)
+    embedder = base.bind_idf(probs)
+
+    actual = embedder.encode_tokenized(tokens)
+
+    expected = np.zeros((3, 3), dtype=np.float32)
+    for row, token_ids in enumerate(([1, 1, 2], [], [2, 3])):
+        if not token_ids:
+            continue
+        p = np.array([np.exp(probs[token_id]) for token_id in token_ids])
+        weights = 1e-3 / (1e-3 + p)
+        weights /= weights.sum()
+        expected[row] = weights @ model.embedding[token_ids, :3]
+
+    assert np.allclose(actual, expected, atol=1e-6)
+    assert tokens.indptr.tolist() == [0, 3, 3, 5]
+    assert ids.tolist() == [1, 2, 3]
+    assert np.all(np.diff(log_probs) <= 0)
+
+
+def test_weighted_encode_batch_tokenizes_each_text_once():
+    model = _StaticModel()
+    base = Embedder(model, "fake", out_dim=3)
+    tokens = base.tokenize(["1 2", "2 3", "3 4"])
+    probs, _, _ = base.token_log_prob(tokens)
+    model.tokenizer.calls = 0
+
+    result = base.bind_idf(probs).encode(["1 2", "2 3", "3 4"], batch_size=64)
+
+    assert result.shape == (3, 3)
+    assert model.tokenizer.calls == 1
 
 
 def test_v1_loader_reads_norm_and_idf(tmp_path):
