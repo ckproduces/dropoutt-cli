@@ -1,0 +1,22 @@
+{
+  "timings_s": {
+    "collect_s": 717.3488709926605,
+    "dedup_minhash_s": 44.05746626853943,
+    "idf_s": 31.556734085083008,
+    "embed_s": 94.82148218154907,
+    "dedup_semantic_s": 25.844921827316284,
+    "normalize_s": 0.6825239658355713,
+    "cluster_l1_s": 0.8108911514282227,
+    "cluster_l2_s": 9.154295921325684,
+    "label_s": 10.11594009399414,
+    "total_s": 937.3092927932739,
+    "cluster_total_s": 9.965187072753906,
+    "embed_plus_train_s": 105.46919322013855
+  },
+  "n_records": 58080,
+  "n_l1": 40,
+  "n_l2": 480,
+  "artifact_mb": 0.593695,
+  "pipeline_hash": "c762a1650bce58da2c939c2cbc211d0c",
+  "encoder_weight_hash": "301372339afa2e9e4f3b626827fcfea3"
+}

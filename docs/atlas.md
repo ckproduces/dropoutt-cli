@@ -7,10 +7,6 @@ quality and it is not a collection of good datasets. Its only job is to give
 every dataset the same bins, so that two fingerprints computed on different
 machines can be compared.
 
-```bash
-dropoutt atlas
-```
-
 ## Why a frozen one
 
 Every existing tool refits a UMAP or t-SNE projection separately for each
@@ -23,31 +19,41 @@ The cost is low: once embeddings exist, assignment is one matrix multiply.
 ## How it is built
 
 `tools/build_atlas.py`, fully reproducible, writing a manifest of exactly which
-sources were used and which were unavailable.
+sources were used and which were unavailable. Client and build share one
+pipeline library under `dropoutt.atlas` — extraction, chunking, embedding,
+normalization — so coordinates stay comparable.
 
-1. **Sample a stratified reference corpus.** Roughly thirty public datasets
-   spanning the taxonomy, with Turkish and regional content deliberately
-   over-weighted. This is the important word: if the corpus mirrored the real
-   distribution of the web it would be about 90% English, and the Turkish regions
-   would be coarse and useless for exactly the people this was built for.
-2. **Embed with a static model.** `potion-multilingual-128M`, 256 dimensions,
-   101 languages. Static embeddings are a token-id lookup into a matrix followed
-   by a mean pool, so there is no torch and no GPU. Roughly 4,500 records per
-   second on a laptop CPU.
-3. **Fit level 0: a supervised taxonomy.** About thirty hand-designed categories,
-   assigned by a logistic probe over the embeddings with labels bootstrapped from
-   dataset provenance.
-4. **Fit level 1: k-means within each category**, allocated proportionally to
-   category mass.
-5. **Name each region from the most frequent words among its members.**
-   Deterministic and offline. See [Region labels](#region-labels-the-five-words)
-   for what these words are and, more importantly, what they are not.
-6. **Project to 2D with PCA.** Deterministic.
-7. **Record the quality numbers inside the artifact** so they can be printed
-   next to any coverage figure.
+```
+ingest → detect format → extract text → chunk → dedup → embed
+       → normalize → assign to cells → aggregate
+```
 
-Total build cost is a few minutes of CPU and well under $20 of compute even at
-full scale.
+1. **Sample a stratified reference corpus** across code, math, instruction/chat,
+   legal/finance, scientific, dialogue/forum, structured/tabular, and
+   multilingual prose. Languages are sampled deliberately so English and Python
+   cannot define the map. Per-source caps and wall-clock budgets keep one dense
+   shard from owning the geometry.
+2. **Format-aware extraction.** JSON/CSV/HTML/markdown/code are reduced to
+   natural-language content before embedding. `detected_format` is metadata, not
+   vector content — otherwise static embeddings collapse into a fake "structured
+   data" cluster.
+3. **Dedup.** Near-exact MinHash over word shingles, then semantic cosine on
+   temporary L2 vectors. Both thresholds are recorded in the manifest.
+4. **Embed with `potion-multilingual-128M`.** Token lookup, SIF-weighted pool
+   (`w = a/(a+p)`, `a=1e-3`) using a unigram table fit on the reference corpus,
+   then truncate 256 → 128 (Matryoshka). No torch, no GPU.
+5. **Freeze normalization.** Mean removal, drop top-2 principal components
+   (all-but-the-top), L2. Constants ship in the artifact; the client applies
+   them and never refits.
+6. **Fit a two-level k-means hierarchy** on cosine distance, top-down so lite is
+   an exact coarsening of full: L1 ≈ 40 regions, L2 ≈ 12 children each
+   (≈ 480 fine cells).
+7. **Label** each cell from distinctive terms (tf–idf against other regions),
+   calibrate soft-assignment temperature and per-cell distance percentiles,
+   project centroids to 2D for display.
+
+Every result carries `atlas_version` + `pipeline_hash`. Encoder weights stay on
+disk (≈ 500 MB); the artifact stores their content hash, not the weights.
 
 ## Putting your data on it
 
@@ -60,7 +66,7 @@ dropoutt scan ./my-corpus
 ```
 
 ```
-  Atlas coverage (atlas-lite-v0)
+  Atlas coverage (atlas-lite-v1)
     Placed       6,042 of 6,130 sampled records (shares below are over these 6,042)
     Breadth      195 of 258 regions occupied, as spread out as 63 even ones
     Shape        75% of even coverage — mixed, covering roughly 25% of the atlas evenly
@@ -105,13 +111,10 @@ cannot see it.
 
 ### What the atlas still cannot tell you
 
-It has no record of how the **reference** corpus was distributed across its own
-regions — `atlas-lite-v0` stores centroids, labels and geometry, but not the
-per-region mass of the 152,622 records it was fitted on. So the gap list is
-absolute ("nothing of yours is here") and there is no over- or
-under-representation figure ("you have four times as much of this as the
-reference"). `tools/build_atlas.py` now records that distribution, so the next
-atlas can answer it; v0 cannot, and nothing in the output pretends otherwise.
+`atlas-lite-v1` stores `region_size` / `l1_size` for the reference mass, so gaps
+can be reported as under-representation against the stratified baseline, not
+only as absolute absence. Read that baseline as a property of *this* reference
+corpus (topic- and language-capped on purpose), not as a natural population.
 
 `--no-atlas` skips it. If it never appears, run `dropoutt doctor` — coverage
 needs the `atlas` extra.
@@ -122,13 +125,17 @@ One corpus on the map is a description. Two is a decision, and that is the
 question the atlas exists to answer: **what does this dataset cover that the one
 I already have does not?**
 
+Scan both and compare their fingerprints. Every scan writes the full region
+histogram under `coverage.region_counts`, which is what makes two scans
+comparable at all:
+
 ```bash
 dropoutt scan ./candidate  --out ./fp/candidate
 dropoutt scan ./have       --out ./fp/have
-dropoutt diff ./fp/candidate/fingerprint.json ./fp/have/fingerprint.json
 ```
 
-Real output, Python code instructions against Turkish general instructions:
+What that comparison looks like, Python code instructions against Turkish
+general instructions:
 
 ```
   Atlas comparison
@@ -191,11 +198,16 @@ a single assignment.
 
 ### How a record is actually placed
 
-1. The record's text is embedded into a 256-dimensional vector by
-   `potion-multilingual-128M`.
-2. Cosine similarity is computed against all 258 region centroids.
-3. The record joins the nearest one — unless the best similarity falls below the
-   off-atlas cutoff of 0.392, in which case it is placed nowhere.
+1. Format-aware extraction pulls natural-language content (keys/syntax dropped).
+2. The text is embedded by `potion-multilingual-128M` with SIF pooling, truncated
+   to 128 dimensions, then corrected with the frozen mean/PCA/L2 constants.
+3. Cosine similarity is computed against all fine (L2) centroids. Soft
+   assignment keeps the top-5 with a temperature tuned so a typical document
+   holds weight on ~2–3 regions; the hard nearest cell still drives the
+   histogram.
+4. Below the off-atlas cutoff the record is placed nowhere. Coarse subject area
+   is the parent L1 cell — a strict coarsening of the fine map, not a second
+   model.
 
 Word overlap is not consulted at any point. Four real placements:
 
@@ -269,18 +281,16 @@ prefix. Production would name regions with an LLM, as Essential-Web did. All of
 this requires a rebuild, because member texts are not stored in the artifact —
 only centroids are.
 
-## Why level 0 is supervised
+## Why the coarse level is a hierarchy prefix, not a second model
 
-Two reasons, and both matter.
+v1 drops the supervised taxonomy probe. L1 is k-means over the same vectors as
+L2, fitted first; L2 is k-means *within* each L1 membership. Lite reports are
+therefore exact unions of fine cells — they cannot contradict the full map.
 
-**Clustering would never produce a Turkish administrative-legal category.** It is
-small in a global corpus and large in this market. A hand-designed taxonomy can
-contain it; k-means cannot be argued into it.
-
-**The coarse level survives a rebuild.** A refitted k-means changes every bin at
-every level, so `atlas-v2` would break comparability with every fingerprint ever
-computed. A fixed taxonomy at level 0 means the coarse history still lines up
-after a rebuild.
+Topic and language breadth still come from **stratified sampling** of the
+reference corpus (math held separate from academic prose, instruction/chat as
+its own mass, legal/finance capped in, Turkish and other languages over-weighted
+relative to the web), not from a classifier trained on dataset provenance.
 
 ## Why language is not a clustering axis
 
@@ -474,7 +484,8 @@ good the clustering is, and a global average would hide that.
 
 ## Reading the quality numbers
 
-`dropoutt atlas` prints two figures that belong next to any coverage number:
+Two figures belong next to any coverage number, and both travel in the
+`coverage` facet of every fingerprint:
 
 | number | meaning |
 | --- | --- |
@@ -520,26 +531,25 @@ its own content, as Essential-Web did. That requires a rebuild.
 ## Tiers
 
 Tiers are **resolution levels of one hierarchy**, not separate atlases.
-Independent atlases would destroy the property the atlas exists for, because
-fingerprints computed against different atlases cannot be compared and the shared
-index would fragment. Coarse mass is exactly the sum of the fine masses beneath
-it, so a free-tier fingerprint and a paid-tier fingerprint remain comparable and
-upgrading re-aggregates existing history rather than invalidating it.
+Lite (L1) is a strict prefix of full (L2): every fine cell has one immutable
+parent. Fingerprints against lite and full stay comparable; upgrading
+re-aggregates rather than invalidating.
 
-This release ships level 0 plus level 1 in the package:
+This release ships both levels in the package (`atlas-lite-v1.npz`):
 
 | property | value |
 | --- | --- |
-| regions | 258 |
-| reference records | 152,622 |
-| level-0 categories | 20 (of 31 defined; under-populated ones are dropped and named at build time) |
-| level-0 held-out accuracy | 0.864 |
-| region purity by taxonomy | 0.785 |
-| artifact size | 271 KB |
-| off-atlas cutoff | 0.392 cosine |
+| L1 regions (lite) | 40 |
+| L2 fine cells | 480 |
+| reference records (after dedup) | 58,080 |
+| embedding | potion-multilingual-128M → 128-d, SIF pool |
+| normalization | mean + top-2 PCA removed + L2 |
+| soft-assign | top-5, T=0.08 (~2.5 regions with weight > 0.15) |
+| region purity by provenance tag | 0.750 |
+| artifact size | ~0.6 MB (budget ≤ 5 MB) |
+| off-atlas cutoff | ~0.330 cosine (2nd percentile of reference) |
 
-Measured on 3,000 real Turkish instruction records: **6.3% off-atlas**, 93 of 258
-regions occupied, region entropy 3.91 of a possible 5.55.
+`atlas-lite-v0` remains on disk for old fingerprints; the loader prefers v1.
 
 ## Hand intervention
 
@@ -561,11 +571,11 @@ part of the fingerprint schema.
 ## Rebuilding
 
 ```bash
-python tools/build_atlas.py --scale 1.0 --out src/dropoutt/data/atlas/atlas-lite-v0.npz
+python tools/build_atlas.py --scale 1.0 --out src/dropoutt/data/atlas/atlas-lite-v1.npz
 ```
 
 `--scale` multiplies every per-source sample target; `--budget` sets a per-source
 wall-clock limit so one slow shard cannot stall the build. Sources that have
 moved, gone gated or changed split names are skipped and recorded in the
-manifest rather than failing the build, which matters when the corpus is
-assembled from thirty independently maintained public datasets.
+manifest rather than failing the build. A JSON timing log is written next to the
+artifact (`build-timing.json`) with collect / embed / cluster wall times.

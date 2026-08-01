@@ -46,6 +46,9 @@ from typing import Any
 
 import numpy as np
 
+from ..textutil import surface_shares
+from .normalize import NormConstants
+
 #: Off-atlas rate bands. These grade how much of the corpus the atlas actually
 #: describes; they never gate whether the numbers are shown.
 #:
@@ -93,24 +96,39 @@ SURFACE_NON_LETTER_MARGIN = 0.15
 class Atlas:
     """A frozen coordinate system."""
 
-    centroids: np.ndarray            # (n_regions, dim), L2-normalised
-    region_category: np.ndarray      # (n_regions,) taxonomy id per region
-    coords: np.ndarray               # (n_regions, 2) for display
+    centroids: np.ndarray            # (n_l2, dim), L2-normalised fine cells
+    region_category: np.ndarray      # (n_l2,) L1 parent id (or legacy taxonomy id)
+    coords: np.ndarray               # (n_l2, 2) for display
     probe_coef: np.ndarray
     probe_intercept: np.ndarray
     probe_classes: np.ndarray
     meta: dict[str, Any] = field(default_factory=dict)
     artifact_hash: str = ""
     #: How the reference corpus itself spread across these regions, when the
-    #: artifact records it. ``atlas-lite-v0`` does not: the build computed the
-    #: assignment and discarded it, so a gap can only be reported as absence and
-    #: never as under-representation against a baseline. Optional rather than
-    #: required so v0 keeps loading.
+    #: artifact records it. Optional rather than required so older test
+    #: fixtures keep loading.
     region_size: np.ndarray | None = None
+    #: L1 (lite) centroids. When present, lite is a strict prefix of the
+    #: hierarchy: each fine cell's ``region_category`` is its L1 parent.
+    l1_centroids: np.ndarray | None = None
+    l1_size: np.ndarray | None = None
+    #: Frozen anisotropy correction. Absent on synthetic test fixtures.
+    norm: NormConstants | None = None
+    #: Token-id → log unigram probability for SIF pooling. Empty dict = mean pool.
+    token_log_prob: dict[int, float] = field(default_factory=dict)
+    #: Per-cell distance calibration: shape (n_regions, 5) for p10..p90 of
+    #: (1 - cosine) on the reference members of that cell.
+    distance_refs: np.ndarray | None = None
 
     @property
     def n_regions(self) -> int:
         return int(self.centroids.shape[0])
+
+    @property
+    def n_l1(self) -> int:
+        if self.l1_centroids is not None:
+            return int(self.l1_centroids.shape[0])
+        return int(len({int(c) for c in self.region_category}))
 
     @property
     def dim(self) -> int:
@@ -125,29 +143,100 @@ class Atlas:
         return float(self.meta.get("off_atlas_threshold", 0.35))
 
     @property
+    def soft_k(self) -> int:
+        return int(self.meta.get("soft_k", 5))
+
+    @property
+    def soft_temperature(self) -> float:
+        return float(self.meta.get("soft_temperature", 0.08))
+
+    @property
     def region_terms(self) -> list[str]:
         return list(self.meta.get("region_terms", []))
 
+    @property
+    def l1_labels(self) -> list[str]:
+        return list(self.meta.get("l1_labels", []))
+
+    @property
+    def pipeline_hash(self) -> str:
+        return str(self.meta.get("pipeline_hash", ""))
+
+    def project(self, embeddings: np.ndarray) -> np.ndarray:
+        """Apply frozen normalization (or plain L2 for legacy fixtures)."""
+        emb = np.asarray(embeddings, dtype=np.float32)
+        if emb.ndim == 1:
+            emb = emb.reshape(1, -1)
+        if self.norm is not None:
+            return self.norm.apply(emb)
+        if emb.shape[1] > self.dim:
+            emb = emb[:, : self.dim]
+        return emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-9)
+
     @classmethod
-    def load(cls, path: str | Path) -> "Atlas":
-        import hashlib  # noqa: PLC0415
+    def load(cls, path: str | Path) -> Atlas:
+        import hashlib
 
         path = Path(path)
         raw = path.read_bytes()
         digest = hashlib.blake2b(raw, digest_size=8).hexdigest()
         data = np.load(path, allow_pickle=True)
         meta = json.loads(str(data["meta"][0]))
+
+        norm = None
+        if "norm_mean" in data.files:
+            pca = (
+                data["norm_pca"]
+                if "norm_pca" in data.files
+                else np.zeros((0, int(data["norm_mean"].shape[0])), dtype=np.float32)
+            )
+            norm = NormConstants(
+                mean=np.asarray(data["norm_mean"], dtype=np.float32),
+                pca_components=np.asarray(pca, dtype=np.float32),
+                dim=int(data["norm_mean"].shape[0]),
+            )
+
+        token_log_prob: dict[int, float] = {}
+        if "idf_token_ids" in data.files and "idf_log_probs" in data.files:
+            ids = np.asarray(data["idf_token_ids"], dtype=np.int32)
+            lps = np.asarray(data["idf_log_probs"], dtype=np.float32)
+            token_log_prob = {int(i): float(p) for i, p in zip(ids, lps, strict=True)}
+
+        # Legacy artifacts store supervised-probe arrays; v1 may omit them.
+        dim = int(data["centroids"].shape[1])
+        probe_coef = (
+            data["probe_coef"] if "probe_coef" in data.files
+            else np.zeros((0, dim), dtype=np.float32)
+        )
+        probe_intercept = (
+            data["probe_intercept"] if "probe_intercept" in data.files
+            else np.zeros(0, dtype=np.float32)
+        )
+        probe_classes = (
+            data["probe_classes"] if "probe_classes" in data.files
+            else np.zeros(0, dtype=np.int32)
+        )
+
         return cls(
             centroids=data["centroids"],
             region_category=data["region_category"],
             coords=data["coords"],
-            probe_coef=data["probe_coef"],
-            probe_intercept=data["probe_intercept"],
-            probe_classes=data["probe_classes"],
+            probe_coef=probe_coef,
+            probe_intercept=probe_intercept,
+            probe_classes=probe_classes,
             meta=meta,
             artifact_hash=digest,
             region_size=(
                 data["region_size"] if "region_size" in data.files else None
+            ),
+            l1_centroids=(
+                data["l1_centroids"] if "l1_centroids" in data.files else None
+            ),
+            l1_size=(data["l1_size"] if "l1_size" in data.files else None),
+            norm=norm,
+            token_log_prob=token_log_prob,
+            distance_refs=(
+                data["distance_refs"] if "distance_refs" in data.files else None
             ),
         )
 
@@ -174,20 +263,59 @@ class Atlas:
         different problem from one that is nearest to a region of Arabic
         Wikipedia and 0.2 away from it.
         """
-        emb = np.asarray(embeddings, dtype=np.float32)
-        emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-9)
+        emb = self.project(embeddings)
         sims = emb @ self.centroids.T
         nearest = sims.argmax(axis=1)
         score = sims.max(axis=1)
         best = np.where(score >= self.off_threshold, nearest, -1)
         return best, score, nearest
 
+    def soft_assign(
+        self, embeddings: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Top-k soft assignment: (cell_ids, weights, best_scores).
+
+        ``cell_ids`` and ``weights`` have shape ``(n, soft_k)``. Weights are a
+        softmax over cosine similarity at ``soft_temperature``, renormalised.
+        Rows whose best similarity is below the off-atlas cutoff get all-zero
+        weights and cell ids of -1.
+        """
+        emb = self.project(embeddings)
+        sims = emb @ self.centroids.T
+        k = min(self.soft_k, sims.shape[1])
+        # argpartition then sort the shortlist
+        part = np.argpartition(-sims, kth=k - 1, axis=1)[:, :k]
+        part_sims = np.take_along_axis(sims, part, axis=1)
+        order = np.argsort(-part_sims, axis=1)
+        cell_ids = np.take_along_axis(part, order, axis=1)
+        top_sims = np.take_along_axis(part_sims, order, axis=1)
+        temp = max(self.soft_temperature, 1e-6)
+        logits = top_sims / temp
+        logits = logits - logits.max(axis=1, keepdims=True)
+        exp = np.exp(logits)
+        weights = exp / (exp.sum(axis=1, keepdims=True) + 1e-9)
+        best = top_sims[:, 0]
+        off = best < self.off_threshold
+        weights[off] = 0.0
+        cell_ids[off] = -1
+        return cell_ids.astype(np.int32), weights.astype(np.float32), best.astype(np.float32)
+
     def categorize(self, embeddings: np.ndarray) -> np.ndarray:
-        """Level-0 taxonomy category per row, from the supervised probe."""
-        emb = np.asarray(embeddings, dtype=np.float32)
-        emb = emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-9)
-        logits = emb @ self.probe_coef.T + self.probe_intercept
-        return self.probe_classes[logits.argmax(axis=1)]
+        """Coarse (L1 / level-0) label per row.
+
+        Prefers L1 centroids when the artifact carries them — lite is then an
+        exact coarsening of the fine map. Falls back to the supervised probe on
+        legacy artifacts, then to the parent id of the nearest fine cell.
+        """
+        emb = self.project(embeddings)
+        if self.l1_centroids is not None and len(self.l1_centroids):
+            sims = emb @ self.l1_centroids.T
+            return sims.argmax(axis=1).astype(np.int32)
+        if self.probe_coef.size and self.probe_classes.size:
+            logits = emb @ self.probe_coef.T + self.probe_intercept
+            return self.probe_classes[logits.argmax(axis=1)]
+        nearest = (emb @ self.centroids.T).argmax(axis=1)
+        return self.region_category[nearest].astype(np.int32)
 
     # -- coverage ---------------------------------------------------------
 
@@ -211,7 +339,7 @@ class Atlas:
         description; each is optional so that a caller holding only regions and
         categories still gets a valid, if thinner, report.
         """
-        total = int(len(regions))
+        total = len(regions)
         if total == 0:
             return {"status": "no records"}
 
@@ -227,10 +355,12 @@ class Atlas:
             "off_atlas_rate": round(off_rate, 4),
             "fit": _fit_band(off_rate),
             "atlas_version": self.meta.get("version"),
+            "pipeline_hash": self.pipeline_hash,
             "embed_model": self.embed_model,
             "off_atlas_cutoff": round(self.off_threshold, 5),
             "l0_holdout_accuracy": self.meta.get("l0_holdout_accuracy"),
             "region_purity_by_taxonomy": self.meta.get("region_purity_by_taxonomy"),
+            "n_l1": self.n_l1,
         }
 
         if languages:
@@ -553,18 +683,12 @@ def _fit_band(off_rate: float) -> str:
 
 
 def _surface_shares(text: str) -> tuple[float, float]:
-    """Whitespace share and non-letter share in one pass."""
-    if not text:
-        return 0.0, 0.0
-    ws = 0
-    non = 0
-    for c in text:
-        if c.isspace():
-            ws += 1
-        elif not c.isalpha():
-            non += 1
-    n = len(text)
-    return ws / n, non / n
+    """Whitespace share and non-letter share in one pass.
+
+    Delegates to the table-driven version in ``textutil``: this used to be a
+    Python loop over every character of every sampled record.
+    """
+    return surface_shares(text)
 
 
 def _whitespace_share(text: str) -> float:
@@ -584,7 +708,7 @@ def _mean_pairwise(vectors: np.ndarray) -> float:
     and linear in n instead of quadratic, which matters because the atlas sample
     can carry tens of thousands of rows.
     """
-    n = int(len(vectors))
+    n = len(vectors)
     if n < 2:
         return float("nan")
     total = float(np.linalg.norm(vectors.sum(axis=0)) ** 2)
@@ -677,14 +801,18 @@ def _diagnose(detail: dict[str, Any]) -> str:
 
 
 def bundled_atlas_path() -> Path | None:
-    from importlib import resources  # noqa: PLC0415
+    from importlib import resources
 
-    try:
-        ref = resources.files("dropoutt.data") / "atlas" / "atlas-lite-v0.npz"
-        path = Path(str(ref))
-        return path if path.exists() else None
-    except Exception:
-        return None
+    # Prefer v1; fall back to v0 so an incomplete install still runs.
+    for name in ("atlas-lite-v1.npz", "atlas-lite-v0.npz"):
+        try:
+            ref = resources.files("dropoutt.data") / "atlas" / name
+            path = Path(str(ref))
+            if path.exists():
+                return path
+        except Exception:
+            continue
+    return None
 
 
 def load_bundled() -> Atlas | None:

@@ -13,10 +13,10 @@ from __future__ import annotations
 
 import hashlib
 import time
+from collections.abc import Callable, Iterator, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterator
 
 from . import checks as _checks_pkg  # noqa: F401  (registers the catalog)
 from .chat_template import (
@@ -25,6 +25,7 @@ from .chat_template import (
     char_spans_to_token_mask,
     offsets_are_reliable,
 )
+from .checks.base import REGISTRY
 from .context import (
     F_LANG,
     F_LANG_CONF,
@@ -34,10 +35,16 @@ from .context import (
     F_TOKEN_IDS,
     ScanContext,
 )
-from .checks.base import REGISTRY
 from .discovery import Discovery, discover
 from .models import Document, Finding, Profile, SkippedCheck
-from .normalize import to_document, to_messages
+from .normalize import to_messages
+from .parallel import (
+    ScanPlan,
+    ShardConfig,
+    ShardResult,
+    plan_scan,
+    run_shards,
+)
 from .readers import RawRecord, read_file
 from .schema_induction import SchemaVerdict, induce
 from .tokenizer_panel import CHARS_PER_TOKEN_FALLBACK, TokenizerHandle
@@ -92,10 +99,13 @@ def scan(
     muted: tuple[str, ...] = (),
     limit_per_file: int | None = None,
     induction_sample: int = 2000,
-    progress: Callable[[str, int], None] | None = None,
+    progress: Callable[[int, int], None] | None = None,
     phase: Callable[[str], None] | None = None,
     offline: bool = False,
     discovery: Discovery | None = None,
+    workers: int | None = None,
+    contamination_dirs: Sequence[Path] | None = None,
+    eval_sets: Sequence[str] | None = None,
 ) -> ScanResult:
     """Run a full scan and return findings plus context.
 
@@ -126,14 +136,18 @@ def scan(
     ctx.stats["not_training_data"] = {}
     ctx.stats["mixed_schemas"] = {}
     ctx.stats["minhash_preset"] = minhash_preset
-    # Stratified sample for the cross-tokenizer budget estimate. Capped per
-    # dataset so one huge dataset cannot dominate the ratio.
-    ctx.stats["budget_sample"] = []
+    # dataset -> sampled texts, kept split rather than pooled. Pooling them and
+    # taking one tokens-per-character ratio over the pile weights each dataset
+    # by how many records the *cap* let it contribute, not by how much of the
+    # corpus it actually is. On a corpus that is 94% English by character but
+    # samples three datasets almost equally, that overstated the token budget by
+    # up to 38%. See :func:`dropoutt.tokenizer_panel.estimate_budget`.
+    ctx.stats["budget_sample"] = {}
     ctx.stats["total_chars"] = 0
     ctx.stats["total_words"] = 0
-    content_hasher = hashlib.blake2b(digest_size=16)
-    budget_sample: list[str] = ctx.stats["budget_sample"]
-    atlas_sample: list[tuple[str, str]] = []
+    ctx.stats["chars_by_dataset"] = {}
+    # Stratified sample, capped per dataset so one huge dataset cannot dominate
+    # the token ratio or the atlas histogram.
     per_dataset_cap = max(200, 20_000 // max(len(disc.datasets), 1))
 
     if tokenizer is not None and chat_template is not None:
@@ -149,27 +163,35 @@ def scan(
     verdicts: dict[str, SchemaVerdict] = {}
     ctx.stats["text_framing"] = _sniff_text_files(disc)
 
-    def _induce_dataset(ds_name: str, files: list[str]) -> tuple[str, SchemaVerdict]:
+    def _induce_dataset(
+        ds_name: str, files: list[str]
+    ) -> tuple[str, SchemaVerdict, float]:
         sample = list(_iter_dataset_records(files, limit=induction_sample))[:induction_sample]
-        return ds_name, induce(sample)
+        # The mean size of a record on disk, measured here because induction has
+        # already paid to read them. It only sizes the progress bar.
+        sized = [len(r.raw_text) for r in sample if r.raw_text]
+        mean = (sum(sized) / len(sized) + 1) if sized else 0.0
+        return ds_name, induce(sample), mean
 
     # Induction is I/O-bound and independent per dataset. Threads share no
     # check state yet, so this is safe and skips serial waiting on slow disks.
-    workers = min(8, max(1, len(disc.datasets)))
-    if workers == 1 or len(disc.datasets) <= 1:
+    induction_workers = min(8, max(1, len(disc.datasets)))
+    if induction_workers == 1 or len(disc.datasets) <= 1:
         induced = [
             _induce_dataset(ds.name, ds.files) for ds in disc.datasets
         ]
     else:
         induced = []
-        with ThreadPoolExecutor(max_workers=workers) as pool:
+        with ThreadPoolExecutor(max_workers=induction_workers) as pool:
             futures = [
                 pool.submit(_induce_dataset, ds.name, ds.files) for ds in disc.datasets
             ]
             for fut in as_completed(futures):
                 induced.append(fut.result())
 
-    by_name = {name: verdict for name, verdict in induced}
+    by_name = {name: verdict for name, verdict, _mean in induced}
+    measured = [mean for _n, _v, mean in induced if mean > 1]
+    mean_record_bytes = sum(measured) / len(measured) if measured else None
     for ds in disc.datasets:
         verdict = by_name[ds.name]
         verdicts[ds.name] = verdict
@@ -193,64 +215,51 @@ def scan(
     # ---- resolve which checks can run ------------------------------------
     active, skipped = REGISTRY.resolve(ctx, max_tier=max_tier, muted=muted)
 
-    # ---- phase 2: one streaming pass -------------------------------------
+    # ---- phase 2: one streaming pass, on one core or on all of them -------
     if phase is not None:
         phase("Scanning records")
-    scanned = 0
-    for ds in disc.datasets:
-        verdict = verdicts[ds.name]
-        if verdict.not_training_data:
-            # Still counted and reported, but not fed to content checks: forcing
-            # log records through a chat layout produces confident nonsense.
-            continue
-        layout = verdict.layout_id
-        sampled_here = 0
-        for idx, rec in enumerate(_iter_dataset_records(ds.files, limit=limit_per_file)):
-            doc = to_document(rec, layout, ds.name, index=idx)
-            _update_content_hash(content_hasher, doc)
-            _compute_features(doc, ctx)
-            ctx.stats["total_chars"] += len(doc.text)
-            ctx.stats["total_words"] += doc.text.count(" ") + 1 if doc.text else 0
-            if sampled_here < per_dataset_cap and len(doc.text) > 20:
-                budget_sample.append(doc.text[:4000])
-                sampled_here += 1
-                if ctx.atlas is not None:
-                    # Coverage comes from the same stratified sample: the atlas
-                    # describes a distribution, and a sample describes it as
-                    # well as every record at a fraction of the embedding cost.
-                    #
-                    # Records below ATLAS_MIN_CHARS are excluded rather than
-                    # placed. A twenty-character record cannot be positioned on
-                    # a topical map, and including it inflates the off-atlas
-                    # rate with records that were never placeable. The count of
-                    # exclusions is reported, not hidden.
-                    if len(doc.text) >= ATLAS_MIN_CHARS:
-                        # The embedder sees the first 2000 characters; the length
-                        # kept here is the record's real one, because the
-                        # off-atlas attribution is a statement about the data,
-                        # not about what was fed to the model.
-                        atlas_sample.append((
-                            doc.text[:2000],
-                            doc.meta.get(F_LANG) or "unknown",
-                            ds.name,
-                            len(doc.text),
-                        ))
-                    else:
-                        ctx.stats["atlas_too_short"] = ctx.stats.get("atlas_too_short", 0) + 1
-            for check in active:
-                try:
-                    check.observe(doc, ctx)
-                except Exception as exc:  # noqa: BLE001
-                    ctx.degraded(f"check {check.check_id} errored: {type(exc).__name__}")
-            scanned += 1
-            ds.record_count += 1
-            if progress is not None and scanned % 2000 == 0:
-                progress(ds.name, scanned)
 
-    ctx.total_records = scanned
-    ctx.stats["content_hash"] = content_hasher.hexdigest()
+    layouts = {
+        ds.name: verdicts[ds.name].layout_id
+        for ds in disc.datasets
+        # Records from a dataset that is not training data are still counted and
+        # reported, but not fed to content checks: forcing log records through a
+        # chat layout produces confident nonsense.
+        if not verdicts[ds.name].not_training_data
+    }
+    plan = plan_scan(
+        disc,
+        layouts,
+        workers=workers,
+        limit_per_file=limit_per_file,
+        per_dataset_cap=per_dataset_cap,
+        mean_record_bytes=mean_record_bytes,
+    )
+    config = ShardConfig(
+        root=disc.root,
+        profile=ctx.profile,
+        target=target,
+        seq_len=seq_len,
+        model_id=model_id,
+        check_ids=[c.check_id for c in active],
+        minhash_preset=minhash_preset,
+        limit_per_file=limit_per_file,
+        sample_cap=plan.sample_cap,
+        want_atlas_sample=atlas is not None,
+        want_language=detector is not None,
+        contamination_dirs=list(contamination_dirs or ()),
+        eval_sets=list(eval_sets or ()),
+        model_for_tokenizer=model_id if tokenizer is not None else None,
+        offline=offline,
+        offsets_unreliable=bool(ctx.stats.get("offsets_unreliable")),
+        eos_token_id=ctx.stats.get("eos_token_id"),
+    )
+
+    results = run_shards(config, plan, ctx=ctx, progress=progress, phase=phase)
+    scanned = merge_shard_results(ctx, active, results, plan, disc)
 
     # ---- atlas coverage --------------------------------------------------
+    atlas_sample = ctx.stats.pop("_atlas_sample", [])
     if atlas is not None and atlas_sample:
         if phase is not None:
             phase("Mapping atlas coverage")
@@ -263,7 +272,7 @@ def scan(
     for check in active:
         try:
             findings.extend(check.finalize(ctx))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             ctx.degraded(f"check {check.check_id} failed to finalize: {type(exc).__name__}")
 
     # Blocking only applies when a target was declared. Without one there is no
@@ -281,6 +290,106 @@ def scan(
     )
 
 
+def merge_shard_results(
+    ctx: ScanContext,
+    active: list,
+    results: list[ShardResult],
+    plan: ScanPlan,
+    disc: Discovery,
+) -> int:
+    """Fold every shard into the parent's context and check instances.
+
+    Order matters and is guaranteed: shards are contiguous slices in corpus
+    order and arrive here sorted, so "the first eight examples" means the same
+    thing as it does in a one-shard scan.
+    """
+    by_id = {check.check_id: check for check in active}
+    scanned = 0
+    content_total = 0
+    samples: dict[str, list[tuple[int, str, str, int]]] = {}
+    store = None
+
+    for result in results:
+        scanned += result.scanned
+        content_total += result.content_total
+        ctx.stats["total_chars"] += result.total_chars
+        ctx.stats["total_words"] += result.total_words
+        for dataset, count in result.chars_by_dataset.items():
+            ctx.stats["chars_by_dataset"][dataset] = (
+                ctx.stats["chars_by_dataset"].get(dataset, 0) + count
+            )
+        for note in result.degradations:
+            ctx.degraded(note)
+        for dataset in result.record_counts:
+            samples.setdefault(dataset, [])
+        for dataset, rows in result.samples.items():
+            samples.setdefault(dataset, []).extend(rows)
+        for check_id, shard_check in result.checks.items():
+            target = by_id.get(check_id)
+            if target is None or target is shard_check:
+                continue
+            try:
+                target.merge(shard_check)
+            except Exception as exc:
+                ctx.degraded(f"check {check_id} failed to merge a shard: {type(exc).__name__}")
+        if result.minhash is not None:
+            if store is None:
+                store = result.minhash
+            elif store is not result.minhash:
+                store.merge(result.minhash)
+        if result.contamination is not None and ctx.contamination is not None:
+            best, witnesses = result.contamination
+            if best is not ctx.contamination._best:
+                ctx.contamination.merge_accumulator(best, witnesses)
+
+    if store is not None:
+        ctx.stats["_minhash_store"] = store
+
+    counts: dict[str, int] = {}
+    for result in results:
+        for dataset, count in result.record_counts.items():
+            counts[dataset] = counts.get(dataset, 0) + count
+    for ds in disc.datasets:
+        ds.record_count = counts.get(ds.name, 0)
+
+    # Bottom-k: keep the globally smallest keys per dataset. Taking the smallest
+    # of the per-shard smallest is the same set as taking them from the union,
+    # which is what makes the sample independent of how the corpus was divided.
+    budget_sample: dict[str, list[str]] = ctx.stats["budget_sample"]
+    atlas_sample: list[tuple[str, str, str, int]] = []
+    too_short = 0
+    for dataset in sorted(samples):
+        rows = sorted(samples[dataset])[: plan.sample_target]
+        for _key, text, lang, chars in rows:
+            budget_sample.setdefault(dataset, []).append(text)
+            if ctx.atlas is None:
+                continue
+            # Coverage comes from the same sample: the atlas describes a
+            # distribution, and a sample describes it as well as every record at
+            # a fraction of the embedding cost.
+            #
+            # Records below ATLAS_MIN_CHARS are excluded rather than placed. A
+            # twenty-character record cannot be positioned on a topical map, and
+            # including it inflates the off-atlas rate with records that were
+            # never placeable. The count of exclusions is reported, not hidden.
+            if chars >= ATLAS_MIN_CHARS:
+                # The embedder sees the first 2000 characters; the length kept
+                # here is the record's real one, because the off-atlas
+                # attribution is a statement about the data, not about what was
+                # fed to the model.
+                atlas_sample.append((text[:2000], lang, dataset, chars))
+            else:
+                too_short += 1
+    if too_short:
+        ctx.stats["atlas_too_short"] = too_short
+    ctx.stats["_atlas_sample"] = atlas_sample
+
+    ctx.total_records = scanned
+    ctx.stats["content_hash"] = format_content_hash(content_total)
+    ctx.stats["shards"] = len(results)
+    return scanned
+
+
 #: How many text files per dataset to sniff. The framing of a generation run is
 #: a property of the run, not of the file, so a sample settles it; sniffing 250
 #: shards to learn the same thing 250 times is wasted IO.
@@ -294,7 +403,7 @@ def _sniff_text_files(disc: Discovery) -> dict[str, dict]:
     folder of JSON-bearing .txt files induces as one bare-text document per
     file, and the profile is inferred from that.
     """
-    from .sniff import sniff_file  # noqa: PLC0415
+    from .sniff import sniff_file
 
     out: dict[str, dict] = {}
     for ds in disc.datasets:
@@ -303,7 +412,9 @@ def _sniff_text_files(disc: Discovery) -> dict[str, dict]:
             continue
         hits: dict[str, dict] = {}
         for path in candidates[:SNIFF_FILES_PER_DATASET]:
-            framing = sniff_file(path)
+            # compressed= spelled out so this hits the same cache entry the
+            # reader will ask for later, rather than sniffing each file twice.
+            framing = sniff_file(path, compressed=False)
             if not framing.is_records:
                 continue
             entry = hits.setdefault(framing.kind, {
@@ -326,8 +437,20 @@ def _sniff_text_files(disc: Discovery) -> dict[str, dict]:
     return out
 
 
-def _update_content_hash(hasher, doc: Document) -> None:
-    """Hash normalized content plus the structure that changes scan results."""
+#: Modulus for the running content digest. See :func:`record_digest`.
+_CONTENT_MOD = 1 << 128
+
+
+def record_digest(doc: Document) -> int:
+    """A 128-bit digest of one record's normalized content and structure.
+
+    Summed rather than chained, because the scan can be split across processes
+    and a chained digest would then depend on how many shards the machine
+    happened to use. Addition modulo 2^128 is commutative, so the corpus digest
+    is a property of the records and their multiplicity and nothing else — the
+    same data gives the same fingerprint id on a two-core laptop and a
+    sixty-four-core node.
+    """
     parts = [
         doc.dataset,
         doc.text,
@@ -341,13 +464,16 @@ def _update_content_hash(hasher, doc: Document) -> None:
             turn.content,
             "1" if turn.coerced else "0",
         ])
-    # One hasher.update beats many small ones for the same bytes.
     buf = bytearray()
     for part in parts:
         raw = part.encode("utf-8", "surrogatepass")
         buf.extend(len(raw).to_bytes(8, "little"))
         buf.extend(raw)
-    hasher.update(buf)
+    return int.from_bytes(hashlib.blake2b(buf, digest_size=16).digest(), "big")
+
+
+def format_content_hash(total: int) -> str:
+    return f"{total % _CONTENT_MOD:032x}"
 
 
 def _infer_profile(verdicts: dict[str, SchemaVerdict]) -> Profile:
@@ -383,9 +509,9 @@ def _probe_offsets(ctx: ScanContext, tok: TokenizerHandle, tpl: ChatTemplate) ->
         ctx.degraded(f"target chat template failed on a probe record: {exc}")
         ctx.chat_template = None
         return
-    if tok._tok is None:  # noqa: SLF001
+    if tok._tok is None:
         return
-    enc = tok._tok.encode(rendered, add_special_tokens=False)  # noqa: SLF001
+    enc = tok._tok.encode(rendered, add_special_tokens=False)
     if not offsets_are_reliable(rendered, list(enc.offsets)):
         ctx.degraded(
             "this tokenizer reports offsets into a normalized string, so the loss mask "
@@ -419,14 +545,14 @@ def _compute_features(doc: Document, ctx: ScanContext) -> None:
             else:
                 result_text = result.text
             doc.meta[F_RENDERED] = result_text
-            enc = ctx.tokenizer._tok.encode(result_text, add_special_tokens=False)  # noqa: SLF001
+            enc = ctx.tokenizer._tok.encode(result_text, add_special_tokens=False)
             doc.meta[F_TOKEN_IDS] = list(enc.ids)
             doc.meta[F_TOKEN_COUNT] = len(enc.ids)
             doc.meta[F_LOSS_MASK] = char_spans_to_token_mask(list(enc.offsets), spans)
             return
         except TemplateRenderError as exc:
             doc.meta["render_error"] = str(exc)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             doc.meta["render_error"] = f"{type(exc).__name__}: {exc}"
 
     doc.meta[F_TOKEN_COUNT] = ctx.tokenizer.count(text)
@@ -444,9 +570,11 @@ def _compute_coverage(
     Degrades rather than failing: if the embedder cannot be loaded, coverage is
     marked unavailable with the reason instead of the scan aborting.
     """
-    from .atlas import load_embedder  # noqa: PLC0415
+    from .atlas import load_embedder
 
-    embedder = load_embedder(ctx.atlas.embed_model, offline=offline)
+    embedder = load_embedder(
+        ctx.atlas.embed_model, offline=offline, out_dim=ctx.atlas.dim
+    )
     if embedder is None:
         ctx.degraded(
             "atlas is present but its embedding model could not be loaded; "
@@ -459,6 +587,8 @@ def _compute_coverage(
             f"model produces {embedder.dim}; coverage was not computed"
         )
         return
+    if ctx.atlas.token_log_prob:
+        embedder = embedder.bind_idf(ctx.atlas.token_log_prob)
 
     texts = [row[0] for row in sample]
     langs = [row[1] for row in sample]
@@ -468,7 +598,7 @@ def _compute_coverage(
         emb = embedder.encode(texts)
         regions, scores, nearest = ctx.atlas.assign_full(emb)
         categories = ctx.atlas.categorize(emb)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         ctx.degraded(f"atlas assignment failed: {type(exc).__name__}")
         return
 
@@ -510,9 +640,9 @@ def _compute_coverage(
         # the corpus whose records are 0.9 alike is the same document written
         # out many times, and the near-duplicate check will miss it whenever the
         # wording varies more than the shingles tolerate.
-        from .atlas.apply import _mean_pairwise  # noqa: PLC0415
-
         import numpy as _np
+
+        from .atlas.apply import _mean_pairwise
 
         unit = _np.asarray(emb, dtype=_np.float32)
         unit = unit / (_np.linalg.norm(unit, axis=1, keepdims=True) + 1e-9)

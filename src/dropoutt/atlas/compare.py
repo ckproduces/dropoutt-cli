@@ -35,7 +35,16 @@ def category_names() -> dict[int, str]:
 
 
 def category_labels() -> dict[int, str]:
-    """Level-0 category id to its human-readable label."""
+    """Coarse-region id to its human-readable label.
+
+    Prefers L1 labels from the bundled atlas (v1 hierarchy). Falls back to the
+    hand-designed taxonomy.json used by legacy artifacts.
+    """
+    from .apply import load_bundled
+
+    atlas = load_bundled()
+    if atlas is not None and atlas.l1_labels:
+        return {i: label for i, label in enumerate(atlas.l1_labels)}
     return {int(c["id"]): str(c["label"]) for c in taxonomy()["categories"]}
 
 
@@ -69,7 +78,7 @@ def region_terms(coverage: dict[str, Any]) -> dict[int, str]:
     does not have.
     """
     terms: dict[int, str] = {}
-    from .apply import load_bundled  # noqa: PLC0415
+    from .apply import load_bundled
 
     atlas = load_bundled()
     if atlas is not None and atlas.meta.get("version") == coverage.get("atlas_version"):
@@ -227,7 +236,7 @@ def compare(a: dict[str, Any] | None, b: dict[str, Any] | None) -> Comparison:
     union = sorted(set(ma) | set(mb))
     va = [ma.get(r, 0.0) for r in union]
     vb = [mb.get(r, 0.0) for r in union]
-    dot = sum(x * y for x, y in zip(va, vb))
+    dot = sum(x * y for x, y in zip(va, vb, strict=True))
     na = math.sqrt(sum(x * x for x in va))
     nb = math.sqrt(sum(y * y for y in vb))
     similarity = dot / (na * nb) if na and nb else 0.0
@@ -282,7 +291,7 @@ def _caveats(placed_a: float, placed_b: float, added_mass: float) -> list[str]:
     tells the reader nothing they can act on. The two sides bias different
     quantities, so they get separate sentences.
     """
-    from .apply import OFF_ATLAS_NOTABLE  # noqa: PLC0415
+    from .apply import OFF_ATLAS_NOTABLE
 
     out: list[str] = []
     if placed_b < 1 - OFF_ATLAS_NOTABLE:
