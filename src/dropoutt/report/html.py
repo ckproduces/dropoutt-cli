@@ -9,624 +9,496 @@ excerpts; ``--no-evidence`` removes excerpts and source locations.
 Autoescaping is on unconditionally and every corpus string additionally passes
 through :func:`safe_snippet`, because everything rendered here came from data we
 did not write.
+
+**The page describes before it complains.** It used to open with a list of
+findings, which meant a reader who had just been handed a folder learned what
+was wrong with it before learning what it was — and learned what it was only by
+inference, since a finding mentions a property of the corpus exactly when that
+property is broken. So composition comes first: what language, what shape,
+whether it is already formatted, how big. The verdict is still above all of it,
+because someone re-reading a failed CI run should not have to scroll, but it is
+one line rather than a panel.
+
+Then the findings, then the token budget, then the map. That order is what a
+person actually asks in sequence: what is this, what is wrong with it, what will
+it cost, and what is it missing.
+
+What the page must not do is present the atlas's own labels as facts about the
+data. See :mod:`dropoutt.report.summary` for why, and for the rule that a place
+on the map is named by the reader's own record before it is named by a caption.
 """
 
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import Any
 
 from jinja2 import Environment, StrictUndefined
 
 from ..fingerprint import Fingerprint
-from ..models import Confidence, Severity
 from ..runner import ScanResult
 from .escaping import safe_snippet
-
-_CSS = """
-:root{--bg:#fcfcfb;--fg:#1d1d1b;--muted:#666662;--line:#deded9;--soft:#f2f2ef;
---danger:#b42318;--warning:#8a5d00;--accent:#1769aa;--atlas:#1769aa;--empty:#d8d8d2}
-@media(prefers-color-scheme:dark){:root{--bg:#151513;--fg:#e9e9e5;--muted:#aaa9a3;
---line:#353531;--soft:#20201d;--danger:#ff7b70;--warning:#e4b04d;
---accent:#76b8eb;--atlas:#76b8eb;--empty:#3d3d38}}
-*{box-sizing:border-box}
-html{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-body{margin:0;padding:2.5rem 1.25rem 4rem;background:var(--bg);color:var(--fg);
-font-family:inherit;font-size:15px;line-height:1.55}
-.wrap{max-width:920px;margin:0 auto}
-header{padding-bottom:1.5rem;border-bottom:1px solid var(--line)}
-h1{font-size:1.55rem;font-weight:650;letter-spacing:-.02em;margin:0}
-h2{font-size:1rem;font-weight:650;margin:0 0 1rem}
-h3{font-size:.95rem;font-weight:650;margin:0}
-p{margin:.45rem 0}
-.path{color:var(--muted);font-size:.85rem;overflow-wrap:anywhere;margin-top:.2rem}
-.summary{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-top:1.4rem}
-.summary div{min-width:92px}
-.label{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;
-letter-spacing:.06em}
-.value{display:block;font-size:1.05rem;font-weight:600;margin-top:.05rem}
-.notice{border-left:2px solid var(--warning);padding:.1rem 0 .1rem .8rem;
-color:var(--muted);font-size:.86rem;margin:1.25rem 0}
-.section{padding:2rem 0;border-bottom:1px solid var(--line)}
-.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
-.section-note,.note{color:var(--muted);font-size:.84rem;max-width:72ch}
-.finding{padding:1rem 0;border-top:1px solid var(--line)}
-.finding:first-of-type{border-top:0;padding-top:0}
-.finding-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
-.check-id{font-size:.78rem;color:var(--muted)}
-.count{margin-left:auto;color:var(--muted);font-size:.82rem}
-.severity{display:inline-flex;align-items:center;gap:.35rem;font-size:.78rem;color:var(--muted)}
-.severity::before{content:"";width:.45rem;height:.45rem;border-radius:50%;background:var(--accent)}
-.severity.blocking::before{background:var(--danger)}
-.severity.warning::before{background:var(--warning)}
-.finding-detail{margin:.55rem 0 .25rem}
-.fix{color:var(--muted);font-size:.86rem}
-details{margin:.7rem 0}
-summary{cursor:pointer;color:var(--muted);font-size:.84rem}
-.evidence{margin:.6rem 0 0;padding:.65rem .75rem;background:var(--soft);
-white-space:pre-wrap;overflow-wrap:anywhere;font-size:.82rem}
-.location{display:block;color:var(--muted);font-size:.75rem;margin-bottom:.2rem;overflow-wrap:anywhere}
-code,.mono{font-family:inherit;font-size:inherit}
-.scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:.87rem}
-th{text-align:left;color:var(--muted);font-weight:500;font-size:.72rem;text-transform:uppercase;
-letter-spacing:.055em;padding:.45rem .55rem;border-bottom:1px solid var(--line)}
-td{padding:.62rem .55rem;border-bottom:1px solid var(--line);vertical-align:top}
-tr:last-child td{border-bottom:0}
-.metrics{display:flex;flex-wrap:wrap;gap:.6rem 1.8rem;margin:1rem 0}
-.metric{min-width:120px}
-.atlas-map{display:block;width:100%;height:auto;margin:1rem 0 .6rem}
-.atlas-point{fill:var(--empty)}
-.atlas-point.occupied{fill:var(--hue,var(--atlas));fill-opacity:.78;stroke:var(--bg);stroke-width:1}
-/* One hue per level-0 subject area, ordered by how much of the corpus sits in
-each. Chosen for separability at 4px rather than for prettiness, and h6 is the
-"empty here" grey that both the map and the legend fall back to. */
-.h0{--hue:#1769aa}.h1{--hue:#0f8a6a}.h2{--hue:#a05a00}
-.h3{--hue:#7a4fbf}.h4{--hue:#b0344e}.h5{--hue:#4a7a1f}.h6{--hue:var(--empty)}
-.legend{display:flex;flex-wrap:wrap;gap:.5rem 1rem;color:var(--muted);font-size:.78rem}
-.legend span{display:inline-flex;align-items:center;gap:.35rem}
-.dot{width:.55rem;height:.55rem;border-radius:50%;background:var(--empty)}
-.dot.occupied{background:var(--hue,var(--atlas))}
-.coverage-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,.75fr);
-gap:1.75rem;margin-top:1.5rem}
-.bar-row{display:grid;grid-template-columns:minmax(100px,1fr) 3fr 3.2rem;
-gap:.65rem;align-items:center;margin:.55rem 0;font-size:.82rem}
-.bar{height:.38rem;background:var(--soft);overflow:hidden}
-.bar span{display:block;height:100%;background:var(--atlas)}
-.region-list{list-style:none;margin:.35rem 0 0;padding:0}
-.region-list li{display:grid;grid-template-columns:2.6rem 4.2rem 1fr;gap:.45rem;
-padding:.4rem 0;border-bottom:1px solid var(--line);font-size:.82rem}
-.region-list.gap-list li,.region-list.region-yours li{
-grid-template-columns:minmax(5rem,7rem) minmax(3rem,4.5rem) 1fr}
-.region-list.gap-list li{grid-template-columns:minmax(10rem,14rem) 1fr}
-.region-list li:last-child{border-bottom:0}
-.dim{color:var(--muted)}
-ul.dim{padding-left:1.2rem}
-footer{padding-top:1.5rem;color:var(--muted);font-size:.78rem}
-@media(max-width:680px){
-body{padding:1.5rem 1rem 3rem}
-.coverage-grid{grid-template-columns:1fr}
-.count{margin-left:0;width:100%}
-th,td{padding-left:.35rem;padding-right:.35rem}
-}
-"""
+from .summary import ScanSummary, budget_method, budget_rows, build
+from .theme import LOGO_SVG, stylesheet
 
 _TEMPLATE = """<!-- generated by dropoutt {{ pipeline_version }} -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy"
       content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
-<title>dropoutt scan — {{ root_short }}</title>
+<title>dropoutt — {{ root_short }}</title>
 <style>{{ css|safe }}</style>
 <div class="wrap">
-<header>
-  <h1>dropoutt scan</h1>
-  <div class="path">{{ root }}</div>
-  <div class="summary" aria-label="Scan summary">
-    <div><span class="label">Records</span><span class="value">{{ "{:,}".format(records) }}</span></div>
-    <div><span class="label">Datasets</span><span class="value">{{ datasets|length }}</span></div>
-    <div><span class="label">Findings</span><span class="value">{{ findings|length }}</span></div>
-    <div><span class="label">Profile</span><span class="value">{{ profile }}</span></div>
-  </div>
+
+<header class="masthead">
+  {{ logo|safe }}
+  <span class="wordmark">dropoutt</span>
+  <span class="kind">dataset report</span>
+  <span class="where">{{ root }}</span>
 </header>
 
-<p class="notice">
-  Findings are unverified structural observations, not model-quality predictions.
-  {% if not blocking_enabled %}No blocking verdict was issued because no target was declared.{% endif %}
-  {% if includes_evidence %} This file contains dataset excerpts and source locations; keep it
-  inside the dataset trust boundary.{% endif %}
-</p>
+<div class="verdict {{ s.tone }}">
+  <span class="dot"></span>
+  <span class="headline">{{ s.verdict }}</span>
+  {% if s.subtitle %}<span class="lead">{{ s.subtitle }}</span>{% endif %}
+</div>
 
-{% if findings %}
-<section class="section">
-  <h2>Findings</h2>
-  {% for f in findings %}
-  <article class="finding">
-    <div class="finding-head">
-      <span class="severity {{ f.severity.value }}">{{ f.severity.value }}</span>
-      <h3>{{ f.title }}</h3>
-      <span class="check-id">{{ f.check_id }}</span>
-      <span class="count">
-        {{ "{:,}".format(f.count) if f.count else "—" }}
-        {% if f.total_considered %} · {{ "%.2f%%"|format(f.rate * 100) }}{% endif %}
-      </span>
+{# ---------------------------------------------------------------- 01 #}
+<section>
+  <div class="sechead"><span class="n">01</span><h2>What this corpus is</h2></div>
+  <p class="secnote">Measured over every record that was read, before any
+  question of what is wrong with it.</p>
+
+  <div class="grid g4">
+    <div class="card stat">
+      <span class="k">Records</span>
+      <span class="v">{{ "{:,}".format(s.records) }}</span>
+      <span class="n">{{ s.datasets }} dataset{{ "" if s.datasets == 1 else "s" }}
+        in {{ s.files }} file{{ "" if s.files == 1 else "s" }}</span>
     </div>
-    <p class="finding-detail">{{ f.detail }}
-      {% if f.wasted_tokens %}<span class="dim"> · {{ "{:,}".format(f.wasted_tokens) }} tokens</span>{% endif %}
-    </p>
-    <p class="fix">Fix: {{ f.fix }}
-      {% if f.would_block_under and not f.is_blocking %}
-      · Would block under {{ f.would_block_under|join(', ') }}
-      {% endif %}
-    </p>
-    {% if includes_evidence and f.evidence %}
-    <details>
-      <summary>{{ f.evidence|length }} example{% if f.evidence|length != 1 %}s{% endif %}</summary>
-      {% for ev in f.evidence %}
-      <div class="evidence">
-        <span class="location">{{ ev.source_file }}:{{ ev.source_index }}</span>{{ ev.excerpt }}
-      </div>
-      {% if ev.partner_excerpt %}
-      <div class="evidence">
-        <span class="location">matching record{% if ev.score %} · Jaccard {{ "%.2f"|format(ev.score) }}{% endif %}</span>{{ ev.partner_excerpt }}
-      </div>
-      {% endif %}
+    <div class="card stat">
+      <span class="k">Looks like</span>
+      <span class="v" style="font-size:var(--t-20)">{{ s.profile }}</span>
+      <span class="n">{{ s.profile_line or "layout could not be inferred" }}</span>
+    </div>
+    <div class="card stat">
+      <span class="k">Tokens</span>
+      <span class="v">{{ tokens_short }}</span>
+      <span class="n">{% if s.tokens %}{{ token_note }}{% else %}no tokenizer available{% endif %}</span>
+    </div>
+    <div class="card stat">
+      <span class="k">Average record</span>
+      <span class="v">{{ "{:,}".format(c.mean_chars) }}<span class="muted" style="font-size:var(--t-14)"> chars</span></span>
+      <span class="n">{{ "{:,}".format(c.total_words) }} words across the corpus</span>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-top:var(--s-12)">
+    <div class="card">
+      <h3>Languages</h3>
+      {% if s.languages %}
+      <p class="t13 muted">Share of records, from the language detector. Records
+      it could not call are counted under <code>unknown</code>.</p>
+      <div class="bars">
+      {% for code, share in s.languages[:7] %}
+        <div class="bar">
+          <span class="label">{{ code }}</span>
+          <span class="track"><span class="fill h{{ loop.index0 % 7 }}" style="width:{{ "%.1f"|format(share * 100) }}%"></span></span>
+          <span class="v">{{ "%.1f%%"|format(share * 100) }}</span>
+        </div>
       {% endfor %}
-    </details>
+      </div>
+      {% if s.languages|length > 7 %}
+      <p class="t12 faint" style="margin-top:var(--s-12)">and
+        {{ s.languages|length - 7 }} more language{{ "" if s.languages|length - 7 == 1 else "s" }}
+        below {{ "%.1f%%"|format(s.languages[6][1] * 100) }} each.</p>
+      {% endif %}
+      {% else %}
+      <p class="t13 muted">Not measured. Language identification needs
+      <code>pip install 'dropoutt[lid]'</code>.</p>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3>Structure</h3>
+      {% if c.layouts %}
+      <p class="t13 muted">{{ c.structured_line }}</p>
+      <div class="bars">
+      {% for label, share, conf in c.layouts[:5] %}
+        <div class="bar">
+          <span class="label">{{ label }}</span>
+          <span class="track"><span class="fill h{{ loop.index0 % 7 }}" style="width:{{ "%.1f"|format(share * 100) }}%"></span></span>
+          <span class="v">{{ "%.0f%%"|format(share * 100) }}</span>
+        </div>
+      {% endfor %}
+      </div>
+      {% else %}
+      <p class="t13 muted">No layout could be induced from these files.</p>
+      {% endif %}
+
+      <h4 style="margin-top:var(--s-20)">Chat templates found in the text</h4>
+      {% if c.templates %}
+      <p class="t13 muted">These records already carry turn delimiters. A trainer
+      that applies its own template on top produces a doubled format the model
+      never sees at inference.</p>
+      <div class="chips">
+      {% for name, count, share in c.templates %}
+        <span class="badge {{ 'bad' if c.template_target and name != c.template_target else 'warn' }}">{{ name }} · {{ "{:,}".format(count) }} records</span>
+      {% endfor %}
+      </div>
+      {% if c.template_target %}
+      <p class="t12 faint" style="margin-top:var(--s-8)">Your target model uses
+      <b>{{ c.template_target }}</b>.</p>
+      {% endif %}
+      {% else %}
+      <p class="t13 muted">None. No record carries the turn delimiters of a known
+      chat template, which is what a trainer applying its own template expects.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:var(--s-12)">
+    <h3>Datasets</h3>
+    <div class="scroll"><table>
+      <thead><tr><th>name</th><th>layout</th><th class="r">records</th>
+      <th class="r">share</th><th>licence</th></tr></thead>
+      <tbody>
+      {% for d in datasets %}
+      <tr>
+        <td>{{ d.name }}</td>
+        <td class="muted">{{ d.layout or "—" }}</td>
+        <td class="r">{{ "{:,}".format(d.records) }}</td>
+        <td class="r muted">{{ "%.1f%%"|format(100 * d.records / s.records) if s.records else "—" }}</td>
+        <td>{% if d.licence %}{{ d.licence }}{% else %}<span class="badge warn">not recorded</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% if overlap %}
+    <h4 style="margin-top:var(--s-20)">Datasets that repeat each other</h4>
+    <p class="t12 faint">Directional: the share of the first that also appears in the second.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>from</th><th>also in</th><th class="r">share</th></tr></thead>
+      <tbody>
+      {% for r in overlap %}
+      <tr><td>{{ r["from"] }}</td><td>{{ r["to"] }}</td>
+      <td class="r">{{ "%.1f%%"|format(r["fraction"] * 100) }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
     {% endif %}
-  </article>
-  {% endfor %}
-</section>
-{% endif %}
-
-{% if overlap %}
-<section class="section">
-  <h2>Cross-dataset overlap</h2>
-  <p class="section-note">Directional: the share of “from” that also appears in “appears in”.</p>
-  <div class="scroll">
-  <table>
-  <tr><th>from</th><th>appears in</th><th>matched</th><th>of</th><th>share</th></tr>
-  {% for r in overlap %}
-  <tr><td>{{ r["from"] }}</td><td>{{ r["to"] }}</td>
-  <td>{{ "{:,}".format(r["matched"]) }}</td><td>{{ "{:,}".format(r["of"]) }}</td>
-  <td>{{ "%.1f%%"|format(r["fraction"] * 100) }}</td></tr>
-  {% endfor %}
-  </table>
   </div>
 </section>
-{% endif %}
 
-{% if budget %}
-<section class="section">
-  <h2>Token budget</h2>
-  {% if not has_tokenizer %}
-  <p class="section-note">Estimated from a stratified sample because no <code>--model</code> was given.</p>
-  {% endif %}
-  <div class="scroll">
-  <table>
-  <tr><th>tokenizer</th><th>total tokens</th><th>tokens per word</th><th>premium</th></tr>
-  {% for e in budget %}
-  <tr><td>{{ e.name }}</td><td>{{ "{:,}".format(e.total) }}</td>
-  <td>{{ "%.2f"|format(e.tpw) }}</td>
-  <td>{% if e.premium > 0 %}+{{ "%.0f%%"|format(e.premium * 100) }}{% else %}—{% endif %}</td></tr>
-  {% endfor %}
-  </table>
-  </div>
-</section>
-{% endif %}
+{# ---------------------------------------------------------------- 02 #}
+<section>
+  <div class="sechead"><span class="n">02</span><h2>What would go wrong</h2></div>
+  <p class="secnote">Ordered by how much of your data each one touches. Nothing
+  here is a prediction about model quality — these are structural facts about the
+  files, and the decision about what to do with them is yours.</p>
 
-{% if coverage %}
-<section class="section">
-  <div class="section-head"><h2>Atlas map</h2><span class="section-note">{{ coverage.version or "" }}</span></div>
-  {% if coverage.withheld %}
-  <p class="note">{{ coverage.reason }}</p>
+  {% if problems %}
+    {% for p in problems %}
+    <article class="finding {{ 'bad' if p.is_blocking or p.would_block else ('warn' if p.severity.value == 'warning' else 'info') }}">
+      <div class="ftop">
+        <span class="badge {{ 'bad' if p.is_blocking or p.would_block else ('warn' if p.severity.value == 'warning' else '') }}">
+          {{ "will block" if p.is_blocking else ("would block" if p.would_block else p.severity.value) }}
+        </span>
+        <h3>{{ p.title }}</h3>
+        <span class="fid">{{ p.check_id }}</span>
+      </div>
+      {% if p.scale or p.cost %}
+      <p class="fscale">{{ p.scale }}{% if p.cost %}<span class="sep">·</span><span class="cost">{{ p.cost }} wasted</span>{% endif %}</p>
+      {% endif %}
+      <p class="fdetail">{{ p.detail }}</p>
+      <p class="ffix"><b>What to do</b> — {{ p.fix }}</p>
+      {% if p.evidence %}
+      <details>
+        <summary>Show {{ p.evidence|length }} example{{ "" if p.evidence|length == 1 else "s" }} from your data</summary>
+        {% for ev in p.evidence %}
+        <div class="excerpt"><span class="loc">{{ ev.source_file }}:{{ ev.source_index }}</span>{{ ev.excerpt }}</div>
+        {% if ev.partner_excerpt %}
+        <div class="excerpt"><span class="loc">matches{% if ev.score %} · {{ "%.0f%%"|format(ev.score * 100) }} alike{% endif %}</span>{{ ev.partner_excerpt }}</div>
+        {% endif %}
+        {% endfor %}
+      </details>
+      {% endif %}
+    </article>
+    {% endfor %}
   {% else %}
-  <p class="section-note">Your corpus on a frozen map of professional training data.
-  It answers what you cover, what you miss, and what sits off the map — it does not score quality.
-  Shares below are over the {{ "{:,}".format(coverage.placed) }} placed records
-  (of {{ "{:,}".format(coverage.records) }} sampled).</p>
-  <div class="metrics">
-    <div class="metric"><span class="label">Placed</span><span class="value">{{ "{:,}".format(coverage.placed) }} / {{ "{:,}".format(coverage.records) }}</span></div>
-    <div class="metric"><span class="label">Breadth</span><span class="value">{{ coverage.occupied }} / {{ coverage.total }}{% if coverage.effective %} · ~{{ "%.0f"|format(coverage.effective) }} even{% endif %}</span></div>
-    <div class="metric"><span class="label">Shape</span><span class="value">{% if coverage.shape %}{{ coverage.shape }}{% elif coverage.concentration is not none %}{{ "%.0f%%"|format(coverage.concentration * 100) }}{% else %}—{% endif %}</span></div>
-    <div class="metric"><span class="label">Off the map</span><span class="value">{{ "%.1f%%"|format(coverage.off_atlas_rate * 100) }}{% if coverage.off_atlas.fit %} · {{ coverage.off_atlas.fit }}{% endif %}</span></div>
-    {% if coverage.too_short %}
-    <div class="metric"><span class="label">Too short</span><span class="value">{{ "{:,}".format(coverage.too_short) }}</span></div>
-    {% endif %}
-  </div>
-  {% if coverage.shape_note %}<p class="note">{{ coverage.shape_note }}</p>{% endif %}
-  {% if coverage.points %}
-  <svg class="atlas-map" viewBox="0 0 720 270" role="img" aria-labelledby="atlas-title atlas-desc">
-    <title id="atlas-title">Where this corpus sits on the atlas</title>
-    <desc id="atlas-desc">{{ coverage.occupied }} of {{ coverage.total }} regions are occupied. Circle size is the number of sampled records; colour is the subject area. Grey circles are regions the atlas covers and this corpus does not reach.</desc>
-    <g aria-hidden="true">
-    {% for p in coverage.points %}
-    <circle class="atlas-point h{{ p.hue }}{% if p.records %} occupied{% endif %}" cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.radius }}">
-      <title>Region {{ p.id }} — {{ p.category }}{% if p.records %}: {{ "{:,}".format(p.records) }} records{% if p.terms %}; {{ p.terms }}{% endif %}{% else %}: empty here{% endif %}</title>
-    </circle>
-    {% endfor %}
-    </g>
-  </svg>
-  <div class="legend" aria-hidden="true">
-    {% for c in coverage.categories[:6] %}
-    <span><i class="dot occupied h{{ c.hue }}"></i>{{ c.name }}</span>
-    {% endfor %}
-    <span><i class="dot h6"></i>empty here</span>
-  </div>
+    <div class="allclear"><b>Nothing to fix.</b> Every check that could run came
+    back clean. The list of checks that could not run is at the bottom of this page.</div>
   {% endif %}
-  {% if coverage.gaps %}
-  <h3>Missing subject areas</h3>
-  <p class="section-note">{{ coverage.gaps|length }}{% if coverage.categories_total %} of {{ coverage.categories_total }}{% endif %}
-  subject areas on the atlas are empty or near-empty here. A histogram of your own data cannot say this —
-  only a frozen map can. Listed, not judged.</p>
-  <ul class="region-list gap-list">
-  {% for g in coverage.gaps %}
-    <li><span class="dim">{{ g.name }}</span><span>{% if g.terms %}{{ g.terms }}{% else %}{{ g.regions }} regions · {{ "{:,}".format(g.records) }} here{% endif %}</span></li>
-  {% endfor %}
-  </ul>
-  {% elif not coverage.none_placed %}
-  <p class="note">Missing subject areas: none — you touch every subject area the atlas covers.</p>
-  {% endif %}
-  <div class="coverage-grid">
-    {% if coverage.categories %}
-    <div>
-      <h3>What you cover</h3>
-      {% for c in coverage.categories %}
-      <div class="bar-row"><span>{{ c.name }}</span><span class="bar"><span style="width:{{ "%.1f"|format(c.share * 100) }}%"></span></span><span>{{ "%.0f%%"|format(c.share * 100) }}</span></div>
+</section>
+
+{# ---------------------------------------------------------------- 03 #}
+{% if budget %}
+<section>
+  <div class="sechead"><span class="n">03</span><h2>What it costs to tokenize</h2></div>
+  <p class="secnote">{% if has_tokenizer %}Counted exactly, with your model's own
+  tokenizer.{% else %}No <code>--model</code> was given, so the corpus is priced
+  under five common tokenizers instead. The same text costs different numbers of
+  tokens under different families, and for non-English data the gap is
+  large.{% endif %}</p>
+
+  <div class="card">
+    <div class="scroll"><table>
+      <thead><tr><th>tokenizer</th><th class="r">total tokens</th>
+      <th class="r">± sampling</th><th class="r">vs cheapest</th></tr></thead>
+      <tbody>
+      {% for e in budget %}
+      <tr>
+        <td>{{ e.name }}{% if loop.first %} <span class="badge ok">cheapest</span>{% endif %}</td>
+        <td class="r">{{ "{:,}".format(e.total) }}</td>
+        <td class="r muted">{% if e.margin_share %}{{ "%.2f%%"|format(e.margin_share * 100) }}{% else %}exact{% endif %}</td>
+        <td class="r">{% if e.premium > 0 %}+{{ "%.1f%%"|format(e.premium * 100) }}{% else %}—{% endif %}</td>
+      </tr>
       {% endfor %}
+      </tbody>
+    </table></div>
+    <p class="t12 faint" style="margin-top:var(--s-16)">{{ budget_method }}</p>
+    {% for note in budget_notes %}
+    <p class="t12 faint">{{ note }}</p>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# ---------------------------------------------------------------- 04 #}
+{% if s.atlas %}
+<section>
+  <div class="sechead"><span class="n">04</span><h2>Where your data sits</h2></div>
+  {% if not s.atlas.available %}
+  <p class="secnote">{{ s.atlas.unavailable_reason }}</p>
+  {% else %}
+  <p class="secnote">Your records were placed on a fixed map built from public
+  training data — {{ s.atlas.regions_total }} neighbourhoods that sit in the same
+  place in every dropoutt report ever produced. What follows is only what the map
+  says with enough confidence and enough size to be worth acting on.</p>
+
+  <div class="grid g4">
+    <div class="card stat">
+      <span class="k">Breadth</span>
+      <span class="v">{{ s.atlas.regions_touched }}<span class="muted" style="font-size:var(--t-16)"> / {{ s.atlas.regions_total }}</span></span>
+      <span class="n">places reached, as spread out as
+      {{ "%.0f"|format(s.atlas.effective) }} evenly-used ones</span>
+    </div>
+    <div class="card stat">
+      <span class="k">Shape</span>
+      <span class="v" style="font-size:var(--t-20)">{{ s.atlas.shape or "—" }}</span>
+      <span class="n">{% if s.atlas.concentration is not none %}{{ "%.0f%%"|format(s.atlas.concentration * 100) }} of perfectly even coverage{% endif %}</span>
+    </div>
+    <div class="card stat">
+      <span class="k">Off the map</span>
+      <span class="v">{{ "%.1f%%"|format(s.atlas.off_rate * 100) }}</span>
+      <span class="n">{{ "{:,}".format(s.atlas.off_count) }} of
+      {{ "{:,}".format(s.atlas.sampled) }} sampled records look like nothing in
+      the reference corpus</span>
+    </div>
+    <div class="card stat">
+      <span class="k">Placed</span>
+      <span class="v">{{ "{:,}".format(s.atlas.placed) }}</span>
+      <span class="n">records positioned{% if s.atlas.too_short %};
+      {{ "{:,}".format(s.atlas.too_short) }} were too short to place{% endif %}</span>
+    </div>
+  </div>
+
+  {% if s.atlas.insights %}
+  <div class="card" style="margin-top:var(--s-12)">
+    <h3>What the map says</h3>
+    {% for i in s.atlas.insights %}
+    <div class="insight {{ i.tone }}">
+      <span class="rule"></span>
+      <div>
+        <h3>{{ i.headline }}</h3>
+        <p>{{ i.detail }}</p>
+        {% if i.evidence %}<span class="quote">“{{ i.evidence }}”</span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="margin-top:var(--s-12)">
+    <h3>What the map says</h3>
+    <p class="t14 muted">Nothing that clears the bar. No subject area is far
+    enough from the map's own balance, and no single place holds enough of your
+    data, for the difference to be worth acting on at this sample size.</p>
+  </div>
+  {% endif %}
+
+  <div class="grid g2" style="margin-top:var(--s-12)">
+    {% if s.atlas.places %}
+    <div class="card">
+      <h3>Where your data piles up</h3>
+      <p class="t12 faint">Each place is named by your own record nearest its
+      centre, because that is the only description of a neighbourhood that is
+      true by construction. The map's own words for it are shown beneath.</p>
+      <ul class="places">
+      {% for pl in s.atlas.places %}
+        <li>
+          <span class="pct">{{ "%.1f%%"|format(pl.share * 100) }}</span>
+          <span>
+            {% if pl.yours %}<span class="yours">“{{ pl.yours }}”</span>
+            {% else %}<span class="yours muted">{{ "{:,}".format(pl.records) }} records</span>{% endif %}
+            <span class="cap">{% if pl.area %}{{ pl.area }}{% endif %}{% if pl.caption %} · {{ pl.caption }}{% endif %}</span>
+            {% if pl.repetitive %}<span class="flag">records here are {{ "%.2f"|format(pl.cohesion) }} alike — likely one template</span>{% endif %}
+          </span>
+        </li>
+      {% endfor %}
+      </ul>
     </div>
     {% endif %}
-    {% if coverage.regions %}
-    <div>
-      <h3>Where yours sit</h3>
-      <p class="section-note">Your closest record first; atlas captions are labels from the reference corpus, not placement rules.</p>
-      <ul class="region-list region-yours">
-      {% for r in coverage.regions %}
+
+    {% if s.atlas.thin_places %}
+    <div class="card">
+      <h3>Where you have only a toehold</h3>
+      <p class="t12 faint">The sparsest places you reach. Each holds under 0.5%
+      of your data, so they count towards breadth without contributing coverage.</p>
+      <ul class="places">
+      {% for pl in s.atlas.thin_places %}
         <li>
-          <span>{{ "%.0f%%"|format(r.share * 100) }}</span>
-          <span>{{ "{:,}".format(r.records) }}</span>
-          <span>{% if r.yours %}<strong>{{ r.yours }}</strong><br><span class="dim">atlas: {{ r.terms }}</span>{% else %}<span class="dim">{{ r.terms }}</span>{% endif %}</span>
+          <span class="pct">{{ "{:,}".format(pl.records) }}</span>
+          <span>
+            {% if pl.yours %}<span class="yours">“{{ pl.yours }}”</span>
+            {% else %}<span class="yours muted">record{{ "" if pl.records == 1 else "s" }} here</span>{% endif %}
+            <span class="cap">{% if pl.area %}{{ pl.area }}{% endif %}{% if pl.caption %} · {{ pl.caption }}{% endif %}</span>
+          </span>
         </li>
       {% endfor %}
       </ul>
     </div>
     {% endif %}
   </div>
-  {% if coverage.dataset_overlap %}
-  <h3>Same ground across datasets</h3>
-  <p class="section-note">Cosine of region histograms. Two datasets can share no wording and still occupy the same ground —
-  text near-dedup cannot see this.</p>
-  <ul class="region-list">
-  {% for p in coverage.dataset_overlap %}
-    <li><span>{{ "%.2f"|format(p.similarity) }}</span><span>{{ p.a }}</span><span class="dim">{{ p.b }}{% if p.verdict %} · {{ p.verdict }}{% endif %}</span></li>
-  {% endfor %}
-  </ul>
-  {% endif %}
-  {% if coverage.off_atlas.count %}
-  <h3>Off the map</h3>
-  <p class="section-note">{{ "{:,}".format(coverage.off_atlas.count) }} records
-  ({{ "%.1f%%"|format(coverage.off_atlas.rate * 100) }}) sit further from every region than the cutoff allows.
-  {% if coverage.off_atlas.fit_note %}{{ coverage.off_atlas.fit_note }}.{% endif %}
-  {% if coverage.off_atlas.diagnosis %}<strong>Why: {{ coverage.off_atlas.diagnosis }}.</strong>{% endif %}</p>
-  {% if coverage.off_atlas.length %}
-  <p class="note">Length: off-map median {{ coverage.off_atlas.length.off_median_chars }} chars{% if coverage.off_atlas.length.placed_median_chars is not none %},
-  placed median {{ coverage.off_atlas.length.placed_median_chars }} chars{% endif %}.</p>
-  {% endif %}
-  {% if coverage.off_atlas.score %}
-  <p class="note">Distance: median similarity {{ "%.2f"|format(coverage.off_atlas.score.off_median) }}, cutoff
-  {{ "%.2f"|format(coverage.off_atlas.score.cutoff) }}{% if coverage.off_atlas.score.placed_median is not none %},
-  placed median {{ "%.2f"|format(coverage.off_atlas.score.placed_median) }}{% endif %}.</p>
-  {% endif %}
-  {% if coverage.off_atlas.coherence and coverage.off_atlas.coherence.off is not none %}
-  <p class="note">Alike: {{ "%.2f"|format(coverage.off_atlas.coherence.off) }} within off-map,
-  {{ "%.2f"|format(coverage.off_atlas.coherence.placed) if coverage.off_atlas.coherence.placed is not none else "—" }} within placed.</p>
-  {% endif %}
-  {% if coverage.off_atlas.surface and coverage.off_atlas.surface.placed_whitespace is not none %}
-  <p class="note">Surface: {{ "%.0f%%"|format(coverage.off_atlas.surface.off_whitespace * 100) }} whitespace /
-  {{ "%.0f%%"|format(coverage.off_atlas.surface.off_non_letter * 100) }} non-letter off-map, vs
-  {{ "%.0f%%"|format(coverage.off_atlas.surface.placed_whitespace * 100) }} /
-  {{ "%.0f%%"|format(coverage.off_atlas.surface.placed_non_letter * 100) }} placed.</p>
-  {% endif %}
-  <div class="coverage-grid">
-    {% if coverage.off_atlas.nearest %}
-    <div>
-      <h3>Nearest atlas neighbours</h3>
-      <ul class="region-list">
-      {% for r in coverage.off_atlas.nearest %}
-        <li><span>{{ r.region }}</span><span>{{ "{:,}".format(r.records) }}</span><span class="dim">{{ r.terms }}</span></li>
-      {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-    {% for label, rows in [("language", coverage.off_atlas.by_language), ("dataset", coverage.off_atlas.by_dataset)] %}
-    {% if rows|length > 1 %}
-    <div>
-      <h3>Off-map rate by {{ label }}</h3>
-      {% for name, st in rows %}
-      <div class="bar-row"><span>{{ name }}</span><span class="bar"><span style="width:{{ "%.1f"|format(st.rate * 100) }}%"></span></span><span>{{ "%.0f%%"|format(st.rate * 100) }}</span></div>
-      {% endfor %}
-    </div>
-    {% endif %}
-    {% endfor %}
-  </div>
-  {% if includes_evidence and coverage.off_examples %}
-  <h3>Furthest from the map</h3>
-  <ul class="region-list">
-  {% for ex in coverage.off_examples %}
-    <li><span>{{ "%.2f"|format(ex.score) }}</span><span class="dim" style="grid-column:2 / -1">{{ ex.excerpt }}</span></li>
-  {% endfor %}
-  </ul>
-  {% endif %}
-  {% endif %}
-  <p class="note">Circle size is record count; colour is subject area. Atlas captions are not placement rules.
-  {% if coverage.l0_accuracy %} Subject-area labels are approximate (probe accuracy {{ "%.3f"|format(coverage.l0_accuracy) }}).{% endif %}
-  Ask what a candidate adds: <code>dropoutt diff candidate.json have.json</code>.</p>
-  {% endif %}
-</section>
-{% endif %}
 
-<section class="section">
-  <h2>Datasets</h2>
-  <div class="scroll">
-  <table>
-  <tr><th>name</th><th>layout</th><th>files</th><th>records</th><th>licence</th></tr>
-  {% for d in datasets %}
-  <tr><td>{{ d.name }}</td><td>{{ d.layout or "—" }}</td>
-  <td>{{ d.files }}</td><td>{{ "{:,}".format(d.records) }}</td>
-  <td>{% if d.licence %}{{ d.licence }}{% else %}<span class="dim">not recorded</span>{% endif %}</td></tr>
-  {% endfor %}
-  </table>
-  </div>
-</section>
-
-{% if skipped %}
-<section class="section">
-  <details>
-    <summary>{{ skipped|length }} unavailable check{% if skipped|length != 1 %}s{% endif %}</summary>
-    <div class="scroll">
-    <table>
-    <tr><th>check</th><th>why not</th><th>unlock</th></tr>
-    {% for s in skipped %}
-    <tr><td>{{ s.check_id }}<br><span class="dim">{{ s.title }}</span></td>
-    <td>{{ s.reason }}</td><td class="dim">{{ s.unlock }}</td></tr>
+  {% if s.atlas.categories %}
+  <div class="card" style="margin-top:var(--s-12)">
+    <h3>Subjects you cover, against the map's own balance</h3>
+    <p class="t12 faint">The bar is your share of placed records. The tick is how
+    much of itself the map spends on that subject — the number of neighbourhoods
+    it gave the area when it was built, which is the closest thing the artifact
+    carries to how common the subject was in the reference corpus. The subject
+    names are the atlas's L1 region labels — human captions for the coarse
+    clusters on the map. Read them as approximate geography, not a classifier
+    verdict on each record.</p>
+    <div class="bars">
+    {% for cat in s.atlas.categories %}
+      <div class="bar">
+        <span class="label">{{ cat.name }}</span>
+        <span class="track">
+          <span class="fill h{{ cat.hue }}" style="width:{{ "%.1f"|format(cat.share * 100) }}%"></span>
+          {% if cat.map_share %}<span class="ref" style="left:{{ "%.1f"|format(cat.map_share * 100) }}%" title="the map spends {{ "%.0f%%"|format(cat.map_share * 100) }} of itself here"></span>{% endif %}
+        </span>
+        <span class="v">{{ "%.0f%%"|format(cat.share * 100) }}</span>
+      </div>
     {% endfor %}
-    </table>
     </div>
+    {% if s.atlas.gaps_line %}
+    <p class="t13 muted" style="margin-top:var(--s-20)">{{ s.atlas.gaps_line }}</p>
+    {% if s.atlas.gaps %}
+    <div class="chips">{% for g in s.atlas.gaps %}<span class="badge">{{ g.name }}</span>{% endfor %}</div>
+    {% endif %}
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if s.atlas.off_count %}
+  <details class="card" style="margin-top:var(--s-12)">
+    <summary>Why {{ "{:,}".format(s.atlas.off_count) }} records could not be placed</summary>
+    <p class="t14 muted" style="margin-top:var(--s-12)">{{ s.atlas.off_line }}</p>
+    <div class="scroll"><table><tbody>
+      {% if off.length %}<tr><td class="muted">Length</td><td>off-map median {{ off.length.off_median_chars }} characters, placed median {{ off.length.placed_median_chars }}</td></tr>{% endif %}
+      {% if off.surface and off.surface.placed_whitespace is not none %}<tr><td class="muted">Surface</td><td>{{ "%.0f%%"|format(off.surface.off_whitespace * 100) }} whitespace and {{ "%.0f%%"|format(off.surface.off_non_letter * 100) }} non-letter, against {{ "%.0f%%"|format(off.surface.placed_whitespace * 100) }} and {{ "%.0f%%"|format(off.surface.placed_non_letter * 100) }} for placed records</td></tr>{% endif %}
+      {% if off.score %}<tr><td class="muted">Distance</td><td>median similarity {{ "%.2f"|format(off.score.off_median) }} against a cutoff of {{ "%.2f"|format(off.score.cutoff) }}{% if off.score.near_miss_share %}; {{ "%.0f%%"|format(off.score.near_miss_share * 100) }} were near misses{% endif %}</td></tr>{% endif %}
+      {% for name, st in off_by_dataset %}<tr><td class="muted">{{ name }}</td><td>{{ "%.0f%%"|format(st.rate * 100) }} of its records ({{ "{:,}".format(st.off_atlas) }} of {{ "{:,}".format(st.records) }})</td></tr>{% endfor %}
+    </tbody></table></div>
+    {% if off_examples %}
+    <h4 style="margin-top:var(--s-16)">Furthest from the map</h4>
+    {% for ex in off_examples %}
+    <div class="excerpt"><span class="loc">similarity {{ "%.2f"|format(ex.score) }}</span>{{ ex.excerpt }}</div>
+    {% endfor %}
+    {% endif %}
   </details>
+  {% endif %}
+  {% endif %}
 </section>
 {% endif %}
 
-{% if degradations %}
-<section class="section">
-  <h2>Degraded</h2>
-  <ul class="dim">{% for d in degradations %}<li>{{ d }}</li>{% endfor %}</ul>
+{# ---------------------------------------------------------------- 05 #}
+{% if notes %}
+<section>
+  <div class="sechead"><span class="n">05</span><h2>Worth knowing</h2></div>
+  <p class="secnote">Measured, not wrong. These describe the corpus rather than fault it.</p>
+  {% for p in notes %}
+  <article class="finding info">
+    <div class="ftop"><span class="badge">note</span><h3>{{ p.title }}</h3>
+    <span class="fid">{{ p.check_id }}</span></div>
+    <p class="fdetail">{{ p.detail }}</p>
+  </article>
+  {% endfor %}
 </section>
 {% endif %}
 
-<section class="section">
+{# ---------------------------------------------------------------- 06 #}
+<section>
+  <div class="sechead"><span class="n">{{ "06" if notes else "05" }}</span><h2>The small print</h2></div>
+  <div class="card">
+  {% if skipped %}
+  <details open>
+    <summary>{{ skipped|length }} check{{ "" if skipped|length == 1 else "s" }} could not run, and what would unlock each</summary>
+    <div class="scroll"><table>
+    <thead><tr><th>check</th><th>why not</th><th>unlock</th></tr></thead>
+    <tbody>
+    {% for sk in skipped %}
+    <tr><td>{{ sk.title }}<br><span class="t11 faint mono">{{ sk.check_id }}</span></td>
+    <td class="muted">{{ sk.reason }}</td><td><code>{{ sk.unlock }}</code></td></tr>
+    {% endfor %}
+    </tbody></table></div>
+  </details>
+  {% endif %}
+  {% if degradations %}
   <details>
-    <summary>Reproducibility metadata</summary>
-    <div class="scroll">
-    <table>
+    <summary>{{ degradations|length }} thing{{ "" if degradations|length == 1 else "s" }} fell back rather than failing</summary>
+    <ul class="muted t13" style="margin:var(--s-8) 0 0 var(--s-20)">{% for d in degradations %}<li>{{ d }}</li>{% endfor %}</ul>
+  </details>
+  {% endif %}
+  <details>
+    <summary>How to reproduce this scan</summary>
+    <div class="scroll"><table><tbody>
     {% for k, v in provenance %}
-    <tr><td class="dim">{{ k }}</td><td>{{ v }}</td></tr>
+    <tr><td class="muted">{{ k }}</td><td class="mono">{{ v }}</td></tr>
     {% endfor %}
-    </table>
-    </div>
+    </tbody></table></div>
   </details>
+  </div>
 </section>
 
 <footer>
-dropoutt {{ pipeline_version }} · fingerprint <span>{{ fingerprint_id }}</span> ·
-{{ "{:,}".format(records) }} records in {{ "%.1f"|format(elapsed) }}s<br>
-{% if includes_evidence %}
-This report may contain excerpts of your data, including anything sensitive that the scan
-found. Personal data matched by the PII check is masked, but surrounding text is not.
-{% else %}
-Record excerpts and source locations were omitted with <span class="mono">--no-evidence</span>.
-Aggregate metadata, dataset names and the scan root remain.
-{% endif %}
+  <p>dropoutt {{ pipeline_version }} · fingerprint {{ fingerprint_id }} ·
+  {{ "{:,}".format(s.records) }} records in {{ "%.1f"|format(s.elapsed) }}s{% if shards > 1 %} across {{ shards }} shards{% endif %}.
+  {% if not s.blocking_enabled %}No pass-or-fail verdict was issued because no
+  target was declared — pass <code>--target sft</code> to turn findings into an
+  exit code.{% endif %}</p>
+  <p>Findings are structural observations about the files. No measured effect on
+  model quality is attached to acting on any of them.</p>
+  <p>{% if includes_evidence %}This file quotes your data, including anything sensitive the scan
+  found. Personal data matched by the PII check is masked; surrounding text is not. Re-run with
+  <code>--no-evidence</code> before sharing it outside the dataset's trust boundary.
+  {% else %}Record excerpts and source locations were omitted with <code>--no-evidence</code>.
+  Aggregate numbers, dataset names and the scan root remain.{% endif %}</p>
 </footer>
 </div>
 """
 
 
-def _shape_note(conc: float, effective: float, total: int) -> tuple[str, str]:
-    shape = "specialised" if conc < 0.45 else ("broad" if conc > 0.75 else "mixed")
-    if shape == "specialised":
-        note = (f"{conc:.0%} of even coverage — specialised. Right for a single-task "
-                f"set; too narrow for a pretraining mixture")
-    elif shape == "broad":
-        note = (f"{conc:.0%} of even coverage — broad. Right for a general corpus; "
-                f"unusually scattered for a single-task set")
-    else:
-        note = (f"{conc:.0%} of even coverage — mixed, covering roughly "
-                f"{effective / total:.0%} of the atlas evenly")
-    return shape, note
-
-
-_FIT_NOTE = {
-    "good": "The atlas describes this corpus well",
-    "partial": "The atlas describes most of this corpus",
-    "poor": "Most of this corpus sits outside the atlas map",
-}
-
-
-def _coverage_view(
-    cov: dict | None,
-    *,
-    atlas: Any = None,
-    region_examples: dict | None = None,
-    off_examples: list[dict] | None = None,
-    include_evidence: bool = True,
-) -> dict | None:
-    """Flatten a coverage facet into what the template needs."""
-    if not cov:
-        return None
-
-    from ..atlas.compare import (  # noqa: PLC0415
-        category_labels,
-        category_names,
-        concentration,
-        unusable_reason,
-    )
-
-    labels = category_labels()
-
-    if cov.get("status") not in ("ok", "none placed"):
-        return {"withheld": True, "reason": unusable_reason(cov),
-                "version": cov.get("atlas_version")}
-
-    off_detail = cov.get("off_atlas_detail") or {}
-    fit = cov.get("fit")
-    off_view = {
-        "count": int(cov.get("off_atlas", 0)),
-        "rate": float(cov.get("off_atlas_rate", 0.0)),
-        "fit": fit,
-        "fit_note": _FIT_NOTE.get(str(fit), ""),
-        "diagnosis": off_detail.get("diagnosis"),
-        "score": off_detail.get("score"),
-        "length": off_detail.get("length"),
-        "coherence": off_detail.get("coherence"),
-        "surface": off_detail.get("surface"),
-        "nearest": off_detail.get("nearest_regions") or [],
-        "by_language": sorted(
-            ((k, v) for k, v in (off_detail.get("by_language") or {}).items()),
-            key=lambda kv: -kv[1]["rate"],
-        )[:5],
-        "by_dataset": sorted(
-            ((k, v) for k, v in (off_detail.get("by_dataset") or {}).items()),
-            key=lambda kv: -kv[1]["rate"],
-        )[:5],
-    }
-
-    if cov.get("status") == "none placed":
-        return {"withheld": False, "none_placed": True,
-                "version": cov.get("atlas_version"),
-                "records": int(cov.get("records", 0)),
-                "placed": 0, "off_atlas": off_view,
-                "off_atlas_rate": float(cov.get("off_atlas_rate", 0.0)),
-                "occupied": 0, "total": cov.get("regions_total", 0),
-                "concentration": None, "shape": None, "shape_note": None,
-                "l0_accuracy": None, "too_short": int(cov.get("excluded_too_short", 0)),
-                "points": [], "categories": [], "regions": [], "gaps": [],
-                "off_examples": []}
-
-    names = category_names()
-    raw = cov.get("by_category") or {}
-    placed = sum(int(v) for v in raw.values()) or 1
-    counts = {int(region): int(count) for region, count in
-              (cov.get("region_counts") or {}).items()}
-    conc = concentration(cov)
-    shape = shape_note = None
-    if conc is not None:
-        shape, shape_note = _shape_note(
-            conc,
-            float(cov.get("effective_regions") or 0.0),
-            int(cov.get("regions_total") or 1),
-        )
-
-    examples = region_examples or {}
-    points: list[dict[str, Any]] = []
-    try:
-        if atlas is None:
-            from ..atlas import load_bundled  # noqa: PLC0415
-
-            atlas = load_bundled()
-        if atlas is not None and atlas.meta.get("version") == cov.get("atlas_version"):
-            xs = atlas.coords[:, 0]
-            ys = atlas.coords[:, 1]
-            x_span = float(xs.max() - xs.min()) or 1.0
-            y_span = float(ys.max() - ys.min()) or 1.0
-            max_count = max(counts.values(), default=1)
-            ranked_cats = [int(c) for c, _ in
-                           sorted(raw.items(), key=lambda kv: -int(kv[1]))]
-            palette = {cid: i for i, cid in enumerate(ranked_cats[:6])}
-            for region in range(atlas.n_regions):
-                count = counts.get(region, 0)
-                radius = 1.8 if not count else 3.0 + 8.0 * (count / max_count) ** 0.5
-                cid = int(atlas.region_category[region])
-                points.append({
-                    "id": region,
-                    "x": round(18.0 + 684.0 * float(xs[region] - xs.min()) / x_span, 1),
-                    "y": round(18.0 + 234.0 * float(ys.max() - ys[region]) / y_span, 1),
-                    "radius": round(radius, 1),
-                    "records": count,
-                    "hue": palette.get(cid, 6) if count else 6,
-                    "category": names.get(cid, f"category {cid}"),
-                    "terms": (
-                        atlas.region_terms[region]
-                        if region < len(atlas.region_terms) else ""
-                    ),
-                })
-    except Exception:
-        points = []
-
-    region_rows = []
-    for r in (cov.get("top_regions") or [])[:10]:
-        region = int(r["region"])
-        rows = examples.get(region) or examples.get(str(region)) or []
-        yours = ""
-        if include_evidence and rows:
-            yours = safe_snippet(str(rows[0].get("excerpt", "")).replace("\n", " "), 120)
-        region_rows.append({
-            "id": region,
-            "records": int(r["records"]),
-            "share": float(r.get("share", 0.0)),
-            "terms": str(r.get("terms", "")),
-            "yours": yours,
-        })
-
-    overlap = []
-    for p in ((cov.get("by_dataset_regions") or {}).get("most_alike") or [])[:5]:
-        sim = float(p["similarity"])
-        verdict = ("same ground" if sim >= 0.8 else
-                   "partly overlapping" if sim >= 0.5 else "distinct")
-        overlap.append({**p, "verdict": verdict})
-
-    off_ex = []
-    if include_evidence and off_examples:
-        for ex in off_examples[:5]:
-            off_ex.append({
-                "score": float(ex.get("score", 0)),
-                "excerpt": safe_snippet(str(ex.get("excerpt", "")).replace("\n", " "), 140),
-            })
-
-    return {
-        "withheld": False,
-        "none_placed": False,
-        "version": cov.get("atlas_version"),
-        "occupied": cov.get("regions_occupied", 0),
-        "total": cov.get("regions_total", 0),
-        "records": int(cov.get("records", 0)),
-        "placed": int(cov.get("placed", placed)),
-        "off_atlas_rate": cov.get("off_atlas_rate", 0.0),
-        "off_atlas": off_view,
-        "concentration": conc,
-        "shape": shape,
-        "shape_note": shape_note,
-        "l0_accuracy": cov.get("l0_holdout_accuracy"),
-        "too_short": int(cov.get("excluded_too_short", 0)),
-        "points": points,
-        "effective": cov.get("effective_regions"),
-        "categories": [
-            {"name": names.get(int(cid), f"category {cid}"),
-             "share": int(n) / placed,
-             "hue": i if i < 6 else 6}
-            for i, (cid, n) in enumerate(
-                sorted(raw.items(), key=lambda kv: -int(kv[1]))[:8])
-        ],
-        "categories_total": int(cov.get("categories_total", 0)),
-        "gaps": [
-            {"name": labels.get(int(g["category"]), f"category {g['category']}"),
-             "regions": int(g["regions"]), "records": int(g["records"]),
-             "terms": str(g.get("terms") or "")}
-            for g in (cov.get("coverage_gaps") or [])[:10]
-        ],
-        "dataset_overlap": overlap,
-        "regions": region_rows,
-        "off_examples": off_ex,
-    }
+def _tokens_short(count: int | None) -> str:
+    if not count:
+        return "—"
+    if count >= 1_000_000_000:
+        return f"{count / 1e9:.1f}B"
+    if count >= 1_000_000:
+        return f"{count / 1e6:.1f}M"
+    if count >= 1_000:
+        return f"{count / 1e3:.0f}k"
+    return f"{count:,}"
 
 
 def render(
@@ -635,75 +507,82 @@ def render(
     budget: Any = None,
     *,
     include_evidence: bool = True,
+    summary: ScanSummary | None = None,
 ) -> str:
     env = Environment(autoescape=True, undefined=StrictUndefined,
                       trim_blocks=True, lstrip_blocks=True)
-    tpl = env.from_string(_TEMPLATE)
+    template = env.from_string(_TEMPLATE)
+    s = summary or build(result, budget=budget, include_evidence=include_evidence)
 
-    findings = deepcopy(sorted(
-        result.findings,
-        key=lambda f: ({Severity.BLOCKING: 0, Severity.WARNING: 1, Severity.INFO: 2}
-                       .get(f.severity, 3), f.check_id),
-    ))
-    for f in findings:
-        if not include_evidence:
-            f.evidence = []
-            continue
-        for ev in f.evidence:
+    for problem in (*s.problems, *s.notes):
+        for ev in problem.evidence:
             ev.excerpt = safe_snippet(ev.excerpt)
             if ev.partner_excerpt:
                 ev.partner_excerpt = safe_snippet(ev.partner_excerpt)
 
-    overlap = []
-    for f in findings:
-        if f.check_id == "T1-OVERLAP-001":
-            overlap = f.data.get("matrix", [])[:40]
-
-    budget_rows = []
-    if budget is not None and budget.estimates:
-        for e in sorted(budget.estimates, key=lambda x: x.total_tokens_est):
-            if e.failed:
-                continue
-            budget_rows.append({
-                "name": e.name,
-                "total": e.total_tokens_est,
-                "tpw": e.tokens_per_word,
-                "premium": budget.premium_vs_cheapest(e),
-            })
+    overlap: list[dict] = []
+    for problem in s.problems + s.notes:
+        if problem.check_id == "T1-OVERLAP-001":
+            for finding in result.findings:
+                if finding.check_id == "T1-OVERLAP-001":
+                    overlap = finding.data.get("matrix", [])[:20]
 
     seen: set[str] = set()
     skipped = []
-    for s in result.skipped:
-        if s.reason in seen:
+    for entry in result.skipped:
+        if entry.reason in seen:
             continue
-        seen.add(s.reason)
-        skipped.append(s)
+        seen.add(entry.reason)
+        skipped.append(entry)
+
+    off = (s.atlas.off_detail if s.atlas else {}) or {}
+    off_examples = []
+    if include_evidence and s.atlas:
+        for ex in s.atlas.off_examples[:4]:
+            off_examples.append({
+                "score": float(ex.get("score", 0.0)),
+                "excerpt": safe_snippet(
+                    str(ex.get("excerpt", "")).replace("\n", " "), 160
+                ),
+            })
+
+    has_tokenizer = result.ctx.tokenizer is not None
+    token_note = ""
+    if s.tokens:
+        token_note = "counted exactly" if has_tokenizer else (
+            f"estimated, ±{s.token_margin * 100:.2f}%" if s.token_margin
+            else "estimated from a sample"
+        )
 
     root = result.ctx.root
-    return tpl.render(
-        css=_CSS,
-        includes_evidence=include_evidence,
-        coverage=_coverage_view(
-            result.ctx.stats.get("atlas_coverage"),
-            atlas=result.ctx.atlas,
-            region_examples=result.ctx.stats.get("atlas_region_examples"),
-            off_examples=result.ctx.stats.get("atlas_off_examples"),
-            include_evidence=include_evidence,
-        ),
+    return template.render(
+        css=stylesheet(),
+        logo=LOGO_SVG,
+        s=s,
+        c=s.composition,
+        problems=s.problems,
+        notes=s.notes,
         root=root,
-        root_short=root.split("/")[-1] or root,
-        records=result.records_scanned,
+        root_short=root.rstrip("/").split("/")[-1] or root,
+        tokens_short=_tokens_short(s.tokens),
+        token_note=token_note,
         datasets=fp.datasets,
-        findings=findings,
         overlap=overlap,
-        budget=budget_rows,
-        has_tokenizer=result.ctx.tokenizer is not None,
+        budget=budget_rows(budget),
+        budget_method=budget_method(budget, exact=has_tokenizer),
+        budget_notes=list(getattr(budget, "notes", []) or []),
+        has_tokenizer=has_tokenizer,
         skipped=skipped,
         degradations=result.ctx.degradations,
-        profile=result.ctx.profile.value,
-        blocking_enabled=result.ctx.blocking_enabled,
         provenance=sorted(fp.provenance.items()),
         fingerprint_id=fp.fingerprint_id,
         pipeline_version=fp.pipeline_version,
-        elapsed=result.elapsed,
+        includes_evidence=include_evidence,
+        shards=int(result.ctx.stats.get("shards", 1) or 1),
+        off=off,
+        off_by_dataset=sorted(
+            ((k, v) for k, v in (off.get("by_dataset") or {}).items()),
+            key=lambda kv: -kv[1]["rate"],
+        )[:4],
+        off_examples=off_examples,
     )

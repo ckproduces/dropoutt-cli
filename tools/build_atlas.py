@@ -902,11 +902,22 @@ def main() -> int:
     print("\nLabelling regions ...")
     t0 = time.time()
     region_terms = label_regions(texts, l2_assign, C.shape[0])
-    # L1 labels from members of each L1
+    # L1 bag-of-words captions from members; human names come from curated
+    # config when present so report subject areas stay readable across rebuilds.
     l1_terms = []
     for cat in range(args.l1):
         members = [texts[i] for i in range(len(texts)) if l1_labels_idx[i] == cat]
         l1_terms.append(top_terms(members) if members else f"region-{cat}")
+    l1_labels = list(l1_terms)
+    curated_path = Path(__file__).resolve().parent.parent / (
+        "src/dropoutt/data/atlas/l1_labels_v2.json"
+    )
+    if curated_path.exists():
+        curated = json.loads(curated_path.read_text(encoding="utf-8"))
+        for i in range(args.l1):
+            name = curated.get("labels", {}).get(str(i))
+            if name:
+                l1_labels[i] = name
     timings["label_s"] = time.time() - t0
 
     # -- Calibration -------------------------------------------------------
@@ -1074,7 +1085,7 @@ def main() -> int:
         emb,
         l1_labels_idx,
         l1_centroids,
-        l1_terms,
+        l1_labels,
         tags,
         source_ids,
         formats,
@@ -1123,7 +1134,12 @@ def main() -> int:
         "cluster_diagnostic_status": diagnostic_status,
         "single_source_cells": single_source_cells,
         "region_terms": region_terms,
-        "l1_labels": l1_terms,
+        "l1_labels": l1_labels,
+        "l1_terms": l1_terms,
+        "l1_labels_source": (
+            "curated:l1_labels_v2.json"
+            if l1_labels != l1_terms else "tfidf_terms"
+        ),
         "format_breakdown": dict(fmt_break),
         "manifest": manifest,
         "timings_s": timings,

@@ -115,6 +115,21 @@ def test_pipeline_hash_is_stable():
     assert len(pipeline_hash()) == 32
 
 
+def test_bundled_v2_subject_areas_have_human_labels():
+    from dropoutt.atlas import load_bundled
+    from dropoutt.atlas.compare import category_labels
+
+    atlas = load_bundled()
+    assert atlas is not None
+    assert atlas.meta.get("version") == "atlas-lite-v2"
+    labels = category_labels(atlas)
+    assert len(labels) == atlas.n_l1 == 50
+    assert labels[1] == "Legal proceedings and court cases"
+    assert labels[34] == "Python programming"
+    assert "," not in labels[0]
+    assert atlas.meta.get("l1_terms")
+
+
 class _Encoding:
     def __init__(self, ids):
         self.ids = ids

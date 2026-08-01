@@ -34,15 +34,16 @@ def category_names() -> dict[int, str]:
     return {int(c["id"]): str(c["key"]) for c in taxonomy()["categories"]}
 
 
-def category_labels() -> dict[int, str]:
+def category_labels(atlas: Any | None = None) -> dict[int, str]:
     """Coarse-region id to its human-readable label.
 
-    Prefers L1 labels from the bundled atlas (v1 hierarchy). Falls back to the
-    hand-designed taxonomy.json used by legacy artifacts.
+    Prefers L1 labels from the given atlas (or the bundled one). Falls back to
+    the hand-designed taxonomy.json used by legacy artifacts.
     """
-    from .apply import load_bundled
+    if atlas is None:
+        from .apply import load_bundled
 
-    atlas = load_bundled()
+        atlas = load_bundled()
     if atlas is not None and atlas.l1_labels:
         return {i: label for i, label in enumerate(atlas.l1_labels)}
     return {int(c["id"]): str(c["label"]) for c in taxonomy()["categories"]}
