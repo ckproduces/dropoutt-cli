@@ -116,9 +116,23 @@ class Atlas:
     norm: NormConstants | None = None
     #: Token-id → log unigram probability for SIF pooling. Empty dict = mean pool.
     token_log_prob: dict[int, float] = field(default_factory=dict)
-    #: Per-cell distance calibration: shape (n_regions, 5) for p10..p90 of
-    #: (1 - cosine) on the reference members of that cell.
+    #: Per-cell distance calibration quantiles of (1 - cosine). Percentile
+    #: positions are carried in ``meta["calibration"]["distance_percentiles"]``.
     distance_refs: np.ndarray | None = None
+    #: Direct member count behind each distance reference. Sparse cells may
+    #: borrow their L1 parent's residual distribution during the build.
+    distance_refs_support: np.ndarray | None = None
+    distance_refs_reliable: np.ndarray | None = None
+    #: Build support for source/topic/language inspection and co-occurrence gaps.
+    cell_source_counts: np.ndarray | None = None
+    cell_topic_counts: np.ndarray | None = None
+    cell_language_counts: np.ndarray | None = None
+    cooccurrence_ids: np.ndarray | None = None
+    cooccurrence_scores: np.ndarray | None = None
+    #: Eight radial member prototypes per cell preserve within-cell breadth.
+    prototype_vectors: np.ndarray | None = None
+    prototype_record_ids: np.ndarray | None = None
+    prototype_distances: np.ndarray | None = None
 
     @property
     def n_regions(self) -> int:
@@ -128,7 +142,7 @@ class Atlas:
     def n_l1(self) -> int:
         if self.l1_centroids is not None:
             return int(self.l1_centroids.shape[0])
-        return int(len({int(c) for c in self.region_category}))
+        return len({int(c) for c in self.region_category})
 
     @property
     def dim(self) -> int:
@@ -237,6 +251,56 @@ class Atlas:
             token_log_prob=token_log_prob,
             distance_refs=(
                 data["distance_refs"] if "distance_refs" in data.files else None
+            ),
+            distance_refs_support=(
+                data["distance_refs_support"]
+                if "distance_refs_support" in data.files
+                else None
+            ),
+            distance_refs_reliable=(
+                data["distance_refs_reliable"]
+                if "distance_refs_reliable" in data.files
+                else None
+            ),
+            cell_source_counts=(
+                data["cell_source_counts"]
+                if "cell_source_counts" in data.files
+                else None
+            ),
+            cell_topic_counts=(
+                data["cell_topic_counts"]
+                if "cell_topic_counts" in data.files
+                else None
+            ),
+            cell_language_counts=(
+                data["cell_language_counts"]
+                if "cell_language_counts" in data.files
+                else None
+            ),
+            cooccurrence_ids=(
+                data["cooccurrence_ids"]
+                if "cooccurrence_ids" in data.files
+                else None
+            ),
+            cooccurrence_scores=(
+                data["cooccurrence_scores"]
+                if "cooccurrence_scores" in data.files
+                else None
+            ),
+            prototype_vectors=(
+                data["prototype_vectors"]
+                if "prototype_vectors" in data.files
+                else None
+            ),
+            prototype_record_ids=(
+                data["prototype_record_ids"]
+                if "prototype_record_ids" in data.files
+                else None
+            ),
+            prototype_distances=(
+                data["prototype_distances"]
+                if "prototype_distances" in data.files
+                else None
             ),
         )
 
@@ -804,7 +868,7 @@ def bundled_atlas_path() -> Path | None:
     from importlib import resources
 
     # Prefer v1; fall back to v0 so an incomplete install still runs.
-    for name in ("atlas-lite-v1.npz", "atlas-lite-v0.npz"):
+    for name in ("atlas-lite-v2.npz", "atlas-lite-v1.npz", "atlas-lite-v0.npz"):
         try:
             ref = resources.files("dropoutt.data") / "atlas" / name
             path = Path(str(ref))

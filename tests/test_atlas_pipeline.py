@@ -11,7 +11,7 @@ from dropoutt.atlas.chunk import chunk_text
 from dropoutt.atlas.embed import Embedder
 from dropoutt.atlas.extract import detect_format, extract_text
 from dropoutt.atlas.normalize import fit_norm
-from dropoutt.atlas.pipeline import pipeline_hash
+from dropoutt.atlas.pipeline import pipeline_hash, population_crosswalk
 
 
 def test_json_extraction_keeps_content_drops_keys():
@@ -174,6 +174,22 @@ def test_weighted_encode_batch_tokenizes_each_text_once():
     assert model.tokenizer.calls == 1
 
 
+def test_population_crosswalk_uses_shared_members_not_coordinates():
+    previous = np.array([0, 0, 0, 1, 1, 1], dtype=np.int32)
+    current = np.array([0, 0, 1, 2, 2, 2], dtype=np.int32)
+
+    result = population_crosswalk(
+        current,
+        previous,
+        n_current=3,
+        n_previous=2,
+        previous_version="old",
+    )
+
+    assert result["previous_version"] == "old"
+    assert result["cells"][2]["previous_cell_id"] == 1
+    assert result["cells"][2]["relationship"] == "unchanged"
+    assert result["cells"][2]["population_jaccard"] == 1.0
 def test_v1_loader_reads_norm_and_idf(tmp_path):
     dim, n_l2, n_l1 = 8, 12, 3
     rng = np.random.default_rng(2)
@@ -195,6 +211,16 @@ def test_v1_loader_reads_norm_and_idf(tmp_path):
         idf_token_ids=np.array([1, 2, 3], dtype=np.int32),
         idf_log_probs=np.array([-1.0, -2.0, -3.0], dtype=np.float32),
         distance_refs=np.zeros((n_l2, 5), dtype=np.float32),
+        distance_refs_support=np.arange(n_l2, dtype=np.int32),
+        distance_refs_reliable=np.arange(n_l2) >= 4,
+        cell_source_counts=np.ones((n_l2, 2), dtype=np.int32),
+        cell_topic_counts=np.ones((n_l2, 3), dtype=np.int32),
+        cell_language_counts=np.ones((n_l2, 2), dtype=np.int32),
+        cooccurrence_ids=np.zeros((n_l2, 2), dtype=np.int32),
+        cooccurrence_scores=np.ones((n_l2, 2), dtype=np.float32),
+        prototype_vectors=np.ones((n_l2, 2, dim), dtype=np.float16),
+        prototype_record_ids=np.full((n_l2, 2), b"abc", dtype="S16"),
+        prototype_distances=np.ones((n_l2, 2), dtype=np.float32),
         probe_coef=np.zeros((0, dim), dtype=np.float32),
         probe_intercept=np.zeros(0, dtype=np.float32),
         probe_classes=np.zeros(0, dtype=np.int32),
@@ -211,5 +237,9 @@ def test_v1_loader_reads_norm_and_idf(tmp_path):
     assert atlas.token_log_prob[2] == -2.0
     assert atlas.n_l1 == 3
     assert atlas.pipeline_hash == "abc"
+    assert atlas.distance_refs_support.tolist() == list(range(n_l2))
+    assert int(atlas.distance_refs_reliable.sum()) == n_l2 - 4
+    assert atlas.cell_source_counts.shape == (n_l2, 2)
+    assert atlas.prototype_vectors.shape == (n_l2, 2, dim)
     cats = atlas.categorize(centroids[:3])
     assert cats.shape == (3,)
