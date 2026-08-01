@@ -113,13 +113,11 @@ SOURCES: list[tuple[str, str | None, str, tuple[str, ...], str, int, str]] = [
     # -- legal / finance / admin (Common Corpus-shaped region) --------------
     ("gbharti/finance-alpaca", None, "train", ("instruction", "output"), "legal_finance", 5000, "en"),
     ("albertvillanova/legal_contracts", None, "train", ("text",), "legal_finance", 4000, "en"),
-    ("lex_glue", "ecthr_a", "train", ("text",), "legal_finance", 4000, "en"),
+    ("coastalcph/lex_glue", "ecthr_a", "train", ("text",), "legal_finance", 4000, "en"),
     # -- scientific (arXiv, PubMed; peS2o script-loader is retired on Hub) --
     ("CShorten/ML-ArXiv-Papers", None, "train", ("title", "abstract"), "scientific", 8000, "en"),
     ("qiaojin/PubMedQA", "pqa_labeled", "train", ("question", "long_answer"), "scientific", 1000, "en"),
-    ("camel-ai/physics", None, "train", ("message_1", "message_2"), "scientific", 3000, "en"),
-    ("camel-ai/biology", None, "train", ("message_1", "message_2"), "scientific", 3000, "en"),
-    ("bigbio/med_qa", "med_qa_en_source", "train", ("question", "answer"), "scientific", 2000, "en"),
+    ("BEE-spoke-data/peS2o-100k_en-xlong", None, "train", ("text",), "scientific", 20000, "en"),
     # -- dialogue / forum (Q&A register) ------------------------------------
     ("HuggingFaceH4/stack-exchange-preferences", None, "train", ("question",), "dialogue", 8000, "en"),
     ("rajpurkar/squad", None, "train", ("context", "question"), "dialogue", 6000, "en"),
@@ -215,6 +213,27 @@ def _load_source_dataset(
     split: str,
 ):
     """Load a source without invoking retired Hub dataset scripts."""
+
+    direct_parquet = {
+        ("HuggingFaceFW/fineweb", "sample-10BT"): (
+            "sample-10BT/train/0000.parquet"
+        ),
+        ("albertvillanova/legal_contracts", None): (
+            "default/partial-train/0000.parquet"
+        ),
+    }
+    direct_path = direct_parquet.get((hf_id, config))
+    if direct_path:
+        url = (
+            f"https://huggingface.co/datasets/{hf_id}/"
+            f"resolve/refs%2Fconvert%2Fparquet/{direct_path}"
+        )
+        return load_dataset(
+            "parquet",
+            data_files={split: [url]},
+            split=split,
+            streaming=True,
+        )
 
     if hf_id == "bigcode/the-stack-smol-xs":
         if not config:
@@ -747,6 +766,7 @@ def main() -> int:
     # Temporary L2 for cosine dedup only
     tmp = emb_raw / (np.linalg.norm(emb_raw, axis=1, keepdims=True) + 1e-9)
     keep = semantic_dedup(tmp, SEMANTIC_COSINE)
+    semantic_keep = keep.copy()
     emb_raw = emb_raw[keep]
     texts = [t for t, k in zip(texts, keep, strict=True) if k]
     tags = [t for t, k in zip(tags, keep, strict=True) if k]
@@ -926,6 +946,7 @@ def main() -> int:
         previous_embedder = embedder.bind_idf(previous_atlas.token_log_prob)
         previous_raw = previous_embedder.encode_tokenized(tokenized)
         _, _, previous_nearest = previous_atlas.assign_full(previous_raw)
+        previous_nearest = previous_nearest[semantic_keep]
         crosswalk = population_crosswalk(
             assign,
             previous_nearest,
