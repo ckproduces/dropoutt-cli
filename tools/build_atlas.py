@@ -214,10 +214,10 @@ def _load_source_dataset(
 ):
     """Load a source without invoking retired Hub dataset scripts."""
 
+    if hf_id == "HuggingFaceFW/fineweb" and config == "sample-10BT":
+        return _dataset_viewer_rows(hf_id, config, split)
+
     direct_parquet = {
-        ("HuggingFaceFW/fineweb", "sample-10BT"): (
-            "sample-10BT/train/0000.parquet"
-        ),
         ("albertvillanova/legal_contracts", None): (
             "default/partial-train/0000.parquet"
         ),
@@ -252,6 +252,42 @@ def _load_source_dataset(
             streaming=True,
         )
     return load_dataset(hf_id, config, split=split, streaming=True)
+
+
+def _dataset_viewer_rows(
+    hf_id: str,
+    config: str,
+    split: str,
+    *,
+    page_size: int = 100,
+):
+    """Stream bounded pages from the Hub viewer when 2GB parquet stalls."""
+
+    from urllib.parse import urlencode
+    from urllib.request import urlopen
+
+    offset = 0
+    while True:
+        query = urlencode({
+            "dataset": hf_id,
+            "config": config,
+            "split": split,
+            "offset": offset,
+            "length": page_size,
+        })
+        with urlopen(
+            f"https://datasets-server.huggingface.co/rows?{query}",
+            timeout=30,
+        ) as response:
+            payload = json.loads(response.read())
+        rows = payload.get("rows", [])
+        if not rows:
+            return
+        for item in rows:
+            row = item.get("row")
+            if isinstance(row, dict):
+                yield row
+        offset += len(rows)
 
 
 def collect(sources, verbose: bool = True, per_source_seconds: float = 90.0):
@@ -523,6 +559,33 @@ def cluster_purity(assignments: np.ndarray, labels: list[str]) -> dict[str, floa
         "macro": float(np.mean(macro)) if macro else 0.0,
         "micro": majority / max(len(y), 1),
     }
+
+
+def conditional_source_ami(
+    assignments: np.ndarray,
+    topics: list[str],
+    languages: list[str],
+    sources: list[str],
+) -> float:
+    """Source leakage left after holding topic and language constant."""
+
+    from sklearn.metrics import adjusted_mutual_info_score
+
+    topic_arr = np.asarray(topics, dtype=object)
+    language_arr = np.asarray(languages, dtype=object)
+    source_arr = np.asarray(sources, dtype=object)
+    weighted = 0.0
+    eligible = 0
+    for topic, language in sorted(set(zip(topics, languages, strict=True))):
+        mask = (topic_arr == topic) & (language_arr == language)
+        n = int(mask.sum())
+        if n < 100 or len(set(source_arr[mask].tolist())) < 2:
+            continue
+        weighted += n * float(
+            adjusted_mutual_info_score(source_arr[mask], assignments[mask])
+        )
+        eligible += n
+    return weighted / max(eligible, 1)
 
 
 def top_distribution(
@@ -976,14 +1039,21 @@ def main() -> int:
     source_purity = cluster_purity(assign, source_ids)
     topic_nmi = float(normalized_mutual_info_score(tags, assign))
     source_nmi = float(normalized_mutual_info_score(source_ids, assign))
+    source_ami_conditioned = conditional_source_ami(
+        assign, tags, langs, source_ids
+    )
     source_counts_per_cell = [
         len(set(np.asarray(source_ids, dtype=object)[assign == r].tolist()))
         for r in range(C.shape[0])
     ]
     single_source_cells = sum(n <= 1 for n in source_counts_per_cell)
-    diagnostic_status = (
-        "topic-dominant" if topic_nmi >= source_nmi else "source-dominant-review"
-    )
+    diagnostic_status = "topic-dominant"
+    if (
+        single_source_cells
+        or source_purity["micro"] >= topic_purity["micro"]
+        or source_ami_conditioned > 0.25
+    ):
+        diagnostic_status = "source-dominant-review"
     print(
         "  L2 topic purity "
         f"{topic_purity['macro']:.3f} macro / {topic_purity['micro']:.3f} micro"
@@ -995,6 +1065,7 @@ def main() -> int:
     )
     print(
         f"  NMI topic={topic_nmi:.3f}, source={source_nmi:.3f}; "
+        f"conditional source AMI={source_ami_conditioned:.3f}; "
         f"{single_source_cells} single-source cells; {diagnostic_status}"
     )
 
@@ -1048,6 +1119,7 @@ def main() -> int:
         "region_source_purity": source_purity,
         "topic_cluster_nmi": topic_nmi,
         "source_cluster_nmi": source_nmi,
+        "source_cluster_ami_conditioned_on_topic_language": source_ami_conditioned,
         "cluster_diagnostic_status": diagnostic_status,
         "single_source_cells": single_source_cells,
         "region_terms": region_terms,
@@ -1135,6 +1207,7 @@ def main() -> int:
         "source_purity": source_purity,
         "topic_cluster_nmi": topic_nmi,
         "source_cluster_nmi": source_nmi,
+        "source_cluster_ami_conditioned_on_topic_language": source_ami_conditioned,
         "single_source_cells": single_source_cells,
         "mean_sources_per_cell": float(np.mean(source_counts_per_cell)),
         "calibration_direct_support": {
