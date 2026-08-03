@@ -58,6 +58,10 @@ library imports — under `HF_HUB_OFFLINE` with a cold cache every tokenizer fal
 back to the character-ratio stand-in, so the measurement under test was never
 computed and a bare `return` reported that as a pass. They now skip.
 
+A third was Windows-only: the markdown report test names its dataset `a|b`,
+after the character that breaks a table cell, and Windows forbids `|` in a path.
+The hostile name is now dropped on Windows alone rather than the whole test.
+
 ### A cell's density is now an estimate, not a quotient
 
 `records / expected` is unusable in the tail, and the tail is most of the map.

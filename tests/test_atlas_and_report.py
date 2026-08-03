@@ -7,6 +7,7 @@ the real loader, so they exercise the actual code path without a network call.
 from __future__ import annotations
 
 import json
+import os
 
 import numpy as np
 import pytest
@@ -794,7 +795,11 @@ def test_the_markdown_report_is_pasteable_and_honours_no_evidence(tmp_path):
     from dropoutt.report import markdown as md_report
     from dropoutt.runner import scan
 
-    data = tmp_path / "a|b"
+    # The dataset is named for the one character that breaks a markdown table.
+    # Windows forbids `|` anywhere in a path, so there the rest of this test
+    # still runs and only that hostile name is dropped — the escaping it
+    # exercises is in the renderer, which does not vary by platform.
+    data = tmp_path / ("ab" if os.name == "nt" else "a|b")
     data.mkdir()
     planted = "sk-live-DEADBEEFdeadbeef01234567"
     (data / "train.jsonl").write_text(
