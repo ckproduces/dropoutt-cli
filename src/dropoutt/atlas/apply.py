@@ -642,13 +642,16 @@ class Atlas:
             "regions_total": self.n_regions,
             "region_entropy": round(entropy, 4),
             "max_region_entropy": round(float(np.log(self.n_regions)), 4),
-            # The number that makes "34 of 258 occupied" readable. Occupancy
-            # counts a region the same whether it holds one record or a third of
-            # the corpus; this is the count of *evenly used* regions the corpus
-            # is as spread out as. A corpus touching 34 regions with 80% of its
-            # mass in two of them has an effective count near 3, and the gap
-            # between the two numbers is itself the finding.
-            "effective_regions": round(float(np.exp(entropy)), 2),
+            # Each occupied cell contributes min(1, density_ratio): parity is a
+            # full score, thinner coverage a fraction, over-representation does
+            # not add more than one. Entropy of the mass used to shrink this
+            # when a cell was heavy, which punished breadth for having a peak.
+            # Without region sizes there is no density; each occupied cell is 1.
+            "effective_regions": round(
+                float(sum(min(1.0, float(v)) for v in density.values()))
+                if density else float(nonzero),
+                2,
+            ),
             #: Shares over `placed`, not over `records`.
             "by_category": cat_counts,
             # The full histogram, sparse. `top_regions` below is a display

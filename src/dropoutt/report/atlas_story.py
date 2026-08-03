@@ -62,6 +62,20 @@ class Place:
 
 
 @dataclass
+class Imbalance:
+    """One cell far from map density, with an example and a cut/grow cue."""
+
+    region: int
+    ratio: float
+    records: int
+    share: float
+    yours: str
+    area: str
+    #: ``cut`` when denser than the map, ``grow`` when thinner.
+    action: str
+
+
+@dataclass
 class Cell:
     """One fine cell of the map, and how densely this corpus sits in it.
 
@@ -82,9 +96,9 @@ class Cell:
     def step(self) -> int:
         """The quantised colour step on the density ramp.
 
-        Step 0 is white. Unreached cells use it with a striped empty treatment;
-        reached cells at the bottom of the scale use the same step so thin
-        coverage reads as near-white, then steps climb smoothly toward green.
+        Step 0 is white. Unreached cells use it with a zero; reached cells at
+        the bottom of the scale use the same step so thin coverage reads as
+        near-white, then steps climb smoothly toward green.
         """
         from dropoutt.report.theme import RAMP_DIVISOR
 
@@ -99,11 +113,10 @@ class Cell:
         The ratio used to be a hover tooltip. A number that only exists while a
         mouse is over it does not exist on paper, in a screenshot pasted into a
         ticket, or for anyone reading with a keyboard — which is most of the
-        ways this page is read. An unreached cell says ``N``: an empty box is
-        ambiguous between "nothing here" and "nothing rendered".
+        ways this page is read. An unreached cell says ``0``.
         """
         if not self.records:
-            return "N"
+            return "0"
         if self.ratio >= 10:
             return f"{self.ratio:.0f}×"
         if self.ratio >= 1:
@@ -138,22 +151,19 @@ class Area:
 
     @property
     def effective_reach(self) -> float:
-        """How many of this area's cells the corpus covers, in even ones.
+        """How many of this area's cells the corpus covers, at map density.
 
-        Counting cells with any record at all makes one record the equal of
-        three thousand, and on a long tail that is most of what the number
-        measures. An area holding ``[3000, 1, 1, 1]`` reported full coverage of
-        its subject on the strength of three records; this reports 1.01.
-
-        The exponential of Shannon entropy — the same quantity the section
-        header already uses for the whole map, applied to one row.
+        Each subregion contributes ``min(1, density_ratio)``: parity (1×) is a
+        full score, thinner coverage is a fraction, and over-representation
+        does not add more than one. Entropy used to shrink the number when a
+        cell was heavy; that punished breadth for having a peak.
         """
-        counts = [cell.records for cell in self.cells if cell.records]
-        total = sum(counts)
-        if not total:
-            return 0.0
-        shares = [count / total for count in counts]
-        return math.exp(-sum(p * math.log(p) for p in shares))
+        return sum(min(1.0, max(0.0, cell.ratio)) for cell in self.cells)
+
+    @property
+    def fully_reached(self) -> bool:
+        """Every subregion is at least at map density."""
+        return bool(self.cells) and self.effective_reach >= len(self.cells) - 1e-9
 
 
 @dataclass
@@ -220,6 +230,9 @@ class AtlasStory:
     #: Occupied regions holding almost nothing. Reaching a place is not the same
     #: as covering it, and the difference is invisible in an occupancy count.
     thin_places: list[Place] = field(default_factory=list)
+    #: Cells farthest from map density, cut and grow interleaved, so a reader
+    #: can see which records to thin and which subjects to add.
+    imbalances: list[Imbalance] = field(default_factory=list)
     #: The single place holding most of the corpus, by share rather than by
     #: density. `places` is ranked on density, and "42% of your data is here"
     #: is a different sentence from "you are 26x the map here".
@@ -293,12 +306,11 @@ def build_story(result) -> AtlasStory | None:
     story.unreached_density = float(model.get("unreached_density", 0.0))
     story.regions_touched = int(coverage.get("regions_occupied", 0))
     story.regions_total = int(coverage.get("regions_total", 0))
-    story.effective = float(coverage.get("effective_regions", 0.0))
     story.concentration = concentration(coverage)
     labels = category_labels(_atlas_of(result))
 
-    story.shape, story.shape_line, story.headline = _shape(story)
     story.places, story.thin_places = _ranked_places(result, coverage)
+    story.imbalances = _imbalances(result, coverage)
     story.dominant = _dominant(result, coverage)
     story.thin_share = _thin_share(coverage)
     story.crowding = _crowding(story)
@@ -306,6 +318,12 @@ def build_story(result) -> AtlasStory | None:
     story.gaps, story.gaps_line = _gaps(coverage, labels)
     story.categories, _palette = _categories(result, coverage)
     story.grid, story.grid_peak = _grid(result, coverage, labels)
+    # Prefer the density-capped sum from the grid; fall back to the facet.
+    if story.grid:
+        story.effective = sum(area.effective_reach for area in story.grid)
+    else:
+        story.effective = float(coverage.get("effective_regions", 0.0))
+    story.shape, story.shape_line, story.headline = _shape(story)
     story.insights = _insights(result, coverage, story)
     story.off_line = _off_line(story)
     return story
@@ -337,8 +355,9 @@ def _shape(story: AtlasStory) -> tuple[str, str, str]:
             "areas, with most of the weight in a few of them."
         )
     headline = (
-        f"Your data reaches {touched} of {total} places on the map, and is as "
-        f"spread out as {effective:.0f} evenly-used ones."
+        f"Your data reaches {touched} of {total} places on the map, with "
+        f"{format_reach(effective)} of {total} in effective coverage "
+        f"(1× density counts as one)."
     )
     return shape, line, headline
 
@@ -424,6 +443,51 @@ def _ranked_places(result, coverage: dict) -> tuple[list[Place], list[Place]]:
             for r, n, share, ratio in reversed(by_density)
             if r not in shown][:PLACES_SHOWN]
     return dense, thin
+
+
+#: How many cut/grow cells to show in the rebalance section.
+IMBALANCE_SHOWN = 8
+
+
+def _imbalances(result, coverage: dict) -> list[Imbalance]:
+    """Cells farthest from map density, so a reader knows what to cut or grow.
+
+    Ranked by distance from parity on a log scale: 6× and 0.17× are the same
+    distance from 1×, and both are more useful than a 1.1× cell.
+    """
+    counts = {
+        int(region): int(count)
+        for region, count in (coverage.get("region_counts") or {}).items()
+    }
+    ratios = {
+        int(region): float(value)
+        for region, value in (coverage.get("region_density") or {}).items()
+    }
+    placed = sum(counts.values())
+    if not placed or not ratios:
+        return []
+
+    ranked = sorted(
+        (
+            (region, counts[region], counts[region] / placed, ratios[region])
+            for region in counts
+            if ratios.get(region, 0.0) > 0
+        ),
+        key=lambda row: (-abs(math.log(row[3])), row[0]),
+    )
+    out: list[Imbalance] = []
+    for region, records, share, ratio in ranked[:IMBALANCE_SHOWN]:
+        place = _place(result, region, records, share, ratio)
+        out.append(Imbalance(
+            region=region,
+            ratio=ratio,
+            records=records,
+            share=share,
+            yours=place.yours,
+            area=place.area,
+            action="cut" if ratio > 1.0 else "grow",
+        ))
+    return out
 
 
 #: A region holding less than this share of the corpus is a toehold rather than
@@ -631,6 +695,13 @@ def density_ratio(value: float) -> str:
     if value < 10:
         return f"{value:.1f}×"
     return f"{value:.0f}×"
+
+
+def format_reach(value: float) -> str:
+    """Effective reach for the grid: ``5`` not ``5.0``, else one decimal."""
+    if abs(value - round(value)) < 1e-9:
+        return str(int(round(value)))
+    return f"{value:.1f}"
 
 
 def _grid(result, coverage: dict,

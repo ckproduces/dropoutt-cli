@@ -261,11 +261,13 @@ def test_a_reached_cell_at_the_bottom_of_the_scale_stays_on_step_zero():
     assert top.step == int(MAX_LEVEL * RAMP_DIVISOR)
 
 
-def test_cell_ink_follows_luminance_contrast():
-    """Ink is black or white by which contrast wins against the fill."""
+def test_cell_ink_follows_luminance_threshold():
+    """Saturated fills get white ink; pale and yellow fills get black."""
     from dropoutt.report.theme import (
         INK_DARK,
         INK_LIGHT,
+        INK_LIGHT_LUMINANCE,
+        RAMP_ANCHORS,
         RAMP_DIVISOR,
         RAMP_STEPS,
         _fill,
@@ -276,11 +278,16 @@ def test_cell_ink_follows_luminance_contrast():
     for step in range(RAMP_STEPS + 1):
         fill = _fill(step / RAMP_DIVISOR)
         ink, _ = _ink(fill)
-        luminance = _luminance(fill)
-        black = (luminance + 0.05) / 0.05
-        white = 1.05 / (luminance + 0.05)
-        expect = INK_DARK if black >= white else INK_LIGHT
+        expect = (
+            INK_LIGHT if _luminance(fill) <= INK_LIGHT_LUMINANCE else INK_DARK
+        )
         assert ink == expect, f"step d{step} chose {ink}, expected {expect}"
+
+    by_level = dict(RAMP_ANCHORS)
+    assert _ink(by_level[0.0])[0] == INK_DARK   # white fill
+    assert _ink(by_level[1.0])[0] == INK_LIGHT  # green-500
+    assert _ink(by_level[2.0])[0] == INK_DARK   # yellow-500
+    assert _ink(by_level[3.0])[0] == INK_LIGHT  # red-500
 
 
 def test_the_grid_draws_the_whole_map_densest_first(scanned):
@@ -338,29 +345,31 @@ def test_the_place_lists_are_ranked_by_density_not_by_record_count(scanned):
                                            story.places)
 
 
-def test_reach_counts_subregions_evenly_weighted():
-    """One record must not count the same as three thousand.
+def test_reach_caps_each_subregion_at_map_density():
+    """Over-representation must not shrink reach; parity is a full score.
 
-    The column counted cells holding anything at all, so a row whose corpus is
-    one big cell with three stray records beside it reported full coverage of
-    its subject area.
+    Entropy of the mass used to: a heavy cell pulled the number down. Now each
+    subregion contributes min(1, density_ratio).
     """
     from dropoutt.report.atlas_story import Area, Cell
 
-    def area(counts):
-        return Area(area=0, name="x", records=sum(counts), share=0.0, ratio=0.0,
-                    cells=[Cell(region=i, records=c, ratio=1.0, level=1.0,
-                                caption="") for i, c in enumerate(counts)])
+    def area(ratios):
+        return Area(
+            area=0, name="x",
+            records=sum(1 for r in ratios if r > 0), share=0.0, ratio=0.0,
+            cells=[
+                Cell(region=i, records=1 if r > 0 else 0, ratio=r, level=r,
+                     caption="")
+                for i, r in enumerate(ratios)
+            ],
+        )
 
-    # The two rows the old column could not tell apart.
-    assert area([4000, 1, 0, 0]).effective_reach == pytest.approx(1.0, abs=0.01)
-    assert area([2000, 2000, 0, 0]).effective_reach == pytest.approx(2.0)
-    # The one it got backwards: four "reached" cells, one subject.
-    assert area([3000, 1, 1, 1]).effective_reach == pytest.approx(1.0, abs=0.05)
-    assert area([3000, 1, 1, 1]).unreached == 0
-
-    assert area([1500, 900, 600, 0]).effective_reach == pytest.approx(2.80, abs=0.01)
-    assert area([0, 0, 0, 0]).effective_reach == 0.0
+    assert area([6.0, 0.5, 0.0, 0.0]).effective_reach == pytest.approx(1.5)
+    assert area([1.0, 1.0, 0.0, 0.0]).effective_reach == pytest.approx(2.0)
+    assert area([1.0, 1.0, 1.0, 1.0]).effective_reach == pytest.approx(4.0)
+    assert area([1.0, 1.0, 1.0, 1.0]).fully_reached
+    assert not area([6.0, 0.5, 0.0, 0.0]).fully_reached
+    assert area([0.0, 0.0, 0.0, 0.0]).effective_reach == 0.0
 
 
 def test_every_square_carries_its_own_ratio(scanned):
@@ -382,21 +391,15 @@ def test_every_square_carries_its_own_ratio(scanned):
                 assert cell.label.endswith("×")
                 assert "the map" in cell.described
             else:
-                # An empty box is ambiguous between "nothing here" and
-                # "nothing rendered", so an unreached cell says so.
-                assert cell.label == "N"
+                assert cell.label == "0"
                 assert cell.described == "not reached"
 
 
-def test_the_atlas_samples_far_deeper_than_the_tokenizer_panel(tmp_path):
-    """The two samples are one bottom-k cut at two depths.
+def test_the_atlas_samples_up_to_two_hundred_thousand(tmp_path):
+    """Atlas coverage is min(total_records, 200_000), corpus-wide.
 
-    They used to share a 20,000 record ceiling, which put a 272,000 record
-    corpus on the map with under seven thousand of its records — few enough
-    that a subject area holding two percent of the corpus was decided by a
-    hundred of them. Placement is one encoder pass per record; pricing is five
-    real tokenizers over the same text, and the quantity it estimates converges
-    long before a histogram over 212 cells does. So only the atlas went deep.
+    The token budget stays a shallower stratified sample; placement is one
+    encoder pass and needs the depth.
     """
     from dropoutt import runner
     from dropoutt.runner import (
@@ -406,13 +409,9 @@ def test_the_atlas_samples_far_deeper_than_the_tokenizer_panel(tmp_path):
         scan,
     )
 
-    assert ATLAS_SAMPLE_TARGET >= 200_000
+    assert ATLAS_SAMPLE_TARGET == 200_000
     assert BUDGET_SAMPLE_TARGET < ATLAS_SAMPLE_TARGET
-    assert _per_dataset(ATLAS_SAMPLE_TARGET, 1) == ATLAS_SAMPLE_TARGET
-    assert _per_dataset(ATLAS_SAMPLE_TARGET, 40) == 5_000
-    # The floor, so a corpus of very many small datasets is not sampled a
-    # handful of records deep in each and called coverage.
-    assert _per_dataset(ATLAS_SAMPLE_TARGET, 100_000) == 200
+    assert _per_dataset(BUDGET_SAMPLE_TARGET, 40) == 500
 
     root = tmp_path / "data"
     root.mkdir()
@@ -426,15 +425,18 @@ def test_the_atlas_samples_far_deeper_than_the_tokenizer_panel(tmp_path):
 
     original = runner._per_dataset
     runner._per_dataset = lambda target, datasets: (
-        40 if target == BUDGET_SAMPLE_TARGET else 150
+        40 if target == BUDGET_SAMPLE_TARGET else target
     )
     try:
         result = scan(str(tmp_path), offline=True)
     finally:
         runner._per_dataset = original
 
-    # The budget stops at its own depth; the sample behind it went further.
     assert sum(len(v) for v in result.ctx.stats["budget_sample"].values()) == 40
+    # Corpus is 300 records; atlas takes all of them (minus too-short).
+    cov = result.ctx.stats.get("atlas_coverage") or {}
+    if cov.get("status") == "ok":
+        assert int(cov.get("records", 0)) <= 300
 
 
 def test_significance_is_measured_against_records_placed():

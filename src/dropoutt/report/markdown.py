@@ -23,7 +23,7 @@ from typing import Any
 
 from ..fingerprint import Fingerprint
 from ..runner import ScanResult
-from .atlas_story import density_ratio
+from .atlas_story import density_ratio, format_reach
 from .escaping import safe_snippet
 from .summary import ScanSummary, budget_rows, build
 
@@ -183,9 +183,10 @@ def _atlas(s: ScanSummary) -> list[str]:
         return [*out, atlas.unavailable_reason, ""]
 
     out.append(
-        f"Reaches **{atlas.regions_touched} of {atlas.regions_total}** places on "
-        f"the map, as spread out as {atlas.effective:.0f} evenly-used ones"
-        + (f" ({atlas.shape})." if atlas.shape else ".")
+        f"**{format_reach(atlas.effective)} of {atlas.regions_total}** in "
+        f"effective coverage ({atlas.regions_touched} subregions hold any "
+        f"records)"
+        + (f" — {atlas.shape}." if atlas.shape else ".")
     )
     out.append("")
 
@@ -194,9 +195,8 @@ def _atlas(s: ScanSummary) -> list[str]:
         out.append(
             "Density is your share of a subject area against the reference "
             "corpus's share of the same one: 1.0× is as common in your data as "
-            "it is on the map, and cells with little behind them are pulled "
-            "towards it. Reach counts subregions evenly weighted, so one "
-            "holding a single record does not count as one held in full."
+            "it is on the map. Reach sums min(1, density) over subregions: "
+            "parity is a full score, and over-representation does not add more."
         )
         out.append("")
         out += _table(
@@ -206,7 +206,7 @@ def _atlas(s: ScanSummary) -> list[str]:
                     area.name,
                     f"{area.share * 100:.1f}%",
                     density_ratio(area.ratio),
-                    f"{area.effective_reach:.1f}/{len(area.cells)}",
+                    f"{format_reach(area.effective_reach)}/{len(area.cells)}",
                 ]
                 for area in reached[:GRID_ROWS]
             ],

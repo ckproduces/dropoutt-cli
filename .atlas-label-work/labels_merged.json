@@ -1,0 +1,290 @@
+{
+  "0": {
+    "old": "C and C++ source code",
+    "new": "C and C++ source code",
+    "rationale": "Nearly all sampled records are C/C++ translation units with include guards, Boost license headers, and class or function implementations from algebraic-stack and StarCoder sources.",
+    "records_read": 220
+  },
+  "1": {
+    "old": "Language tasks and text annotation",
+    "new": "Grammar and translation instruction",
+    "rationale": "Records are overwhelmingly NLP-style instruction tasks—sentence rewriting, translation between languages, grammar correction, and linguistic classification—from Alpaca, UltraFeedback, and InstrucTurca rather than open chat.",
+    "records_read": 220
+  },
+  "2": {
+    "old": "Personal finance and insurance",
+    "new": "Personal finance and insurance",
+    "rationale": "Text centers on household money topics: taxes, pensions, loans, insurance, budgeting, and investment Q&A from finance-alpaca, Reddit finance, and fineweb, with occasional contract clauses from LEDGAR.",
+    "records_read": 220
+  },
+  "3": {
+    "old": "Physics and astronomy",
+    "new": "Physics and astronomy",
+    "rationale": "Dominant content is scientific prose on quantum field theory, astrophysics, cosmology, and observational astronomy from arXiv and peS2o, plus encyclopedic astronomy articles across several languages.",
+    "records_read": 220
+  },
+  "4": {
+    "old": "Video games and play",
+    "new": "Video games and play",
+    "rationale": "Samples span game reviews, walkthroughs, console histories, Unity game-dev snippets, and casino or esports pages, with a strong Chinese fineweb gaming thread alongside English and Turkish gaming forums.",
+    "records_read": 220
+  },
+  "5": {
+    "old": "Contact details and user accounts",
+    "new": "Website privacy and contact pages",
+    "rationale": "Records mix privacy policies, contact-us and FAQ boilerplate, e-commerce product listings, and assistant dialogues about websites or user data—not primarily programming Q&A like neighboring Stack Exchange cells.",
+    "records_read": 220
+  },
+  "6": {
+    "old": "Desktop and mobile application support",
+    "new": "Desktop and mobile application support",
+    "rationale": "Stack Exchange Q&A on Windows, C#/C++, Android, SQL Server, serial ports, and installed-application errors dominates, distinct from the HTML and JavaScript focus of the adjacent web-dev cell.",
+    "records_read": 220
+  },
+  "7": {
+    "old": "Web development troubleshooting",
+    "new": "Web development troubleshooting",
+    "rationale": "Over half the cell is Stack Exchange dialogue on HTML, jQuery, ASP.NET, JavaScript, CSS, and WordPress problems, matching the dialogue-heavy axis profile and separating it from general desktop-app support.",
+    "records_read": 220
+  },
+  "8": {
+    "old": "Mathematical proofs and notation",
+    "new": "Formal mathematics and equations",
+    "rationale": "Records are dominated by LaTeX-style equations, advanced calculus and analysis problems, and math-to-code snippets from open-web-math, finemath, and arXiv rather than elementary proof exercises alone.",
+    "records_read": 220
+  },
+  "9": {
+    "old": "Measurement and unit word problems",
+    "new": "Measurement and unit word problems",
+    "rationale": "Roughly half of sampled records are rate, distance, weight, and cost word problems from orca-math and aqua_rat, consistently asking students to compute quantities with real-world units.",
+    "records_read": 220
+  },
+  "10": {
+    "old": "Software licences and file headers",
+    "new": "Open source code and licensing",
+    "rationale": "Samples combine repository source files, commit-pack code, and Stack Exchange developer posts where copyright and license boilerplate is a recurring signature, not just isolated file headers.",
+    "records_read": 220
+  },
+  "11": {
+    "old": "Public health and clinical care",
+    "new": "Public health and clinical care",
+    "rationale": "Over half of records discuss patients, treatments, vaccines, and epidemiological studies drawn heavily from PubMedQA and biomedical web sources.",
+    "records_read": 220
+  },
+  "12": {
+    "old": "Academic research and higher education",
+    "new": "Academic research and higher education",
+    "rationale": "Content centers on universities, research programs, academic awards, and educational policy from fineweb-edu, Wikipedia, and scientific paper abstracts.",
+    "records_read": 220
+  },
+  "13": {
+    "old": "Religion and scripture",
+    "new": "Religion and scripture",
+    "rationale": "Multilingual Wikipedia and encyclopedic entries consistently cover prophets, Islamic and Christian history, religious doctrine, and sacred figures across many languages.",
+    "records_read": 220
+  },
+  "14": {
+    "old": "Criminal justice and human rights cases",
+    "new": "Criminal justice and human rights cases",
+    "rationale": "Records blend crime and court reporting with ECTHR human-rights case material and police or prison proceedings in news and legal corpora.",
+    "records_read": 220
+  },
+  "15": {
+    "old": "Geometry and algebra",
+    "new": "Geometry and algebra",
+    "rationale": "Two-thirds of samples contain explicit equations about triangles, polynomials, areas, and coordinate geometry from OpenMathInstruct and finemath sources.",
+    "records_read": 220
+  },
+  "16": {
+    "old": "Open-ended assistant conversation",
+    "new": "AI assistant dialogue and advice",
+    "rationale": "Anthropic hh-rlhf accounts for 69 of 220 samples with Human/Assistant pairs on everyday advice, ethics, and harmful-request handling. Instruction axis dominates at 105 records across OpenAssistant and UltraChat, making chatbot dialogue the distinctive subject rather than any single topic domain.",
+    "records_read": 220
+  },
+  "17": {
+    "old": "SQL queries over event and record tables",
+    "new": "SQL databases and event records",
+    "rationale": "Synthetic text-to-SQL from gretelai and DuckDB sources fills 76 samples, and SQL keywords appear in 97 records with CREATE TABLE, SELECT, and date or event schemas. Web snippets about tours and annual meetings supplement but do not outweigh structured database query content.",
+    "records_read": 220
+  },
+  "18": {
+    "old": "Machine learning theory and algorithms",
+    "new": "Machine learning theory and algorithms",
+    "rationale": "ML-ArXiv papers are 115 of 220 samples with titles on classifiers, neural networks, reinforcement learning, and optimization. Scientific axis covers 159 records and machine-learning terminology appears in 136, clearly distinguishing this from general computing or math instruction.",
+    "records_read": 220
+  },
+  "19": {
+    "old": "Elementary arithmetic word problems",
+    "new": "General knowledge and word problems",
+    "rationale": "Samples mix Wikipedia biographies, pet-care advice, Python debugging, Harry Potter trivia, and Orca math word problems rather than pure arithmetic. Instruction and encyclopedic axes each exceed 25 records, so a broader everyday-knowledge label fits better than elementary arithmetic alone.",
+    "records_read": 220
+  },
+  "20": {
+    "old": "Historical calendars and the Catholic church",
+    "new": "World history and calendar events",
+    "rationale": "Wikipedia dominates at 166 of 220 records with multilingual on-this-day pages listing births, deaths, and historical events by date. Calendar and chronology vocabulary appears in 53 records across Gregorian, Islamic, and Japanese dating systems, well beyond Catholic church history alone.",
+    "records_read": 220
+  },
+  "21": {
+    "old": "Film and television",
+    "new": "Film and television",
+    "rationale": "Film and TV terminology appears in 101 of 220 records covering actors, directors, movie listings, streaming services, and episode guides. Wikipedia filmographies and web entertainment articles in English, Turkish, and Azerbaijani reinforce cinema and broadcast media as the core subject.",
+    "records_read": 220
+  },
+  "22": {
+    "old": "Buildings, materials and construction",
+    "new": "Built and natural environment",
+    "rationale": "Content spans construction and skyscrapers but also rivers, dams, geology, edible gardens, and coastal cleanup across 36 water-related and 27 construction-themed records. Web and encyclopedic sources describe physical places and landforms alongside building materials and infrastructure.",
+    "records_read": 220
+  },
+  "23": {
+    "old": "Plants and animals",
+    "new": "Plants and animals",
+    "rationale": "Species, plant, bird, and tree terminology appears in 61 of 220 records from Wikipedia genus entries, wildlife articles, and gardening guides. EU animal-breeding law, fishing reports, and Orca math problems about birds or bananas sit within a consistent natural-history subject area.",
+    "records_read": 220
+  },
+  "24": {
+    "old": "Music and recordings",
+    "new": "Music and recordings",
+    "rationale": "About 153 of 220 samples name artists, albums, songs, bands, or music-production tasks; Wikipedia music bios and songwriting instructions dominate over unrelated web noise.",
+    "records_read": 220
+  },
+  "25": {
+    "old": "United States geography and politics",
+    "new": "United States geography and politics",
+    "rationale": "Roughly 98 records cite U.S. places, institutions, or political figures (Boston streets, Bunker Hill, presidents, counties); SQuAD and English Wikipedia reinforce American civic and geographic content.",
+    "records_read": 220
+  },
+  "26": {
+    "old": "Travel and accommodation",
+    "new": "Travel and accommodation",
+    "rationale": "Hotel reviews, booking sites, tourism guides, and lodging descriptions appear in many languages across fineweb sources; local-area and housing mentions are secondary to hospitality and trip content.",
+    "records_read": 220
+  },
+  "27": {
+    "old": "Symptoms, therapy and physical health",
+    "new": "Symptoms therapy and physical health",
+    "rationale": "PubMedQA clinical questions mix with patient-facing texts on pain, treatment, exercise, pilates, surgery, and conditions like osteoporosis; scientific and web health axes both center on bodily care rather than lab biology.",
+    "records_read": 220
+  },
+  "28": {
+    "old": "Creative writing and fiction",
+    "new": "Creative writing and fiction",
+    "rationale": "Instruction prompts to write stories, poems, and characters are the largest share, alongside literary Wikipedia entries on authors and poets; content is generative fiction and literature rather than general chat.",
+    "records_read": 220
+  },
+  "29": {
+    "old": "Prices, trading and business arithmetic",
+    "new": "Finance trading and business arithmetic",
+    "rationale": "Finance-Alpaca, Reddit finance, and money word problems fill most records with stocks, costs, profit, loans, and market talk; math axis content is overwhelmingly commercial arithmetic rather than abstract math.",
+    "records_read": 220
+  },
+  "30": {
+    "old": "Database schemas and query construction",
+    "new": "SQL queries and database schemas",
+    "rationale": "More than 100 records are text-to-SQL pairs from sql-create-context and DuckDB datasets, plus Stack Exchange database troubleshooting; structured and code axes reflect schema design and SELECT/WHERE query work.",
+    "records_read": 220
+  },
+  "31": {
+    "old": "Technology and computing systems",
+    "new": "Technology and computing systems",
+    "rationale": "Software, cloud, devices, operating systems, and IT products appear in encyclopedic articles and how-to instructions across fineweb and Wikipedia; computing vocabulary outscores finance, travel, or creative themes.",
+    "records_read": 220
+  },
+  "32": {
+    "old": "Contracts and court proceedings",
+    "new": "Contracts and court proceedings",
+    "rationale": "After reading all 220 samples, legal_finance dominates (114 records) from LEDGAR contract clauses, ECTHR human-rights cases, SCOTUS opinions, and terms-of-service disputes. Recurring language includes shall, applicant, court, and agreement boilerplate.",
+    "records_read": 220
+  },
+  "33": {
+    "old": "Transport and vehicles",
+    "new": "Transport and vehicles",
+    "rationale": "Samples span railways and metro systems, automotive and trucking news, aviation and airports, road traffic and driving, plus speed or distance word problems. Japanese and French transit encyclopedia entries mix with web articles on vehicles.",
+    "records_read": 220
+  },
+  "34": {
+    "old": "European Union law and regulation",
+    "new": "European Union law and regulation",
+    "rationale": "EUR-Lex is the top source (69 of 220 samples) with Council directives, Commission regulations, and Treaty references. EU institutional vocabulary appears in 41% of records, clearly distinguishing this cell from general government or contract law.",
+    "records_read": 220
+  },
+  "35": {
+    "old": "Government and politics",
+    "new": "Government and politics",
+    "rationale": "Content covers political parties, elections, parliaments, heads of state, diplomacy, and policy debate across English, Turkish, Arabic, and other languages. Encyclopedic biographies of politicians sit alongside news and instruction-following on civic topics.",
+    "records_read": 220
+  },
+  "36": {
+    "old": "Neural networks and deep learning",
+    "new": "Neural networks and deep learning",
+    "rationale": "ML-ArXiv papers account for 162 of 220 samples with titles on GANs, graph neural networks, transformers, reinforcement learning, and adversarial detection. Scientific axis dominates at 183 records with dense neural-network and deep-learning terminology.",
+    "records_read": 220
+  },
+  "37": {
+    "old": "Business marketing and social media",
+    "new": "Business and marketing",
+    "rationale": "Web and instruction records feature company profiles, marketing agencies, corporate management, industry reports, and career advice. Marketing appears far more often than social-media platforms, so a subject label focused on business and marketing better fits the corpus.",
+    "records_read": 220
+  },
+  "38": {
+    "old": "Molecular biology and medicine",
+    "new": "Molecular biology and medicine",
+    "rationale": "PubMedQA and peS2o scientific papers dominate with gene expression, protein pathways, DNA replication, cancer biology, and clinical trial questions. Patient, cell, and molecular terminology co-occur throughout biomedical and clinical research text.",
+    "records_read": 220
+  },
+  "39": {
+    "old": "Football and team sports",
+    "new": "Team sports and leagues",
+    "rationale": "Beyond football and soccer, samples include baseball, basketball, hockey, golf, and multi-sport Olympic coverage plus stadium and league encyclopedia entries. SQL sports-database queries appear but the subject matter is professional and amateur team athletics.",
+    "records_read": 220
+  },
+  "40": {
+    "old": "Number theory and arithmetic",
+    "new": "Number theory and arithmetic",
+    "rationale": "Across 220 samples, 158 are math-axis records dominated by primes, divisibility, digit puzzles, averages, interest rates, and integer property word problems from finemath, GSM8K, and OpenMathInstruct sources.",
+    "records_read": 220
+  },
+  "41": {
+    "old": "Settlements and administrative geography",
+    "new": "Settlements and administrative geography",
+    "rationale": "165 of 220 records are encyclopedic Wikipedia entries naming cities, communes, districts, provinces, and municipalities with population, location, and administrative hierarchy across many languages.",
+    "records_read": 220
+  },
+  "42": {
+    "old": "Fashion, colour and home decor",
+    "new": "Fashion and home decor",
+    "rationale": "Samples center on clothing, footwear, bags, colors, and style alongside interior paint, furniture, tiles, and DIY product pages from fineweb and retail listings, with color as a cross-cutting product attribute.",
+    "records_read": 220
+  },
+  "43": {
+    "old": "Everyday conversation and opinion",
+    "new": "Personal blogs and casual opinion",
+    "rationale": "No single subject domain dominates; 220 records are informal first-person web writing including personal blogs, forum posts, lifestyle opinions, travel notes, and casual assistant chats rather than topical reference or instructional content.",
+    "records_read": 220
+  },
+  "44": {
+    "old": "Food and cooking",
+    "new": "Food and cooking",
+    "rationale": "123 of 220 records explicitly discuss recipes, ingredients, meal preparation, restaurants, and nutrition, including step-by-step cooking instructions and food-themed math word problems.",
+    "records_read": 220
+  },
+  "45": {
+    "old": "Schools and teaching",
+    "new": "Schools and teaching",
+    "rationale": "135 of 220 records focus on students, teachers, schools, universities, curricula, and education policy from fineweb-edu, school news, and instructional datasets, making education the clear subject anchor.",
+    "records_read": 220
+  },
+  "46": {
+    "old": "Website boilerplate and page furniture",
+    "new": "Website boilerplate and page furniture",
+    "rationale": "71 records contain copyright notices, comment forms, subscribe widgets, and site footers while 53 are code file headers and CMS template fragments, confirming web page scaffolding as the distinctive content.",
+    "records_read": 220
+  },
+  "47": {
+    "old": "Energy, climate and the environment",
+    "new": "Energy climate and environment",
+    "rationale": "107 of 220 records address renewable energy, climate change, pollution, biodiversity, HVAC efficiency, and environmental policy from fineweb-edu and scientific papers, with synthetic SQL as a minor format overlay.",
+    "records_read": 220
+  }
+}

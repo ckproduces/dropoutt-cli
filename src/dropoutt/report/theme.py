@@ -301,6 +301,21 @@ padding-left:var(--s-16);white-space:nowrap}
 .agrid .reach-ok{color:var(--ok);font-size:var(--t-12)}
 .agrid .reach-miss{color:var(--text-faint);font-size:var(--t-12)}
 .agrid tr.empty td{color:var(--text-faint);font-weight:var(--w-regular)}
+.imbalances{list-style:none}
+.imbalances li{display:grid;grid-template-columns:4.2rem 1fr;gap:var(--s-12);
+padding:var(--s-12) 0;border-top:1px solid var(--border-subtle);align-items:start}
+.imbalances li:first-child{border-top:0;padding-top:var(--s-4)}
+.imbalances .pct{font-weight:var(--w-semibold);font-variant-numeric:tabular-nums;
+text-align:right;font-size:var(--t-14)}
+.imbalances .pct.cut{color:var(--bad)}
+.imbalances .pct.grow{color:var(--ok)}
+.imbalances .yours{display:block;font-size:var(--t-14);overflow-wrap:anywhere}
+.imbalances .cap{display:block;color:var(--text-faint);font-size:var(--t-12);
+margin-top:var(--s-4)}
+.imbalances .act{display:inline-block;margin-top:var(--s-4);font-size:var(--t-12);
+font-weight:var(--w-medium)}
+.imbalances .act.cut{color:var(--bad)}
+.imbalances .act.grow{color:var(--ok)}
 
 /* Name and cells are one column: the name is what the row of chips is about,
    and a gutter between them only invited the eye to read them as two tables. */
@@ -321,11 +336,9 @@ box-shadow:inset 0 0 0 1px var(--neutral-500);
 color:var(--ink,var(--text));font-size:var(--t-11);
 font-weight:var(--w-bold);font-variant-numeric:tabular-nums;
 letter-spacing:0;text-transform:none}
-/* Never reached. Diagonal hatch marks the empty box without looking like a
-   white low-coverage cell — same border, different surface. */
-.cell:not(.on){background:repeating-linear-gradient(
--45deg,var(--neutral-200),var(--neutral-200) 1px,var(--white) 1px,var(--white) 4px);
-color:var(--text-faint);font-weight:var(--w-medium)}
+/* Never reached: white fill, same border, a zero instead of a blank. */
+.cell:not(.on){background:var(--white);color:var(--text-faint);
+font-weight:var(--w-medium)}
 
 /* The scale is continuous, so the legend is a gradient rather than four
    swatches the reader has to interpolate between by eye. */
@@ -435,16 +448,21 @@ RAMP_ANCHORS = (
     (3.0, "#dc3c52"),   # --red-500: the densest cell in this corpus
 )
 
-#: Steps per level unit across the whole ramp. Sixteenths keep low-coverage
-#: cells on a smooth white→green climb instead of a hard white band.
-RAMP_DIVISOR = 16
+#: Steps per level unit across the whole ramp. Thirty-two keeps low-coverage
+#: cells on a smooth white→green climb and gives saturated fills enough stops
+#: that neighbouring ratios stay distinguishable.
+RAMP_DIVISOR = 32
 RAMP_STEPS = int(RAMP_ANCHORS[-1][0] * RAMP_DIVISOR)
 
-#: Text colours the ink chooses between. Pure black and white, matching the
-#: luminance formula below — not the page body colour, which flattered dark ink
-#: on saturated fills.
+#: Text colours the ink chooses between. Pure black and white.
 INK_DARK = "#000000"
 INK_LIGHT = "#ffffff"
+
+#: Fills at or below this luminance get white ink. Pure WCAG contrast would
+#: still pick black on green-500 and red-500 (they clear 4.5:1), but at 11px
+#: on a saturated chip the dark digits smear; white is the readable choice.
+#: Yellow-500 sits above the cut and keeps black.
+INK_LIGHT_LUMINANCE = 0.40
 
 
 def _mix(a: str, b: str, t: float) -> str:
@@ -469,18 +487,15 @@ def _contrast(a: str, b: str) -> float:
 
 
 def _ink(fill: str) -> tuple[str, float]:
-    """Black or white text on this fill, by relative luminance contrast.
+    """Black or white text on this fill, by relative luminance.
 
-    Chooses whichever of pure black and pure white has the higher contrast
-    against the fill; black wins ties. Same decision as the product's
-    ``textColor`` helper.
+    White below :data:`INK_LIGHT_LUMINANCE`, black above. Returns the chosen
+    ink and its WCAG contrast against the fill.
     """
     luminance = _luminance(fill)
-    black_contrast = (luminance + 0.05) / 0.05
-    white_contrast = 1.05 / (luminance + 0.05)
-    if black_contrast >= white_contrast:
-        return INK_DARK, black_contrast
-    return INK_LIGHT, white_contrast
+    if luminance <= INK_LIGHT_LUMINANCE:
+        return INK_LIGHT, 1.05 / (luminance + 0.05)
+    return INK_DARK, (luminance + 0.05) / 0.05
 
 
 def ramp_contrast() -> list[tuple[int, float]]:
@@ -517,7 +532,7 @@ def _ramp() -> str:
     for step in range(RAMP_STEPS + 1):
         fill = _fill(step / RAMP_DIVISOR)
         ink, _ = _ink(fill)
-        rules.append(f".d{step}{{--cell:{fill};--ink:{ink}}}")
+        rules.append(f".d{step}{{--cell:{fill};--ink:{ink};color:{ink}}}")
     return "\n".join(rules) + "\n"
 
 

@@ -25,6 +25,7 @@ from rich.markup import escape
 from ..models import Severity
 from ..runner import ScanResult
 from ..tokenizer_panel import BudgetReport
+from .atlas_story import format_reach
 from .summary import ScanSummary, build
 
 TONE = {"block": "red", "warn": "yellow", "clean": "green"}
@@ -169,8 +170,9 @@ def _render_atlas(console: Console, s: ScanSummary) -> None:
         return
 
     console.print(
-        f"    Reaches [bold]{atlas.regions_touched}[/bold] of {atlas.regions_total} "
-        f"places, as spread out as {atlas.effective:.0f} even ones"
+        f"    Effective coverage [bold]{format_reach(atlas.effective)}[/bold] of "
+        f"{atlas.regions_total} "
+        f"({atlas.regions_touched} hold any records)"
         + (f" [dim]({_m(atlas.shape)})[/dim]" if atlas.shape else "")
     )
     if atlas.insights:

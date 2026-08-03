@@ -1,0 +1,50 @@
+{
+  "32": {
+    "old": "Contracts and court proceedings",
+    "new": "Contracts and court proceedings",
+    "rationale": "After reading all 220 samples, legal_finance dominates (114 records) from LEDGAR contract clauses, ECTHR human-rights cases, SCOTUS opinions, and terms-of-service disputes. Recurring language includes shall, applicant, court, and agreement boilerplate.",
+    "records_read": 220
+  },
+  "33": {
+    "old": "Transport and vehicles",
+    "new": "Transport and vehicles",
+    "rationale": "Samples span railways and metro systems, automotive and trucking news, aviation and airports, road traffic and driving, plus speed or distance word problems. Japanese and French transit encyclopedia entries mix with web articles on vehicles.",
+    "records_read": 220
+  },
+  "34": {
+    "old": "European Union law and regulation",
+    "new": "European Union law and regulation",
+    "rationale": "EUR-Lex is the top source (69 of 220 samples) with Council directives, Commission regulations, and Treaty references. EU institutional vocabulary appears in 41% of records, clearly distinguishing this cell from general government or contract law.",
+    "records_read": 220
+  },
+  "35": {
+    "old": "Government and politics",
+    "new": "Government and politics",
+    "rationale": "Content covers political parties, elections, parliaments, heads of state, diplomacy, and policy debate across English, Turkish, Arabic, and other languages. Encyclopedic biographies of politicians sit alongside news and instruction-following on civic topics.",
+    "records_read": 220
+  },
+  "36": {
+    "old": "Neural networks and deep learning",
+    "new": "Neural networks and deep learning",
+    "rationale": "ML-ArXiv papers account for 162 of 220 samples with titles on GANs, graph neural networks, transformers, reinforcement learning, and adversarial detection. Scientific axis dominates at 183 records with dense neural-network and deep-learning terminology.",
+    "records_read": 220
+  },
+  "37": {
+    "old": "Business marketing and social media",
+    "new": "Business and marketing",
+    "rationale": "Web and instruction records feature company profiles, marketing agencies, corporate management, industry reports, and career advice. Marketing appears far more often than social-media platforms, so a subject label focused on business and marketing better fits the corpus.",
+    "records_read": 220
+  },
+  "38": {
+    "old": "Molecular biology and medicine",
+    "new": "Molecular biology and medicine",
+    "rationale": "PubMedQA and peS2o scientific papers dominate with gene expression, protein pathways, DNA replication, cancer biology, and clinical trial questions. Patient, cell, and molecular terminology co-occur throughout biomedical and clinical research text.",
+    "records_read": 220
+  },
+  "39": {
+    "old": "Football and team sports",
+    "new": "Team sports and leagues",
+    "rationale": "Beyond football and soccer, samples include baseball, basketball, hockey, golf, and multi-sport Olympic coverage plus stadium and league encyclopedia entries. SQL sports-database queries appear but the subject matter is professional and amateur team athletics.",
+    "records_read": 220
+  }
+}

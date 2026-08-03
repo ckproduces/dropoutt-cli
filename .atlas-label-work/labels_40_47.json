@@ -1,0 +1,50 @@
+{
+  "40": {
+    "old": "Number theory and arithmetic",
+    "new": "Number theory and arithmetic",
+    "rationale": "Across 220 samples, 158 are math-axis records dominated by primes, divisibility, digit puzzles, averages, interest rates, and integer property word problems from finemath, GSM8K, and OpenMathInstruct sources.",
+    "records_read": 220
+  },
+  "41": {
+    "old": "Settlements and administrative geography",
+    "new": "Settlements and administrative geography",
+    "rationale": "165 of 220 records are encyclopedic Wikipedia entries naming cities, communes, districts, provinces, and municipalities with population, location, and administrative hierarchy across many languages.",
+    "records_read": 220
+  },
+  "42": {
+    "old": "Fashion, colour and home decor",
+    "new": "Fashion and home decor",
+    "rationale": "Samples center on clothing, footwear, bags, colors, and style alongside interior paint, furniture, tiles, and DIY product pages from fineweb and retail listings, with color as a cross-cutting product attribute.",
+    "records_read": 220
+  },
+  "43": {
+    "old": "Everyday conversation and opinion",
+    "new": "Personal blogs and casual opinion",
+    "rationale": "No single subject domain dominates; 220 records are informal first-person web writing including personal blogs, forum posts, lifestyle opinions, travel notes, and casual assistant chats rather than topical reference or instructional content.",
+    "records_read": 220
+  },
+  "44": {
+    "old": "Food and cooking",
+    "new": "Food and cooking",
+    "rationale": "123 of 220 records explicitly discuss recipes, ingredients, meal preparation, restaurants, and nutrition, including step-by-step cooking instructions and food-themed math word problems.",
+    "records_read": 220
+  },
+  "45": {
+    "old": "Schools and teaching",
+    "new": "Schools and teaching",
+    "rationale": "135 of 220 records focus on students, teachers, schools, universities, curricula, and education policy from fineweb-edu, school news, and instructional datasets, making education the clear subject anchor.",
+    "records_read": 220
+  },
+  "46": {
+    "old": "Website boilerplate and page furniture",
+    "new": "Website boilerplate and page furniture",
+    "rationale": "71 records contain copyright notices, comment forms, subscribe widgets, and site footers while 53 are code file headers and CMS template fragments, confirming web page scaffolding as the distinctive content.",
+    "records_read": 220
+  },
+  "47": {
+    "old": "Energy, climate and the environment",
+    "new": "Energy climate and environment",
+    "rationale": "107 of 220 records address renewable energy, climate change, pollution, biodiversity, HVAC efficiency, and environmental policy from fineweb-edu and scientific papers, with synthetic SQL as a minor format overlay.",
+    "records_read": 220
+  }
+}

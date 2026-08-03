@@ -66,22 +66,17 @@ class TopicalConcentration(Check):
     )
     rationale = (
         "Occupancy counts a region the same whether it holds one record or a third of the "
-        "corpus, so '34 of 258 regions occupied' can describe a broad corpus or a corpus that "
-        "is really two regions with noise around them. The effective region count — the "
-        "exponential of the region entropy — is how many evenly-used regions the corpus is as "
-        "spread out as, and the gap between the two numbers is the finding. This is reported, "
-        "never judged: a Turkish legal-QA set should be concentrated, and a pretraining "
-        "mixture should not, and the tool has not been told which one this is."
+        "corpus, so '34 of 212 regions occupied' can describe a broad corpus or a corpus that "
+        "is really two regions with noise around them. Effective coverage sums "
+        "min(1, density_ratio) over subregions — parity is a full score, thinner coverage a "
+        "fraction — and the gap between occupied and effective is the finding. This is "
+        "reported, never judged: a Turkish legal-QA set should be concentrated, and a "
+        "pretraining mixture should not, and the tool has not been told which one this is."
     )
 
     #: Narrowness is tested in absolute terms, not against the occupied count.
-    #: An earlier version fired when effective regions fell below a fraction of
-    #: occupied ones, and reported a Turkish assistant corpus touching 195
-    #: regions with an effective spread of 63 as concentrated. It is not: 63
-    #: evenly-used regions out of 258 is a broad corpus, and the ratio was
-    #: measuring the shape of every long-tailed distribution rather than
-    #: anything about this one. These two bounds fire only when the corpus is
-    #: genuinely small in topical extent or genuinely dominated by one region.
+    #: These two bounds fire only when the corpus is genuinely small in topical
+    #: extent or genuinely dominated by one region.
     MAX_EFFECTIVE = 10.0
     MAX_TOP_SHARE = 0.25
 
@@ -100,7 +95,8 @@ class TopicalConcentration(Check):
             return []
         detail = (
             f"placed records touch {occupied} of {int(cov.get('regions_total', 0))} "
-            f"areas but are as spread out as {effective:.1f} evenly-used ones"
+            f"subregions with {effective:.1f} effective coverage "
+            f"(1× density counts as one)"
         )
         if lead:
             detail += f"; the largest single area holds {lead_share:.0%} of them"

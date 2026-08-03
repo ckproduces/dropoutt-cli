@@ -173,9 +173,10 @@ def scan(
     ctx.stats["total_chars"] = 0
     ctx.stats["total_words"] = 0
     ctx.stats["chars_by_dataset"] = {}
-    # Stratified sample, capped per dataset so one huge dataset cannot dominate
-    # the token ratio or the atlas histogram.
-    per_dataset_cap = _per_dataset(ATLAS_SAMPLE_TARGET, len(disc.datasets))
+    # Atlas sample is corpus-wide: min(total_records, 200_000). The token budget
+    # stays stratified per dataset — it estimates a ratio that converges early,
+    # and one huge dataset must not set the corpus-wide tokens-per-character.
+    atlas_sample_target = ATLAS_SAMPLE_TARGET
 
     if tokenizer is not None and chat_template is not None:
         _probe_offsets(ctx, tokenizer, chat_template)
@@ -259,7 +260,7 @@ def scan(
         layouts,
         workers=workers,
         limit_per_file=limit_per_file,
-        per_dataset_cap=per_dataset_cap,
+        per_dataset_cap=atlas_sample_target,
         mean_record_bytes=mean_record_bytes,
     )
     config = ShardConfig(
@@ -333,13 +334,14 @@ def merge_shard_results(
     by_id = {check.check_id: check for check in active}
     scanned = 0
     content_total = 0
-    # Bottom-k again, and bounded. Shards are allowed to keep three times their
-    # expected share so that none of them discards a globally-small key, which
-    # means the parent is offered up to three times the target — at a 200,000
-    # record target that is most of a gigabyte of text held to throw two thirds
-    # of it away. Merging into a bounded heap keeps the peak at the target.
-    heaps: dict[str, list[tuple[int, str, str, int]]] = {}
+    # Bottom-k again, and bounded. Shards keep headroom so none discards a
+    # globally-small key; the parent merges into one corpus-wide heap of
+    # ATLAS_SAMPLE_TARGET so the atlas sample is min(total_records, 200_000)
+    # rather than a per-dataset split that under-samples large corpora.
+    atlas_heap: list[tuple[int, str, str, int, str]] = []
+    budget_heaps: dict[str, list[tuple[int, str, str, int]]] = {}
     store = None
+    budget_cap = _per_dataset(BUDGET_SAMPLE_TARGET, len(disc.datasets))
 
     for result in results:
         scanned += result.scanned
@@ -353,15 +355,20 @@ def merge_shard_results(
         for note in result.degradations:
             ctx.degraded(note)
         for dataset in result.record_counts:
-            heaps.setdefault(dataset, [])
+            budget_heaps.setdefault(dataset, [])
         for dataset, rows in result.samples.items():
-            heap = heaps.setdefault(dataset, [])
+            budget = budget_heaps.setdefault(dataset, [])
             for key, text, lang, chars in rows:
-                entry = (-key, text, lang, chars)
-                if len(heap) < plan.sample_target:
-                    heapq.heappush(heap, entry)
-                elif entry[0] > heap[0][0]:
-                    heapq.heapreplace(heap, entry)
+                atlas_entry = (-key, text, lang, chars, dataset)
+                if len(atlas_heap) < ATLAS_SAMPLE_TARGET:
+                    heapq.heappush(atlas_heap, atlas_entry)
+                elif atlas_entry[0] > atlas_heap[0][0]:
+                    heapq.heapreplace(atlas_heap, atlas_entry)
+                budget_entry = (-key, text, lang, chars)
+                if len(budget) < budget_cap:
+                    heapq.heappush(budget, budget_entry)
+                elif budget_entry[0] > budget[0][0]:
+                    heapq.heapreplace(budget, budget_entry)
         for check_id, shard_check in result.checks.items():
             target = by_id.get(check_id)
             if target is None or target is shard_check:
@@ -390,36 +397,25 @@ def merge_shard_results(
     for ds in disc.datasets:
         ds.record_count = counts.get(ds.name, 0)
 
-    # Bottom-k: keep the globally smallest keys per dataset. Taking the smallest
-    # of the per-shard smallest is the same set as taking them from the union,
-    # which is what makes the sample independent of how the corpus was divided.
+    # Budget sample: stratified per dataset. Atlas sample: corpus-wide bottom-k
+    # of size min(total_records, ATLAS_SAMPLE_TARGET). Uniform over records, so
+    # each sampled row stands for scanned / n of the corpus.
     budget_sample: dict[str, list[str]] = ctx.stats["budget_sample"]
+    for dataset in sorted(budget_heaps):
+        rows = [(-k, t, lang, c) for k, t, lang, c
+                in sorted(budget_heaps[dataset], reverse=True)]
+        for _key, text, _lang, _chars in rows:
+            budget_sample.setdefault(dataset, []).append(text)
+
     atlas_sample: list[tuple[str, str, str, int, float]] = []
     too_short = 0
-    budget_cap = _per_dataset(BUDGET_SAMPLE_TARGET, len(disc.datasets))
-    for dataset in sorted(heaps):
-        rows = [(-k, t, lang, c) for k, t, lang, c in sorted(heaps[dataset], reverse=True)]
-        # How many records of this dataset each sampled one stands for. The cap
-        # is per dataset, so a dataset of ten million and one of ten thousand
-        # arrive here the same size; without this the atlas histogram would
-        # describe the average of your datasets rather than your corpus. The
-        # token budget has always corrected for this in its own way — see
-        # `estimate_budget` — and coverage did not.
-        weight = (counts.get(dataset, 0) / len(rows)) if rows else 1.0
-        for position, (_key, text, lang, chars) in enumerate(rows):
-            # The two samples are the same bottom-k, cut at different depths.
-            # A prefix of a bottom-k over a uniform hash is itself a uniform
-            # sample, so the budget keeps the properties it always had while
-            # the atlas goes ten times deeper — placement is an embedding pass
-            # and pricing is five tokenizers over the same text.
-            if position < budget_cap:
-                budget_sample.setdefault(dataset, []).append(text)
-            if ctx.atlas is None:
-                continue
-            # Coverage comes from the same sample: the atlas describes a
-            # distribution, and a sample describes it as well as every record at
-            # a fraction of the embedding cost.
-            #
+    atlas_rows = [(-k, t, lang, c, ds) for k, t, lang, c, ds
+                  in sorted(atlas_heap, reverse=True)]
+    atlas_n = min(scanned, ATLAS_SAMPLE_TARGET, len(atlas_rows))
+    selected = atlas_rows[:atlas_n]
+    weight = (scanned / len(selected)) if selected else 1.0
+    if ctx.atlas is not None:
+        for _key, text, lang, chars, dataset in selected:
             # Records below ATLAS_MIN_CHARS are excluded rather than placed. A
             # twenty-character record cannot be positioned on a topical map, and
             # including it inflates the off-atlas rate with records that were

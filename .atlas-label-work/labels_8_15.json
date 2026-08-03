@@ -1,0 +1,50 @@
+{
+  "8": {
+    "old": "Mathematical proofs and notation",
+    "new": "Formal mathematics and equations",
+    "rationale": "Records are dominated by LaTeX-style equations, advanced calculus and analysis problems, and math-to-code snippets from open-web-math, finemath, and arXiv rather than elementary proof exercises alone.",
+    "records_read": 220
+  },
+  "9": {
+    "old": "Measurement and unit word problems",
+    "new": "Measurement and unit word problems",
+    "rationale": "Roughly half of sampled records are rate, distance, weight, and cost word problems from orca-math and aqua_rat, consistently asking students to compute quantities with real-world units.",
+    "records_read": 220
+  },
+  "10": {
+    "old": "Software licences and file headers",
+    "new": "Open source code and licensing",
+    "rationale": "Samples combine repository source files, commit-pack code, and Stack Exchange developer posts where copyright and license boilerplate is a recurring signature, not just isolated file headers.",
+    "records_read": 220
+  },
+  "11": {
+    "old": "Public health and clinical care",
+    "new": "Public health and clinical care",
+    "rationale": "Over half of records discuss patients, treatments, vaccines, and epidemiological studies drawn heavily from PubMedQA and biomedical web sources.",
+    "records_read": 220
+  },
+  "12": {
+    "old": "Academic research and higher education",
+    "new": "Academic research and higher education",
+    "rationale": "Content centers on universities, research programs, academic awards, and educational policy from fineweb-edu, Wikipedia, and scientific paper abstracts.",
+    "records_read": 220
+  },
+  "13": {
+    "old": "Religion and scripture",
+    "new": "Religion and scripture",
+    "rationale": "Multilingual Wikipedia and encyclopedic entries consistently cover prophets, Islamic and Christian history, religious doctrine, and sacred figures across many languages.",
+    "records_read": 220
+  },
+  "14": {
+    "old": "Criminal justice and human rights cases",
+    "new": "Criminal justice and human rights cases",
+    "rationale": "Records blend crime and court reporting with ECTHR human-rights case material and police or prison proceedings in news and legal corpora.",
+    "records_read": 220
+  },
+  "15": {
+    "old": "Geometry and algebra",
+    "new": "Geometry and algebra",
+    "rationale": "Two-thirds of samples contain explicit equations about triangles, polynomials, areas, and coordinate geometry from OpenMathInstruct and finemath sources.",
+    "records_read": 220
+  }
+}

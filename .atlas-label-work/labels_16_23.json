@@ -1,0 +1,50 @@
+{
+  "16": {
+    "old": "Open-ended assistant conversation",
+    "new": "AI assistant dialogue and advice",
+    "rationale": "Anthropic hh-rlhf accounts for 69 of 220 samples with Human/Assistant pairs on everyday advice, ethics, and harmful-request handling. Instruction axis dominates at 105 records across OpenAssistant and UltraChat, making chatbot dialogue the distinctive subject rather than any single topic domain.",
+    "records_read": 220
+  },
+  "17": {
+    "old": "SQL queries over event and record tables",
+    "new": "SQL databases and event records",
+    "rationale": "Synthetic text-to-SQL from gretelai and DuckDB sources fills 76 samples, and SQL keywords appear in 97 records with CREATE TABLE, SELECT, and date or event schemas. Web snippets about tours and annual meetings supplement but do not outweigh structured database query content.",
+    "records_read": 220
+  },
+  "18": {
+    "old": "Machine learning theory and algorithms",
+    "new": "Machine learning theory and algorithms",
+    "rationale": "ML-ArXiv papers are 115 of 220 samples with titles on classifiers, neural networks, reinforcement learning, and optimization. Scientific axis covers 159 records and machine-learning terminology appears in 136, clearly distinguishing this from general computing or math instruction.",
+    "records_read": 220
+  },
+  "19": {
+    "old": "Elementary arithmetic word problems",
+    "new": "General knowledge and word problems",
+    "rationale": "Samples mix Wikipedia biographies, pet-care advice, Python debugging, Harry Potter trivia, and Orca math word problems rather than pure arithmetic. Instruction and encyclopedic axes each exceed 25 records, so a broader everyday-knowledge label fits better than elementary arithmetic alone.",
+    "records_read": 220
+  },
+  "20": {
+    "old": "Historical calendars and the Catholic church",
+    "new": "World history and calendar events",
+    "rationale": "Wikipedia dominates at 166 of 220 records with multilingual on-this-day pages listing births, deaths, and historical events by date. Calendar and chronology vocabulary appears in 53 records across Gregorian, Islamic, and Japanese dating systems, well beyond Catholic church history alone.",
+    "records_read": 220
+  },
+  "21": {
+    "old": "Film and television",
+    "new": "Film and television",
+    "rationale": "Film and TV terminology appears in 101 of 220 records covering actors, directors, movie listings, streaming services, and episode guides. Wikipedia filmographies and web entertainment articles in English, Turkish, and Azerbaijani reinforce cinema and broadcast media as the core subject.",
+    "records_read": 220
+  },
+  "22": {
+    "old": "Buildings, materials and construction",
+    "new": "Built and natural environment",
+    "rationale": "Content spans construction and skyscrapers but also rivers, dams, geology, edible gardens, and coastal cleanup across 36 water-related and 27 construction-themed records. Web and encyclopedic sources describe physical places and landforms alongside building materials and infrastructure.",
+    "records_read": 220
+  },
+  "23": {
+    "old": "Plants and animals",
+    "new": "Plants and animals",
+    "rationale": "Species, plant, bird, and tree terminology appears in 61 of 220 records from Wikipedia genus entries, wildlife articles, and gardening guides. EU animal-breeding law, fishing reports, and Orca math problems about birds or bananas sit within a consistent natural-history subject area.",
+    "records_read": 220
+  }
+}

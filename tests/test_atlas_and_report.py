@@ -28,6 +28,7 @@ def tiny_atlas(tmp_path):
         path,
         centroids=centroids,
         region_category=np.repeat([0, 1, 2], 4).astype(np.int32),
+        region_size=np.full(n_regions, 100.0, dtype=np.float32),
         coords=rng.normal(size=(n_regions, 2)).astype(np.float32),
         probe_coef=rng.normal(size=(3, dim)).astype(np.float32),
         probe_intercept=np.zeros(3, dtype=np.float32),
@@ -225,6 +226,7 @@ def test_a_legacy_artifact_without_reference_sizes_says_nothing_rather_than_gues
     tiny_atlas,
 ):
     """The divisor is the reference distribution, and older artifacts lack it."""
+    tiny_atlas.region_size = None
     cov = tiny_atlas.coverage(
         np.array([1] * 10, dtype=np.int32), np.zeros(10, dtype=np.int32)
     )
@@ -1054,7 +1056,8 @@ def test_effective_regions_separates_breadth_from_occupancy(tiny_atlas):
     """Occupancy counts a region holding one record the same as one holding half.
 
     Two corpora that occupy the same four regions get the same occupancy number
-    and should not get the same breadth number.
+    and should not get the same breadth number. Effective coverage caps each
+    cell at 1× map density, so a peak does not erase the thin neighbours.
     """
     even = np.array([0, 1, 2, 3] * 25, dtype=np.int32)
     lopsided = np.array([0] * 97 + [1, 2, 3], dtype=np.int32)
@@ -1065,7 +1068,9 @@ def test_effective_regions_separates_breadth_from_occupancy(tiny_atlas):
 
     assert a["regions_occupied"] == b["regions_occupied"] == 4
     assert a["effective_regions"] == pytest.approx(4.0, abs=0.05)
-    assert b["effective_regions"] < 1.3
+    # Lopsided still scores the three thin cells as fractions, so below full.
+    assert b["effective_regions"] < a["effective_regions"]
+    assert b["effective_regions"] > 1.0
 
 
 def test_coverage_names_the_subject_areas_the_corpus_never_reaches(tiny_atlas):
@@ -1122,7 +1127,7 @@ def test_the_coverage_facet_carries_no_record_text(tiny_atlas):
 
 def test_a_gap_is_absolute_when_the_atlas_records_no_reference_mass(tiny_atlas):
     """atlas-lite-v0 stores no reference distribution, so no share is invented."""
-    assert tiny_atlas.region_size is None
+    tiny_atlas.region_size = None
     regions = np.array([0, 1, 2, 3] * 25, dtype=np.int32)
     cov = tiny_atlas.coverage(regions, tiny_atlas.region_category[regions])
     assert all("reference_share" not in g for g in cov["coverage_gaps"])
