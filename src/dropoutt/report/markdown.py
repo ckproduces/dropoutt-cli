@@ -194,17 +194,19 @@ def _atlas(s: ScanSummary) -> list[str]:
         out.append(
             "Density is your share of a subject area against the reference "
             "corpus's share of the same one: 1.0× is as common in your data as "
-            "it is on the map."
+            "it is on the map, and cells with little behind them are pulled "
+            "towards it. Reach counts subregions evenly weighted, so one "
+            "holding a single record does not count as one held in full."
         )
         out.append("")
         out += _table(
-            ["subject area", "share", "density", "reached"],
+            ["subject area", "share", "density", "reach"],
             [
                 [
                     area.name,
                     f"{area.share * 100:.1f}%",
                     density_ratio(area.ratio),
-                    f"{len(area.cells) - area.unreached}/{len(area.cells)}",
+                    f"{area.effective_reach:.1f}/{len(area.cells)}",
                 ]
                 for area in reached[:GRID_ROWS]
             ],

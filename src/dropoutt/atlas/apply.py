@@ -609,6 +609,18 @@ class Atlas:
         else:
             w = None
             region_counts = np.bincount(on, minlength=self.n_regions)
+
+        # How many independent observations are actually behind the histogram.
+        # Not `placed`: a weighted record standing for five thousand others
+        # carries one record's worth of evidence, and treating the weighted
+        # total as the sample size would claim certainty the scan never had.
+        # Kish's effective sample size is the standard correction.
+        if w is not None and w.size:
+            effective_n = float(w.sum()) ** 2 / float((w * w).sum())
+        else:
+            effective_n = float(placed)
+        result["effective_sample"] = round(effective_n, 1)
+
         # Categories are counted over placed records only. Counting them over
         # every record while the region histogram covers only placed ones put
         # two different denominators in the same panel, so a category share and
@@ -622,6 +634,7 @@ class Atlas:
         nonzero = int((region_counts > 0).sum())
         mass = region_counts / max(region_counts.sum(), 1)
         entropy = float(-(mass[mass > 0] * np.log(mass[mass > 0])).sum())
+        density, density_model = self._density(region_counts, effective_n)
 
         result.update({
             "status": "ok",
@@ -663,7 +676,8 @@ class Atlas:
             # which is a reference distribution nobody should have to fetch to
             # read a number. Cells absent from this map have a density of zero
             # by construction.
-            "region_density": self._density(region_counts),
+            "region_density": density,
+            "density_model": density_model,
             "coverage_gaps": self._gaps(region_counts),
             # How many subject areas the atlas actually carries regions for.
             # Not the size of the taxonomy: 31 categories are defined and only
@@ -684,7 +698,15 @@ class Atlas:
     #: of records is as likely to be probe error as to be real presence.
     GAP_SHARE = 0.005
 
-    def _density(self, region_counts: np.ndarray) -> dict[str, float]:
+    #: The most a cell can be shrunk towards the map. Reached when the corpus
+    #: is statistically indistinguishable from the reference distribution, at
+    #: which point every ratio is 1.0 and the honest reading is "nothing here
+    #: the sample can tell you".
+    MAX_PRIOR_STRENGTH = 1e7
+
+    def _density(
+        self, region_counts: np.ndarray, effective_n: float
+    ) -> tuple[dict[str, float], dict[str, Any]]:
         """Occupied cells, each as a multiple of the map's own density there.
 
         The reference corpus is not spread evenly over the cells — some
@@ -692,23 +714,103 @@ class Atlas:
         are here" says nothing until it is divided by how much of the reference
         corpus is there too. That divisor is ``region_size``, which older
         artifacts do not carry; without it this is empty rather than wrong.
+
+        The raw quotient is unusable in the tail, and the tail is most of the
+        map. A cell holding one sampled record out of ten thousand produced
+        "0.02x the map" — read as a confident claim of under-coverage when it
+        is a coin flip about whether the sample happened to land there at all.
+        The same arithmetic at the other end turned one record in a rarely-used
+        neighbourhood into a 40x cell.
+
+        So the estimate is a posterior mean rather than a quotient: a Dirichlet
+        prior whose weights are the map's own densities, with strength
+        :meth:`_prior_strength` estimated from how far the whole grid actually
+        departs from the map. Well-observed cells are left alone; unreliable
+        ones are pulled towards parity, which is the correct rendering of "no
+        evidence" and is what a reader takes 1.0 to mean.
         """
         if self.region_size is None or not len(self.region_size):
-            return {}
+            return {}, {}
         sizes = np.asarray(self.region_size, dtype=np.float64)
         reference = float(sizes.sum())
         placed = float(region_counts.sum())
         if reference <= 0 or placed <= 0:
-            return {}
-        expected = sizes / reference
+            return {}, {}
+
+        n = max(float(effective_n), 1.0)
+        # Everything in units of the effective sample: `region_counts` may be
+        # weighted estimates of corpus records, and the prior below is a count
+        # of pseudo-observations, so the two have to be on one scale.
+        share = sizes / reference
+        seen = n * (region_counts / placed)
+        due = n * share
+        alpha = self._prior_strength(seen, due)
+        estimate = (seen + alpha) / (due + alpha)
+
         out: dict[str, float] = {}
         for cell in np.nonzero(region_counts)[0]:
-            if expected[cell] <= 0:
+            if due[cell] <= 0:
                 continue
-            out[str(int(cell))] = round(
-                float((region_counts[cell] / placed) / expected[cell]), 4
-            )
-        return out
+            out[str(int(cell))] = round(float(estimate[cell]), 4)
+        return out, {
+            "effective_sample": round(n, 1),
+            "prior_strength": round(float(alpha), 3),
+            # What a cell you never reached is worth. Near 1.0 means the sample
+            # was too thin to call absence at all; near 0 means you would have
+            # seen it if it were there.
+            "unreached_density": round(
+                float(alpha / (float(due.mean()) + alpha)), 4
+            ),
+        }
+
+    #: Expected count below which a cell carries too little information to help
+    #: estimate the prior. Five is the usual floor for treating a Poisson count
+    #: as approximately normal, and cells under it are exactly the ones the
+    #: prior is being estimated in order to rescue.
+    MIN_EXPECTED_FOR_FIT = 5.0
+
+    #: Prior strength when the grid cannot estimate one. Two pseudo-records: a
+    #: cell has to have been worth seeing a couple of times before its own count
+    #: outweighs "assume it looks like the map".
+    DEFAULT_PRIOR_STRENGTH = 2.0
+
+    def _prior_strength(self, seen: np.ndarray, due: np.ndarray) -> float:
+        """How many pseudo-records of "you look like the map" each cell starts with.
+
+        This is the parameter that makes one cell's estimate depend on the rest
+        of the grid, which is the point: whether a single record in a cell is
+        signal or noise cannot be answered from that cell alone.
+
+        The model is Gamma-Poisson. A cell's count is Poisson about ``due * r``
+        where ``r`` is its true density ratio, and ``r`` is drawn from a Gamma
+        with mean 1 and variance ``1/alpha``. The posterior mean of ``r`` is
+        then ``(seen + alpha) / (due + alpha)`` — per cell, and scaled by that
+        cell's own expected count, which is what makes it work at both ends: a
+        lone record where forty were due is strong evidence, and the same lone
+        record where half of one was due is nothing.
+
+        That per-cell scaling is why this replaced a Dirichlet with a single
+        global concentration. The Dirichlet shrinks every cell by the same
+        factor, so on a corpus with one enormous cell the fitted concentration
+        collapsed and the tail — the part that needed shrinking — got none.
+
+        ``alpha`` is fitted by moments on cells with enough expected mass to say
+        anything: the spread of the observed ratios, less the Poisson noise
+        already inside it, is what is left for the prior to explain.
+        """
+        usable = due >= self.MIN_EXPECTED_FOR_FIT
+        if int(usable.sum()) < 3:
+            return self.DEFAULT_PRIOR_STRENGTH
+        ratios = seen[usable] / due[usable]
+        # Observed spread is the real spread plus the sampling noise on top of
+        # it. Subtracting the second leaves the first; when nothing is left the
+        # corpus is indistinguishable from the map and the prior wins outright.
+        spread = float(ratios.var())
+        noise = float((1.0 / due[usable]).mean())
+        excess = spread - noise
+        if excess <= 0:
+            return self.MAX_PRIOR_STRENGTH
+        return float(min(max(1.0 / excess, 0.0), self.MAX_PRIOR_STRENGTH))
 
     def _gaps(self, region_counts: np.ndarray) -> list[dict[str, Any]]:
         """Regions the atlas knows about that this corpus never reaches.

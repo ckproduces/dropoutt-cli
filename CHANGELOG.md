@@ -2,6 +2,55 @@
 
 ## Unreleased
 
+### A cell's density is now an estimate, not a quotient
+
+`records / expected` is unusable in the tail, and the tail is most of the map.
+One record where half of one was due came out as "2.2× the map" — a confident
+claim built on a coin flip about whether the sample landed there at all. The
+same arithmetic at the other end made forty records out of ninety-five a 147×
+cell.
+
+Each cell is now a Gamma-Poisson posterior mean, `(seen + α) / (due + α)`,
+where `due` is what the reference corpus's own density predicts and `α` is
+fitted from the spread of the whole grid less the sampling noise inside it.
+That is what makes one cell's number depend on every other cell: whether a
+single record is signal or noise cannot be answered from that cell alone.
+
+The behaviour is the point, and it is opposite in the two regimes:
+
+| corpus | placed | one-record cell reads |
+| --- | ---: | --- |
+| messy fixture | 95 | **1.2×** — one record where 0.45 was due is nothing |
+| long-tailed synthetic | 9,296 | **0.02×** — one record where 44 was due is 6.5σ |
+
+A corpus drawn from the map itself now reports every cell at 1.0 rather than at
+whatever its sampling noise was.
+
+The first attempt used a Dirichlet with a single global concentration, and it
+failed on real data: it shrinks every cell by the same factor, so one enormous
+cell collapsed the fitted concentration and the tail — the part that needed
+shrinking — got none. Scaling per cell by its own expected count is what fixes
+it.
+
+Two things fall out. `PLACE_MIN_SHARE`, a hand-picked floor that existed only to
+keep one-record cells off the place lists, is gone — a cell with no evidence
+behind it now sits near parity and sorts itself out of both ends. And
+`effective_sample` (Kish) is emitted and threaded through every significance
+gate: after weighting, a record standing for five thousand others is still one
+observation, and the gates were reading the weighted total.
+
+### Reach counts subregions evenly weighted
+
+The column counted cells holding anything at all, which makes one record the
+equal of three thousand. An area holding `[3000, 1, 1, 1]` reported **4/4** —
+full coverage of its subject — on the strength of three records. It now reports
+**1.0/4**, the exponential of Shannon entropy over the row, which is the same
+measure the section header already used for the whole map.
+
+On a long-tailed corpus the two disagree by 4×: 34 cells "reached", 8.1
+effective. Dropping four singleton cells — records the sample may or may not
+have caught — moves the old number by 12% and the new one by 0.35%.
+
 ### The atlas places ten times as many records
 
 The atlas and the token budget shared one 20,000-record ceiling, which put a

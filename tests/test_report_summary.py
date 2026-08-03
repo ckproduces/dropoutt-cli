@@ -338,6 +338,31 @@ def test_the_place_lists_are_ranked_by_density_not_by_record_count(scanned):
                                            story.places)
 
 
+def test_reach_counts_subregions_evenly_weighted():
+    """One record must not count the same as three thousand.
+
+    The column counted cells holding anything at all, so a row whose corpus is
+    one big cell with three stray records beside it reported full coverage of
+    its subject area.
+    """
+    from dropoutt.report.atlas_story import Area, Cell
+
+    def area(counts):
+        return Area(area=0, name="x", records=sum(counts), share=0.0, ratio=0.0,
+                    cells=[Cell(region=i, records=c, ratio=1.0, level=1.0,
+                                caption="") for i, c in enumerate(counts)])
+
+    # The two rows the old column could not tell apart.
+    assert area([4000, 1, 0, 0]).effective_reach == pytest.approx(1.0, abs=0.01)
+    assert area([2000, 2000, 0, 0]).effective_reach == pytest.approx(2.0)
+    # The one it got backwards: four "reached" cells, one subject.
+    assert area([3000, 1, 1, 1]).effective_reach == pytest.approx(1.0, abs=0.05)
+    assert area([3000, 1, 1, 1]).unreached == 0
+
+    assert area([1500, 900, 600, 0]).effective_reach == pytest.approx(2.80, abs=0.01)
+    assert area([0, 0, 0, 0]).effective_reach == 0.0
+
+
 def test_every_square_carries_its_own_ratio(scanned):
     """The number has to survive paper, a screenshot, and a keyboard.
 

@@ -136,6 +136,25 @@ class Area:
     def unreached(self) -> int:
         return sum(1 for cell in self.cells if not cell.records)
 
+    @property
+    def effective_reach(self) -> float:
+        """How many of this area's cells the corpus covers, in even ones.
+
+        Counting cells with any record at all makes one record the equal of
+        three thousand, and on a long tail that is most of what the number
+        measures. An area holding ``[3000, 1, 1, 1]`` reported full coverage of
+        its subject on the strength of three records; this reports 1.01.
+
+        The exponential of Shannon entropy — the same quantity the section
+        header already uses for the whole map, applied to one row.
+        """
+        counts = [cell.records for cell in self.cells if cell.records]
+        total = sum(counts)
+        if not total:
+            return 0.0
+        shares = [count / total for count in counts]
+        return math.exp(-sum(p * math.log(p) for p in shares))
+
 
 @dataclass
 class Insight:
@@ -219,6 +238,14 @@ class AtlasStory:
     #: The densest cell on the map relative to the reference corpus, which is
     #: what the top of the colour scale was normalised against.
     grid_peak: float = 0.0
+    #: Independent observations behind the histogram, after weighting. Not
+    #: `placed`: a record standing for five thousand others is still one
+    #: record's worth of evidence, and every significance gate takes this.
+    effective_sample: float = 0.0
+    #: How hard each cell was pulled towards the map, and where an unreached
+    #: cell lands. See :meth:`dropoutt.atlas.apply.Atlas._prior_strength`.
+    prior_strength: float = 0.0
+    unreached_density: float = 0.0
     version: str = ""
     probe_accuracy: float | None = None
 
@@ -260,6 +287,10 @@ def build_story(result) -> AtlasStory | None:
         )
         return story
 
+    model = coverage.get("density_model") or {}
+    story.effective_sample = float(model.get("effective_sample", 0.0))
+    story.prior_strength = float(model.get("prior_strength", 0.0))
+    story.unreached_density = float(model.get("unreached_density", 0.0))
     story.regions_touched = int(coverage.get("regions_occupied", 0))
     story.regions_total = int(coverage.get("regions_total", 0))
     story.effective = float(coverage.get("effective_regions", 0.0))
@@ -343,13 +374,6 @@ def _place(result, region: int, records: int, share: float,
 #: of each is enough to see the shape and few enough to read.
 PLACES_SHOWN = 5
 
-#: A place has to hold at least this share of the corpus before its density is
-#: worth reporting either way. Without a floor the list is decided by cells
-#: holding a single record, whose ratio is arithmetically enormous and means
-#: nothing — one record over a neighbourhood the reference corpus barely used.
-PLACE_MIN_SHARE = 0.002
-
-
 def _ranked_places(result, coverage: dict) -> tuple[list[Place], list[Place]]:
     """The map's own extremes for this corpus: densest and thinnest, by ratio.
 
@@ -361,8 +385,14 @@ def _ranked_places(result, coverage: dict) -> tuple[list[Place], list[Place]]:
 
     Ranking by density against the map asks the question the fixed reference
     exists for: where does this corpus stand *out*, and where does it show up
-    only nominally. Both are cut at a floor share, because the ratio of a cell
-    holding one record is arithmetic rather than evidence.
+    only nominally.
+
+    There is no minimum share here any more. There used to be, because the raw
+    quotient made a one-record cell the most extreme thing on the map in either
+    direction, and a hand-picked floor was the cheapest way to keep it off the
+    list. The estimate is shrunk now — see
+    :meth:`dropoutt.atlas.apply.Atlas._density` — so a cell with no evidence
+    behind it sits near parity and sorts itself out of both ends.
     """
     counts = {
         int(region): int(count)
@@ -377,9 +407,9 @@ def _ranked_places(result, coverage: dict) -> tuple[list[Place], list[Place]]:
         return [], []
 
     candidates = [
-        (region, counts[region], counts[region] / placed, ratios.get(region, 0.0))
+        (region, counts[region], counts[region] / placed, ratios[region])
         for region in counts
-        if counts[region] / placed >= PLACE_MIN_SHARE and ratios.get(region, 0.0) > 0
+        if ratios.get(region, 0.0) > 0
     ]
     if not candidates:
         return [], []
@@ -669,13 +699,21 @@ def _grid(result, coverage: dict,
             ),
         ))
 
+    # The row's own density is shrunk by the same rule as its cells, and with
+    # the same prior. A row printed as a raw quotient beside cells that were
+    # not is a row that disagrees with the squares underneath it.
+    model = coverage.get("density_model") or {}
+    n = float(model.get("effective_sample") or placed) or 1.0
+    alpha = float(model.get("prior_strength") or 0.0)
+
     grid = list(rows.values())
     for area in grid:
         area.cells.sort(key=lambda cell: (-cell.ratio, cell.region))
         area.share = area.records / placed
         if reference > 0:
             expected = sum(sizes[cell.region] for cell in area.cells) / reference
-            area.ratio = area.share / expected if expected > 0 else 0.0
+            if expected > 0:
+                area.ratio = (n * area.share + alpha) / (n * expected + alpha)
     return sorted(grid, key=lambda a: (-a.share, a.name.lower())), peak
 
 
@@ -780,13 +818,14 @@ INSIGHTS_PER_KIND = 3
 INSIGHT_ORDER = ("dominance", "over", "under", "thin", "twins")
 
 
-def _significant(observed: float, expected: float, n: int) -> bool:
+def _significant(observed: float, expected: float, n: float) -> bool:
     """Whether a share differs from its expectation by more than sampling noise.
 
     A binomial standard error on the *expected* share, which is the null being
-    tested. ``n`` is the number of records actually placed, not the corpus size:
-    the atlas sees a sample, and pretending otherwise would narrow every
-    interval on the page by the sampling ratio.
+    tested. ``n`` is how many independent observations are behind the histogram
+    — the effective sample size, not the corpus size and not the weighted total.
+    Pretending otherwise would narrow every interval on the page by the sampling
+    ratio, and after weighting a single record can stand for thousands.
     """
     if n <= 0 or not 0.0 < expected < 1.0:
         return False
@@ -818,7 +857,10 @@ def _insights(result, coverage: dict, story: AtlasStory) -> list[Insight]:
     from ..atlas.compare import category_labels
 
     out: list[Insight] = []
-    placed = story.placed or 1
+    # Effective, not placed: every gate below asks "could this be noise", and
+    # the answer depends on how many independent records were seen rather than
+    # on how many they were scaled up to represent.
+    placed = story.effective_sample or story.placed or 1
     labels = category_labels(_atlas_of(result))
     per_area, _counts = _region_categories(result, coverage)
     allocation, n_regions = _map_allocation(result)
@@ -861,7 +903,7 @@ def _insights(result, coverage: dict, story: AtlasStory) -> list[Insight]:
     # The trailing "what this means" sentence goes on the first of each kind
     # only. Three cards ending in the same clause reads as boilerplate and
     # teaches the reader to stop at the headline.
-    comparable = story.placed >= MIN_PLACED_FOR_INSIGHT
+    comparable = placed >= MIN_PLACED_FOR_INSIGHT
     over = 0
     for area, _count in sorted(area_counts_by_id.items(), key=lambda kv: -kv[1]):
         if not comparable or over >= INSIGHTS_PER_KIND:

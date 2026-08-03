@@ -143,14 +143,82 @@ def test_the_density_of_each_cell_travels_with_the_coverage_facet():
     cov = atlas.coverage(regions, np.zeros(100, dtype=np.int32))
 
     assert set(cov["region_density"]) == set(cov["region_counts"])
-    # Four times the records in cell 1, against the reference corpus's own
-    # split between the two, so the ratio has to follow the same direction.
-    expected = (0.8 / 0.2) * (
-        float(atlas.region_size[2]) / float(atlas.region_size[1])
-    )
-    assert cov["region_density"]["1"] / cov["region_density"]["2"] == pytest.approx(
-        expected, rel=1e-3
-    )
+    # Four times the records in cell 1, so its density has to come out higher.
+    # The two are not in exactly a 4:1 ratio, because each is shrunk towards
+    # the map by its own expected count — see the tests below.
+    assert cov["region_density"]["1"] > cov["region_density"]["2"]
+    assert cov["density_model"]["effective_sample"] == 100
+
+
+def test_a_cells_density_is_shrunk_by_how_much_evidence_is_behind_it():
+    """The same observation means different things at different sample sizes.
+
+    One record where forty were due is strong evidence of under-coverage. The
+    same one record where half of one was due is nothing at all. A raw quotient
+    reports both as a confident number, and on a small scan the whole grid is
+    the second case.
+    """
+    from dropoutt.atlas import load_bundled
+
+    atlas = load_bundled()
+    if atlas is None or atlas.region_size is None:
+        pytest.skip("bundled atlas carries no reference sizes")
+    share = np.asarray(atlas.region_size, dtype=float)
+    share = share / share.sum()
+    rng = np.random.default_rng(0)
+
+    def scan(n, p):
+        regions = rng.choice(len(share), size=n, p=p).astype(np.int32)
+        return atlas.coverage(regions, np.zeros(n, dtype=np.int32))
+
+    # A corpus drawn from the map itself has nothing to report, and every cell
+    # comes back at parity rather than at whatever the sampling noise was.
+    same = scan(9_000, share)
+    assert all(abs(v - 1.0) < 0.05 for v in same["region_density"].values())
+    assert same["density_model"]["prior_strength"] >= 1e6
+
+    # Lopsided and well sampled: the signal survives essentially untouched.
+    lopsided = (share ** 4) / (share ** 4).sum()
+    big = scan(9_000, lopsided)
+    counts = {int(k): int(v) for k, v in big["region_counts"].items()}
+    thin = min(counts, key=lambda r: counts[r])
+    raw = (counts[thin] / 9_000) / share[thin]
+    assert big["region_density"][str(thin)] < 0.5
+    assert raw < big["region_density"][str(thin)], "shrinkage only ever pulls inward"
+
+    # The same corpus at a hundredth of the sample: now a single record is not
+    # evidence of anything, and the cell reads as parity instead of as a claim.
+    small = scan(95, lopsided)
+    counts = {int(k): int(v) for k, v in small["region_counts"].items()}
+    singles = [r for r, c in counts.items() if c == 1]
+    assert singles, "fixture must produce at least one single-record cell"
+    for cell in singles:
+        assert abs(small["region_density"][str(cell)] - 1.0) < 0.45
+
+
+def test_the_effective_sample_is_what_the_weights_leave_behind():
+    """A record standing for five thousand others is still one observation.
+
+    Every gate that asks "could this be noise" takes this number. Handing it
+    the weighted total would claim certainty proportional to the corpus rather
+    than to what was actually read.
+    """
+    from dropoutt.atlas import load_bundled
+
+    atlas = load_bundled()
+    if atlas is None:
+        pytest.skip("no bundled atlas")
+    regions = np.array([1] * 50 + [2] * 50, dtype=np.int32)
+    cats = np.zeros(100, dtype=np.int32)
+
+    flat = atlas.coverage(regions, cats, weights=[1.0] * 100)
+    assert flat["density_model"]["effective_sample"] == 100
+
+    # Fifty records carrying a thousand each, beside fifty carrying one: a
+    # hundred records read, nowhere near a hundred records' worth of evidence.
+    skewed = atlas.coverage(regions, cats, weights=[1000.0] * 50 + [1.0] * 50)
+    assert skewed["density_model"]["effective_sample"] < 55
+    assert skewed["placed"] == 100
 
 
 def test_a_legacy_artifact_without_reference_sizes_says_nothing_rather_than_guessing(
