@@ -21,6 +21,7 @@ class NotTrainingData(Check):
     check_id = "T0-SCHEMA-001"
     title = "Files are not training data"
     tier = 0
+    unit = "dataset"
     profiles = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN)
     cost = CostClass.FREE
     severity = Severity.BLOCKING
@@ -33,10 +34,7 @@ class NotTrainingData(Check):
     )
 
     def finalize(self, ctx: ScanContext) -> list[Finding]:
-        offenders = {
-            name: reason
-            for name, reason in ctx.stats.get("not_training_data", {}).items()
-        }
+        offenders = dict(ctx.stats.get("not_training_data", {}))
         if not offenders:
             return []
         detail = "; ".join(f"{name}: {reason}" for name, reason in list(offenders.items())[:4])
@@ -48,7 +46,7 @@ class NotTrainingData(Check):
                 count=len(offenders),
                 total=len(ctx.datasets),
                 detail=detail,
-                by_dataset={k: 1 for k in offenders},
+                by_dataset=dict.fromkeys(offenders, 1),
             )
         ]
 
@@ -58,6 +56,7 @@ class MixedSchemas(Check):
     check_id = "T0-SCHEMA-002"
     title = "One folder contains several record layouts"
     tier = 0
+    unit = "dataset"
     profiles = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN)
     cost = CostClass.FREE
     severity = Severity.WARNING
@@ -81,7 +80,7 @@ class MixedSchemas(Check):
                 count=len(mixed),
                 total=len(ctx.datasets),
                 detail="; ".join(parts),
-                by_dataset={k: 1 for k in mixed},
+                by_dataset=dict.fromkeys(mixed, 1),
             )
         ]
 
@@ -97,6 +96,10 @@ class UnparseableRecords(Check):
     blocking_in = (Profile.SFT, Profile.CORPUS)
     fix = "Repair or remove the malformed lines; they are silently skipped by most trainers."
 
+    MERGE_SUM = ("count", "total")
+    MERGE_COUNTS = ("by_dataset",)
+    MERGE_EVIDENCE = ("evidence",)
+
     def __init__(self) -> None:
         self.count = 0
         self.total = 0
@@ -108,7 +111,7 @@ class UnparseableRecords(Check):
         if doc.meta.get("parse_error"):
             self.count += 1
             self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            if len(self.evidence) < 5:
+            if len(self.evidence) < self.EVIDENCE_CAP:
                 self.evidence.append(
                     Evidence(doc.doc_id, doc.source_file, doc.source_index,
                              f"{doc.meta['parse_error']} :: {excerpt(doc.text, 120)}")
@@ -120,7 +123,7 @@ class UnparseableRecords(Check):
         return [
             make_finding(
                 self, count=self.count, total=self.total,
-                detail=f"{self.count} of {self.total} records could not be parsed as JSON",
+                detail=f"{self.count:,} of {self.total:,} records could not be parsed as JSON",
                 evidence=self.evidence, by_dataset=self.by_dataset,
             )
         ]
@@ -129,7 +132,7 @@ class UnparseableRecords(Check):
 @register
 class RoleValidity(Check):
     check_id = "T0-ROLE-001"
-    title = "Conversation role structure is valid"
+    title = "Conversations have a broken turn structure"
     tier = 0
     profiles = CONVERSATIONAL
     cost = CostClass.FREE
@@ -141,6 +144,11 @@ class RoleValidity(Check):
         "nothing. Consecutive same-role turns almost always indicate a flattening bug in "
         "whatever exported the data."
     )
+
+    EVIDENCE_CAP = 6
+    MERGE_SUM = ("total", "no_assistant", "consecutive", "empty_content", "ends_on_user")
+    MERGE_COUNTS = ("by_dataset",)
+    MERGE_EVIDENCE = ("evidence",)
 
     def __init__(self) -> None:
         self.total = 0
@@ -175,7 +183,7 @@ class RoleValidity(Check):
 
         if bad:
             self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            if len(self.evidence) < 6:
+            if len(self.evidence) < self.EVIDENCE_CAP:
                 self.evidence.append(
                     Evidence(doc.doc_id, doc.source_file, doc.source_index,
                              f"roles={roles} :: {excerpt(doc.text, 140)}")
@@ -184,13 +192,13 @@ class RoleValidity(Check):
     def finalize(self, ctx: ScanContext) -> list[Finding]:
         problems = []
         if self.no_assistant:
-            problems.append(f"{self.no_assistant} with no assistant turn")
+            problems.append(f"{self.no_assistant:,} with no assistant turn")
         if self.consecutive:
-            problems.append(f"{self.consecutive} with consecutive same-role turns")
+            problems.append(f"{self.consecutive:,} with consecutive same-role turns")
         if self.empty_content:
-            problems.append(f"{self.empty_content} with an empty message")
+            problems.append(f"{self.empty_content:,} with an empty message")
         if self.ends_on_user:
-            problems.append(f"{self.ends_on_user} ending on a user turn")
+            problems.append(f"{self.ends_on_user:,} ending on a user turn")
         if not problems:
             return []
         count = sum(self.by_dataset.values())
@@ -212,7 +220,7 @@ class RoleValidity(Check):
 @register
 class RoleVocabulary(Check):
     check_id = "T0-ROLE-002"
-    title = "Role names are not the canonical vocabulary"
+    title = "Role names your trainer will not recognise"
     tier = 0
     profiles = CONVERSATIONAL
     cost = CostClass.FREE
@@ -225,6 +233,10 @@ class RoleVocabulary(Check):
         "produces an all-ignored label vector, and drops the record. The counters that would "
         "have told you are frequently computed and then discarded."
     )
+
+    MERGE_SUM = ("total", "affected")
+    MERGE_COUNTS = ("seen", "by_dataset")
+    MERGE_EVIDENCE = ("evidence",)
 
     def __init__(self) -> None:
         self.total = 0
@@ -245,7 +257,7 @@ class RoleVocabulary(Check):
         for t in nonstandard:
             key = t.raw_role or "(missing)"
             self.seen[key] = self.seen.get(key, 0) + 1
-        if len(self.evidence) < 5:
+        if len(self.evidence) < self.EVIDENCE_CAP:
             names = sorted({t.raw_role or "(missing)" for t in nonstandard})
             self.evidence.append(
                 Evidence(doc.doc_id, doc.source_file, doc.source_index,
@@ -269,7 +281,7 @@ class RoleVocabulary(Check):
 @register
 class CoercedContent(Check):
     check_id = "T0-SCHEMA-004"
-    title = "Message content was not a string"
+    title = "Message content was not text"
     tier = 0
     profiles = CONVERSATIONAL
     cost = CostClass.FREE
@@ -281,6 +293,10 @@ class CoercedContent(Check):
         "trained on a Python repr, single quotes and None included. It looks like data and "
         "trains like noise."
     )
+
+    MERGE_SUM = ("total", "count")
+    MERGE_COUNTS = ("by_dataset",)
+    MERGE_EVIDENCE = ("evidence",)
 
     def __init__(self) -> None:
         self.total = 0
@@ -295,7 +311,7 @@ class CoercedContent(Check):
         if any(t.coerced for t in doc.turns):
             self.count += 1
             self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            if len(self.evidence) < 5:
+            if len(self.evidence) < self.EVIDENCE_CAP:
                 bad = next(t for t in doc.turns if t.coerced)
                 self.evidence.append(
                     Evidence(doc.doc_id, doc.source_file, doc.source_index,
@@ -308,7 +324,7 @@ class CoercedContent(Check):
         return [
             make_finding(
                 self, count=self.count, total=self.total,
-                detail=f"{self.count} records had non-string content coerced to text",
+                detail=f"{self.count:,} records had non-string content coerced to text",
                 evidence=self.evidence, by_dataset=self.by_dataset,
             )
         ]

@@ -67,13 +67,12 @@ def test_columnar_formats_are_read(suffix, tmp_path):
     ])
     path = tmp_path / f"data{suffix}"
     if suffix in (".arrow", ".feather"):
-        import pyarrow.ipc as ipc
+        from pyarrow import ipc
 
-        with pa.OSFile(str(path), "wb") as sink:
-            with ipc.new_file(sink, table.schema) as writer:
-                writer.write_table(table)
+        with pa.OSFile(str(path), "wb") as sink, ipc.new_file(sink, table.schema) as writer:
+            writer.write_table(table)
     else:
-        import pyarrow.orc as orc
+        from pyarrow import orc
 
         orc.write_table(table, path)
 
@@ -104,3 +103,68 @@ def test_externally_compressed_columnar_file_has_actionable_error(tmp_path):
 
     assert len(rows) == 1
     assert "decompress the file first" in rows[0].error
+
+
+def test_jsonl_holding_a_pretty_printed_json_array_is_read_as_records(tmp_path):
+    """The extension is a claim about the file, not a fact about it.
+
+    A real corpus shipped 1.26M records this way. Read line by line, every line
+    is a parse error, the repeated `{` and `"license": ...` fragments become a
+    157,045-copy duplicate cluster, and they are too short to identify so the
+    language breakdown fills with "unknown". One misread file, three wrong
+    findings.
+    """
+    path = tmp_path / "sorucevap.jsonl"
+    path.write_text(json.dumps(
+        [{"question": f"Soru {i}", "answer": f"Cevap {i}", "license": "CC BY-SA 3.0"}
+         for i in range(5)],
+        ensure_ascii=False, indent=2,
+    ), encoding="utf-8")
+
+    rows = list(readers.read_file(str(path), ".jsonl"))
+
+    assert len(rows) == 5
+    assert all(r.error is None for r in rows)
+    assert rows[0].payload["question"] == "Soru 0"
+    assert rows[4].payload["answer"] == "Cevap 4"
+
+
+def test_json_array_jsonl_is_never_line_split(tmp_path):
+    path = tmp_path / "a.jsonl"
+    path.write_text("[\n  {\"text\": \"one\"},\n  {\"text\": \"two\"}\n]\n", encoding="utf-8")
+
+    assert readers.plan_splits(str(path), ".jsonl", 4) == [readers.WHOLE_FILE]
+
+
+def test_ordinary_jsonl_still_splits(tmp_path):
+    path = tmp_path / "b.jsonl"
+    path.write_text("".join(json.dumps({"text": f"row {i}"}) + "\n" for i in range(400)),
+                    encoding="utf-8")
+
+    assert len(readers.plan_splits(str(path), ".jsonl", 4)) > 1
+
+
+def test_csv_headers_are_mapped_to_layout_keys(tmp_path):
+    """`Question,Activation-Feed,Result` matched no layout and fell back to raw."""
+    path = tmp_path / "t_dataset.csv"
+    path.write_text(
+        "Question,Activation-Feed,Result\n"
+        "What is Angular?,Kodlama,A frontend web framework.\n",
+        encoding="utf-8",
+    )
+
+    rows = list(readers.read_file(str(path), ".csv"))
+
+    assert rows[0].payload["question"] == "What is Angular?"
+    assert rows[0].payload["answer"] == "A frontend web framework."
+    # A column no layout knows about is kept, not dropped.
+    assert rows[0].payload["activation-feed"] == "Kodlama"
+
+
+def test_semicolon_delimited_csv_is_not_read_as_one_column(tmp_path):
+    path = tmp_path / "d.csv"
+    path.write_text("question;answer\nNedir bu?;Bir cevap.\n", encoding="utf-8")
+
+    rows = list(readers.read_file(str(path), ".csv"))
+
+    assert rows[0].payload == {"question": "Nedir bu?", "answer": "Bir cevap."}

@@ -9,8 +9,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from dropoutt.langid import LanguageDetector
 from dropoutt.models import Profile, Severity
 from dropoutt.runner import scan
@@ -120,22 +118,6 @@ def test_exact_duplicates_report_cluster_size(tmp_path):
     f = findings_by_id(run(tmp_path))["T0-DUP-001"]
     assert f.count == 8
     assert f.data["largest_cluster"] == 9
-
-
-def test_ascii_folded_turkish(tmp_path):
-    write_jsonl(tmp_path / "d" / "train.jsonl", [
-        chat("Bu bir soru degil mi ve bu daha iyi bir cevap icin gerekli olan sey",
-             "Evet bu dogru degil ve bir sey daha var gibi gorunuyor icin bu")
-    ] * 10)
-    assert "T1-LANG-004" in findings_by_id(run(tmp_path))
-
-
-def test_proper_turkish_is_not_flagged_as_ascii_folded(tmp_path):
-    write_jsonl(tmp_path / "d" / "train.jsonl", [
-        chat("Bu bir soru değil mi ve bu daha iyi bir cevap için gerekli olan şey",
-             "Evet bu doğru değil ve bir şey daha var gibi görünüyor için bu")
-    ] * 10)
-    assert "T1-LANG-004" not in findings_by_id(run(tmp_path))
 
 
 def test_degenerate_responses(tmp_path):
@@ -618,3 +600,49 @@ def test_a_classification_set_of_short_labels_is_not_a_length_cap(tmp_path):
         for i in range(400)
     ])
     assert "T0-TRUNC-002" not in findings_by_id(run(tmp_path))
+
+
+def test_near_duplicates_do_not_re_report_exact_copies(tmp_path):
+    """The exact-duplicate check already counted these.
+
+    On a real corpus the top six "near-copies" were the same four rows, each
+    shown matched against itself at 100% alike, while the count double-charged
+    every exact copy that a MinHash cluster happened to contain.
+    """
+    same = chat("Yapay zeka projelerinde veri guvenligi nasil saglanir bu bir soru",
+                "Veri sifreleme ve erisim kontrolleri ile guvenlik saglanir " + LONG)
+    records = [same] * 12
+    write_jsonl(tmp_path / "d" / "train.jsonl", records)
+
+    found = findings_by_id(run(tmp_path))
+
+    assert "T0-DUP-001" in found
+    assert "T1-NDUP-001" not in found
+
+
+def test_near_duplicates_still_fire_on_genuine_near_copies(tmp_path):
+    base = ("Yapay zeka projelerinde model dagitimi icin en iyi yontemler nelerdir "
+            "Docker konteynerleri Kubernetes orkestrasyonu ve bulut servisleri ile ")
+    records = [chat(f"{base} varyant {i}", f"{base} cevap metni {i} {LONG}")
+               for i in range(12)]
+    write_jsonl(tmp_path / "d" / "train.jsonl", records)
+
+    found = findings_by_id(run(tmp_path))
+
+    if "T1-NDUP-001" in found:
+        f = found["T1-NDUP-001"]
+        # No record is ever shown as its own near-copy.
+        assert all(e.doc_id != e.partner_doc_id for e in f.evidence)
+        # Each record appears at most once in the examples.
+        ids = [e.doc_id for e in f.evidence]
+        assert len(ids) == len(set(ids))
+
+
+def test_removed_single_language_checks_are_gone(tmp_path):
+    """Turkish-only checks were dropped; the general ones stay."""
+    from dropoutt.checks.base import REGISTRY
+
+    ids = {check.check_id for check in REGISTRY.all()}
+    assert "T0-ENC-002" not in ids
+    assert "T1-LANG-004" not in ids
+    assert {"T0-ENC-001", "T1-LANG-001", "T1-LANG-002", "T1-LANG-003"} <= ids

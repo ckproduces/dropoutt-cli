@@ -70,8 +70,8 @@ def chunk_text(
 def _split_sentences(text: str) -> list[str]:
     parts: list[str] = []
     buf: list[str] = []
-    for token in text.replace("?", ".").replace("!", ".").split("."):
-        token = token.strip()
+    for raw_token in text.replace("?", ".").replace("!", ".").split("."):
+        token = raw_token.strip()
         if not token:
             continue
         buf.append(token)

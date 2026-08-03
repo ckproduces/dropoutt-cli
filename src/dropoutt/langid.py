@@ -19,7 +19,10 @@ from __future__ import annotations
 import unicodedata
 from dataclasses import dataclass
 
+import numpy as np
+
 from .compat import HAVE_FASTTEXT_LID
+from .textutil import codepoints
 
 #: Below this, we emit "unknown" rather than a language.
 DEFAULT_FLOOR = 0.55
@@ -82,36 +85,70 @@ class LangResult:
         return set()
 
 
+#: Script names in the order their ids appear in the lookup table below. Index 0
+#: is "not a letter, ignore" and the last entry is the catch-all the original
+#: per-character loop called "Other".
+_SCRIPT_NAMES = ["", *[name for name, _lo, _hi in SCRIPT_RANGES], "Other"]
+_OTHER_ID = len(_SCRIPT_NAMES) - 1
+
+_SCRIPT_TABLE: np.ndarray | None = None
+
+
+def _script_table() -> np.ndarray:
+    """Codepoint -> script id, for the Basic Multilingual Plane.
+
+    A table of 65,536 bytes built once, in place of a Python loop that called
+    ``ord``, ``isalpha`` and then walked ten ranges for every character of every
+    record. Only characters that are letters get a script id, which is what the
+    per-character version did by testing ``isalpha`` before the ranges.
+    """
+    global _SCRIPT_TABLE
+    if _SCRIPT_TABLE is None:
+        table = np.zeros(0x10000, dtype=np.uint8)
+        for cp in range(0x10000):
+            if chr(cp).isalpha():
+                table[cp] = _OTHER_ID
+        for idx, (_name, lo, hi) in enumerate(SCRIPT_RANGES, start=1):
+            span = table[lo : hi + 1]
+            span[span == _OTHER_ID] = idx
+        _SCRIPT_TABLE = table
+    return _SCRIPT_TABLE
+
+
 def dominant_script(text: str) -> str:
-    counts: dict[str, int] = {}
-    for ch in text[:2000]:
-        cp = ord(ch)
-        if not ch.isalpha():
-            continue
-        for name, lo, hi in SCRIPT_RANGES:
-            if lo <= cp <= hi:
-                counts[name] = counts.get(name, 0) + 1
-                break
-        else:
-            counts["Other"] = counts.get("Other", 0) + 1
-    if not counts:
+    """Which writing system most of the letters in this text belong to.
+
+    Characters outside the Basic Multilingual Plane are ignored rather than
+    counted as "Other". Nothing downstream distinguishes the two: the only
+    consumer is :meth:`LanguageDetector.script_mismatch`, which treats "Other"
+    and "None" identically.
+    """
+    codes = codepoints(text[:2000])
+    if codes.size == 0:
         return "None"
-    return max(counts, key=lambda k: counts[k])
+    ids = _script_table()[codes[codes < 0x10000]]
+    ids = ids[ids != 0]
+    if ids.size == 0:
+        return "None"
+    return _SCRIPT_NAMES[int(np.bincount(ids, minlength=len(_SCRIPT_NAMES)).argmax())]
 
 
 class LanguageDetector:
     """Wraps whichever backend is available."""
 
-    def __init__(self, floor: float | None = None) -> None:
-        if HAVE_FASTTEXT_LID:
-            from ftlangdetect import detect  # noqa: PLC0415
+    #: How much of a record is fed to identification. fastText is a bag of
+    #: character n-grams, so the tail of a long document adds nothing the head
+    #: has not already said, and slicing before ``strip`` keeps a megabyte-long
+    #: record from being copied twice.
+    HEAD_CHARS = 2000
 
-            self._detect = detect
+    def __init__(self, floor: float | None = None) -> None:
+        self._model = None
+        if HAVE_FASTTEXT_LID:
             self.backend = "fasttext-lid.176"
             self.low_trust = False
             self.floor = DEFAULT_FLOOR if floor is None else floor
         else:
-            self._detect = None
             self.backend = "builtin-fallback"
             self.low_trust = True
             # The fallback is capped at 0.75 by construction and scores lower
@@ -119,23 +156,43 @@ class LanguageDetector:
             # reject everything and report a corpus as entirely unidentifiable.
             self.floor = 0.30 if floor is None else floor
 
+    def _predict(self, normalized: str) -> tuple[str, float]:
+        """One call into fastText's pybind layer.
+
+        ``ftlangdetect.detect`` is not used at scan time. It re-collapses
+        whitespace with a regex over text this class has already normalised,
+        takes a lock to look up a model in a dict, and allocates a TypedDict per
+        call — about seventy microseconds of pure overhead on top of a
+        prediction that costs less than that. The model object and the
+        normalisation contract are the same either way.
+        """
+        if self._model is None:
+            from ftlangdetect.detect import get_or_load_model
+
+            self._model = get_or_load_model(True)
+        predictions = self._model.f.predict(normalized + "\n", 1, 0.0, "strict")
+        if not predictions:
+            raise RuntimeError("fastText returned no prediction")
+        probability, label = predictions[0]
+        return label.replace("__label__", ""), min(float(probability), 1.0)
+
     def detect(self, text: str) -> LangResult:
-        stripped = text.strip()
-        script = dominant_script(stripped)
-        if len(stripped) < 12:
+        head = text[: self.HEAD_CHARS + 64].strip() if len(text) > self.HEAD_CHARS else text.strip()
+        script = dominant_script(head)
+        if len(head) < 12:
             # Too short to be worth an answer. Saying "unknown" here is more
             # useful than a coin flip presented as a result.
             return LangResult("unknown", 0.0, script, self.low_trust)
 
-        if self._detect is not None:
+        if not self.low_trust:
             try:
-                # fastText chokes on embedded newlines.
-                res = self._detect(stripped.replace("\n", " ")[:2000], low_memory=True)
-                lang, score = res["lang"], float(res["score"])
+                # fastText treats a newline as a record separator and rejects
+                # any string containing one, so whitespace is collapsed first.
+                lang, score = self._predict(" ".join(head[: self.HEAD_CHARS].split()))
             except Exception:
                 return LangResult("unknown", 0.0, script, self.low_trust)
         else:
-            lang, score = _fallback_detect(stripped, script)
+            lang, score = _fallback_detect(head, script)
 
         if score < self.floor:
             return LangResult("unknown", score, script, self.low_trust)

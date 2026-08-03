@@ -64,16 +64,28 @@ Works on macOS, Linux, and Windows. Cache defaults to `~/.cache/dropoutt`, or
 
 ```bash
 dropoutt scan ./my-corpus
-# writes .dropoutt/fingerprint.json, findings.jsonl, report.html
+# writes .dropoutt/{report.html, report.md, findings.jsonl, fingerprint.json}
 
 dropoutt scan ./my-corpus --model qwen3 --seq-len 4096 --target sft
 # unlocks token/mask checks and exit code 10 on blocking findings
 
 dropoutt checks                 # live catalog
 dropoutt checks T0-MASK-001     # one check in detail
-dropoutt atlas                  # atlas artifact summary
-dropoutt diff a.json b.json     # compare two fingerprints (incl. atlas)
+dropoutt doctor                 # what is installed, what each gap costs
+dropoutt fetch                  # pre-download everything --offline needs
 ```
+
+The report is one self-contained file: no CDN, no web fonts, no network, opens
+from `file://`. A scan opens it for you when there is a desktop to open it on,
+and quietly does not when there is not — over SSH, in CI, under a batch
+scheduler, or with output redirected. `--no-open` or `DROPOUTT_OPEN=0` turns
+that off; `DROPOUTT_OPEN=1` forces it, which is what you want with X11
+forwarding.
+
+Anything above 24 MB is scanned across processes — 200,000 SFT records in about
+20 seconds on a laptop. The result does not depend on how many cores you have:
+same findings, same examples, same fingerprint id on one core or on sixteen. Cap
+it with `-j` or `DROPOUTT_WORKERS` if you are sharing a node.
 
 **New here?** [docs/getting-started.md](docs/getting-started.md).
 
@@ -101,14 +113,20 @@ with the `atlas` extra places a sample of your records on that map and reports:
 
 | Section | What you learn |
 | --- | --- |
-| **What you cover** | Subject-area mix on the shared map |
-| **Missing subject areas** | What the atlas knows that you barely reach — something a histogram of *your* data cannot say |
-| **Where yours sit** | Your closest records first; atlas captions second |
-| **Off the map** | Records unlike the reference geography, with a diagnosis (often length, not “bad data”) |
-| **Same ground** | Datasets that share topical regions even when they share no wording |
+| **What the map says** | A handful of sentences that clear both a size gate and a significance gate — a subject 8x denser here than the map is built for, an area the map spends a fifth of itself on that you barely reach. Nothing is shown for being true; it is shown for being large *and* true |
+| **Where your data piles up** | The five crowded places, named by *your own record* nearest the centre of each, because that is the only description of a neighbourhood that is true by construction |
+| **Where you have only a toehold** | The sparsest places you reach. Reaching a place is not covering it, and an occupancy count cannot tell the difference |
+| **Shape** | Specialised or broad — right for a single-task set, wrong for a pretraining mixture, and the tool does not know which you are building |
+| **Crowding** | One area holding half the corpus whose records are 0.98 alike is one template, not one topic — and shingle dedup cannot see it |
+| **Same ground** | Datasets that occupy the same regions even when they share no wording, i.e. merging them adds volume and not coverage |
+| **Off the map** | Records unlike the reference geography, with a diagnosis (often length or markup, not “bad data”) |
 
-Compare two corpora with `dropoutt diff` to answer: *what would adding this set
-bring that I do not already have?* Details: [docs/atlas.md](docs/atlas.md).
+The atlas's own five-word captions for a region are shown as captions and never
+as findings: they are frequency counts over reference records, roughly 40% of
+that text is function words shared with other regions, and the subject-area
+names were assigned per source dataset rather than per record. What the map is
+trusted for is geometry. Details and the full list of what that costs:
+[docs/atlas.md](docs/atlas.md).
 
 ## Exit codes
 
@@ -150,7 +168,6 @@ in `dropoutt.toml`. Full narrative: [docs/checks.md](docs/checks.md). Live list:
 | `T0-TRUNC-001` | Records exceed the sequence length |
 | `T0-PACK-001` | Packing efficiency under concat-and-chunk |
 | `T0-ENC-001` | Text encoding is damaged |
-| `T0-ENC-002` | Turkish dotted / dotless I damage |
 | `T0-DUP-001` | Exact and whitespace-identical duplicates |
 | `T0-DEGEN-001` | Degenerate responses |
 
@@ -167,7 +184,6 @@ in `dropoutt.toml`. Full narrative: [docs/checks.md](docs/checks.md). Live list:
 | `T1-LANG-001` | Language composition and detection confidence |
 | `T1-LANG-002` | Records deviate from the dataset’s main language |
 | `T1-LANG-003` | Script does not match the detected language |
-| `T1-LANG-004` | Turkish text has lost its diacritics |
 | `T1-PII-001` | Personal data and credentials in training text |
 | `T1-IDENT-001` | Assistant identity leakage and refusal boilerplate |
 | `T1-STYLE-001` | Formulaic response openings |
@@ -183,7 +199,7 @@ yet links acting on a finding to a measured change in model quality.
 | nothing | inventory, schema, dedup, overlap, bundled contamination, language, PII, atlas (if installed) |
 | `--model` | exact tokens, fertility, truncation, template, loss mask, stop token, packing |
 | `--target` | pass-or-fail gating (exit 10) |
-| `dropoutt index-eval` | contamination against *your* held-out set |
+| the `atlas` extra | where the corpus sits on the map, and what it misses |
 
 ## Documentation
 
@@ -209,7 +225,21 @@ yet links acting on a finding to a measured change in model quality.
 ```bash
 pip install -e '.[dev]'
 pytest -q
+ruff check .
 python -m build && twine check dist/*
 ```
 
-Apache-2.0.
+Lint rules live in `pyproject.toml`, and every rule that is switched off says
+why. Two conventions are worth knowing before reading the source:
+
+- **Imports go inside functions** wherever the import is expensive or optional.
+  `dropoutt --help` should not pay for numpy, tokenizers and the atlas.
+- **Every fast path has a slow one beside it.** `tests/test_fastpaths.py`
+  checks the vectorised implementations against the obvious ones they replaced.
+  The contamination hashes in particular are frozen — the shipped `.idx` files
+  are tables of exactly those numbers, and no benchmark text exists anywhere to
+  recompute them from.
+
+## Licence
+
+dropoutt is Apache-2.0.

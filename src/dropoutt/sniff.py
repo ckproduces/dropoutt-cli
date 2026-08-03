@@ -41,8 +41,13 @@ scaffolding measurement and the framing decision come from the same number.
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
+from functools import lru_cache
+
+import numpy as np
+
+from .compat import json_loads
+from .textutil import codepoints, non_whitespace_prefix
 
 #: How much of the head of a file to read when deciding. Large enough that a
 #: few-hundred-KB file is decided on its entirety, small enough that a 4 GB
@@ -94,6 +99,9 @@ class Framing:
         return self.parsed / self.spans if self.spans else 0.0
 
 
+_QUOTE, _BACKSLASH, _OPEN, _CLOSE = 0x22, 0x5C, 0x7B, 0x7D
+
+
 def iter_json_spans(text: str) -> list[tuple[int, int]]:
     """Every balanced top-level ``{...}`` span, as ``(start, end)`` offsets.
 
@@ -104,7 +112,82 @@ def iter_json_spans(text: str) -> list[tuple[int, int]]:
 
     Unbalanced tails are dropped rather than guessed at: a record cut off by the
     probe limit is not a record.
+
+    Only four characters can change the state, and in a file of records they
+    are one or two percent of it. numpy finds them, and the Python loop below
+    visits those positions rather than every character of half a megabyte.
     """
+    return scan_json_spans(text)[0]
+
+
+def scan_json_spans(text: str) -> tuple[list[tuple[int, int]], int]:
+    """:func:`iter_json_spans`, plus where a fresh scan could safely resume.
+
+    The second value is the offset from which re-scanning yields the same
+    future spans as continuing would. It is the start of the record still open
+    at the end, or the end of the text when nothing is open. The incremental
+    reader uses it to drop text it has finished with; without it, a file with a
+    long stretch and no records is re-scanned from the beginning on every read
+    and the cost is quadratic in the file size.
+    """
+    codes = codepoints(text)
+    if codes.size != len(text):  # pragma: no cover - lone surrogates
+        return _scan_char_by_char(text)
+    marks = (
+        (codes == _QUOTE) | (codes == _BACKSLASH)
+        | (codes == _OPEN) | (codes == _CLOSE)
+    )
+    positions = np.flatnonzero(marks)
+
+    spans: list[tuple[int, int]] = []
+    depth = 0
+    start = -1
+    in_string = False
+    #: Where the backslash that would escape the next character sits, or -2.
+    #: The dense loop cleared a flag on whatever character came next; skipping
+    #: characters means the flag has to remember which position it applies to.
+    escape_at = -2
+
+    # Both lists are indexed by `positions`, so they are the same length by
+    # construction; checking that per record would be pure overhead.
+    for index, code in zip(positions.tolist(), codes[positions].tolist(), strict=False):
+        if in_string:
+            if code == _BACKSLASH:
+                escape_at = -2 if escape_at == index - 1 else index
+            elif code == _QUOTE:
+                if escape_at != index - 1:
+                    in_string = False
+                escape_at = -2
+            continue
+        if code == _QUOTE:
+            in_string = True
+            escape_at = -2
+        elif code == _OPEN:
+            if depth == 0:
+                start = index
+            depth += 1
+        elif code == _CLOSE and depth > 0:
+            depth -= 1
+            if depth == 0 and start >= 0:
+                spans.append((start, index + 1))
+                start = -1
+    return spans, _resume_at(text, depth, start, in_string)
+
+
+def _resume_at(text: str, depth: int, start: int, in_string: bool) -> int:
+    """Where a scan of ``text`` could have begun without changing its tail.
+
+    A record left open re-derives its own state from its opening brace, so its
+    start is safe. A quote left open outside any record does not: truncating
+    would flip which side of it the following text falls on.
+    """
+    if depth > 0 and start >= 0:
+        return start
+    return 0 if in_string else len(text)
+
+
+def _scan_char_by_char(text: str) -> tuple[list[tuple[int, int]], int]:
+    """The definition, for text numpy cannot index by codepoint."""
     spans: list[tuple[int, int]] = []
     depth = 0
     start = -1
@@ -126,13 +209,12 @@ def iter_json_spans(text: str) -> list[tuple[int, int]]:
             if depth == 0:
                 start = i
             depth += 1
-        elif ch == "}":
-            if depth > 0:
-                depth -= 1
-                if depth == 0 and start >= 0:
-                    spans.append((start, i + 1))
-                    start = -1
-    return spans
+        elif ch == "}" and depth > 0:
+            depth -= 1
+            if depth == 0 and start >= 0:
+                spans.append((start, i + 1))
+                start = -1
+    return spans, _resume_at(text, depth, start, in_string)
 
 
 def sniff_text(
@@ -146,15 +228,15 @@ def sniff_text(
     parsed = 0
     for start, end in spans:
         try:
-            if isinstance(json.loads(text[start:end]), dict):
+            if isinstance(json_loads(text[start:end]), dict):
                 parsed += 1
         except Exception:
             continue
 
-    non_ws_total = sum(1 for c in text if not c.isspace())
-    covered = sum(
-        sum(1 for c in text[s:e] if not c.isspace()) for s, e in spans
-    )
+    prefix = non_whitespace_prefix(text)
+    starts, ends = _bounds(spans)
+    non_ws_total = int(prefix[-1])
+    covered = int((prefix[ends] - prefix[starts]).sum())
     coverage = covered / non_ws_total if non_ws_total else 0.0
 
     framing = Framing(
@@ -178,12 +260,19 @@ def _framing_kind(text: str, spans: list[tuple[int, int]]) -> str:
     """
     if "```" in text:
         return "fenced"
-    one_per_line = sum(
-        1 for s, e in spans if "\n" not in text[s:e]
-    )
+    breaks = np.zeros(len(text) + 1, dtype=np.int64)
+    np.cumsum(codepoints(text) == 0x0A, out=breaks[1:])
+    starts, ends = _bounds(spans)
+    one_per_line = int(np.count_nonzero(breaks[ends] == breaks[starts]))
     if one_per_line / len(spans) >= 0.9:
         return "line-delimited"
     return "blank-separated"
+
+
+def _bounds(spans: list[tuple[int, int]]) -> tuple[np.ndarray, np.ndarray]:
+    """Span offsets as two arrays, for indexing a prefix-count array."""
+    pairs = np.asarray(spans, dtype=np.int64).reshape(-1, 2)
+    return pairs[:, 0], pairs[:, 1]
 
 
 def _between(text: str, spans: list[tuple[int, int]], *, limit: int) -> list[str]:
@@ -210,9 +299,17 @@ def _between(text: str, spans: list[tuple[int, int]], *, limit: int) -> list[str
     return seen
 
 
+@lru_cache(maxsize=1024)
 def sniff_file(path: str, *, compressed: bool = False) -> Framing:
-    """Sniff a file on disk. Never raises; an unreadable file is prose."""
-    from .readers import open_maybe_compressed  # noqa: PLC0415
+    """Sniff a file on disk. Never raises; an unreadable file is prose.
+
+    Cached because discovery and reading each ask about the same file, and the
+    answer costs half a megabyte of IO plus a scan of it. The cache is keyed on
+    the path and lives for the process, so a file rewritten mid-scan keeps its
+    first answer — which is the same assumption every other part of a scan
+    already makes about the corpus not moving underneath it.
+    """
+    from .readers import open_maybe_compressed
 
     try:
         with open_maybe_compressed(path, compressed) as fh:

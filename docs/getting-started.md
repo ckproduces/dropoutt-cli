@@ -122,7 +122,7 @@ Real output, trimmed in the middle:
   Best guess at what you are building
     Stage      sft
     Language   tr 97%, unknown 2%, en 0%
-    Confidence: medium. Confirm with `dropoutt init`.
+    Confidence: medium. Set it explicitly in dropoutt.toml if this is wrong.
 
   Findings
 check                  count    detail
@@ -142,10 +142,8 @@ T0-DUP-001        ●        6    6 redundant copies across 1 exact clusters
                                 (largest cluster 7 copies)
 T0-SCHEMA-002     ●        1    alpaca_mix: alpaca 91%, prompt_completion 9%
 T0-SCHEMA-003     ●        1    1 of 332 records could not be parsed as JSON
-T1-LANG-004       ●        1    1 records (0.3%) read as Turkish but contain
-                                none of the Turkish-specific characters
 T1-NDUP-001       ●       23    23 redundant records across 11 clusters at
-                                Jaccard >= 0.75 (largest cluster 8)
+                                Jaccard >= 0.85 (largest cluster 8)
 T1-OVERLAP-001    ●        2    17% of 'alpaca_mix' records (10 of 60) also
                                 appear in 'good_chat'
 
@@ -163,14 +161,14 @@ T1-OVERLAP-001    ●        2    17% of 'alpaca_mix' records (10 of 60) also
     Packing efficiency under concat-and-chunk   needs a tokenizer
       → pass --model, e.g. --model Qwen/Qwen3-8B
 
-  All findings in this build are unverified: no measured effect size is
-  attached to acting on them. They are structural observations, not
-  predictions.
-  No blocking verdict issued: no target declared.
-  332 records in 1.6s
-
-  wrote tests/fixtures/messy/.dropoutt/fingerprint.json, findings.jsonl,
-  report.html
+  Written to tests/fixtures/messy/.dropoutt
+    report.html       the map, the excerpts, every finding in full
+    report.md         the same, as text — paste into a PR or a ticket
+    findings.jsonl    one finding per line, for scripts
+    fingerprint.json  comparable measurements, for diffing runs
+  No pass-or-fail verdict: no target declared. Pass --target sft to turn
+  findings into an exit code.
+  332 records in 1.6s.
 ```
 
 Scanning writes a `.dropoutt/` folder next to your data. Use `--out` to put it
@@ -205,7 +203,7 @@ produces confident nonsense.
 
 ### Best guess at what you are building
 
-A hypothesis, labelled as one. `dropoutt init` writes it down so you can correct
+A hypothesis, labelled as one. Write `profile` into `dropoutt.toml` to correct
 it.
 
 ### Findings
@@ -277,8 +275,7 @@ The package ships hashed 8-gram indices for ten permissively licensed
 benchmarks. Your own held-out set matters more:
 
 ```bash
-dropoutt index-eval ./my_holdout.jsonl --name my-eval --field question
-dropoutt scan ./data --model qwen3
+dropoutt scan ./data --model qwen3 --target sft
 ```
 
 The index stores hashed 8-grams rather than raw text. Keep it beside the held-out
@@ -296,7 +293,7 @@ the point.
 ### Step 3 — write the config down
 
 ```bash
-dropoutt init ./data
+dropoutt scan ./data --model qwen3
 ```
 
 ```
@@ -373,10 +370,11 @@ Every scan writes to `.dropoutt/`:
 | file | what it is |
 | --- | --- |
 | `report.html` | one self-contained file — no server, no CDN. Contains excerpts and paths unless the scan used `--no-evidence`. |
+| `report.md` | the same reading as Markdown, sized to paste into a pull request or a CI log |
 | `fingerprint.json` | the comparable description of the dataset |
 | `findings.jsonl` | one JSON object per finding, for scripting |
 
-**`report.html` may contain your data.** PII values are masked before they reach
+**`report.html` and `report.md` may contain your data.** PII values are masked before they reach
 it — there is a test that fails if a planted secret appears in a generated
 report — but excerpts of your text are in there. Treat it as you would treat the
 dataset.
@@ -415,52 +413,6 @@ the tool cannot verify for you. Full schema in
 
 ---
 
-## 7. Comparing two datasets
-
-Every scan places your records on `atlas-lite-v0`, a shared coordinate system,
-and prints where they landed:
-
-```
-  Atlas coverage (atlas-lite-v0)
-    Regions      24 of 258 occupied
-    Spread       40% of even coverage  (specialised)
-    Off-atlas    0.0%
-    Top categories
-      general_chat            46%
-      code_explanation        31%
-```
-
-That describes one corpus. The question worth asking involves two — **what does
-this dataset cover that the one I already have does not?**
-
-```bash
-dropoutt scan ./candidate --out ./fp/candidate
-dropoutt scan ./have      --out ./fp/have
-dropoutt diff ./fp/candidate/fingerprint.json ./fp/have/fingerprint.json
-```
-
-```
-    Similarity   0.02  (1.0 = same distribution over regions)
-    Shared       38% of left sits in regions right also occupies
-    New          62% of left sits in regions right never reaches
-
-    Only in left — what adding it would bring
-      151    12%  import, python, return, data, create
-      157    11%  return, function, list, write, given
-```
-
-Read it left against right. It is directional on purpose: a small specialised
-corpus can sit wholly inside a large one while the large one is barely inside
-it. Swap the arguments for the other question.
-
-If either side had too many off-atlas records, `diff` refuses instead of
-producing a confident-looking number from two unreliable ones.
-
-Details, including what the five label words are and are not, in
-[atlas.md](atlas.md).
-
----
-
 ## 8. Browsing what it knows
 
 These need no data and no network:
@@ -470,7 +422,7 @@ dropoutt checks               # all 27 checks: id, tier, title, what each needs
 dropoutt checks T0-MASK-001   # one check in full
 dropoutt models               # known models, templates, licences
 dropoutt benchmarks           # benchmarks available for contamination scanning
-dropoutt atlas                # the atlas and its own quality numbers
+dropoutt doctor               # what is installed, and what each gap costs
 ```
 
 `dropoutt checks <id>` is the one to reach for when a finding is unclear:
@@ -507,7 +459,6 @@ Every check carries a `Fix`.
 | `T0-TRUNC-001` | records exceed `--seq-len` | raise the length or truncate deliberately. Check the separate count for records that lose their *whole* assistant span — those are worse than truncated. |
 | `T1-OVERLAP-001` | two datasets contain the same records | direction matters. 100% one way and 1% the other means full containment. |
 | `T1-NDUP-001` | near-duplicate clusters | **do not reflexively delete.** See below. |
-| `T1-LANG-004` | Turkish that lost its diacritics | fix the encoding upstream, or drop. `degil` teaches wrong orthography. |
 
 ### On deduplication
 

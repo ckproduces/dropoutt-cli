@@ -21,9 +21,9 @@ from __future__ import annotations
 #: from here via `[tool.hatch.version]`, so bump it in this file only. Carrying
 #: the number in both places let them drift: 0.1.4 was tagged in pyproject while
 #: `dropoutt doctor` still reported 0.1.3 from this constant.
-__version__ = "0.2.0"
+__version__ = "1.0.0"
 
-from .models import (  # noqa: F401
+from .models import (
     Confidence,
     Document,
     Finding,
@@ -31,4 +31,4 @@ from .models import (  # noqa: F401
     Severity,
 )
 
-__all__ = ["__version__", "Document", "Finding", "Profile", "Severity", "Confidence"]
+__all__ = ["Confidence", "Document", "Finding", "Profile", "Severity", "__version__"]

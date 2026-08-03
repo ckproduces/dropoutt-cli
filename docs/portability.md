@@ -51,7 +51,6 @@ because it is the invocation that always works.
 | `typer`, `rich`, `jinja2`, `numpy` | CLI, output, report, maths | required; all pure Python except numpy |
 | `tokenizers` | token counting, template rendering | token-dependent checks skip with an unlock hint |
 | `orjson` | JSONL parsing | falls back to stdlib `json`; slower, identical results |
-| `rensa` | Rust MinHash | falls back to numpy MinHash; same permutation scheme and banding, so clusters agree |
 | `fasttext-langdetect` | language identification | falls back to a small character-profile detector; **less accurate**, and every finding it produces is marked low-trust |
 | `model2vec` | atlas embeddings | atlas coverage is reported as skipped |
 | `pyarrow` | Parquet, Arrow IPC, Feather, ORC | these columnar files are reported as unreadable with an install hint |
@@ -150,7 +149,7 @@ must not be read as if the template had been applied.
 
 The same offline flag gates atlas model loading. If its three files are absent
 from `$DROPOUTT_CACHE/embedder`, coverage is reported as unavailable without a
-connection attempt. `dropoutt index-eval` always writes private indices to
+connection attempt. The cache directory is always used for
 `$DROPOUTT_CACHE/contamination`; it never writes into read-only site-packages.
 
 `DROPOUTT_OFFLINE=1` and `HF_HUB_OFFLINE=1` are also honored by `scan` and
@@ -221,7 +220,7 @@ No telemetry or hosted service is used. Network access is limited to fetching
 explicit model artifacts and the optional tokenizer panel described above.
 That does not make every output artifact safe to export.
 
-By default, terminal examples, `findings.jsonl`, and `report.html` contain
+By default, terminal examples, `findings.jsonl`, `report.md`, and `report.html` contain
 bounded excerpts and source locations. Detected PII is masked, but arbitrary
 proprietary text and secrets outside the pattern catalog are not. Use:
 

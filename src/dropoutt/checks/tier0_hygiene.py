@@ -5,14 +5,14 @@ None of these need a model. All of them are cheap enough to run on every commit.
 
 from __future__ import annotations
 
-import re
+from hashlib import blake2b as _blake
 
 from ..context import ScanContext
 from ..models import CostClass, Document, Evidence, Finding, Profile, Severity
 from ..registry_data import style_patterns
 from ..textutil import (
-    control_chars,
     excerpt,
+    has_control_chars,
     has_mojibake,
     needs_nfc,
     normalize_ws,
@@ -22,11 +22,10 @@ from .base import Check, make_finding, register
 
 ALL_PROFILES = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN)
 
-# Turkish text that has been through a naive .lower() or .upper(): the dotted
-# capital I and the dotless lowercase i are distinct letters, and the default
-# locale mangles both. "ISTANBUL".lower() gives "istanbul" where Turkish wants
-# "ıstanbul"; "iş".upper() gives "IŞ" where Turkish wants "İŞ".
-_TR_CASE_DAMAGE = re.compile(r"\b(?:istanbul|izmir|ısparta|IsTANBUL)\b")
+#: How many distinct records keep an example and a character count. Past this
+#: the duplicate report is already complete in aggregate — counts come from the
+#: unbounded tally — and the extra examples buy nothing.
+FIRST_SEEN_CAP = 50_000
 
 
 @register
@@ -45,6 +44,10 @@ class EncodingHygiene(Check):
         "meaning."
     )
 
+    MERGE_SUM = ("total", "mojibake", "control", "nfc")
+    MERGE_COUNTS = ("by_dataset",)
+    MERGE_EVIDENCE = ("evidence",)
+
     def __init__(self) -> None:
         self.total = 0
         self.mojibake = 0
@@ -60,8 +63,7 @@ class EncodingHygiene(Check):
         if has_mojibake(text):
             self.mojibake += 1
             hit = True
-        ctrl = control_chars(text)
-        if ctrl:
+        if has_control_chars(text):
             self.control += 1
             hit = True
         if needs_nfc(text):
@@ -69,7 +71,7 @@ class EncodingHygiene(Check):
             hit = True
         if hit:
             self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            if len(self.evidence) < 5:
+            if len(self.evidence) < self.EVIDENCE_CAP:
                 self.evidence.append(
                     Evidence(doc.doc_id, doc.source_file, doc.source_index, excerpt(text, 160))
                 )
@@ -77,11 +79,11 @@ class EncodingHygiene(Check):
     def finalize(self, ctx: ScanContext) -> list[Finding]:
         parts = []
         if self.mojibake:
-            parts.append(f"{self.mojibake} with mojibake")
+            parts.append(f"{self.mojibake:,} with mojibake")
         if self.control:
-            parts.append(f"{self.control} with control characters")
+            parts.append(f"{self.control:,} with control characters")
         if self.nfc:
-            parts.append(f"{self.nfc} not in Unicode NFC form")
+            parts.append(f"{self.nfc:,} not in Unicode NFC form")
         if not parts:
             return []
         count = sum(self.by_dataset.values())
@@ -95,56 +97,9 @@ class EncodingHygiene(Check):
 
 
 @register
-class TurkishCaseHazard(Check):
-    check_id = "T0-ENC-002"
-    title = "Turkish dotted and dotless I damage"
-    tier = 0
-    profiles = ALL_PROFILES
-    cost = CostClass.CHEAP
-    severity = Severity.WARNING
-    fix = "Use a Turkish-aware casefold, or leave case untouched during preprocessing."
-    rationale = (
-        "Turkish has two distinct letter I pairs. A default-locale lower() turns 'I' into 'i' "
-        "where Turkish wants 'ı', and upper() turns 'i' into 'I' where Turkish wants 'İ'. The "
-        "result is fluent-looking text with the wrong orthography, which language "
-        "identification will not flag."
-    )
-
-    def __init__(self) -> None:
-        self.total = 0
-        self.count = 0
-        self.evidence: list[Evidence] = []
-        self.by_dataset: dict[str, int] = {}
-
-    def observe(self, doc: Document, ctx: ScanContext) -> None:
-        self.total += 1
-        # Only meaningful if the text is plausibly Turkish at all.
-        if "ı" not in doc.text and "İ" not in doc.text and "ş" not in doc.text:
-            return
-        if _TR_CASE_DAMAGE.search(doc.text):
-            self.count += 1
-            self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            if len(self.evidence) < 4:
-                self.evidence.append(
-                    Evidence(doc.doc_id, doc.source_file, doc.source_index, excerpt(doc.text, 160))
-                )
-
-    def finalize(self, ctx: ScanContext) -> list[Finding]:
-        if not self.count:
-            return []
-        return [
-            make_finding(
-                self, count=self.count, total=self.total,
-                detail=f"{self.count} records show locale-incorrect Turkish case folding",
-                evidence=self.evidence, by_dataset=self.by_dataset,
-            )
-        ]
-
-
-@register
 class ExactDuplicates(Check):
     check_id = "T0-DUP-001"
-    title = "Exact and whitespace-identical duplicates"
+    title = "The same record appears more than once"
     tier = 0
     profiles = ALL_PROFILES
     cost = CostClass.CHEAP
@@ -157,11 +112,30 @@ class ExactDuplicates(Check):
         "This check reports; the decision is yours."
     )
 
+    #: Records are keyed by a BLAKE2b digest rather than by ``hash()``. Python
+    #: randomises string hashing per interpreter, so a sharded scan running in
+    #: several processes would give the same text different keys in each one and
+    #: count every duplicate as unique.
+    @staticmethod
+    def _key(text: str) -> int:
+        return int.from_bytes(
+            _blake(text.encode("utf-8", "surrogatepass"), digest_size=8).digest(), "big"
+        )
+
+    EVIDENCE_CAP = 4
+    MERGE_SUM = ("total",)
+    MERGE_COUNTS = ("exact", "ws")
+    MERGE_FIRST = ("origin",)
+    MERGE_FIRST_CAP = FIRST_SEEN_CAP
+    #: Derived in finalize from the merged tables above.
+    MERGE_IGNORE = ("by_dataset", "dup_chars")
+
     def __init__(self) -> None:
         self.total = 0
-        self.exact: dict[str, int] = {}
-        self.ws: dict[str, int] = {}
-        self.first_seen: dict[str, tuple[str, str, int, str]] = {}
+        self.exact: dict[int, int] = {}
+        self.ws: dict[int, int] = {}
+        #: key -> (dataset, characters, evidence) for the first copy seen.
+        self.origin: dict[int, tuple[str, int, Evidence]] = {}
         self.by_dataset: dict[str, int] = {}
         self.dup_chars = 0
 
@@ -169,18 +143,17 @@ class ExactDuplicates(Check):
         if not doc.text.strip():
             return
         self.total += 1
-        key = hash(doc.text)
-        skey = hash(normalize_ws(doc.text).lower())
-        prev = self.exact.get(key, 0)
-        self.exact[key] = prev + 1
+        key = self._key(doc.text)
+        skey = self._key(normalize_ws(doc.text).lower())
+        self.exact[key] = self.exact.get(key, 0) + 1
         self.ws[skey] = self.ws.get(skey, 0) + 1
-        if prev == 0:
-            if len(self.first_seen) < 50_000:
-                self.first_seen[key] = (doc.doc_id, doc.source_file, doc.source_index,
-                                        excerpt(doc.text, 160))
-        else:
-            self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            self.dup_chars += len(doc.text)
+        if key not in self.origin and len(self.origin) < FIRST_SEEN_CAP:
+            self.origin[key] = (
+                doc.dataset,
+                len(doc.text),
+                Evidence(doc.doc_id, doc.source_file, doc.source_index,
+                         excerpt(doc.text, 160)),
+            )
 
     def finalize(self, ctx: ScanContext) -> list[Finding]:
         exact_extra = sum(v - 1 for v in self.exact.values() if v > 1)
@@ -189,16 +162,33 @@ class ExactDuplicates(Check):
             return []
         clusters = sum(1 for v in self.exact.values() if v > 1)
         largest = max(self.exact.values()) if self.exact else 0
+
+        # Wasted characters and the per-dataset split are derived here rather
+        # than counted as records arrive, because "is this a repeat?" depends on
+        # everything seen so far and a shard has not seen everything. Redundant
+        # copies are attributed to the dataset the text first appeared in, which
+        # is also the only attribution that does not change with the order the
+        # files happen to be read in.
+        for key, count in self.exact.items():
+            if count < 2:
+                continue
+            entry = self.origin.get(key)
+            if entry is None:
+                continue
+            dataset, chars, _ev = entry
+            self.by_dataset[dataset] = self.by_dataset.get(dataset, 0) + (count - 1)
+            self.dup_chars += chars * (count - 1)
+
         evidence = [
-            Evidence(d, f, i, t)
-            for d, f, i, t in list(self.first_seen.values())[:4]
-        ]
+            entry[2] for key, entry in self.origin.items()
+            if self.exact.get(key, 0) > 1
+        ][: self.EVIDENCE_CAP]
         detail = (
-            f"{exact_extra} redundant copies across {clusters} exact clusters "
-            f"(largest cluster {largest} copies)"
+            f"{exact_extra:,} redundant copies across {clusters:,} exact clusters "
+            f"(largest cluster {largest:,} copies)"
         )
         if ws_extra > exact_extra:
-            detail += f"; {ws_extra} when whitespace and case are ignored"
+            detail += f"; {ws_extra:,} when whitespace and case are ignored"
         return [
             make_finding(
                 self, count=exact_extra, total=self.total, detail=detail,
@@ -213,8 +203,9 @@ class ExactDuplicates(Check):
 @register
 class Degeneracy(Check):
     check_id = "T0-DEGEN-001"
-    title = "Degenerate responses"
+    title = "Responses that teach the model nothing"
     tier = 0
+    unit = "response"
     profiles = (Profile.SFT, Profile.PREFERENCE, Profile.UNKNOWN)
     cost = CostClass.CHEAP
     severity = Severity.WARNING
@@ -224,6 +215,13 @@ class Degeneracy(Check):
         "a generation that got stuck in a loop, and a response that simply repeats the prompt. "
         "All three are common in scraped and synthetic data."
     )
+
+    EVIDENCE_CAP = 6
+    MERGE_SUM = ("total", "trivial", "looping", "copying")
+    MERGE_COUNTS = ("by_dataset",)
+    MERGE_EVIDENCE = ("evidence",)
+    #: Thresholds read from the shipped pattern file, identical in every shard.
+    MERGE_IGNORE = ("min_chars", "rep_n", "rep_threshold", "copy_threshold")
 
     def __init__(self) -> None:
         cfg = style_patterns()["degeneracy"]
@@ -279,7 +277,7 @@ class Degeneracy(Check):
 
         if why:
             self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            if len(self.evidence) < 6:
+            if len(self.evidence) < self.EVIDENCE_CAP:
                 self.evidence.append(
                     Evidence(doc.doc_id, doc.source_file, doc.source_index,
                              f"{why} :: {excerpt(answer, 140)}")
@@ -288,11 +286,11 @@ class Degeneracy(Check):
     def finalize(self, ctx: ScanContext) -> list[Finding]:
         parts = []
         if self.trivial:
-            parts.append(f"{self.trivial} trivial")
+            parts.append(f"{self.trivial:,} trivial")
         if self.looping:
-            parts.append(f"{self.looping} looping")
+            parts.append(f"{self.looping:,} looping")
         if self.copying:
-            parts.append(f"{self.copying} copying the prompt")
+            parts.append(f"{self.copying:,} copying the prompt")
         if not parts:
             return []
         count = sum(self.by_dataset.values())

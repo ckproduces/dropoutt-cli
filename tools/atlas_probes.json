@@ -1,0 +1,82 @@
+{
+  "version": "probe-v3",
+  "note": "Records with an unambiguous topical identity, each written in four languages and four scripts. Two questions are asked of every release: does one topic land in one cell regardless of the language it is written in, and do different topics written in the same language stay apart. The first is what decides whether per-language centering ships. The second is the guard against buying cross-language agreement by collapsing the map. The ood block is content that must come back unplaceable rather than as a confident neighbour.",
+  "languages": ["en", "tr", "ar", "zh"],
+  "probes": [
+    {"topic": "photosynthesis", "lang": "en", "text": "Plants convert sunlight into chemical energy through photosynthesis. Chlorophyll in the leaves absorbs light, and the plant combines carbon dioxide and water to produce sugar and release oxygen."},
+    {"topic": "photosynthesis", "lang": "tr", "text": "Bitkiler fotosentez yoluyla güneş ışığını kimyasal enerjiye dönüştürür. Yapraklardaki klorofil ışığı emer; bitki karbondioksit ve suyu birleştirerek şeker üretir ve oksijen salar."},
+    {"topic": "photosynthesis", "lang": "ar", "text": "تحوّل النباتات ضوء الشمس إلى طاقة كيميائية عن طريق التمثيل الضوئي. يمتص الكلوروفيل في الأوراق الضوء، ويجمع النبات ثاني أكسيد الكربون والماء لإنتاج السكر وإطلاق الأكسجين."},
+    {"topic": "photosynthesis", "lang": "zh", "text": "植物通过光合作用把阳光转化为化学能。叶片中的叶绿素吸收光线，植物利用二氧化碳和水生成糖分并释放氧气。"},
+
+    {"topic": "contract_law", "lang": "en", "text": "A breach of contract occurs when one party fails to perform an obligation stated in the agreement. The injured party may claim damages, and the court will consider whether the loss was foreseeable when the contract was signed."},
+    {"topic": "contract_law", "lang": "tr", "text": "Sözleşmeye aykırılık, taraflardan biri anlaşmada belirtilen bir yükümlülüğü yerine getirmediğinde ortaya çıkar. Zarar gören taraf tazminat talep edebilir; mahkeme, zararın sözleşme imzalandığı sırada öngörülebilir olup olmadığını değerlendirir."},
+    {"topic": "contract_law", "lang": "ar", "text": "يقع الإخلال بالعقد عندما يخفق أحد الطرفين في تنفيذ التزام منصوص عليه في الاتفاق. يجوز للطرف المتضرر المطالبة بالتعويض، وتنظر المحكمة فيما إذا كانت الخسارة متوقعة وقت توقيع العقد."},
+    {"topic": "contract_law", "lang": "zh", "text": "当一方未履行合同中约定的义务时，即构成违约。受损方可以请求损害赔偿，法院会考虑该损失在签订合同时是否可以预见。"},
+
+    {"topic": "neural_networks", "lang": "en", "text": "Training a neural network adjusts the weights of each layer by backpropagating the gradient of a loss function. A larger learning rate speeds up convergence but can make the optimisation unstable."},
+    {"topic": "neural_networks", "lang": "tr", "text": "Bir yapay sinir ağının eğitimi, kayıp fonksiyonunun gradyanını geri yayarak her katmandaki ağırlıkları günceller. Daha büyük bir öğrenme oranı yakınsamayı hızlandırır ancak optimizasyonu kararsız hâle getirebilir."},
+    {"topic": "neural_networks", "lang": "ar", "text": "يقوم تدريب الشبكة العصبية بتعديل أوزان كل طبقة عبر الانتشار العكسي لتدرّج دالة الخسارة. معدل تعلّم أكبر يسرّع التقارب لكنه قد يجعل عملية التحسين غير مستقرة."},
+    {"topic": "neural_networks", "lang": "zh", "text": "训练神经网络通过反向传播损失函数的梯度来调整每一层的权重。较大的学习率可以加快收敛，但可能使优化过程不稳定。"},
+
+    {"topic": "diabetes_care", "lang": "en", "text": "Type 2 diabetes develops when cells become resistant to insulin and blood glucose stays high. Treatment usually begins with diet, exercise and metformin, and the patient's HbA1c is measured every few months."},
+    {"topic": "diabetes_care", "lang": "tr", "text": "Tip 2 diyabet, hücreler insüline direnç geliştirdiğinde ve kan şekeri yüksek kaldığında ortaya çıkar. Tedavi genellikle beslenme, egzersiz ve metformin ile başlar; hastanın HbA1c değeri birkaç ayda bir ölçülür."},
+    {"topic": "diabetes_care", "lang": "ar", "text": "يتطور داء السكري من النوع الثاني عندما تصبح الخلايا مقاومة للأنسولين ويبقى سكر الدم مرتفعًا. يبدأ العلاج عادةً بالحمية والرياضة والميتفورمين، ويُقاس مستوى الهيموغلوبين السكري كل بضعة أشهر."},
+    {"topic": "diabetes_care", "lang": "zh", "text": "当细胞对胰岛素产生抵抗、血糖持续偏高时，就会出现2型糖尿病。治疗通常从饮食、运动和二甲双胍开始，患者的糖化血红蛋白每隔几个月检测一次。"},
+
+    {"topic": "football_match", "lang": "en", "text": "The striker scored twice in the second half and the home side won three to one. The result puts the club second in the league table with four matches left to play."},
+    {"topic": "football_match", "lang": "tr", "text": "Forvet ikinci yarıda iki gol attı ve ev sahibi takım maçı üç bir kazandı. Bu sonuç, oynanacak dört maç kala kulübü ligde ikinci sıraya yerleştirdi."},
+    {"topic": "football_match", "lang": "ar", "text": "سجّل المهاجم هدفين في الشوط الثاني وفاز الفريق المضيف بثلاثة أهداف مقابل هدف. تضع هذه النتيجة النادي في المركز الثاني بجدول الدوري مع بقاء أربع مباريات."},
+    {"topic": "football_match", "lang": "zh", "text": "前锋在下半场攻入两球，主队以三比一取胜。这一结果使该俱乐部在联赛积分榜上升至第二位，还剩四轮比赛。"},
+
+    {"topic": "bread_recipe", "lang": "en", "text": "Mix the flour, water, salt and yeast, then knead the dough for ten minutes. Let it rise until doubled, shape the loaf, and bake at 230 degrees until the crust is golden."},
+    {"topic": "bread_recipe", "lang": "tr", "text": "Unu, suyu, tuzu ve mayayı karıştırın, ardından hamuru on dakika yoğurun. İki katına çıkana kadar mayalanmaya bırakın, somunu şekillendirin ve kabuk altın rengi olana dek 230 derecede pişirin."},
+    {"topic": "bread_recipe", "lang": "ar", "text": "اخلط الطحين والماء والملح والخميرة، ثم اعجن العجين لمدة عشر دقائق. اتركه يتخمر حتى يتضاعف حجمه، ثم شكّل الرغيف واخبزه على درجة 230 حتى تصبح القشرة ذهبية."},
+    {"topic": "bread_recipe", "lang": "zh", "text": "将面粉、水、盐和酵母混合，然后揉面十分钟。让面团发酵至两倍大，整形成面包，在230度下烘烤至外皮金黄。"},
+
+    {"topic": "monetary_policy", "lang": "en", "text": "The central bank raised its policy rate by half a point to slow inflation. Higher rates make borrowing more expensive, which usually cools demand and strengthens the currency."},
+    {"topic": "monetary_policy", "lang": "tr", "text": "Merkez bankası enflasyonu yavaşlatmak için politika faizini yarım puan artırdı. Yüksek faiz borçlanmayı pahalılaştırır; bu da genellikle talebi soğutur ve para birimini güçlendirir."},
+    {"topic": "monetary_policy", "lang": "ar", "text": "رفع البنك المركزي سعر الفائدة نصف نقطة لكبح التضخم. تجعل الفائدة المرتفعة الاقتراض أكثر كلفة، ما يهدّئ الطلب عادةً ويقوّي العملة."},
+    {"topic": "monetary_policy", "lang": "zh", "text": "央行将政策利率上调半个百分点以抑制通货膨胀。较高的利率使借贷成本上升，通常会抑制需求并使本币走强。"},
+
+    {"topic": "volcanic_eruption", "lang": "en", "text": "The volcano erupted after weeks of increasing seismic activity, sending an ash column several kilometres into the air. Lava flowed down the southern flank and residents of nearby villages were evacuated."},
+    {"topic": "volcanic_eruption", "lang": "tr", "text": "Yanardağ, haftalarca artan sismik hareketliliğin ardından patlayarak birkaç kilometre yüksekliğinde kül sütunu oluşturdu. Lav güney yamaçtan aşağı aktı ve yakındaki köylerin sakinleri tahliye edildi."},
+    {"topic": "volcanic_eruption", "lang": "ar", "text": "ثار البركان بعد أسابيع من تزايد النشاط الزلزالي، فأطلق عمودًا من الرماد يرتفع عدة كيلومترات. تدفقت الحمم على المنحدر الجنوبي وتم إجلاء سكان القرى المجاورة."},
+    {"topic": "volcanic_eruption", "lang": "zh", "text": "在数周地震活动增强之后，这座火山爆发，喷出高达数公里的火山灰柱。熔岩沿南侧山坡流下，附近村庄的居民已被疏散。"},
+
+    {"topic": "database_query", "lang": "en", "text": "The query joins the orders table with the customers table on the customer identifier and filters rows where the order date falls in the last quarter. An index on that date column keeps the scan from reading the whole table."},
+    {"topic": "database_query", "lang": "tr", "text": "Sorgu, siparişler tablosunu müşteri kimliği üzerinden müşteriler tablosuyla birleştirir ve sipariş tarihi son çeyrekte olan satırları filtreler. Bu tarih sütunundaki bir dizin, taramanın tüm tabloyu okumasını önler."},
+    {"topic": "database_query", "lang": "ar", "text": "يربط الاستعلام جدول الطلبات بجدول العملاء عبر معرّف العميل ويصفّي الصفوف التي يقع تاريخ طلبها في الربع الأخير. يمنع وجود فهرس على عمود التاريخ المسح من قراءة الجدول بأكمله."},
+    {"topic": "database_query", "lang": "zh", "text": "该查询通过客户标识把订单表与客户表连接起来，并筛选出下单日期落在上一个季度的记录。在该日期列上建立索引可以避免全表扫描。"},
+
+    {"topic": "astronomy_redshift", "lang": "en", "text": "The telescope observed a distant galaxy whose light has travelled for billions of years. Astronomers measured the redshift of its spectrum to estimate how fast it is moving away from us."},
+    {"topic": "astronomy_redshift", "lang": "tr", "text": "Teleskop, ışığı milyarlarca yıldır yol alan uzak bir gökadayı gözlemledi. Gökbilimciler, gökadanın bizden ne kadar hızlı uzaklaştığını tahmin etmek için tayfının kırmızıya kaymasını ölçtü."},
+    {"topic": "astronomy_redshift", "lang": "ar", "text": "رصد التلسكوب مجرّة بعيدة سافر ضوءها مليارات السنين. قاس الفلكيون الانزياح الأحمر في طيفها لتقدير سرعة ابتعادها عنّا."},
+    {"topic": "astronomy_redshift", "lang": "zh", "text": "望远镜观测到一个遥远的星系，它的光已经传播了数十亿年。天文学家测量其光谱的红移，以估算它远离我们的速度。"},
+
+    {"topic": "classical_music", "lang": "en", "text": "The symphony opens with a slow introduction in the strings before the main theme enters in the woodwinds. The composer wrote it for a small orchestra and it lasts around forty minutes."},
+    {"topic": "classical_music", "lang": "tr", "text": "Senfoni, ana tema tahta üflemelilerde girmeden önce yaylılarda yavaş bir girişle açılır. Besteci eseri küçük bir orkestra için yazmıştır ve yaklaşık kırk dakika sürer."},
+    {"topic": "classical_music", "lang": "ar", "text": "تبدأ السيمفونية بمقدمة بطيئة في الآلات الوترية قبل أن يدخل اللحن الرئيسي في آلات النفخ الخشبية. كتبها المؤلف لأوركسترا صغيرة وتستغرق نحو أربعين دقيقة."},
+    {"topic": "classical_music", "lang": "zh", "text": "这部交响曲以弦乐缓慢的引子开始，随后主题由木管乐器奏出。作曲家为小型乐队而作，全曲约四十分钟。"},
+
+    {"topic": "climate_emissions", "lang": "en", "text": "Greenhouse gas emissions from burning coal and oil trap heat in the atmosphere and raise average surface temperatures. Cutting emissions requires replacing fossil fuel generation with renewable sources."},
+    {"topic": "climate_emissions", "lang": "tr", "text": "Kömür ve petrol yakılmasından kaynaklanan sera gazı salımları atmosferde ısıyı hapsederek ortalama yüzey sıcaklıklarını yükseltir. Salımları azaltmak, fosil yakıtlı üretimin yenilenebilir kaynaklarla değiştirilmesini gerektirir."},
+    {"topic": "climate_emissions", "lang": "ar", "text": "تحبس انبعاثات غازات الدفيئة الناتجة عن حرق الفحم والنفط الحرارة في الغلاف الجوي وترفع متوسط درجات حرارة السطح. يتطلب خفض الانبعاثات استبدال توليد الطاقة بالوقود الأحفوري بمصادر متجددة."},
+    {"topic": "climate_emissions", "lang": "zh", "text": "燃烧煤炭和石油产生的温室气体在大气中截留热量，使地表平均温度升高。减少排放需要用可再生能源替代化石燃料发电。"},
+
+    {"topic": "roman_republic", "lang": "en", "text": "The Roman republic was governed by two consuls elected each year, with the senate advising on policy and finance. Its expansion across the Mediterranean brought both wealth and long civil conflict."},
+    {"topic": "roman_republic", "lang": "tr", "text": "Roma cumhuriyeti, her yıl seçilen iki konsül tarafından yönetiliyor, senato ise siyaset ve maliye konularında danışmanlık yapıyordu. Akdeniz boyunca genişlemesi hem zenginlik hem de uzun iç savaşlar getirdi."},
+    {"topic": "roman_republic", "lang": "ar", "text": "كانت الجمهورية الرومانية تُحكم بقنصلين يُنتخبان كل عام، بينما يقدّم مجلس الشيوخ المشورة في السياسة والمال. جلب توسعها في أنحاء المتوسط ثروة وصراعات أهلية طويلة."},
+    {"topic": "roman_republic", "lang": "zh", "text": "罗马共和国由每年选出的两位执政官治理，元老院在政策和财政上提供建议。它在地中海地区的扩张带来了财富，也带来了长期的内战。"},
+
+    {"topic": "freight_logistics", "lang": "en", "text": "The container ship was delayed at the port because customs clearance took longer than planned. The freight forwarder rerouted part of the cargo by rail to meet the delivery window."},
+    {"topic": "freight_logistics", "lang": "tr", "text": "Konteyner gemisi, gümrük işlemleri planlanandan uzun sürdüğü için limanda gecikti. Nakliye acentesi, teslim penceresini yakalamak için yükün bir kısmını demiryoluyla yeniden yönlendirdi."},
+    {"topic": "freight_logistics", "lang": "ar", "text": "تأخرت سفينة الحاويات في الميناء لأن التخليص الجمركي استغرق وقتًا أطول من المخطط. أعاد وكيل الشحن توجيه جزء من البضائع بالسكك الحديدية للالتزام بموعد التسليم."},
+    {"topic": "freight_logistics", "lang": "zh", "text": "由于清关时间比计划更长，集装箱船在港口延误。货运代理将部分货物改由铁路运输，以赶上交付时间窗口。"}
+  ],
+  "ood": [
+    {"name": "base64_blob", "text": "f0VMRgIBAQAAAAAAAAAAAAIAPgABAAAAUFdAAAAAAABAAAAAAAAAAJhtAgAAAAAAAAAAAEAAOAAJAEAAHgAdAAYAAAAEAAAAQAAAAAAAAABAAEAAAAAAAEAAQAAAAAAAAPgBAAAAAAAA+AEAAAAAAAAIAAAAAAAAAAMAAAAEAAAAOAIAAAAAAAA4AkAAAAAAADgCQAAAAAAAHAAAAAAAAAAcAAAAAAAAAAEAAAAAAAAA"},
+    {"name": "hex_log", "text": "0x7ffd3a1c 0x00000041 0x7ffd3a20 0x0000005b 0x7ffd3a24 0xdeadbeef 0x7ffd3a28 0x0000000c 0x7ffd3a2c 0xcafebabe 0x7ffd3a30 0x00000000 0x7ffd3a34 0xfeedface 0x7ffd3a38 0x00000017 0x7ffd3a3c 0x0badf00d 0x7ffd3a40 0x00000003"},
+    {"name": "dna_sequence", "text": "ATGGCCTGACCGGTTAACGGATCCGGTACCAAGCTTGGATCCTCTAGAGTCGACCTGCAGGCATGCAAGCTTGGCACTGGCCGTCGTTTTACAACGTCGTGACTGGGAAAACCCTGGCGTTACCCAACTTAATCGCCTTGCAGCACATCCCCCTTTCGCCAGCTGGCGTAATAGCGAAGAGGCCCGCACCGATCGCCCTTCC"},
+    {"name": "minified_js", "text": "!function(e,t){\"object\"==typeof exports&&\"undefined\"!=typeof module?t(exports):\"function\"==typeof define&&define.amd?define([\"exports\"],t):t((e=e||self).x={})}(this,function(e){\"use strict\";function t(e,t){return e(t={exports:{}},t.exports),t.exports}var n=t(function(e,t){})});"}
+  ]
+}

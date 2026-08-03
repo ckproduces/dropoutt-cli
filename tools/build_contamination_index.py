@@ -20,13 +20,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from dropoutt.contamination import BenchmarkIndex  # noqa: E402
-from dropoutt.registry_data import shippable_benchmarks  # noqa: E402
+from dropoutt.contamination import BenchmarkIndex
+from dropoutt.registry_data import shippable_benchmarks
 
 
 def load_rows(hf_id: str, config: str | None, split: str, limit: int | None = None):
     """Fetch a benchmark split without pulling in the `datasets` library."""
-    from datasets import load_dataset  # noqa: PLC0415
+    from datasets import load_dataset
 
     ds = load_dataset(hf_id, config, split=split) if config else load_dataset(hf_id, split=split)
     for i, row in enumerate(ds):
@@ -88,7 +88,7 @@ def main() -> int:
             print(f"  {name:<16} {n:>6,} instances  {len(idx.postings):>8,} grams  "
                   f"{size_kb:>7.0f} KB  [{bench.get('license')}]")
             built.append(name)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             print(f"  {name:<16} FAILED: {type(exc).__name__}: {exc}")
             failed.append(name)
 

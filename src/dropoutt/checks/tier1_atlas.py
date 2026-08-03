@@ -53,13 +53,17 @@ def _coverage(ctx: ScanContext) -> dict[str, Any] | None:
 @register
 class TopicalConcentration(Check):
     check_id = "T1-ATLAS-001"
-    title = "The corpus sits in very few topical regions"
+    title = "The corpus covers very little of the map"
     tier = 1
+    unit = "map area"
     profiles = ALL_PROFILES
     requires = (Requirement.ATLAS,)
     cost = CostClass.EMBEDDING
     severity = Severity.INFO
-    fix = "If this was meant to be a broad mixture, the missing regions are listed under coverage gaps."
+    fix = (
+        "If this was meant to be a broad mixture, the missing regions are listed "
+        "under coverage gaps."
+    )
     rationale = (
         "Occupancy counts a region the same whether it holds one record or a third of the "
         "corpus, so '34 of 258 regions occupied' can describe a broad corpus or a corpus that "
@@ -95,14 +99,17 @@ class TopicalConcentration(Check):
         if effective > self.MAX_EFFECTIVE and lead_share < self.MAX_TOP_SHARE:
             return []
         detail = (
-            f"placed records touch {occupied} regions but are as spread out as "
-            f"{effective:.1f} evenly-used ones"
+            f"placed records touch {occupied} of {int(cov.get('regions_total', 0))} "
+            f"areas but are as spread out as {effective:.1f} evenly-used ones"
         )
         if lead:
-            detail += (
-                f"; the largest holds {lead_share:.0%} of them "
-                f"({lead.get('terms') or 'unlabelled'})"
-            )
+            detail += f"; the largest single area holds {lead_share:.0%} of them"
+        # The atlas's own five words for a region are deliberately not quoted
+        # here. They are the most frequent words among the first hundred and
+        # fifty reference records that landed there, about forty percent of that
+        # text is function words shared with other regions, and a finding that
+        # ends in "(such, used, other, also, some)" reads as noise. The report's
+        # map names the same place with the reader's own nearest record.
         return [
             make_finding(
                 self,
@@ -121,13 +128,17 @@ class TopicalConcentration(Check):
 @register
 class RedundantRegion(Check):
     check_id = "T1-ATLAS-002"
-    title = "A crowded region holds near-identical records"
+    title = "One crowded area holds near-identical records"
     tier = 1
+    unit = "map area"
     profiles = ALL_PROFILES
     requires = (Requirement.ATLAS,)
     cost = CostClass.EMBEDDING
     severity = Severity.WARNING
-    fix = "Inspect that region's examples; if they are one template, sample it down rather than deduplicating."
+    fix = (
+        "Inspect that region's examples; if they are one template, sample it down "
+        "rather than deduplicating."
+    )
     rationale = (
         "Near-duplicate detection works on shingle overlap, so it finds records that share "
         "wording. It does not find a thousand records generated from one template with the "
@@ -155,15 +166,17 @@ class RedundantRegion(Check):
                 offenders.append((region, share, float(coh), entry.get("terms", "")))
         if not offenders:
             return []
-        region, share, coh, terms = offenders[0]
+        region, share, coh, _terms = offenders[0]
         return [
             make_finding(
                 self,
                 count=len(offenders),
                 total=int(cov.get("regions_occupied", 0)),
                 detail=(
-                    f"region {region} holds {share:.0%} of placed records and its records "
-                    f"average {coh:.2f} cosine to each other ({terms or 'unlabelled'})"
+                    f"one area of the map holds {share:.0%} of placed records, and those "
+                    f"records average {coh:.2f} cosine similarity to each other — that is "
+                    f"one thing written out many times rather than one subject covered "
+                    f"many ways, and shingle-based duplicate detection cannot see it"
                 ),
                 data={
                     "regions": [

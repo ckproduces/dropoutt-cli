@@ -45,7 +45,7 @@ def category_labels(atlas: Any | None = None) -> dict[int, str]:
 
         atlas = load_bundled()
     if atlas is not None and atlas.l1_labels:
-        return {i: label for i, label in enumerate(atlas.l1_labels)}
+        return dict(enumerate(atlas.l1_labels))
     return {int(c["id"]): str(c["label"]) for c in taxonomy()["categories"]}
 
 

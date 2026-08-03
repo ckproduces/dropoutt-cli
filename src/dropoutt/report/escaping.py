@@ -23,10 +23,12 @@ import html as _html
 import json as _json
 import re
 
-# U+202A..U+202E and U+2066..U+2069 change text direction for everything after
-# them until popped. In a report full of concatenated snippets, one stray
-# override corrupts the rest of the page.
-_BIDI = re.compile(r"[‪-‮⁦-⁩‎‏]")
+# U+202A..U+202E and U+2066..U+2069 change text direction for everything
+# after them until popped, and U+200E/U+200F mark it. In a report full of
+# concatenated snippets, one stray override reverses the rest of the page.
+# Written as escapes: these characters are invisible, and source that
+# contains them literally cannot be reviewed.
+_BIDI = re.compile("[\u202a-\u202e\u2066-\u2069\u200e\u200f]")
 
 _CONTROL_PICTURE_BASE = 0x2400
 

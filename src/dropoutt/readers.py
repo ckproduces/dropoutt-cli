@@ -13,11 +13,40 @@ import csv
 import gzip
 import io
 import lzma
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from .compat import HAVE_PYARROW, HAVE_ZSTANDARD, json_loads
+
+
+@dataclass(frozen=True, slots=True)
+class ReadSpan:
+    """A contiguous piece of one file, and the record index it begins at.
+
+    Exists so the streaming pass can be split across processes without the
+    record numbering changing. ``source_index`` appears in evidence, in
+    duplicate keys and in the fingerprint, so a shard has to number its records
+    exactly as a serial read would, which means knowing how many records precede
+    its first byte.
+
+    For line-delimited formats ``start`` and ``end`` are byte offsets and
+    ``start`` always sits at the beginning of a line. For columnar formats they
+    are row-group indices.
+    """
+
+    start: int = 0
+    #: Exclusive. -1 means "to the end of the file".
+    end: int = -1
+    first_index: int = 0
+
+    @property
+    def is_whole_file(self) -> bool:
+        return self.start == 0 and self.end < 0
+
+
+WHOLE_FILE = ReadSpan()
 
 
 @dataclass(slots=True)
@@ -41,15 +70,52 @@ def open_maybe_compressed(path: str, compressed: bool) -> io.TextIOBase:
     if compressed and path.endswith(".zst"):
         if not HAVE_ZSTANDARD:
             raise RuntimeError("zstd support not installed; pip install 'dropoutt[zstd]'")
-        import zstandard  # noqa: PLC0415
+        import zstandard
 
-        raw = open(path, "rb")
+        raw = open(path, "rb")  # noqa: SIM115 - closed with the wrapper this returns
         stream = zstandard.ZstdDecompressor().stream_reader(raw)
         return io.TextIOWrapper(stream, encoding="utf-8", errors="replace")
-    return open(path, "r", encoding="utf-8", errors="replace")
+    return open(path, encoding="utf-8", errors="replace")
 
 
-def read_jsonl(path: str, *, compressed: bool = False, limit: int | None = None) -> Iterator[RawRecord]:
+def is_json_array_file(path: str, compressed: bool = False) -> bool:
+    """True when a line-delimited extension is really one JSON array.
+
+    The extension is a claim about the file, not a fact about it. A ``.jsonl``
+    whose first character is ``[`` is a pretty-printed array, and reading it a
+    line at a time yields one parse error per line: on a real corpus that was
+    1,256,362 failures out of 1,371,772 records. The damage does not stop at the
+    parse count. Every ``{``, ``},`` and ``"license": "CC BY-SA 3.0",`` becomes a
+    record in its own right, so the same fragment repeats a hundred thousand
+    times and the duplicate check reports a cluster of 157,045 copies, while the
+    fragments are too short to identify and the language breakdown fills up with
+    "unknown". One misread file produced three wrong findings.
+
+    Only the head is read, so this costs a single buffered read.
+    """
+    try:
+        with open_maybe_compressed(path, compressed) as fh:
+            head = fh.read(4096)
+    except Exception:
+        return False
+    return head.lstrip()[:1] == "["
+
+
+def read_jsonl(
+    path: str,
+    *,
+    compressed: bool = False,
+    limit: int | None = None,
+    span: ReadSpan = WHOLE_FILE,
+) -> Iterator[RawRecord]:
+    if not span.is_whole_file:
+        yield from _read_jsonl_span(path, span)
+        return
+    if is_json_array_file(path, compressed):
+        # The incremental span scanner already handles this shape and does not
+        # hold the file in memory, which a whole-document json.loads would.
+        yield from _read_embedded_records(path, compressed=compressed, limit=limit)
+        return
     with open_maybe_compressed(path, compressed) as fh:
         for idx, line in enumerate(fh):
             if limit is not None and idx >= limit:
@@ -64,7 +130,113 @@ def read_jsonl(path: str, *, compressed: bool = False, limit: int | None = None)
                                 raw_text=stripped[:2000])
 
 
-def read_json(path: str, *, compressed: bool = False, limit: int | None = None) -> Iterator[RawRecord]:
+def _read_jsonl_span(path: str, span: ReadSpan) -> Iterator[RawRecord]:
+    """Read one byte range, numbering records from ``span.first_index``.
+
+    Decoding is done here rather than by a TextIOWrapper so the byte position
+    stays exact: a wrapper buffers ahead and ``tell`` on it is not a cheap
+    integer.
+    """
+    idx = span.first_index
+    end = span.end
+    with open(path, "rb") as fh:
+        fh.seek(span.start)
+        pos = span.start
+        for raw in fh:
+            pos += len(raw)
+            stripped = raw.decode("utf-8", "replace").strip()
+            if stripped:
+                try:
+                    yield RawRecord(json_loads(stripped), path, idx, raw_text=stripped)
+                except Exception as exc:
+                    yield RawRecord(None, path, idx, error=f"{type(exc).__name__}: {exc}",
+                                    raw_text=stripped[:2000])
+            idx += 1
+            if 0 <= end <= pos:
+                return
+
+
+#: Blocks used when locating split points. Large enough that the scan is bound
+#: by the disk rather than by Python.
+_SPLIT_BLOCK = 1 << 23
+
+
+def plan_line_splits(path: str, parts: int) -> list[ReadSpan]:
+    """Cut a line-delimited file into ``parts`` spans aligned to line starts.
+
+    Costs one sequential pass at ``memchr`` speed, which buys the record index
+    at each cut. Without that index a shard could not number its records the way
+    a serial read does, and every duplicate key, evidence location and
+    fingerprint would depend on how many cores the machine had.
+    """
+    size = Path(path).stat().st_size
+    if parts <= 1 or size <= 0:
+        return [WHOLE_FILE]
+    targets = [size * k // parts for k in range(1, parts)]
+    cuts: list[tuple[int, int]] = []
+    with open(path, "rb") as fh:
+        pos = 0
+        lines = 0
+        t = 0
+        while t < len(targets):
+            block = fh.read(_SPLIT_BLOCK)
+            if not block:
+                break
+            block_end = pos + len(block)
+            while t < len(targets) and targets[t] < block_end:
+                nl = block.find(b"\n", max(0, targets[t] - pos))
+                if nl < 0:
+                    break
+                cut = pos + nl + 1
+                if not cuts or cut > cuts[-1][0]:
+                    cuts.append((cut, lines + block.count(b"\n", 0, nl + 1)))
+                t += 1
+            lines += block.count(b"\n")
+            pos = block_end
+
+    spans: list[ReadSpan] = []
+    prev_offset, prev_index = 0, 0
+    for cut, index in cuts:
+        spans.append(ReadSpan(prev_offset, cut, prev_index))
+        prev_offset, prev_index = cut, index
+    spans.append(ReadSpan(prev_offset, -1, prev_index))
+    return spans
+
+
+def plan_row_group_splits(path: str, parts: int) -> list[ReadSpan]:
+    """Cut a Parquet file into spans of whole row groups.
+
+    The row counts come from the footer, so this reads kilobytes rather than the
+    file.
+    """
+    if parts <= 1 or not HAVE_PYARROW:
+        return [WHOLE_FILE]
+    try:
+        import pyarrow.parquet as pq
+
+        meta = pq.ParquetFile(path).metadata
+        groups = meta.num_row_groups
+        if groups < 2:
+            return [WHOLE_FILE]
+        rows = [meta.row_group(i).num_rows for i in range(groups)]
+    except Exception:
+        return [WHOLE_FILE]
+
+    per = max(1, groups // parts)
+    spans: list[ReadSpan] = []
+    index = 0
+    start = 0
+    while start < groups:
+        stop = min(groups, start + per) if len(spans) < parts - 1 else groups
+        spans.append(ReadSpan(start, stop, index))
+        index += sum(rows[start:stop])
+        start = stop
+    return spans
+
+
+def read_json(
+    path: str, *, compressed: bool = False, limit: int | None = None
+) -> Iterator[RawRecord]:
     """A whole-file JSON document.
 
     Handles both a top-level array of records and a single object. Falls back to
@@ -96,9 +268,8 @@ def read_json(path: str, *, compressed: bool = False, limit: int | None = None) 
                 for item in items:
                     if limit is not None and idx >= limit:
                         return
-                    if isinstance(item, dict):
-                        item = {**item, "_split": split}
-                    yield RawRecord(item, path, idx)
+                    record = {**item, "_split": split} if isinstance(item, dict) else item
+                    yield RawRecord(record, path, idx)
                     idx += 1
         else:
             yield RawRecord(doc, path, 0)
@@ -114,7 +285,7 @@ def read_text(path: str, *, compressed: bool = False, limit: int | None = None,
     from that, and the conversational checks are not skipped so much as never
     considered. See :mod:`dropoutt.sniff` for how the decision is made.
     """
-    from .sniff import sniff_file  # noqa: PLC0415
+    from .sniff import sniff_file
 
     framing = sniff_file(path, compressed=compressed)
     if framing.is_records:
@@ -148,7 +319,7 @@ def _read_embedded_records(
     fails to parse is yielded as an error record rather than dropped: those are
     the malformed records, and reporting them is the point.
     """
-    from .sniff import iter_json_spans  # noqa: PLC0415
+    from .sniff import scan_json_spans
 
     idx = 0
     buffer = ""
@@ -158,57 +329,93 @@ def _read_embedded_records(
             if not chunk:
                 break
             buffer += chunk
-            spans = iter_json_spans(buffer)
-            if not spans:
-                continue
+            spans, resume = scan_json_spans(buffer)
             for start, end in spans:
                 if limit is not None and idx >= limit:
                     return
                 raw = buffer[start:end]
+                # A malformed record is data, so it becomes an error record.
+                # Anything that is not a decode failure is a bug in this file
+                # and must not be disguised as one.
                 try:
                     yield RawRecord(json_loads(raw), path, idx, raw_text=raw[:2000])
-                except Exception as exc:
+                except (ValueError, TypeError) as exc:
                     yield RawRecord(None, path, idx, error=f"{type(exc).__name__}: {exc}",
                                     raw_text=raw[:2000])
                 idx += 1
-            buffer = buffer[spans[-1][1]:]
+            # Drop everything the scanner is finished with, including when it
+            # found nothing: a long records-free stretch would otherwise be
+            # re-scanned from offset zero on every read.
+            buffer = buffer[max(resume, spans[-1][1] if spans else 0):]
 
-    for start, end in iter_json_spans(buffer):
+    for start, end in scan_json_spans(buffer)[0]:
         if limit is not None and idx >= limit:
             return
         raw = buffer[start:end]
         try:
             yield RawRecord(json_loads(raw), path, idx, raw_text=raw[:2000])
-        except Exception as exc:
+        except (ValueError, TypeError) as exc:
             yield RawRecord(None, path, idx, error=f"{type(exc).__name__}: {exc}",
                             raw_text=raw[:2000])
         idx += 1
 
 
-def read_csv(path: str, *, compressed: bool = False, limit: int | None = None) -> Iterator[RawRecord]:
+#: Delimiters worth considering when the extension does not settle it. A
+#: semicolon-separated export read as comma-separated parses as a single column
+#: holding the whole row, which then reads as unstructured raw text.
+_CSV_DELIMITERS = (",", ";", "\t", "|")
+
+
+def _csv_delimiter(path: str, compressed: bool, suffix: str) -> str:
+    """Delimiter from the header row, falling back to the extension's default."""
+    if suffix == ".tsv":
+        return "\t"
+    try:
+        with open_maybe_compressed(path, compressed) as fh:
+            head = fh.read(8192)
+    except Exception:
+        return ","
+    line = next((ln for ln in head.splitlines() if ln.strip()), "")
+    counts = {d: line.count(d) for d in _CSV_DELIMITERS}
+    best = max(counts, key=lambda d: counts[d]) if line else ","
+    return best if counts.get(best, 0) > 0 else ","
+
+
+def read_csv(
+    path: str, *, compressed: bool = False, limit: int | None = None
+) -> Iterator[RawRecord]:
     effective = Path(path)
     if effective.suffix.lower() in {".gz", ".bz2", ".xz", ".zst"}:
         effective = effective.with_suffix("")
-    delimiter = "\t" if effective.suffix.lower() == ".tsv" else ","
+    delimiter = _csv_delimiter(path, compressed, effective.suffix.lower())
     with open_maybe_compressed(path, compressed) as fh:
         try:
+            from .schema_induction import canonical_tabular_keys
+
             reader = csv.DictReader(fh, delimiter=delimiter)
+            mapping: dict[str, str] | None = None
             for idx, row in enumerate(reader):
                 if limit is not None and idx >= limit:
                     return
-                yield RawRecord(dict(row), path, idx)
+                if mapping is None:
+                    mapping = canonical_tabular_keys(list(row.keys()))
+                yield RawRecord(
+                    {mapping.get(k, k): v for k, v in row.items()}, path, idx
+                )
         except Exception as exc:
             yield RawRecord(None, path, 0, error=f"{type(exc).__name__}: {exc}")
 
 
-def read_parquet(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
+def read_parquet(
+    path: str, *, limit: int | None = None, span: ReadSpan = WHOLE_FILE
+) -> Iterator[RawRecord]:
     if not HAVE_PYARROW:
         yield RawRecord(
             None, path, 0,
             error="parquet support not installed; pip install 'dropoutt[parquet]'",
         )
         return
-    import pyarrow.parquet as pq  # noqa: PLC0415
+    import pyarrow.parquet as pq
 
     try:
         pf = pq.ParquetFile(path)
@@ -216,8 +423,17 @@ def read_parquet(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
         yield RawRecord(None, path, 0, error=f"{type(exc).__name__}: {exc}")
         return
 
-    idx = 0
-    for batch in pf.iter_batches(batch_size=4096):
+    if span.is_whole_file:
+        batches = pf.iter_batches(batch_size=4096)
+        idx = 0
+    else:
+        stop = span.end if span.end >= 0 else pf.num_row_groups
+        batches = pf.iter_batches(
+            batch_size=4096, row_groups=list(range(span.start, stop))
+        )
+        idx = span.first_index
+
+    for batch in batches:
         rows = batch.to_pylist()
         for row in rows:
             if limit is not None and idx >= limit:
@@ -236,8 +452,8 @@ def read_arrow(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
         return
 
     try:
-        import pyarrow as pa  # noqa: PLC0415
-        import pyarrow.ipc as ipc  # noqa: PLC0415
+        import pyarrow as pa
+        from pyarrow import ipc
 
         source = pa.memory_map(path, "r")
         try:
@@ -251,7 +467,7 @@ def read_arrow(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
                 batches = ipc.open_stream(source)
             except Exception:
                 # Feather V1 predates the Arrow IPC file layout.
-                import pyarrow.feather as feather  # noqa: PLC0415
+                from pyarrow import feather
 
                 batches = feather.read_table(path).to_batches(max_chunksize=4096)
 
@@ -277,7 +493,7 @@ def read_orc(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
             error="ORC support not installed; pip install 'dropoutt[parquet]'",
         )
         return
-    import pyarrow.orc as orc  # noqa: PLC0415
+    from pyarrow import orc
 
     try:
         source = orc.ORCFile(path)
@@ -292,9 +508,44 @@ def read_orc(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
         yield RawRecord(None, path, 0, error=f"{type(exc).__name__}: {exc}")
 
 
+#: Formats whose records can be located without reading everything before them.
+SPLITTABLE = (".jsonl", ".ndjson", ".parquet")
+
+
+def plan_splits(path: str, suffix: str, parts: int, *, compressed: bool = False) -> list[ReadSpan]:
+    """Spans for one file, or a single whole-file span if it cannot be split.
+
+    Compressed streams are never split: finding a record boundary in one means
+    decompressing everything before it, which is the work the split was supposed
+    to divide.
+    """
+    if parts <= 1 or compressed:
+        return [WHOLE_FILE]
+    if suffix in (".jsonl", ".ndjson"):
+        if is_json_array_file(path, compressed):
+            # Records span many lines, so a line offset is not a record
+            # boundary. Splitting here would hand each shard a fragment.
+            return [WHOLE_FILE]
+        return plan_line_splits(path, parts)
+    if suffix == ".parquet":
+        return plan_row_group_splits(path, parts)
+    return [WHOLE_FILE]
+
+
 def read_file(path: str, suffix: str, *, compressed: bool = False,
-              limit: int | None = None) -> Iterator[RawRecord]:
+              limit: int | None = None, span: ReadSpan = WHOLE_FILE) -> Iterator[RawRecord]:
     """Dispatch on suffix."""
+    if not span.is_whole_file:
+        try:
+            if suffix in (".jsonl", ".ndjson"):
+                yield from read_jsonl(path, compressed=compressed, limit=limit, span=span)
+            elif suffix == ".parquet":
+                yield from read_parquet(path, limit=limit, span=span)
+            else:  # pragma: no cover - the planner never produces these
+                yield from read_file(path, suffix, compressed=compressed, limit=limit)
+        except Exception as exc:
+            yield RawRecord(None, path, span.first_index, error=f"{type(exc).__name__}: {exc}")
+        return
     try:
         if compressed and suffix in {".parquet", ".arrow", ".feather", ".orc"}:
             yield RawRecord(
@@ -321,7 +572,7 @@ def read_file(path: str, suffix: str, *, compressed: bool = False,
             yield from read_csv(path, compressed=compressed, limit=limit)
         elif suffix in (".txt", ".md"):
             yield from read_text(path, compressed=compressed, limit=limit)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         yield RawRecord(
             None,
             path,

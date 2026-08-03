@@ -8,6 +8,7 @@ assert.
 from __future__ import annotations
 
 import pytest
+from jinja2 import TemplateSyntaxError
 
 from dropoutt.chat_template import (
     ChatTemplate,
@@ -107,7 +108,7 @@ def test_raise_exception_becomes_a_render_error_not_a_crash():
 
 
 def test_broken_template_fails_at_compile_time():
-    with pytest.raises(Exception):
+    with pytest.raises(TemplateSyntaxError):
         ChatTemplate(source="{% for m in messages %}{{ m.content }}")
 
 
@@ -126,7 +127,7 @@ def test_offset_reliability_probe():
 
 
 def test_loss_mask_end_to_end_with_a_real_tokenizer():
-    tokenizers = pytest.importorskip("tokenizers")
+    pytest.importorskip("tokenizers")
     from tokenizers import Tokenizer, models, pre_tokenizers, trainers
 
     tok = Tokenizer(models.BPE(unk_token="<unk>"))
@@ -142,6 +143,8 @@ def test_loss_mask_end_to_end_with_a_real_tokenizer():
 
     assert any(mask), "some tokens must be trainable"
     assert not all(mask), "prompt tokens must not be trainable"
-    trainable = "".join(out.text[a:b] for (a, b), m in zip(enc.offsets, mask) if m)
+    trainable = "".join(
+        out.text[a:b] for (a, b), m in zip(enc.offsets, mask, strict=True) if m
+    )
     assert "Selam" in trainable and "Iyiyim" in trainable
     assert "Merhaba" not in trainable, "user content must never be trainable"

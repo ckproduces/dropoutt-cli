@@ -28,7 +28,7 @@ from __future__ import annotations
 import datetime as _dt
 import json as _json
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, ClassVar
 
 from jinja2 import nodes
 from jinja2.ext import Extension
@@ -47,7 +47,8 @@ class GenerationExtension(Extension):
     records the character spans, which become the trainable region.
     """
 
-    tags = {"generation"}
+    #: Jinja reads this off the class to learn which tag the extension owns.
+    tags: ClassVar[set[str]] = {"generation"}
 
     def parse(self, parser):  # pragma: no cover - exercised via render
         lineno = next(parser.stream).lineno
@@ -170,7 +171,7 @@ class ChatTemplate:
             )
         except TemplateRenderError:
             raise
-        except Exception as exc:  # noqa: BLE001 - any template error is a finding
+        except Exception as exc:
             raise TemplateRenderError(f"{type(exc).__name__}: {exc}") from exc
 
         clean, spans = _strip_sentinels(raw)

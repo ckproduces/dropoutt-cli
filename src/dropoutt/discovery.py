@@ -192,11 +192,11 @@ def discover(root: str, *, follow_symlinks: bool = False, max_files: int = 200_0
 
     folded = _fold_shards({name: [] for name, _, _ in pending})
     if folded:
-        disc.shard_families = sorted({v for v in folded.values()})
+        disc.shard_families = sorted(set(folded.values()))
 
     by_dataset: dict[str, DatasetRef] = {}
-    for ds_name, fp, size in pending:
-        ds_name = folded.get(ds_name, ds_name)
+    for raw_name, fp, size in pending:
+        ds_name = folded.get(raw_name, raw_name)
         ds = by_dataset.get(ds_name)
         if ds is None:
             ds = DatasetRef(name=ds_name, root=str(fp.parent))
@@ -220,7 +220,7 @@ def _classify(path: Path) -> tuple[str, bool]:
 
 def _attach_cards(root: Path, disc: Discovery) -> None:
     """Read licence and declared language from any dataset card found."""
-    from .cards import parse_card  # noqa: PLC0415
+    from .cards import parse_card
 
     for ds in disc.datasets:
         card = Path(ds.root) / "README.md"

@@ -58,6 +58,20 @@ LAYOUTS: tuple[Layout, ...] = (
     Layout("content_only", "Bare content", ("content",), (), ("title", "url"), "text"),
 )
 
+#: Every layout's key names, lowercased once. ``score_record`` runs on up to
+#: 10,000 records per dataset and used to rebuild all of this from the frozen
+#: tuples above on each one.
+_LAYOUT_KEYS: tuple[tuple[Layout, frozenset[str], tuple[frozenset[str], ...],
+                          frozenset[str]], ...] = tuple(
+    (
+        layout,
+        frozenset(k.lower() for k in layout.required),
+        tuple(frozenset(g.lower() for g in group) for group in layout.any_of),
+        frozenset(o.lower() for o in layout.optional),
+    )
+    for layout in LAYOUTS
+)
+
 #: Role key aliases seen in the wild. The mapping matters: a record whose role
 #: is ``gpt`` produces zero trainable tokens in a trainer that only recognises
 #: ``assistant``, and nothing warns you.
@@ -71,6 +85,54 @@ ROLE_ALIASES = {
 
 #: Keys that hold the message list under each conversational layout.
 TURN_KEYS = {"messages": ("role", "content"), "conversations": ("from", "value")}
+
+#: Column headers that mean a layout key. Applies to tabular formats only.
+#:
+#: A JSON dataset uses conventional key names because a library wrote them. A
+#: CSV carries whatever the author typed into the header row, and the difference
+#: decides whether the file is read as training data at all: a corpus with the
+#: header ``Question,Activation-Feed,Result`` matched no layout, fell back to
+#: raw text, and had all three columns concatenated into one block — which then
+#: produced 100%-alike "near-duplicate" pairs, because the shared category
+#: column dominated the shingles.
+#:
+#: This is column-name tolerance, not language detection. The non-English
+#: entries are here because the header row is metadata written by a person, and
+#: a Turkish corpus labels its columns in Turkish.
+TABULAR_KEY_ALIASES: dict[str, str] = {
+    "questions": "question", "query": "question", "soru": "question",
+    "result": "answer", "results": "answer", "reply": "answer",
+    "answer_text": "answer", "cevap": "answer", "yanit": "answer",
+    "yanıt": "answer", "cevaplar": "answers",
+    "talimat": "instruction", "instructions": "instruction",
+    "çıktı": "output", "cikti": "output", "girdi": "input",
+    "assistant": "response", "bot": "response",
+    "passage": "context", "paragraph": "context", "baglam": "context",
+    "bağlam": "context", "document": "context",
+    "body": "text", "contents": "content",
+}
+
+
+def canonical_tabular_keys(header: list[str]) -> dict[str, str]:
+    """Map raw column headers to canonical layout keys.
+
+    Returns ``{original: canonical}``. Headers that are already canonical, or
+    that no layout knows about, map to their own lower-cased name — nothing is
+    dropped, because a column this does not recognise is still content and the
+    "content sits in keys the layout never reads" check needs to see it.
+    """
+    mapping: dict[str, str] = {}
+    taken: set[str] = set()
+    for raw in header:
+        name = str(raw).strip().lower()
+        canonical = TABULAR_KEY_ALIASES.get(name, name)
+        if canonical in taken:
+            # Two columns claiming the same role: keep the first, leave the
+            # second under its own name rather than silently overwriting it.
+            canonical = name
+        taken.add(canonical)
+        mapping[raw] = canonical
+    return mapping
 
 
 # --------------------------------------------------------------------------
@@ -139,22 +201,15 @@ def score_record(payload: Any) -> tuple[str | None, float]:
     keys = _keys_of(payload)
     best: tuple[str | None, float] = (None, 0.0)
 
-    for layout in LAYOUTS:
-        req = {k.lower() for k in layout.required}
-        if not req.issubset(keys):
+    for layout, required, any_of, optional in _LAYOUT_KEYS:
+        if not required <= keys:
             continue
-        ok = True
-        for group in layout.any_of:
-            if not any(g.lower() in keys for g in group):
-                ok = False
-                break
-        if not ok:
+        if not all(group & keys for group in any_of):
             continue
 
         score = 0.6
-        opt_hits = sum(1 for o in layout.optional if o.lower() in keys)
-        if layout.optional:
-            score += 0.2 * (opt_hits / len(layout.optional))
+        if optional:
+            score += 0.2 * (len(optional & keys) / len(optional))
         # Prefer layouts whose required keys carry actual content.
         if _has_content(payload, layout):
             score += 0.2

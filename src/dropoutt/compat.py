@@ -85,19 +85,6 @@ except ImportError:
 
 
 # --------------------------------------------------------------------------
-# MinHash. rensa is a Rust implementation; the fallback in minhash.py is a
-# numpy-vectorised implementation using the same permutation scheme and banding,
-# so cluster membership agrees. It is slower, not different.
-# --------------------------------------------------------------------------
-try:
-    import rensa as _rensa  # noqa: F401
-
-    HAVE_RENSA = True
-except ImportError:
-    HAVE_RENSA = False
-
-
-# --------------------------------------------------------------------------
 # Language identification. The fallback is a small character-profile detector
 # that covers far fewer languages and is materially less accurate. Because that
 # is a quality difference rather than a speed difference, langid.py marks its
@@ -145,11 +132,6 @@ def capability_report() -> dict[str, dict[str, Any]]:
             "available": HAVE_ZSTANDARD,
             "impact": "reading .zst-compressed files",
             "install": "pip install 'dropoutt[zstd]'",
-        },
-        "rensa": {
-            "available": HAVE_RENSA,
-            "impact": "speed only, identical clusters",
-            "install": "pip install 'dropoutt[fast]'",
         },
         "fasttext-langdetect": {
             "available": HAVE_FASTTEXT_LID,

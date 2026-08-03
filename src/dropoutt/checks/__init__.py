@@ -18,6 +18,6 @@ from . import (  # noqa: F401
     tier1_dedup,
     tier1_language,
 )
-from .base import REGISTRY, Check, Registry, make_finding, register  # noqa: F401
+from .base import REGISTRY, Check, Registry, make_finding, register
 
 __all__ = ["REGISTRY", "Check", "Registry", "make_finding", "register"]

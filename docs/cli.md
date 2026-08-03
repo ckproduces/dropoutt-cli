@@ -5,10 +5,23 @@ script lands in the environment's `bin/`, which module systems and batch
 schedulers often leave off `PATH`; the module form works from any interpreter
 that can import the package.
 
-`dropoutt` with no command prints the help. Commands with required arguments,
-such as `scan`, `diff`, and `index-eval`, also print their complete help and an
-example when run with no arguments. `dropoutt --version` prints the version and
-exits. Those are the only top-level options.
+`dropoutt` with no command prints the mark and the help. `scan`, which takes a
+required argument, prints its complete help and a set of examples when run with
+no arguments.
+
+Help and version are spelled both ways, because a tool should not answer a
+reasonable guess with a usage error:
+
+```bash
+dropoutt --help        dropoutt help
+dropoutt -h            dropoutt help scan
+dropoutt --version     dropoutt version
+dropoutt -V
+```
+
+The commands below are the whole surface, and it is stable: `dropoutt` follows
+semantic versioning from 1.0, so a command or a flag will not change meaning
+inside a major version.
 
 ## `dropoutt scan PATH`
 
@@ -30,8 +43,10 @@ and periodic record counts instead of control sequences.
 | `--offline` | off | never touch the network; resolve the model from the cache |
 | `--limit` | none | max records per file, for a fast look |
 | `--no-html` | off | skip the HTML report |
+| `--no-open` | off | do not open the report when the scan finishes |
 | `--no-atlas` | off | skip atlas coverage |
-| `--no-evidence` | off | omit record excerpts and source locations from terminal output, `findings.jsonl`, and `report.html` |
+| `--no-evidence` | off | omit record excerpts and source locations from terminal output, `findings.jsonl`, `report.md`, and `report.html` |
+| `--workers`, `-j` | one per core, less one | processes used for the streaming pass |
 | `--quiet`, `-q` | off | suppress the terminal report; only the output path is printed |
 
 ```bash
@@ -41,7 +56,33 @@ dropoutt scan ./data --model /scratch/models/qwen3-4b --offline
 dropoutt scan ./data --target sft --quiet          # CI gate
 dropoutt scan ./data --limit 1000                  # quick look at a huge corpus
 dropoutt scan ./data --offline --no-evidence       # VPC-safe network and evidence settings
+dropoutt scan ./data -j 4                          # cap the scan at four processes
 ```
+
+### Opening the report
+
+The scan opens `report.html` when it finishes. It does not when there would be
+nobody to see it, and it says nothing in that case rather than reporting a
+failure — the file is written either way, and the path is printed either way.
+
+The checks, in order: `--no-open`, `--quiet` or `--no-html`, `DROPOUTT_OPEN=0`,
+an SSH session (`SSH_CONNECTION`, `SSH_CLIENT`, `SSH_TTY`), CI (`CI`,
+`GITHUB_ACTIONS`, `GITLAB_CI` and others), a batch scheduler (`SLURM_JOB_ID`,
+`PBS_JOBID`, `LSB_JOBID`, `SGE_TASK_ID`), stdout that is not a terminal, and on
+Unix a session with no `DISPLAY` or `WAYLAND_DISPLAY`. `DROPOUTT_OPEN=1` skips
+every one of them, which is what you want when X11 forwarding means the SSH
+check is wrong.
+
+### Workers
+
+Above 24 MB the streaming pass is split into contiguous shards and run across
+processes; below it, and with `-j 1`, it runs in the calling process. The result
+is identical either way — same findings, same examples, same fingerprint id —
+because a shard reads a slice of the corpus in the order a serial scan would and
+the checks are combined afterwards. `DROPOUTT_WORKERS` sets the default for a
+whole machine; `-j` overrides it for one run. On a scheduler that allocates you
+part of a node, set one of them to your allocation, because the default reads
+the machine's core count and not your share of it.
 
 `--model`, `--profile`, `--target`, `--seq-len`, `--tier`, and `--offline` fall
 back to `dropoutt.toml` when not given on the command line, and `--seq-len`
@@ -71,159 +112,15 @@ before it is one about their subject; the reported reason says which. See
 
 `--no-atlas` skips the assignment step and the block with it. When coverage is
 computed, the full region histogram also goes into `fingerprint.json`, which is
-what `dropoutt diff` reads. Record excerpts stay out of `fingerprint.json`, which
+comparable across machines. Record excerpts stay out of `fingerprint.json`, which
 is the artifact meant to be shareable.
 
-By default, terminal examples, `findings.jsonl`, and `report.html` contain
+By default, terminal examples, `findings.jsonl`, `report.md`, and `report.html` contain
 bounded record excerpts and source locations so findings can be inspected.
 Detected PII is masked, but arbitrary proprietary text is not. Use
 `--no-evidence` before moving these artifacts outside the dataset's trust
 boundary. The fingerprint never contains record excerpts, but it does contain
 the scan root, dataset names, aggregate measurements, and stable hashes.
-
-## `dropoutt diff LEFT RIGHT`
-
-Compare two fingerprints against the shared atlas.
-
-| flag | default | meaning |
-| --- | --- | --- |
-| `--full` | off | list every differing region instead of truncating to the top few |
-
-Both arguments are `fingerprint.json` files written by `dropoutt scan`. The
-bundled `atlas-lite-v0.npz` is not an operand. If a binary atlas artifact,
-unrelated JSON file, or malformed fingerprint is passed, the command identifies
-the mismatch and prints the correct invocation.
-
-The comparison is directional and reads left against right: **what does LEFT
-cover that RIGHT does not**. It is not symmetric. A small specialised corpus can
-sit wholly inside a large one while the large one is barely inside it, so run it
-with the dataset you are considering on the left and the mixture you already
-have on the right.
-
-```bash
-dropoutt diff ./candidate/.dropoutt/fingerprint.json ./mixture/.dropoutt/fingerprint.json
-dropoutt diff ./candidate/.dropoutt/fingerprint.json ./mixture/.dropoutt/fingerprint.json --full
-```
-
-```
-──────────────────────────────────── dropoutt diff ─────────────────────────────────────
-  left  /private/tmp/fp-code
-  right /private/tmp/fp-turkish_instructions
-
-  Shape
-                 left      right
-records         1,500      1,500
-datasets            1          1
-characters    908,255    568,510
-
-  Atlas comparison
-    Similarity   0.02  (1.0 = same distribution over regions)
-    Shared       38% of left sits in regions right also occupies
-    New          62% of left sits in regions right never reaches
-
-    Only in left — what adding it would bring
-      151    12%  import, python, return, data, create
-      157    11%  return, function, list, write, given
-      149     9%  return, function, write, given, else
-      153     8%  list, return, python, function, write
-      147     5%  class, return, name, initself, python
-      155     5%  import, model, data, python, create
-      156     4%  random, import, password, python, generate
-      158     2%  import, return, none, class, assert
-      and 16 more; --full to list them
-
-    Only in right
-       94     5%  yardımcı, nasıl, şekilde, olabilir, sahip
-       98     4%  makine, algoritma, öğrenimi, oluşturun, etmek
-       89     4%  olduğunu, büyük, film, ortaya, şekilde
-        7     4%  cümle, cümlenin, cümleyi, adım, doğru
-       92     3%  uygulama, yazılım, kullanıcı, windows, şekilde
-
-    Category mix
-category            left    right    delta
-code_generation      94%       0%     +94%
-general_chat          3%      95%     -92%
-turkish_culture       0%       3%      -3%
-code_explanation      3%       0%      +3%
-  This is geometry, not a recommendation. Whether new coverage helps depends on what you
-are training.
-```
-
-The Shape table is read straight from the two fingerprints: records, datasets,
-characters, and the near- and exact-duplicate rates when both sides recorded
-them.
-
-Similarity is the cosine of the two region-mass vectors over their union, so
-1.0 means the same distribution across regions and not the same records.
-**Shared** is the share of left's placed mass sitting in regions right also
-occupies; **New** is the share sitting in regions right never reaches at all.
-The two region lists are shares of their own side's placed mass, truncated to
-the top 8 and top 5 unless `--full` is given. The category mix table lists only
-categories that differ by at least 2 points, again capped at 8 rows without
-`--full`.
-
-If the two fingerprints were written by different pipeline versions the run says
-so and continues.
-
-When either side placed less than 90% of its records, the run prints the placed
-shares under the headline numbers and states which way the bias runs. A partial
-**right** side means regions it appears not to reach may be reached by records it
-could not place, so `New` is an upper bound. A partial **left** side means the
-shares describe only the part that placed. Both are reported; neither stops the
-comparison.
-
-The comparison refuses only when it would have to invent an answer:
-
-```
-  Atlas comparison
-    not comparable left side: coverage status is 'not computed (no atlas available)'
-```
-
-That happens when a side's coverage was never computed, when the two fingerprints
-were built against different atlas versions, where the region ids do not refer to
-the same regions, and when a fingerprint predates 0.1.4 and had its histogram
-discarded by the old suppression rule — re-scanning fixes that one. The exit code
-is 0 in every case above, including this one. A missing or unreadable fingerprint
-file is a usage error and exits 2.
-
-## `dropoutt init [PATH]`
-
-Infer configuration and write `dropoutt.toml`. `PATH` defaults to `.`.
-
-| flag | meaning |
-| --- | --- |
-| `--model`, `-m` | resolve a model and show the template confirmation |
-| `--offline` | resolve model metadata only from local files and caches |
-| `--force` | overwrite an existing config |
-
-With `--model` it renders a two-turn probe conversation through the model's chat
-template and prints the exact trainable span, so a template or masking mismatch
-shows up immediately rather than after a run.
-
-## `dropoutt index-eval PATH --name NAME`
-
-Build a contamination index from your own evaluation set.
-
-| flag | default | meaning |
-| --- | --- | --- |
-| `--name`, `-n` | required | name for this benchmark |
-| `--field`, `-f` | `text` | which field holds the text; falls back to joining all string fields |
-| `--force` | off | overwrite an existing private index with the same name |
-
-```bash
-dropoutt index-eval ./holdout.jsonl --name internal-eval --field question
-```
-
-The index stores hashed 8-grams and the per-instance gram count used as the
-coverage denominator rather than raw text. It is not a disclosure-proof
-artifact: because hashes are unkeyed, someone with candidate phrases can test
-them against the index. Keep private indices inside the evaluation set's trust
-boundary.
-
-The output path is `$DROPOUTT_CACHE/contamination`, or the resolved fallback
-cache when that variable is unset. The command prints the exact path. Bundled
-and private indices are both searched on later scans. Names must be filename-safe
-and an existing index is not overwritten without `--force`.
 
 ## `dropoutt checks [CHECK_ID]`
 
@@ -254,17 +151,6 @@ distributed, or `not distributable` when the licence forbids it.
 
 List known models with their chat-template family and licence, then the
 shorthand aliases. The Turkish models are in the same table.
-
-## `dropoutt atlas`
-
-Show the bundled atlas and its own quality numbers: artifact hash, embedding
-model, region count, reference-record count, the off-atlas cosine cutoff, the
-level-0 held-out accuracy and the region purity, how many build sources were
-unavailable, and the largest regions with their terms.
-
-The accuracy and purity figures are printed next to any coverage number for a
-reason: an atlas whose level-0 probe is weak produces coverage histograms that
-look precise and are not.
 
 ## `dropoutt fetch`
 
@@ -357,7 +243,9 @@ be used in CI, which is why 1 is reserved for a genuine failure of the tool.
 | variable | meaning |
 | --- | --- |
 | `DROPOUTT_CACHE` | cache location; overrides `XDG_CACHE_HOME`. Holds the atlas embedding model and the cached `tokenizer_config.json` files. |
-| `DROPOUTT_OFFLINE` | when set to `1`, `true`, `yes`, or `on`, makes `scan` and `init` resolve only from local files and caches |
+| `DROPOUTT_OFFLINE` | when set to `1`, `true`, `yes`, or `on`, makes `scan` resolve only from local files and caches |
+| `DROPOUTT_OPEN` | `0` never opens the finished report; `1` always does, ignoring the SSH and headless checks |
+| `DROPOUTT_WORKERS` | default number of processes for the streaming pass; `-j` overrides it for one run |
 | `DROPOUTT_DEBUG` | when truthy, show a traceback for an internal error instead of the concise exit-1 message |
 | `XDG_CACHE_HOME` | standard cache root; used as `$XDG_CACHE_HOME/dropoutt` when `DROPOUTT_CACHE` is unset |
 | `HF_HOME` | Hugging Face cache root. The tokenizers themselves are cached here, not under `DROPOUTT_CACHE`. |

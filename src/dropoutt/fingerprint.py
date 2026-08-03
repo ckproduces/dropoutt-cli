@@ -188,10 +188,9 @@ def build(
         language["composition"] = lang_f.data.get("composition", {})
         language["backend"] = lang_f.data.get("backend")
         language["low_trust"] = lang_f.data.get("low_trust", False)
-    for cid, key in (("T1-LANG-002", "outliers"), ("T1-LANG-004", "ascii_folded_turkish")):
-        f = by_id.get(cid)
-        if f is not None:
-            language[key] = {"count": f.count, "rate": round(f.rate, 5)}
+    outliers = by_id.get("T1-LANG-002")
+    if outliers is not None:
+        language["outliers"] = {"count": outliers.count, "rate": round(outliers.rate, 5)}
     facets["language"] = Facet(
         "language", language,
         "The accuracy of the labels matters; the target mix is your decision.",

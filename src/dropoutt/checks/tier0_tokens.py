@@ -6,7 +6,7 @@ reported as skipped alongside the flag that unlocks them, rather than guessed at
 
 from __future__ import annotations
 
-from ..context import F_LOSS_MASK, F_RENDERED, F_TOKEN_COUNT, F_TOKEN_IDS, ScanContext
+from ..context import F_LOSS_MASK, F_TOKEN_COUNT, F_TOKEN_IDS, ScanContext
 from ..models import (
     CostClass,
     Document,
@@ -40,6 +40,10 @@ class TemplateDrift(Check):
         "target model's, which is what this check reports."
     )
 
+    MERGE_SUM = ("total",)
+    MERGE_COUNTS = ("hits", "by_dataset")
+    MERGE_EVIDENCE = ("evidence",)
+
     def __init__(self) -> None:
         self.total = 0
         self.hits: dict[str, int] = {}
@@ -56,7 +60,7 @@ class TemplateDrift(Check):
         fam = families[0][0]
         self.hits[fam] = self.hits.get(fam, 0) + 1
         self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-        if len(self.evidence) < 5:
+        if len(self.evidence) < self.EVIDENCE_CAP:
             self.evidence.append(
                 Evidence(doc.doc_id, doc.source_file, doc.source_index,
                          f"looks like {fam} formatting :: {excerpt(doc.text, 140)}")
@@ -66,7 +70,8 @@ class TemplateDrift(Check):
         if not self.hits:
             return []
         target = template_family_for_model(ctx.model_id) if ctx.model_id else None
-        parts = ", ".join(f"{fam} ({n})" for fam, n in sorted(self.hits.items(), key=lambda kv: -kv[1]))
+        by_frequency = sorted(self.hits.items(), key=lambda kv: -kv[1])
+        parts = ", ".join(f"{fam} ({n})" for fam, n in by_frequency)
         detail = f"embedded template markers found: {parts}"
         severity = self.severity
         if target and any(fam != target for fam in self.hits):
@@ -94,6 +99,10 @@ class TemplateRender(Check):
     blocking_in = (Profile.SFT,)
     fix = "Repair the affected records; the trainer will fail or silently drop them."
 
+    MERGE_SUM = ("total", "failed")
+    MERGE_COUNTS = ("by_dataset",)
+    MERGE_EVIDENCE = ("evidence",)
+
     def __init__(self) -> None:
         self.total = 0
         self.failed = 0
@@ -108,7 +117,7 @@ class TemplateRender(Check):
         if err:
             self.failed += 1
             self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            if len(self.evidence) < 5:
+            if len(self.evidence) < self.EVIDENCE_CAP:
                 self.evidence.append(
                     Evidence(doc.doc_id, doc.source_file, doc.source_index,
                              f"{err} :: {excerpt(doc.text, 120)}")
@@ -120,7 +129,7 @@ class TemplateRender(Check):
         return [
             make_finding(
                 self, count=self.failed, total=self.total,
-                detail=f"{self.failed} of {self.total} records could not be rendered",
+                detail=f"{self.failed:,} of {self.total:,} records could not be rendered",
                 evidence=self.evidence, by_dataset=self.by_dataset,
             )
         ]
@@ -144,6 +153,11 @@ class EmptyLossMask(Check):
         "name the template does not recognise."
     )
 
+    EVIDENCE_CAP = 6
+    MERGE_SUM = ("total", "empty", "wasted")
+    MERGE_COUNTS = ("by_dataset",)
+    MERGE_EVIDENCE = ("evidence",)
+
     def __init__(self) -> None:
         self.total = 0
         self.empty = 0
@@ -160,7 +174,7 @@ class EmptyLossMask(Check):
             self.empty += 1
             self.wasted += len(mask)
             self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            if len(self.evidence) < 6:
+            if len(self.evidence) < self.EVIDENCE_CAP:
                 roles = [t.raw_role or t.role for t in doc.turns]
                 self.evidence.append(
                     Evidence(doc.doc_id, doc.source_file, doc.source_index,
@@ -175,7 +189,7 @@ class EmptyLossMask(Check):
             make_finding(
                 self, count=self.empty, total=self.total,
                 detail=(
-                    f"{self.empty} records ({pct:.1%}) have an entirely masked label vector "
+                    f"{self.empty:,} records ({pct:.1%}) have an entirely masked label vector "
                     f"and will train nothing"
                 ),
                 evidence=self.evidence, by_dataset=self.by_dataset,
@@ -203,6 +217,10 @@ class StopTokenConvention(Check):
         "reports which convention was detected, because the number is meaningless without it."
     )
 
+    MERGE_SUM = ("total", "missing")
+    #: Decided in finalize from the template, not accumulated per record.
+    MERGE_IGNORE = ("convention",)
+
     def __init__(self) -> None:
         self.total = 0
         self.missing = 0
@@ -217,8 +235,10 @@ class StopTokenConvention(Check):
         if eos_id is None:
             return
         self.total += 1
-        trainable_ids = {i for i, m in zip(ids, mask) if m}
-        if eos_id not in trainable_ids:
+        # One question — is the stop token anywhere in the trainable span — so
+        # stop at the first one rather than collecting a set of every token id
+        # in the record and throwing it away.
+        if not any(i == eos_id and m for i, m in zip(ids, mask, strict=True)):
             self.missing += 1
 
     def finalize(self, ctx: ScanContext) -> list[Finding]:
@@ -285,6 +305,10 @@ class TruncationForecast(Check):
         "will split it across blocks with no separator and full cross-document attention."
     )
 
+    MERGE_SUM = ("total", "over", "answer_lost", "tokens_lost")
+    MERGE_COUNTS = ("by_dataset",)
+    MERGE_EVIDENCE = ("evidence",)
+
     def __init__(self) -> None:
         self.total = 0
         self.over = 0
@@ -309,7 +333,7 @@ class TruncationForecast(Check):
             kept = mask[: ctx.seq_len]
             if not any(kept):
                 self.answer_lost += 1
-                if len(self.evidence) < 5:
+                if len(self.evidence) < self.EVIDENCE_CAP:
                     self.evidence.append(
                         Evidence(doc.doc_id, doc.source_file, doc.source_index,
                                  f"{n} tokens, entire assistant span beyond {ctx.seq_len}")
@@ -319,12 +343,12 @@ class TruncationForecast(Check):
         if not self.over:
             return []
         detail = (
-            f"{self.over} of {self.total} records exceed seq_len={ctx.seq_len}, "
+            f"{self.over:,} of {self.total:,} records exceed seq_len={ctx.seq_len}, "
             f"losing {self.tokens_lost:,} tokens"
         )
         severity = self.severity
         if self.answer_lost:
-            detail += f"; {self.answer_lost} lose their entire assistant span"
+            detail += f"; {self.answer_lost:,} lose their entire assistant span"
             severity = Severity.BLOCKING
         return [
             make_finding(
@@ -341,6 +365,7 @@ class PackingEfficiency(Check):
     check_id = "T0-PACK-001"
     title = "Packing efficiency under concat-and-chunk"
     tier = 0
+    unit = "record"
     profiles = (Profile.SFT, Profile.CORPUS)
     requires = (Requirement.TOKENIZER, Requirement.SEQ_LEN)
     cost = CostClass.TOKENIZER
@@ -351,6 +376,8 @@ class PackingEfficiency(Check):
         "twenty points between concat-and-chunk, first-fit-decreasing and best-fit. A packing "
         "efficiency with no algorithm attached is not comparable to anything."
     )
+
+    MERGE_SUM = ("total_tokens", "trainable_tokens", "records")
 
     def __init__(self) -> None:
         self.total_tokens = 0
@@ -365,7 +392,7 @@ class PackingEfficiency(Check):
         self.total_tokens += n
         mask = doc.meta.get(F_LOSS_MASK)
         if mask is not None:
-            self.trainable_tokens += sum(1 for m in mask if m)
+            self.trainable_tokens += sum(mask)
 
     def finalize(self, ctx: ScanContext) -> list[Finding]:
         if not self.records or ctx.seq_len is None:

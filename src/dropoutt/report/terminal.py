@@ -1,27 +1,30 @@
-"""Terminal output.
+"""Terminal output: triage, and a map of where the rest of it went.
 
-Same reading as the HTML page, cut to what fits on a screen someone is about to
-scroll past. The order is the verdict, what would go wrong, where the data sits
-on the map, and what could not be checked — and nothing else, because everything
-that was previously printed and never acted on was competing with the four
-things that are.
+This is not a short version of the report. It answers one question — *is
+anything wrong, and do I need to go and look* — and then says where looking
+happens. Everything it used to print in full is written to a file in the same
+directory milliseconds earlier: the detail and fix for each finding, the
+excerpts, the dataset table, the tokenizer panel, the off-map diagnosis, the
+whole density grid. Reprinting any of it made the scroll-back longer without
+making the decision easier, and taught people to skim the part that *is* the
+decision.
 
-Three things moved out of here into the page rather than being repeated in both.
-The dataset table, the tokenizer comparison beyond its headline, and the full
-off-map diagnosis: all of them are worth reading once and none of them is worth
-scrolling past every run. The last line says where to find them.
+So: a verdict, one line of facts, one line per finding, three lines about the
+map, what could not run, and the list of files. Roughly twenty lines whatever
+the corpus. The files are named with a word each, because "where is the fix
+for T0-ROLE-002" should not require knowing which of four artifacts holds it.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from rich.console import Console
 from rich.markup import escape
-from rich.table import Table
 
 from ..models import Severity
 from ..runner import ScanResult
 from ..tokenizer_panel import BudgetReport
-from .escaping import safe_snippet
 from .summary import ScanSummary, build
 
 TONE = {"block": "red", "warn": "yellow", "clean": "green"}
@@ -31,9 +34,13 @@ SEVERITY_MARK = {
     Severity.INFO: ("[cyan]●[/cyan]", "cyan"),
 }
 
-#: How many problems get their own block before the rest are summarised. A
-#: terminal report that lists twenty findings is read as a wall and skipped.
+#: How many problems get their own line before the rest are counted. A terminal
+#: report that lists twenty findings is read as a wall and skipped.
 SHOWN = 6
+
+#: Width of the consequence column, sized for its longest word. Fixed, because
+#: it is the column a reader scans down and a ragged one cannot be scanned.
+FLAG_WIDTH = 11
 
 
 def _m(value: object) -> str:
@@ -56,7 +63,8 @@ def render(
     budget: BudgetReport | None = None,
     show_evidence: bool = True,
     summary: ScanSummary | None = None,
-    report_path: str | None = None,
+    out_dir: Path | str | None = None,
+    written: list[str] | None = None,
 ) -> None:
     from ..branding import mark, supports_unicode
 
@@ -76,27 +84,14 @@ def render(
     ]
     if s.tokens:
         facts.append(f"[bold]{_short(s.tokens)}[/bold] tokens")
-    facts.append(f"looks like [bold]{_m(s.profile)}[/bold]")
     if s.language_line:
         facts.append(_m(s.language_line))
     console.print("  " + "   [dim]·[/dim]   ".join(facts))
 
-    _render_problems(console, s, show_evidence=show_evidence)
+    _render_problems(console, s)
     _render_atlas(console, s)
     _render_unavailable(console, result)
-
-    console.print()
-    if s.notes:
-        console.print(f"  [dim]{len(s.notes)} more observation"
-                      f"{'' if len(s.notes) == 1 else 's'} in the report.[/dim]")
-    if report_path:
-        where = "Full report with the map" if (s.atlas and s.atlas.available) else "Full report"
-        console.print(f"  [dim]{where}: {_m(report_path)}[/dim]")
-    if not s.blocking_enabled:
-        console.print("  [dim]No pass-or-fail verdict: no target declared. "
-                      "Pass --target sft to turn findings into an exit code.[/dim]")
-    console.print(f"  [dim]{s.records:,} records in {s.elapsed:.1f}s.[/dim]")
-    console.print()
+    _render_outputs(console, s, out_dir, written)
 
 
 def _short(count: int) -> str:
@@ -109,52 +104,60 @@ def _short(count: int) -> str:
     return f"{count:,}"
 
 
-def _render_problems(console: Console, s: ScanSummary, *, show_evidence: bool) -> None:
+def _render_problems(console: Console, s: ScanSummary) -> None:
+    """One line per finding, most critical first.
+
+    It used to print the scale, the detail, the fix and an excerpt for each of
+    six findings, which is most of a screen and all of it duplicated in the
+    files written beside it. What a terminal is for is deciding whether to look
+    further, and that decision needs a title, a consequence and an id.
+    """
     console.print()
     if not s.problems:
         console.print("  [green]No problems found.[/green]")
         return
 
     console.print("  [bold]What would go wrong[/bold]")
+    # Laid out by hand rather than with a `Table`. Rich sizes a flexible column
+    # against the widest cell in it and then shrinks *every* column to fit,
+    # including the fixed ones — which truncates "would block" to "would b…",
+    # losing the word that carries the decision to save a title that nobody has
+    # to read in full. The title is the column that should give.
+    scale_width = max(
+        (len(p.scale.split(" · ")[0]) for p in s.problems[:SHOWN] if p.scale),
+        default=0,
+    )
+    title_width = max(20, console.width - FLAG_WIDTH - scale_width - 8)
     for problem in s.problems[:SHOWN]:
         mark, style = SEVERITY_MARK.get(problem.severity, ("●", "white"))
-        flag = ""
         if problem.is_blocking:
-            flag = " [red]blocks this run[/red]"
+            flag, tone = "blocks", "red"
         elif problem.would_block:
-            flag = f" [dim]would block under {', '.join(problem.would_block)}[/dim]"
-        console.print()
-        console.print(f"  {mark} [bold]{_m(problem.title)}[/bold]{flag}"
-                      f"  [dim]{problem.check_id}[/dim]")
-        scale = problem.scale
-        if problem.cost:
-            scale = f"{scale}   [{style}]{problem.cost} wasted[/{style}]" if scale \
-                else f"[{style}]{problem.cost} wasted[/{style}]"
-        if scale:
-            console.print(f"      {scale}")
-        console.print(f"      [dim]{_m(problem.detail)}[/dim]")
-        console.print(f"      [dim]→[/dim] {_m(problem.fix)}")
-        if show_evidence and problem.evidence:
-            ev = problem.evidence[0]
-            console.print(f"      [dim]{_m(_where(ev))}[/dim]  "
-                          f"[dim]{_m(safe_snippet(ev.excerpt, 96))}[/dim]")
+            flag, tone = "would block", "yellow"
+        else:
+            flag, tone = problem.severity.value, "dim"
+        title = problem.title
+        if len(title) > title_width:
+            title = title[: title_width - 1] + "…"
+        scale = problem.scale.split(" · ")[0] if problem.scale else ""
+        console.print(
+            f"  {mark} [bold]{_m(title):<{title_width}}[/bold] "
+            f"[{tone}]{flag:<{FLAG_WIDTH}}[/{tone}] "
+            f"[{style}]{_m(scale):>{scale_width}}[/{style}]"
+        )
 
     if len(s.problems) > SHOWN:
         rest = len(s.problems) - SHOWN
-        console.print()
-        console.print(f"  [dim]and {rest} more: "
-                      f"{_m(', '.join(p.check_id for p in s.problems[SHOWN:]))}[/dim]")
-
-
-def _where(evidence) -> str:
-    path = evidence.source_file
-    if len(path) > 44:
-        path = "…" + path[-43:]
-    return f"{path}:{evidence.source_index}"
+        console.print(f"    [dim]and {rest} more[/dim]")
 
 
 def _render_atlas(console: Console, s: ScanSummary) -> None:
-    """Four lines about the map, and nothing that needs a picture to make sense."""
+    """Three lines about the map: how broad, how lopsided, how much fell off.
+
+    The place list and the subject bars that used to be here are the grid in
+    the report, and the grid needs colour and a hundred rows to say what it
+    says. Three sentences is what survives being read in a scroll-back.
+    """
     atlas = s.atlas
     if atlas is None:
         return
@@ -167,50 +170,13 @@ def _render_atlas(console: Console, s: ScanSummary) -> None:
 
     console.print(
         f"    Reaches [bold]{atlas.regions_touched}[/bold] of {atlas.regions_total} "
-        f"areas on the map, as spread out as {atlas.effective:.0f} even ones"
+        f"places, as spread out as {atlas.effective:.0f} even ones"
         + (f" [dim]({_m(atlas.shape)})[/dim]" if atlas.shape else "")
     )
-    if atlas.crowding:
-        console.print(f"    [yellow]{_m(atlas.crowding)}[/yellow]")
-    if atlas.twins_line and len(atlas.twins) > 0:
-        console.print(f"    {_m(atlas.twins_line)}")
-    console.print(f"    [dim]{_m(atlas.off_line)}[/dim]")
-
-    if atlas.places:
-        console.print()
-        console.print("    [dim]Your biggest areas, named by your own record "
-                      "closest to the centre of each[/dim]")
-        table = Table(show_header=False, box=None, pad_edge=False, padding=(0, 1, 0, 4))
-        # A floor on the share column, because rich will otherwise shrink it to
-        # an ellipsis when the excerpt beside it wants the room.
-        table.add_column(justify="right", no_wrap=True, min_width=5)
-        table.add_column(overflow="ellipsis", no_wrap=True, ratio=1)
-        for place in atlas.places[:4]:
-            text = _m(place.yours or f"{place.records:,} records")
-            if place.repetitive:
-                text += f"  [yellow]({place.cohesion:.2f} alike)[/yellow]"
-            table.add_row(f"{place.share:.0%}", text)
-        console.print(table)
-    if atlas.categories:
-        console.print()
-        console.print("    [dim]Subject areas[/dim]")
-        for cat in atlas.categories[:8]:
-            name = _m(str(cat.get("name", "")))
-            share = float(cat.get("share", 0.0))
-            map_share = cat.get("map_share")
-            suffix = (
-                f"  [dim](map {float(map_share):.0%})[/dim]"
-                if map_share is not None else ""
-            )
-            console.print(f"      {share:>4.0%}  {name}{suffix}")
-    if atlas.gaps_line:
-        console.print(f"    [dim]{_m(atlas.gaps_line)}[/dim]")
-        if atlas.gaps:
-            shown = ", ".join(_m(str(g.get("name", ""))) for g in atlas.gaps[:8])
-            more = len(atlas.gaps) - 8
-            if more > 0:
-                shown = f"{shown}, and {more} more"
-            console.print(f"      [dim]{_m(shown)}[/dim]")
+    if atlas.insights:
+        console.print(f"    {_m(atlas.insights[0].headline)}")
+    if atlas.off_count:
+        console.print(f"    [dim]{_m(atlas.off_line.split('. ')[0])}.[/dim]")
 
 
 def _render_unavailable(console: Console, result: ScanResult) -> None:
@@ -235,3 +201,43 @@ def _render_unavailable(console: Console, result: ScanResult) -> None:
     for entry in rows[:5]:
         console.print(f"    [dim]{_m(entry.reason)}[/dim]"
                       + (f"  [dim]→[/dim] {_m(entry.unlock)}" if entry.unlock else ""))
+
+
+#: What each artifact is for, in the fewest words that let someone pick one.
+#: Keyed by filename so a file that stops being written stops being advertised.
+ARTIFACTS = {
+    "report.html": "the map, the excerpts, every finding in full",
+    "report.md": "the same, as text — paste into a PR or a ticket",
+    "findings.jsonl": "one finding per line, for scripts",
+    "fingerprint.json": "comparable measurements, for diffing runs",
+}
+
+
+def _render_outputs(
+    console: Console,
+    s: ScanSummary,
+    out_dir: Path | str | None,
+    written: list[str] | None,
+) -> None:
+    """Where everything this screen left out has been put.
+
+    The screen above is a decision, not a report. This is the part that makes
+    that honest: it names each file and what it is for, so nobody has to guess
+    which of four artifacts holds the fix for the finding they just read.
+    """
+    console.print()
+    if s.notes:
+        console.print(f"  [dim]{len(s.notes)} more observation"
+                      f"{'' if len(s.notes) == 1 else 's'} in the report.[/dim]")
+    if out_dir is not None and written:
+        width = max(len(name) for name in written)
+        console.print(f"  [dim]Written to {_m(out_dir)}[/dim]")
+        for name in written:
+            purpose = ARTIFACTS.get(name, "")
+            console.print(f"    [bold]{_m(name):<{width}}[/bold]"
+                          + (f"  [dim]{purpose}[/dim]" if purpose else ""))
+    if not s.blocking_enabled:
+        console.print("  [dim]No pass-or-fail verdict: no target declared. "
+                      "Pass --target sft to turn findings into an exit code.[/dim]")
+    console.print(f"  [dim]{s.records:,} records in {s.elapsed:.1f}s.[/dim]")
+    console.print()

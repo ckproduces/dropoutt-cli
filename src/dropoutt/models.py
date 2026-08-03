@@ -32,8 +32,15 @@ from typing import Any
 #: one document, and folds sharded siblings into one dataset — so record counts,
 #: dataset counts and the inferred profile all change for those inputs — and adds
 #: coverage gaps, effective region count and the per-dataset region signature to
-#: the atlas facet.
-PIPELINE_VERSION = "0.1.5"
+#: the atlas facet. 0.2.0 makes the streaming pass shardable, and three
+#: measurements move with it: the corpus digest is now a sum over records rather
+#: than a chain, so it no longer depends on how the scan was divided; the atlas
+#: and token-budget samples are a bottom-k over a positional hash rather than the
+#: head of each dataset, so they cover the whole corpus instead of its
+#: beginning; and near-duplicate shingles use a vectorised hash, which shifts
+#: MinHash estimates by a fraction of a percent. Contamination hashes are
+#: unchanged, because the shipped indices are made of them.
+PIPELINE_VERSION = "0.2.0"
 FINGERPRINT_SCHEMA_VERSION = "fp-v0.1"
 
 
@@ -138,13 +145,47 @@ class Document:
     #: Populated lazily by checks that need it.
     meta: dict[str, Any] = field(default_factory=dict)
 
+    # Derived views, computed on first use and kept. Six checks ask for the
+    # assistant text and three ask for a lowercased copy; recomputing a join or
+    # a case fold of the whole record once per asker was, measurably, one of the
+    # larger allocation sources in the scan.
+    _assistant: str | None = None
+    _prompt: str | None = None
+    _text_lower: str | None = None
+    _assistant_lower: str | None = None
+
     @property
     def assistant_text(self) -> str:
-        return "\n".join(t.content for t in self.turns if t.role == "assistant")
+        value = self._assistant
+        if value is None:
+            value = "\n".join(t.content for t in self.turns if t.role == "assistant")
+            self._assistant = value
+        return value
 
     @property
     def prompt_text(self) -> str:
-        return "\n".join(t.content for t in self.turns if t.role != "assistant")
+        value = self._prompt
+        if value is None:
+            value = "\n".join(t.content for t in self.turns if t.role != "assistant")
+            self._prompt = value
+        return value
+
+    @property
+    def text_lower(self) -> str:
+        """Lowercased record text, for pattern gates. See ``regexgate``."""
+        value = self._text_lower
+        if value is None:
+            value = self.text.lower()
+            self._text_lower = value
+        return value
+
+    @property
+    def assistant_lower(self) -> str:
+        value = self._assistant_lower
+        if value is None:
+            value = self.assistant_text.lower()
+            self._assistant_lower = value
+        return value
 
 
 @dataclass(slots=True)

@@ -30,30 +30,62 @@ ingest → detect format → extract text → chunk → dedup → embed
 
 1. **Sample a stratified reference corpus** across code, math, instruction/chat,
    legal/finance, scientific, dialogue/forum, structured/tabular, and
-   multilingual prose. Languages are sampled deliberately so English and Python
-   cannot define the map. Per-source caps and wall-clock budgets keep one dense
-   shard from owning the geometry.
+   multilingual prose. The v2 build collected 786,180 records from 48 working
+   source/configuration pairs: FineWeb, Wikipedia in six languages,
+   StarCoderData plus ten explicit The Stack language configs, OpenWebMath,
+   FineMath, peS2o, arXiv, PubMed, OpenAssistant, UltraFeedback, Stack Exchange,
+   contracts, ECHR case law, finance, and SQL/tabular material. Per-source caps
+   keep English, Python, and the densest shards from defining the geometry.
 2. **Format-aware extraction.** JSON/CSV/HTML/markdown/code are reduced to
    natural-language content before embedding. `detected_format` is metadata, not
    vector content — otherwise static embeddings collapse into a fake "structured
    data" cluster.
 3. **Dedup.** Near-exact MinHash over word shingles, then semantic cosine on
    temporary L2 vectors. Both thresholds are recorded in the manifest.
-4. **Embed with `potion-multilingual-128M`.** Token lookup, SIF-weighted pool
-   (`w = a/(a+p)`, `a=1e-3`) using a unigram table fit on the reference corpus,
-   then truncate 256 → 128 (Matryoshka). No torch, no GPU.
+4. **Embed with `potion-multilingual-128M`.** The fast tokenizer runs once.
+   Its flat token-ID cache fits both the unigram table and a CSR document/token
+   matrix; one sparse-dense multiply pools all documents with
+   `w = a/(a+p)`, `a=1e-3`. The embedding table is subset to observed tokens,
+   then 256 dimensions are truncated to 128 (Matryoshka). No per-record Python
+   pooling loop, torch, or GPU.
 5. **Freeze normalization.** Mean removal, drop top-2 principal components
    (all-but-the-top), L2. Constants ship in the artifact; the client applies
    them and never refits.
 6. **Fit a two-level k-means hierarchy** on cosine distance, top-down so lite is
-   an exact coarsening of full: L1 ≈ 40 regions, L2 ≈ 12 children each
-   (≈ 480 fine cells).
-7. **Label** each cell from distinctive terms (tf–idf against other regions),
-   calibrate soft-assignment temperature and per-cell distance percentiles,
-   project centroids to 2D for display.
+   an exact coarsening of full: 50 L1 regions and 20 children each (1,000 L2
+   cells). L2 count is support-gated; a build cannot create a child for every
+   300 reference members it does not have.
+7. **Label and calibrate.** Each cell carries 12 distinctive terms, 17 distance
+   quantiles, eight radial prototype vectors, source/topic/language support,
+   and its 16 strongest source-level co-occurrence neighbors. Cells below 200
+   direct calibration members retain their local observations and borrow
+   residuals from siblings under the same L1 parent.
 
 Every result carries `atlas_version` + `pipeline_hash`. Encoder weights stay on
 disk (≈ 500 MB); the artifact stores their content hash, not the weights.
+
+### Measured v2 build time
+
+Measured on the release machine over 736,966 records after both dedup passes:
+
+| stage | wall time |
+| --- | ---: |
+| source collection | 1,229.3 s |
+| MinHash dedup | 15.3 s |
+| tokenize once | 44.4 s |
+| fit token probabilities from cached IDs | 1.6 s |
+| **SIF sparse embedding** | **23.0 s (32,904 records/s)** |
+| semantic dedup | 11.2 s |
+| normalization fit | 3.2 s |
+| **L1 + L2 clustering** | **5.9 s** |
+| labels | 35.5 s |
+| v1 population crosswalk | 22.8 s |
+| **embedding + normalization + clustering** | **32.1 s** |
+| **total wall** | **1,406.6 s (23.4 min)** |
+
+Tokenization, probability fitting, and embedding together took 69.0 seconds.
+The geometry training itself (normalization plus both clustering levels) took
+9.1 seconds. Collection, not model compute, remains the dominant build cost.
 
 ## Putting your data on it
 
@@ -516,10 +548,6 @@ its label words are `tıkla, dokun, ekranın` (click, tap, screen).
 `religion_philosophy` (219–225) is Arabic Wikipedia, mapped there at build time;
 two of its regions are about languages and computers.
 
-**One source carries the defect the tool detects.** Some TurkishMMLU records in
-`education_pedagogy` are ASCII-folded (`gore`, `asagıdakilerden`), exactly what
-`T1-LANG-004` flags.
-
 Read category counts as approximate, and read `general_chat` as "unclassified".
 Region assignment and the off-atlas rate are unaffected — those come from
 embedding geometry, not from labels.
@@ -535,21 +563,41 @@ Lite (L1) is a strict prefix of full (L2): every fine cell has one immutable
 parent. Fingerprints against lite and full stay comparable; upgrading
 re-aggregates rather than invalidating.
 
-This release ships both levels in the package (`atlas-lite-v1.npz`):
+This release ships both levels in the package (`atlas-lite-v2.npz`):
 
 | property | value |
 | --- | --- |
-| L1 regions (lite) | 40 |
-| L2 fine cells | 480 |
-| reference records (after dedup) | 58,080 |
+| L1 regions (lite) | 50 |
+| L2 fine cells | 1,000 |
+| reference records (after both dedup passes) | 736,966 |
+| working source/config pairs | 48 of 51 |
 | embedding | potion-multilingual-128M → 128-d, SIF pool |
 | normalization | mean + top-2 PCA removed + L2 |
-| soft-assign | top-5, T=0.08 (~2.5 regions with weight > 0.15) |
-| region purity by provenance tag | 0.750 |
-| artifact size | ~0.6 MB (budget ≤ 5 MB) |
-| off-atlas cutoff | ~0.330 cosine (2nd percentile of reference) |
+| soft-assign | top-5, T=0.08 (2.86 regions with weight > 0.15) |
+| topic purity (macro / micro) | 0.738 / 0.740 |
+| source purity (macro / micro; lower is better) | 0.578 / 0.578 |
+| source AMI after conditioning on topic + language | 0.129 |
+| directly calibrated cells (≥200 members) | 997 of 1,000 |
+| median / minimum cell support | 677 / 122 |
+| artifact size | 3.09 MB (required 3–5 MB) |
+| off-atlas cutoff | 0.339 cosine (2nd percentile of reference) |
 
-`atlas-lite-v0` remains on disk for old fingerprints; the loader prefers v1.
+No L2 cell is supported by only a few dozen records. The three cells below 200
+direct members use the recorded L1-parent fallback; their direct support and
+reliability flag travel with the artifact.
+
+The topic/source diagnostic does not compare raw NMI values directly: a
+language-specific source such as German Wikipedia makes source identity and
+language identical. After holding the broad topic and language hints constant,
+source AMI is 0.129, no cell is single-source, and the average cell contains
+19.6 sources. L1 exemplar review shows recognisable regions for clinical
+medicine, legal agreements, finance, SQL, mathematics, machine learning,
+biology, sports, and code. Some intentionally distinct registers remain visible
+(assistant dialogue, licences, and task-formatted instructions); format syntax
+itself is stripped before embedding.
+
+`atlas-lite-v0` and v1 remain on disk for old fingerprints; the loader prefers
+v2. The v2 artifact carries a population-Jaccard crosswalk to v1.
 
 ## Hand intervention
 
@@ -571,11 +619,18 @@ part of the fingerprint schema.
 ## Rebuilding
 
 ```bash
-python tools/build_atlas.py --scale 1.0 --out src/dropoutt/data/atlas/atlas-lite-v1.npz
+python tools/build_atlas.py \
+  --scale 4.0 \
+  --budget 180 \
+  --out src/dropoutt/data/atlas/atlas-lite-v2.npz
 ```
 
 `--scale` multiplies every per-source sample target; `--budget` sets a per-source
 wall-clock limit so one slow shard cannot stall the build. Sources that have
 moved, gone gated or changed split names are skipped and recorded in the
 manifest rather than failing the build. A JSON timing log is written next to the
-artifact (`build-timing.json`) with collect / embed / cluster wall times.
+artifact (`build-timing.json`) with collect / tokenize / embed / cluster wall
+times. `build-diagnostics.json` records every L1 label, exemplar, source
+concentration, topic mix, format mix, language mix, and calibration support.
+The build fails if the useful compressed artifact falls outside 3–5 MB; it does
+not add padding to meet the lower bound.

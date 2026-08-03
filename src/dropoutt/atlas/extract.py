@@ -39,7 +39,9 @@ _CODE_COMMENT_LINE = re.compile(r"(?m)^\s*(#|//|--)\s?(.*)$")
 _CODE_BLOCK_COMMENT = re.compile(
     r"/\*[^*]{0,2000}\*/|'''[^']{0,2000}'''|\"\"\"[^\"]{0,2000}\"\"\""
 )
-_CODE_STRING = re.compile(r"'(?:\\.|[^'\\]){0,400}'|\"(?:\\.|[^\"\\]){0,400}\"|`(?:\\.|[^`\\]){0,400}`")
+_CODE_STRING = re.compile(
+    r"'(?:\\.|[^'\\]){0,400}'|\"(?:\\.|[^\"\\]){0,400}\"|`(?:\\.|[^`\\]){0,400}`"
+)
 _ID_LIKE = re.compile(r"^[A-Za-z0-9_\-]{8,}$")
 _MOSTLY_NUMERIC = re.compile(r"^[\d\s.,+\-eE/$%]+$")
 
@@ -149,12 +151,7 @@ def extract_from_fields(row: dict[str, Any], fields: tuple[str, ...]) -> tuple[s
             if text:
                 parts.append(text)
                 formats.append(fmt)
-        elif isinstance(v, dict):
-            text = _strings_from_obj(v)
-            if text:
-                parts.append(text)
-                formats.append("json")
-        elif isinstance(v, list):
+        elif isinstance(v, (dict, list)):
             text = _strings_from_obj(v)
             if text:
                 parts.append(text)
@@ -182,8 +179,8 @@ def _extract_json(text: str) -> str:
 
 def _extract_jsonl(text: str) -> str:
     parts: list[str] = []
-    for line in text.splitlines():
-        line = line.strip()
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
         if not line:
             continue
         try:
@@ -202,9 +199,13 @@ def _strings_from_obj(obj: Any) -> str:
     def walk(x: Any) -> None:
         if isinstance(x, str):
             s = x.strip()
-            if len(s) >= MIN_STRING_CHARS and len(s.split()) >= MIN_STRING_WORDS:
-                if not _MOSTLY_NUMERIC.match(s) and not _ID_LIKE.match(s):
-                    out.append(s)
+            if (
+                len(s) >= MIN_STRING_CHARS
+                and len(s.split()) >= MIN_STRING_WORDS
+                and not _MOSTLY_NUMERIC.match(s)
+                and not _ID_LIKE.match(s)
+            ):
+                out.append(s)
         elif isinstance(x, dict):
             for v in x.values():
                 walk(v)
@@ -233,8 +234,8 @@ def _extract_delimited(text: str, delimiter: str) -> str:
         if not col:
             continue
         textish = 0
-        for cell in col[:40]:
-            cell = (cell or "").strip()
+        for raw_cell in col[:40]:
+            cell = (raw_cell or "").strip()
             if (
                 len(cell) >= 8
                 and not _MOSTLY_NUMERIC.match(cell)

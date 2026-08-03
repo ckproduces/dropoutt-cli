@@ -86,6 +86,83 @@ def test_a_high_off_atlas_rate_does_not_withhold_the_histogram(tiny_atlas):
     assert sum(cov["by_category"].values()) == 60
 
 
+def test_coverage_describes_the_corpus_not_the_average_of_its_datasets(tiny_atlas):
+    """The sample is equal per dataset; the histogram must not be.
+
+    A dataset of a million records and one of a thousand are sampled to the
+    same size, so an unweighted histogram gives them equal say. Weighting each
+    sampled record by how many corpus records it stands for is what turns the
+    sample back into a description of the corpus.
+    """
+    # Fifty records land in region 1 and fifty in region 2. The first fifty are
+    # a 1000x sample of a huge dataset; the second fifty are all of a small one.
+    regions = np.array([1] * 50 + [2] * 50, dtype=np.int32)
+    categories = np.zeros(100, dtype=np.int32)
+
+    flat = tiny_atlas.coverage(regions, categories)
+    assert flat["region_counts"]["1"] == flat["region_counts"]["2"]
+
+    weighted = tiny_atlas.coverage(
+        regions, categories, weights=[1000.0] * 50 + [1.0] * 50
+    )
+    assert weighted["region_counts"]["1"] == 50_000
+    assert weighted["region_counts"]["2"] == 50
+    assert weighted["placed_estimated"] == 50_050
+    # The sample counts stay sample counts: they are the honest denominator for
+    # "how much did we actually look at".
+    assert weighted["placed"] == 100
+    # And the shape of the corpus follows the weighted histogram, so the corpus
+    # now reads as concentrated rather than as evenly split.
+    assert weighted["effective_regions"] < flat["effective_regions"]
+
+
+def test_a_weighted_cell_never_rounds_away_a_record_that_is_there(tiny_atlas):
+    """A weight is at least one — a record stands for itself at minimum."""
+    regions = np.array([3] * 4, dtype=np.int32)
+    cov = tiny_atlas.coverage(
+        regions, np.zeros(4, dtype=np.int32), weights=[1.0, 1.0, 1.0, 1.0]
+    )
+    assert cov["region_counts"]["3"] == 4
+
+
+def test_the_density_of_each_cell_travels_with_the_coverage_facet():
+    """A number a reader can see has to be a number a script can read.
+
+    The report draws each cell against the reference corpus's own density
+    there. Deriving that only at render time would mean the one comparison the
+    atlas exists to make could not be asserted on in CI without loading the
+    artifact and dividing by `region_size` by hand.
+    """
+    from dropoutt.atlas import load_bundled
+
+    atlas = load_bundled()
+    if atlas is None or atlas.region_size is None:
+        pytest.skip("bundled atlas carries no reference sizes")
+
+    regions = np.array([1] * 80 + [2] * 20, dtype=np.int32)
+    cov = atlas.coverage(regions, np.zeros(100, dtype=np.int32))
+
+    assert set(cov["region_density"]) == set(cov["region_counts"])
+    # Four times the records in cell 1, against the reference corpus's own
+    # split between the two, so the ratio has to follow the same direction.
+    expected = (0.8 / 0.2) * (
+        float(atlas.region_size[2]) / float(atlas.region_size[1])
+    )
+    assert cov["region_density"]["1"] / cov["region_density"]["2"] == pytest.approx(
+        expected, rel=1e-3
+    )
+
+
+def test_a_legacy_artifact_without_reference_sizes_says_nothing_rather_than_guessing(
+    tiny_atlas,
+):
+    """The divisor is the reference distribution, and older artifacts lack it."""
+    cov = tiny_atlas.coverage(
+        np.array([1] * 10, dtype=np.int32), np.zeros(10, dtype=np.int32)
+    )
+    assert cov["region_density"] == {}
+
+
 def test_coverage_reports_none_placed_only_when_nothing_placed(tiny_atlas):
     """The one case where the numbers genuinely do not exist."""
     regions = np.full(200, -1, dtype=np.int32)
@@ -270,6 +347,51 @@ def test_install_hints_survive_rich_markup():
         )
 
 
+def test_the_terminal_is_triage_and_says_where_the_rest_went(tmp_path):
+    """Short enough to read, and honest about what it left out.
+
+    Everything it used to print in full is in a file written milliseconds
+    earlier, so the screen answers "do I need to look" and then says where
+    looking happens. A screen that omits the detail without naming the file
+    that holds it is not brief, it is lossy.
+    """
+    import io
+
+    from rich.console import Console
+
+    from dropoutt.report import terminal as term_report
+    from dropoutt.runner import scan
+
+    data = tmp_path / "d"
+    data.mkdir()
+    (data / "train.jsonl").write_text(
+        "\n".join(
+            json.dumps({"messages": [
+                {"role": "human", "content": f"question {i} spelled out at length"},
+                {"role": "gpt", "content": f"answer {i} spelled out at some length"},
+            ]})
+            for i in range(60)
+        ) + "\n",
+        encoding="utf-8",
+    )
+    result = scan(str(tmp_path))
+    written = ["report.html", "report.md", "findings.jsonl", "fingerprint.json"]
+
+    buf = io.StringIO()
+    term_report.render(
+        Console(file=buf, width=100, no_color=True), result,
+        out_dir=str(tmp_path / "out"), written=written,
+    )
+    out = buf.getvalue()
+
+    assert len(out.splitlines()) <= 40, "the terminal report has grown a wall again"
+    for name in written:
+        assert name in out, f"{name} was written and never mentioned"
+    # The fix text and the excerpts belong to the files, not to the scroll-back.
+    for problem in term_report.build(result).problems:
+        assert problem.fix not in out
+
+
 def test_dataset_names_cannot_inject_terminal_styling():
     """A folder named `[red]` must not restyle our own output."""
     import io
@@ -293,8 +415,8 @@ def test_control_characters_are_made_visible_not_stripped():
 
 def test_bidi_overrides_are_neutralised():
     """One unbalanced override would otherwise reverse the whole report."""
-    out = safe_snippet("safe‮text‭more")
-    assert "‮" not in out and "‭" not in out
+    out = safe_snippet("safe\u202etext\u202dmore")
+    assert "\u202e" not in out and "\u202d" not in out
 
 
 def test_script_payload_cannot_close_its_own_element():
@@ -346,7 +468,7 @@ def test_html_report_can_omit_all_record_evidence(tmp_path):
     data = tmp_path / "d"
     data.mkdir()
     with open(data / "train.jsonl", "w", encoding="utf-8") as fh:
-        for i in range(8):
+        for _ in range(8):
             fh.write(json.dumps({"messages": [
                 {"role": "user", "content": "Soru"},
                 {"role": "assistant", "content": planted},
@@ -459,7 +581,7 @@ def test_html_report_escapes_markup_from_the_corpus(tmp_path):
     assert "<script>alert" not in page
 
 
-def test_html_report_uses_sans_serif_and_plots_atlas_coverage(tmp_path):
+def test_html_report_describes_the_corpus_before_it_faults_it(tmp_path):
     from dropoutt.atlas import load_bundled
     from dropoutt.fingerprint import build as build_fingerprint
     from dropoutt.langid import LanguageDetector
@@ -483,15 +605,154 @@ def test_html_report_uses_sans_serif_and_plots_atlas_coverage(tmp_path):
 
     page = html_report.render(result, fp, None)
 
-    assert "Inter,ui-sans-serif,system-ui" in page
-    assert "ui-monospace" not in page
+    assert "ui-sans-serif" in page, "no web font may be required to read this"
     assert "&#34;" not in page
-    assert '<svg class="atlas-map"' in page
-    assert page.count("<circle class=\"atlas-point") == atlas.n_regions
-    # The map's accessible description has to explain both encodings, because it
-    # now carries two: size is record count and colour is level-0 subject area.
-    assert "Circle size is the number of sampled records" in page
-    assert "colour is the subject area" in page
+
+    # Composition leads. A reader handed a folder should learn what it is before
+    # learning what is wrong with it, and a findings list only ever mentions a
+    # property of the corpus when that property is broken.
+    assert page.index("What this corpus is") < page.index("What would go wrong")
+    assert page.index("What would go wrong") < page.index("Where your data sits")
+
+    # The 258-dot scatter is gone. It was honest and useless: the positions are
+    # a projection rather than distances, which had to be disclaimed directly
+    # under the picture, and having read the disclaimer there was nothing left
+    # to do with the dots.
+    assert "<circle" not in page
+    assert "not distances" not in page
+    assert "What the map says" in page
+
+    # The verdict is a caption for the findings list, so it stands at the head
+    # of that list rather than at the head of the page.
+    assert page.index("What would go wrong") < page.index('class="verdict')
+    assert page.index('class="verdict') < page.index('class="finding')
+
+
+def test_the_page_works_with_scripting_off_and_in_one_theme(tmp_path):
+    """Two constraints that are one constraint: the file has to survive travel.
+
+    It is opened from a mail attachment, from a shared drive, from a CI artifact
+    browser — under its own CSP, which grants no ``script-src`` at all — and it
+    is printed. So the sort control on the density grid is radio buttons and a
+    CSS ``order``, its tooltips are ``::after`` on ``:hover``, and there is one
+    palette rather than one per reader's laptop.
+    """
+    from dropoutt.fingerprint import build as build_fingerprint
+    from dropoutt.report import html as html_report
+    from dropoutt.runner import scan
+
+    data = tmp_path / "d"
+    data.mkdir()
+    (data / "train.jsonl").write_text(
+        json.dumps({"text": "a sufficiently long atlas record for coverage"}) + "\n",
+        encoding="utf-8",
+    )
+    result = scan(str(tmp_path))
+    fp = build_fingerprint(result.ctx, result.findings, total_chars=100, total_words=20)
+
+    page = html_report.render(result, fp, None)
+
+    assert "<script" not in page.lower()
+    assert "onclick" not in page.lower()
+    assert "prefers-color-scheme" not in page
+    assert "data-theme" not in page
+    assert "color-scheme:light" in page
+
+
+def test_the_density_grid_reaches_the_page_with_its_scale_explained(tmp_path):
+    """A colour ramp nobody can read is decoration.
+
+    Every square is a claim about a ratio, so the ratio is printed inside the
+    square rather than revealed by hovering it, and a legend names the anchor
+    that makes the colours mean anything. It is a real table so that its header
+    repeats when the 48 rows cross a page boundary on paper.
+    """
+    from dropoutt.atlas import load_bundled
+    from dropoutt.fingerprint import build as build_fingerprint
+    from dropoutt.report import html as html_report
+    from dropoutt.runner import scan
+
+    data = tmp_path / "d"
+    data.mkdir()
+    (data / "train.jsonl").write_text(
+        json.dumps({"text": "a sufficiently long atlas record for coverage"}) + "\n",
+        encoding="utf-8",
+    )
+    result = scan(str(tmp_path))
+    atlas = load_bundled()
+    if atlas is None or atlas.region_size is None:
+        pytest.skip("bundled atlas carries no reference sizes")
+    landed = np.array([0, 0, 2, 4], dtype=np.int32)
+    result.ctx.stats["atlas_coverage"] = atlas.coverage(
+        landed, atlas.region_category[landed]
+    )
+    fp = build_fingerprint(result.ctx, result.findings, total_chars=100, total_words=20)
+
+    page = html_report.render(result, fp, None)
+
+    assert page.count('class="cell d') >= atlas.n_regions
+    assert "own density" in page
+    assert "no reach" in page
+    assert "as common as on the map" in page
+    assert 'aria-label="' in page
+    # The scale is continuous, so the legend is one gradient rather than four
+    # swatches the reader has to interpolate between by eye.
+    assert "linear-gradient(90deg" in page
+
+    # No hover, no sort control, and a table header the print stylesheet can
+    # repeat. All three are the same decision.
+    assert "data-t=" not in page
+    assert "Hover" not in page
+    assert 'type="radio"' not in page
+    assert "<thead>" in page
+    assert "display:table-header-group" in page
+
+
+def _table_of(page: str, row: str) -> int:
+    """Which table a row belongs to, so rows are compared with their siblings."""
+    return page[: page.index(row)].count("| --- ")
+
+
+def test_the_markdown_report_is_pasteable_and_honours_no_evidence(tmp_path):
+    """The third rendering, for the reader who has no browser.
+
+    A scan runs in CI and what a reviewer sees is a comment or a job log, so
+    this one has to survive being pasted: no HTML, no images, and table cells
+    that cannot be broken by a dataset called ``a|b``.
+    """
+    from dropoutt.fingerprint import build as build_fingerprint
+    from dropoutt.report import markdown as md_report
+    from dropoutt.runner import scan
+
+    data = tmp_path / "a|b"
+    data.mkdir()
+    planted = "sk-live-DEADBEEFdeadbeef01234567"
+    (data / "train.jsonl").write_text(
+        "\n".join(
+            json.dumps({"text": f"a sufficiently long record number {i} to be read"})
+            for i in range(20)
+        ) + "\n" + json.dumps({"text": f"my key is {planted} keep it safe"}) + "\n",
+        encoding="utf-8",
+    )
+    result = scan(str(tmp_path))
+    fp = build_fingerprint(result.ctx, result.findings, total_chars=100, total_words=20)
+
+    page = md_report.render(result, fp, None)
+    assert "<div" not in page and "<span" not in page
+    assert page.startswith("##")
+    # A pipe inside a cell would add a column to the row it sits in and
+    # misalign every cell after it, so every table row has the same shape.
+    widths = {}
+    for line in page.splitlines():
+        if not line.startswith("|"):
+            continue
+        columns = len(line.replace("\\|", "").split("|"))
+        widths.setdefault(_table_of(page, line), set()).add(columns)
+    assert all(len(seen) == 1 for seen in widths.values()), widths
+
+    quiet = md_report.render(result, fp, None, include_evidence=False)
+    assert planted not in quiet
+    assert "--no-evidence" in quiet
 
 
 def test_category_counts_are_json_serialisable(tiny_atlas):
@@ -698,7 +959,7 @@ def test_full_histogram_is_used_rather_than_the_display_head():
     """
     from dropoutt.atlas.compare import compare, region_mass
 
-    counts = {r: 10 for r in range(30)}
+    counts = dict.fromkeys(range(30), 10)
     cov = _coverage(counts)
     assert len(region_mass(cov)) == 30, "all regions must be read, not just the head"
     assert compare(cov, cov).a_head_coverage == 1.0

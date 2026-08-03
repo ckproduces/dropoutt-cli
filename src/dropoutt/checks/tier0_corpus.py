@@ -19,6 +19,10 @@ waste of the streaming design.
 
 from __future__ import annotations
 
+from collections import Counter
+
+import numpy as np
+
 from ..context import ScanContext
 from ..models import CostClass, Document, Evidence, Finding, Profile, Severity
 from ..textutil import excerpt
@@ -52,22 +56,19 @@ def line_shape(text: str) -> tuple[float, float, float] | None:
     """
     if len(text) < MIN_DOC_CHARS:
         return None
-    lines = [ln.strip() for ln in text.split("\n")]
-    lines = [ln for ln in lines if ln]
+    lines = [stripped for ln in text.split("\n") if (stripped := ln.strip())]
     if not lines:
         return None
 
-    punct = sum(1 for ln in lines if ln[-1] in TERMINAL_PUNCT) / len(lines)
-    short = sum(1 for ln in lines if len(ln) < SHORT_LINE_CHARS) / len(lines)
+    # One length array, then three reductions over it, rather than three
+    # generator passes over the lines. Corpus documents run to thousands.
+    lengths = np.fromiter(map(len, lines), dtype=np.int64, count=len(lines))
+    punct = sum(ln[-1] in TERMINAL_PUNCT for ln in lines) / len(lines)
+    short = float(np.count_nonzero(lengths < SHORT_LINE_CHARS)) / len(lines)
 
-    seen: set[str] = set()
-    dup_chars = 0
-    for ln in lines:
-        if ln in seen:
-            dup_chars += len(ln)
-        else:
-            seen.add(ln)
-    total_chars = sum(len(ln) for ln in lines) or 1
+    repeats = Counter(lines)
+    dup_chars = sum(len(line) * (count - 1) for line, count in repeats.items() if count > 1)
+    total_chars = int(lengths.sum()) or 1
     return punct, short, dup_chars / total_chars
 
 
@@ -83,6 +84,11 @@ class _LineShapeCheck(Check):
     metric = 0
     threshold = 0.0
     fails_above = True
+
+    EVIDENCE_CAP = 4
+    MERGE_SUM = ("count", "total")
+    MERGE_COUNTS = ("by_dataset",)
+    MERGE_EVIDENCE = ("evidence",)
 
     def __init__(self) -> None:
         self.count = 0
@@ -106,7 +112,7 @@ class _LineShapeCheck(Check):
             return
         self.count += 1
         self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-        if len(self.evidence) < 4:
+        if len(self.evidence) < self.EVIDENCE_CAP:
             self.evidence.append(
                 Evidence(doc.doc_id, doc.source_file, doc.source_index,
                          f"{value:.2f} :: {excerpt(doc.text, 120)}")
@@ -127,7 +133,7 @@ class _LineShapeCheck(Check):
 @register
 class UnpunctuatedLines(_LineShapeCheck):
     check_id = "T0-QUAL-001"
-    title = "Documents whose lines mostly do not end in punctuation"
+    title = "Documents that read like menus, not prose"
     metric = 0
     threshold = LINE_PUNCT_MIN
     fails_above = False
@@ -152,7 +158,7 @@ class UnpunctuatedLines(_LineShapeCheck):
 @register
 class ShortLineDocuments(_LineShapeCheck):
     check_id = "T0-QUAL-002"
-    title = "Documents built mostly from very short lines"
+    title = "Documents that are mostly lists, not text"
     metric = 1
     threshold = SHORT_LINE_MAX
     fails_above = True

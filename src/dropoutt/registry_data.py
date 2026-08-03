@@ -13,6 +13,7 @@ from importlib import resources
 from typing import Any
 
 from .compat import json_loads
+from .regexgate import PatternGate, gate_for
 
 
 def _load(*parts: str) -> dict[str, Any]:
@@ -63,29 +64,31 @@ def style_patterns() -> dict[str, Any]:
 
 
 @lru_cache(maxsize=1)
-def compiled_pii() -> list[tuple[str, str, str, re.Pattern[str], str | None]]:
-    """(id, label, severity, compiled regex, validator name)."""
+def compiled_pii() -> list[tuple[str, str, str, re.Pattern[str], str | None, PatternGate]]:
+    """(id, label, severity, compiled regex, validator name, gate)."""
     out = []
     for p in pii_patterns()["patterns"]:
-        out.append((p["id"], p["label"], p["severity"], re.compile(p["regex"]), p.get("validator")))
+        out.append((p["id"], p["label"], p["severity"], re.compile(p["regex"]),
+                    p.get("validator"), gate_for(p["regex"])))
     return out
 
 
 @lru_cache(maxsize=1)
-def compiled_identity() -> list[tuple[str, str, str, re.Pattern[str]]]:
-    """(group, id, lang, compiled regex)."""
+def compiled_identity() -> list[tuple[str, str, str, re.Pattern[str], PatternGate]]:
+    """(group, id, lang, compiled regex, gate)."""
     data = identity_patterns()
     out = []
     for group in ("identity_leakage", "refusal_boilerplate"):
         for p in data[group]["patterns"]:
-            out.append((group, p["id"], p["lang"], re.compile(p["regex"])))
+            out.append((group, p["id"], p["lang"], re.compile(p["regex"]),
+                        gate_for(p["regex"])))
     return out
 
 
 @lru_cache(maxsize=1)
-def compiled_style_openers() -> list[tuple[str, str, re.Pattern[str]]]:
+def compiled_style_openers() -> list[tuple[str, str, re.Pattern[str], PatternGate]]:
     return [
-        (p["id"], p["lang"], re.compile(p["regex"]))
+        (p["id"], p["lang"], re.compile(p["regex"]), gate_for(p["regex"]))
         for p in style_patterns()["openers"]
     ]
 
@@ -126,11 +129,33 @@ def detect_template_family(text: str) -> list[tuple[str, int]]:
     delimiters from the same family is.
     """
     hits: list[tuple[str, int]] = []
-    for fam in template_index():
-        matched = sum(1 for d in fam["delimiters"] if d in text)
+    for family, delimiters, openers in _template_gates():
+        if not any(opener in text for opener in openers):
+            continue
+        matched = sum(1 for d in delimiters if d in text)
         if matched:
-            hits.append((fam["id"], matched))
+            hits.append((family, matched))
     return sorted(hits, key=lambda kv: -kv[1])
+
+
+@lru_cache(maxsize=1)
+def _template_gates() -> tuple[tuple[str, tuple[str, ...], tuple[str, ...]], ...]:
+    """Each family with its delimiters and the characters they can start with.
+
+    A delimiter cannot be present unless its first character is, and a single
+    character scan is memchr where a substring scan is not. Most records match
+    no family and pay one character test per family instead of six substring
+    searches. The gate is derived from the delimiters, never written by hand,
+    so a new family cannot arrive with a stale gate that switches it off.
+    """
+    return tuple(
+        (
+            family["id"],
+            tuple(family["delimiters"]),
+            tuple({d[0] for d in family["delimiters"] if d}),
+        )
+        for family in template_index()
+    )
 
 
 # --------------------------------------------------------------------------
@@ -177,12 +202,12 @@ def luhn(value: str) -> bool:
     if not 13 <= len(digits) <= 19:
         return False
     total = 0
-    for i, d in enumerate(reversed(digits)):
-        if i % 2 == 1:
-            d *= 2
-            if d > 9:
-                d -= 9
-        total += d
+    for i, digit in enumerate(reversed(digits)):
+        if i % 2 == 0:
+            total += digit
+            continue
+        doubled = digit * 2
+        total += doubled - 9 if doubled > 9 else doubled
     return total % 10 == 0
 
 

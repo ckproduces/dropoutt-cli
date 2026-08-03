@@ -16,11 +16,28 @@ A check declares what it needs via ``requires``. The runner uses that to decide
 what can run, and to report everything else as skipped alongside the single flag
 that would unlock it. That reporting is a feature, not an apology: it is the
 progressive-disclosure ladder made visible.
+
+``merge(other)``
+    Fold a second instance of the same check, which observed a later contiguous
+    slice of the same corpus, into this one. This is what lets the streaming
+    pass be split across processes: each worker runs the real check over its
+    shard and the parent combines the results, so the checks themselves need no
+    knowledge that a shard exists.
+
+    Almost every check is a bag of counters, count-maps and a capped evidence
+    list, so it only has to *name* its state through the ``MERGE_*`` class
+    attributes and the generic implementation below does the rest. Checks whose
+    state does not reduce that way override ``merge``. Nothing is merged
+    implicitly: a check that declares nothing and overrides nothing fails the
+    coverage test in ``tests/test_merge.py``, because a silently unmerged
+    counter would make a parallel scan quietly report smaller numbers than a
+    serial one.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
 
 from ..models import (
     Confidence,
@@ -62,12 +79,82 @@ class Check:
     #: Profiles under which a finding from this check would fail a run.
     blocking_in: tuple[Profile, ...] = ()
 
-    def observe(self, doc: Document, ctx: "ScanContext") -> None:
+    #: What ``count`` counts, singular. Most checks count records, but some
+    #: count datasets, files or areas of the atlas, and a report that sorts
+    #: "1 of 1 datasets" against "49,872 of 50,000 records" by percentage puts
+    #: the wrong thing first. ``total_unit`` differs only where the numerator
+    #: and denominator are different things — distinct prompts out of records,
+    #: for instance.
+    unit: str = "record"
+    total_unit: str = ""
+
+    @classmethod
+    def units(cls) -> tuple[str, str]:
+        return cls.unit, cls.total_unit or cls.unit
+
+    #: How many examples this check keeps. Read by ``observe`` and by the
+    #: generic merge, so a sharded scan truncates at the same point a serial one
+    #: does rather than at a multiple of it.
+    EVIDENCE_CAP: int = 5
+
+    #: Integer counters, summed.
+    MERGE_SUM: tuple[str, ...] = ()
+    #: ``dict[key, int]``, values summed.
+    MERGE_COUNTS: tuple[str, ...] = ()
+    #: ``dict[key, dict[key, int]]``, inner values summed.
+    MERGE_NESTED: tuple[str, ...] = ()
+    #: Lists concatenated in shard order and cut to ``EVIDENCE_CAP``.
+    MERGE_EVIDENCE: tuple[str, ...] = ()
+    #: Lists concatenated in shard order with no cap.
+    MERGE_CONCAT: tuple[str, ...] = ()
+    #: Dicts where the earlier shard's value wins, since it saw the earlier
+    #: record. Optionally capped by ``MERGE_FIRST_CAP``.
+    MERGE_FIRST: tuple[str, ...] = ()
+    MERGE_FIRST_CAP: int | None = None
+    #: Handled by an overriding ``merge``, because no per-attribute rule fits.
+    MERGE_CUSTOM: tuple[str, ...] = ()
+    #: Static configuration, or state derived in ``finalize`` from something
+    #: that *is* merged. Named so the coverage test can tell "handled" from
+    #: "forgotten".
+    MERGE_IGNORE: tuple[str, ...] = ()
+
+    def observe(self, doc: Document, ctx: ScanContext) -> None:
         """Called once per record."""
 
-    def finalize(self, ctx: "ScanContext") -> list[Finding]:
+    def finalize(self, ctx: ScanContext) -> list[Finding]:
         """Called once after all records. Returns any findings."""
         return []
+
+    def merge(self, other: Check) -> None:
+        """Fold a later shard of the same corpus into this instance."""
+        for name in self.MERGE_SUM:
+            setattr(self, name, getattr(self, name) + getattr(other, name))
+        for name in self.MERGE_COUNTS:
+            target = getattr(self, name)
+            for key, value in getattr(other, name).items():
+                target[key] = target.get(key, 0) + value
+        for name in self.MERGE_NESTED:
+            target = getattr(self, name)
+            for key, inner in getattr(other, name).items():
+                bucket = target.setdefault(key, {})
+                for sub, value in inner.items():
+                    bucket[sub] = bucket.get(sub, 0) + value
+        for name in self.MERGE_EVIDENCE:
+            target = getattr(self, name)
+            room = self.EVIDENCE_CAP - len(target)
+            if room > 0:
+                target.extend(getattr(other, name)[:room])
+        for name in self.MERGE_CONCAT:
+            getattr(self, name).extend(getattr(other, name))
+        for name in self.MERGE_FIRST:
+            target = getattr(self, name)
+            cap = self.MERGE_FIRST_CAP
+            for key, value in getattr(other, name).items():
+                if key in target:
+                    continue
+                if cap is not None and len(target) >= cap:
+                    break
+                target[key] = value
 
     # -- helpers ---------------------------------------------------------
 
@@ -76,7 +163,7 @@ class Check:
         return profile in cls.profiles
 
     @classmethod
-    def missing_requirements(cls, ctx: "ScanContext") -> list[Requirement]:
+    def missing_requirements(cls, ctx: ScanContext) -> list[Requirement]:
         return [r for r in cls.requires if not ctx.has(r)]
 
 
@@ -102,7 +189,7 @@ class Registry:
 
     def resolve(
         self,
-        ctx: "ScanContext",
+        ctx: ScanContext,
         *,
         max_tier: int = 1,
         muted: Iterable[str] = (),
@@ -123,7 +210,10 @@ class Registry:
             if cls.tier > max_tier:
                 skipped.append(
                     SkippedCheck(
-                        cls.check_id, cls.title, f"tier {cls.tier} not enabled", f"--tier {cls.tier}"
+                        cls.check_id,
+                        cls.title,
+                        f"tier {cls.tier} not enabled",
+                        f"--tier {cls.tier}",
                     )
                 )
                 continue
@@ -168,7 +258,7 @@ def _explain(req: Requirement) -> tuple[str, str]:
         ),
         Requirement.CONTAMINATION_INDEX: (
             "no benchmark indices found",
-            "run dropoutt fetch, or dropoutt index-eval on your own held-out set",
+            "reinstall dropoutt; the benchmark indices ship inside the package",
         ),
         Requirement.MULTIPLE_DATASETS: (
             "only one dataset was discovered",

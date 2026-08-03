@@ -36,6 +36,12 @@ LAYOUT_KEYS: dict[str, tuple[str, ...]] = {
     "source_target": ("source", "target"),
 }
 
+#: The same table as a set per layout, built once. ``_unread_keys`` runs on
+#: every record and used to rebuild this from the tuples above each time.
+_LAYOUT_KEY_SETS: dict[str, frozenset[str]] = {
+    layout: frozenset(keys) for layout, keys in LAYOUT_KEYS.items()
+}
+
 #: Bookkeeping columns that are supposed to be along for the ride. Flagging
 #: these would bury the one key that matters under a dozen that never did.
 BENIGN_KEYS = frozenset({
@@ -72,14 +78,13 @@ def _unread_keys(payload: dict, layout_id: str) -> list[tuple[str, int]]:
     trains on nothing, and no existing check notices, because every key it does
     look at is perfectly well-formed.
     """
-    known = LAYOUT_KEYS.get(layout_id)
+    known = _LAYOUT_KEY_SETS.get(layout_id)
     if known is None:
         return []
-    known_set = {k.lower() for k in known}
     out: list[tuple[str, int]] = []
     for key, value in payload.items():
         name = str(key).lower()
-        if name in known_set or name in BENIGN_KEYS or name.startswith("_"):
+        if name in known or name in BENIGN_KEYS or name.startswith("_"):
             continue
         size = _text_size(value)
         if size >= UNREAD_KEY_MIN_CHARS:
@@ -169,6 +174,15 @@ def to_document(
         )
 
     keys = tuple(sorted(str(k) for k in payload))
+    # Induction lower-cases key names before matching layouts; the lookups below
+    # spell them out in lower case. A tabular export carries whatever the header
+    # row said — "Question", "Result" — so a capitalised header could satisfy
+    # induction and then produce a record with no turns at all. Building the
+    # lower-case view once keeps the two halves reading the same record. The
+    # original spellings stay in ``keys`` because that is what the report shows.
+    lowered = {str(k).lower(): v for k, v in payload.items()}
+    if len(lowered) == len(payload):
+        payload = lowered
     turns: list[Turn] = []
     system: str | None = None
 
@@ -198,7 +212,7 @@ def to_document(
         )
         prompt, _ = _coerce_content(prompt_val)
         chosen, coerced = _coerce_content(payload.get("chosen"))
-        rejected, _ = _coerce_content(payload.get("rejected"))
+        _rejected, _ = _coerce_content(payload.get("rejected"))
         turns = [Turn("user", prompt), Turn("assistant", chosen, coerced=coerced)]
     elif layout_id == "qa":
         question, _ = _coerce_content(payload.get("question"))

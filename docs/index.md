@@ -31,7 +31,7 @@ page is the summary.
   Best guess at what you are building
     Stage      sft
     Language   tr 97%, unknown 2%, en 0%
-    Confidence: medium. Confirm with `dropoutt init`.
+    Confidence: medium. Set it explicitly in dropoutt.toml if this is wrong.
 
   Findings
   T0-ROLE-002    ●   60   non-canonical role names: 'human' (60), 'gpt' (60)
@@ -48,7 +48,7 @@ page is the summary.
     Records contribute zero trainable tokens    needs the target model's template
       → pass --model
     Training data overlaps evaluation benchmarks  no benchmark indices found
-      → run dropoutt index-eval on your own held-out set
+      → reinstall dropoutt; the benchmark indices ship in the package
 
   No blocking verdict issued: no target declared.
 ```
@@ -81,8 +81,7 @@ Adds exact token counts, fertility, the truncation forecast, chat-template
 rendering, loss-mask validation and packing efficiency.
 
 ```bash
-dropoutt index-eval ./my_holdout.jsonl --name my-eval --field question
-dropoutt scan ./data --model qwen3
+dropoutt scan ./data --model qwen3 --target sft
 ```
 
 Adds contamination against *your* held-out set. The index stores hashed 8-grams,
@@ -97,11 +96,12 @@ Enables blocking. Exit code 10 on blocking findings.
 
 ## Outputs
 
-Every scan writes three files to `.dropoutt/`:
+Every scan writes four files to `.dropoutt/`:
 
 | file | what it is |
 | --- | --- |
 | `report.html` | one self-contained file, no server, no CDN. Contains excerpts and paths unless the scan used `--no-evidence`. |
+| `report.md` | the same reading as text, for a pull-request comment or a CI log |
 | `fingerprint.json` | the comparable description of your dataset |
 | `findings.jsonl` | one record per finding, for scripting |
 

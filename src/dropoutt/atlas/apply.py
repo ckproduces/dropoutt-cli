@@ -133,6 +133,19 @@ class Atlas:
     prototype_vectors: np.ndarray | None = None
     prototype_record_ids: np.ndarray | None = None
     prototype_distances: np.ndarray | None = None
+    #: Per-language mean vectors, in ``meta["normalization"]["lang_labels"]``
+    #: order. Present only when the build's probe gate chose per-language
+    #: centering; empty otherwise, and the global mean is used for everything.
+    lang_means: np.ndarray | None = None
+    #: Coarse-resolution correction. ``coarse_knots[r]`` are distances measured
+    #: against L1 centroid ``r``; ``coarse_expected[r]`` is the fine-cell
+    #: distance a record at that coarse distance actually has. Without it a
+    #: coarse measurement overstates novelty and every corpus looks unusual.
+    coarse_knots: np.ndarray | None = None
+    coarse_expected: np.ndarray | None = None
+    #: Per-family: are the children distinct enough to name individually?
+    family_distinguishable: np.ndarray | None = None
+    family_sibling_overlap: np.ndarray | None = None
 
     @property
     def n_regions(self) -> int:
@@ -176,16 +189,58 @@ class Atlas:
     def pipeline_hash(self) -> str:
         return str(self.meta.get("pipeline_hash", ""))
 
-    def project(self, embeddings: np.ndarray) -> np.ndarray:
-        """Apply frozen normalization (or plain L2 for legacy fixtures)."""
+    @property
+    def encoder_weight_hash(self) -> str:
+        return str(self.meta.get("encoder_weight_hash", ""))
+
+    @property
+    def lang_labels(self) -> list[str]:
+        return list(self.meta.get("normalization", {}).get("lang_labels", []))
+
+    @property
+    def uses_language_centering(self) -> bool:
+        return (
+            self.lang_means is not None
+            and getattr(self.lang_means, "size", 0) > 0
+            and bool(self.lang_labels)
+        )
+
+    def project(self, embeddings: np.ndarray,
+                languages: list[str] | None = None) -> np.ndarray:
+        """Apply frozen normalization (or plain L2 for legacy fixtures).
+
+        When the build shipped per-language mean vectors, ``languages`` selects
+        one per row. Language is a nuisance parameter here: v2's coarse regions
+        included "Turkish television and radio" and "Spanish-language server
+        documentation", which are registers of a language rather than subjects,
+        and the scan already reports language separately. A row whose language
+        is unknown, or which the build had too few examples of, falls back to the
+        global mean — which is exactly what v2 did for every row.
+        """
         emb = np.asarray(embeddings, dtype=np.float32)
         if emb.ndim == 1:
             emb = emb.reshape(1, -1)
-        if self.norm is not None:
+        if self.norm is None:
+            if emb.shape[1] > self.dim:
+                emb = emb[:, : self.dim]
+            return emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-9)
+        if languages is None or not self.uses_language_centering:
             return self.norm.apply(emb)
+
         if emb.shape[1] > self.dim:
             emb = emb[:, : self.dim]
-        return emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-9)
+        labels = self.lang_labels
+        index = {label: i for i, label in enumerate(labels)}
+        means = np.tile(self.norm.mean.reshape(1, -1), (len(emb), 1))
+        for row, lang in enumerate(languages[: len(emb)]):
+            slot = index.get(lang)
+            if slot is not None:
+                means[row] = self.lang_means[slot]
+        x = emb - means
+        if self.norm.pca_components.size:
+            comps = self.norm.pca_components
+            x = x - (x @ comps.T) @ comps
+        return (x / (np.linalg.norm(x, axis=1, keepdims=True) + 1e-9)).astype(np.float32)
 
     @classmethod
     def load(cls, path: str | Path) -> Atlas:
@@ -302,21 +357,41 @@ class Atlas:
                 if "prototype_distances" in data.files
                 else None
             ),
+            lang_means=(
+                data["norm_lang_means"] if "norm_lang_means" in data.files else None
+            ),
+            coarse_knots=(
+                data["coarse_knots"] if "coarse_knots" in data.files else None
+            ),
+            coarse_expected=(
+                data["coarse_expected"] if "coarse_expected" in data.files else None
+            ),
+            family_distinguishable=(
+                data["family_distinguishable"]
+                if "family_distinguishable" in data.files
+                else None
+            ),
+            family_sibling_overlap=(
+                data["family_sibling_overlap"]
+                if "family_sibling_overlap" in data.files
+                else None
+            ),
         )
 
     # -- assignment -------------------------------------------------------
 
-    def assign(self, embeddings: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def assign(self, embeddings: np.ndarray,
+               languages: list[str] | None = None) -> tuple[np.ndarray, np.ndarray]:
         """Return (region index, cosine similarity) for each row.
 
         A region index of -1 means off-atlas. Use :meth:`assign_full` when the
         nearest region of an off-atlas record matters, which it usually does.
         """
-        best, score, _ = self.assign_full(embeddings)
+        best, score, _ = self.assign_full(embeddings, languages)
         return best, score
 
     def assign_full(
-        self, embeddings: np.ndarray
+        self, embeddings: np.ndarray, languages: list[str] | None = None
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Return (region or -1, cosine similarity, nearest region regardless).
 
@@ -327,7 +402,7 @@ class Atlas:
         different problem from one that is nearest to a region of Arabic
         Wikipedia and 0.2 away from it.
         """
-        emb = self.project(embeddings)
+        emb = self.project(embeddings, languages)
         sims = emb @ self.centroids.T
         nearest = sims.argmax(axis=1)
         score = sims.max(axis=1)
@@ -335,7 +410,7 @@ class Atlas:
         return best, score, nearest
 
     def soft_assign(
-        self, embeddings: np.ndarray
+        self, embeddings: np.ndarray, languages: list[str] | None = None
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Top-k soft assignment: (cell_ids, weights, best_scores).
 
@@ -344,7 +419,7 @@ class Atlas:
         Rows whose best similarity is below the off-atlas cutoff get all-zero
         weights and cell ids of -1.
         """
-        emb = self.project(embeddings)
+        emb = self.project(embeddings, languages)
         sims = emb @ self.centroids.T
         k = min(self.soft_k, sims.shape[1])
         # argpartition then sort the shortlist
@@ -364,22 +439,66 @@ class Atlas:
         cell_ids[off] = -1
         return cell_ids.astype(np.int32), weights.astype(np.float32), best.astype(np.float32)
 
-    def categorize(self, embeddings: np.ndarray) -> np.ndarray:
-        """Coarse (L1 / level-0) label per row.
+    def categorize(self, embeddings: np.ndarray,
+                   languages: list[str] | None = None) -> np.ndarray:
+        """Coarse (L1 / level-0) label per row: the parent of the nearest cell.
 
-        Prefers L1 centroids when the artifact carries them — lite is then an
-        exact coarsening of the fine map. Falls back to the supervised probe on
-        legacy artifacts, then to the parent id of the nearest fine cell.
+        There is one assignment, and this is derived from it. Taking a separate
+        arg-max over L1 centroids — which is what this did until now — lets the
+        coarse answer and the fine answer disagree, and on v2's own shipped
+        reference records they disagreed for 24.9% of them, rising to 47.6% for
+        records near the edge of their cell. That is the failure "lite is an
+        exact prefix of the hierarchy" exists to rule out: drilling down is
+        supposed to add resolution, never flip the answer.
+
+        The supervised-probe branch is kept only for legacy artifacts that have
+        no ``region_category`` worth trusting.
         """
-        emb = self.project(embeddings)
-        if self.l1_centroids is not None and len(self.l1_centroids):
-            sims = emb @ self.l1_centroids.T
-            return sims.argmax(axis=1).astype(np.int32)
+        emb = self.project(embeddings, languages)
+        if self.region_category is not None and len(self.region_category):
+            nearest = (emb @ self.centroids.T).argmax(axis=1)
+            return self.region_category[nearest].astype(np.int32)
         if self.probe_coef.size and self.probe_classes.size:
             logits = emb @ self.probe_coef.T + self.probe_intercept
             return self.probe_classes[logits.argmax(axis=1)]
-        nearest = (emb @ self.centroids.T).argmax(axis=1)
-        return self.region_category[nearest].astype(np.int32)
+        return np.zeros(len(emb), dtype=np.int32)
+
+    # -- calibration lookups ----------------------------------------------
+
+    def correct_coarse_distance(self, l1_ids: np.ndarray,
+                                distances: np.ndarray) -> np.ndarray:
+        """Convert distances measured against L1 centroids to fine-cell scale.
+
+        Part of a coarse distance is structure the coarse map cannot resolve, so
+        an uncorrected reading calls ordinary data novel. Returns the input
+        unchanged when the artifact predates the correction table.
+        """
+        if self.coarse_knots is None or self.coarse_expected is None:
+            return np.asarray(distances, dtype=np.float32)
+        out = np.asarray(distances, dtype=np.float32).copy()
+        for region in np.unique(np.asarray(l1_ids)):
+            if not 0 <= int(region) < len(self.coarse_knots):
+                continue
+            mask = np.asarray(l1_ids) == region
+            out[mask] = np.interp(
+                out[mask],
+                self.coarse_knots[int(region)],
+                self.coarse_expected[int(region)],
+            )
+        return out
+
+    def can_name_children(self, l1_id: int) -> bool:
+        """Whether a report may name one child cell of this family.
+
+        Siblings that share most of their distinctive terms cannot support a
+        statement about one of them. Naming the family is then the honest
+        resolution: "thin in Legal" rather than "thin in contract drafting".
+        """
+        if self.family_distinguishable is None:
+            return True
+        if not 0 <= l1_id < len(self.family_distinguishable):
+            return True
+        return bool(self.family_distinguishable[l1_id])
 
     # -- coverage ---------------------------------------------------------
 
@@ -395,6 +514,7 @@ class Atlas:
         lengths: list[int] | None = None,
         datasets: list[str] | None = None,
         texts: list[str] | None = None,
+        weights: list[float] | None = None,
     ) -> dict[str, Any]:
         """Build the coverage report.
 
@@ -402,6 +522,15 @@ class Atlas:
         arguments are what turns an off-atlas count into an off-atlas
         description; each is optional so that a caller holding only regions and
         categories still gets a valid, if thinner, report.
+
+        ``weights`` is how many corpus records each sampled record stands for.
+        The scan samples a fixed number per dataset so that one huge dataset
+        cannot dominate, which is the right sample and the wrong histogram: a
+        dataset of ten thousand records and one of ten million arrive here the
+        same size, and an unweighted count describes the average of your
+        datasets rather than your corpus. Passing the inverse sampling rate
+        turns the histogram back into an estimate of the corpus. Omitting it
+        keeps the old behaviour, which is correct when every record was placed.
         """
         total = len(regions)
         if total == 0:
@@ -421,6 +550,11 @@ class Atlas:
             "atlas_version": self.meta.get("version"),
             "pipeline_hash": self.pipeline_hash,
             "embed_model": self.embed_model,
+            # A result that names its atlas and pipeline but not the encoder
+            # weights is not self-describing: the same pipeline over different
+            # weights produces different coordinates.
+            "encoder_weight_hash": self.encoder_weight_hash,
+            "normalization_variant": self.meta.get("normalization", {}).get("variant"),
             "off_atlas_cutoff": round(self.off_threshold, 5),
             "l0_holdout_accuracy": self.meta.get("l0_holdout_accuracy"),
             "region_purity_by_taxonomy": self.meta.get("region_purity_by_taxonomy"),
@@ -456,15 +590,34 @@ class Atlas:
             return result
 
         on = regions[regions >= 0]
-        region_counts = np.bincount(on, minlength=self.n_regions)
+        # Every downstream number in this block — occupancy, entropy, shares,
+        # the gap list — is derived from `region_counts`, so weighting it here
+        # is the whole of the correction.
+        if weights is not None and len(weights) == total:
+            w = np.asarray(weights, dtype=np.float64)[~off_mask]
+            estimated = np.bincount(on, weights=w, minlength=self.n_regions)
+            # Back to whole records: these are counts of records, and a cell
+            # holding a sampled record must never round to none. Weights are at
+            # least one — a record stands for itself at minimum — so rounding
+            # cannot erase an occupied cell, and the clamp says so out loud.
+            region_counts = np.where(
+                np.bincount(on, minlength=self.n_regions) > 0,
+                np.maximum(np.rint(estimated), 1),
+                0,
+            ).astype(np.int64)
+            result["placed_estimated"] = int(region_counts.sum())
+        else:
+            w = None
+            region_counts = np.bincount(on, minlength=self.n_regions)
         # Categories are counted over placed records only. Counting them over
         # every record while the region histogram covers only placed ones put
         # two different denominators in the same panel, so a category share and
         # a region share could not be read against each other.
         cat_counts: dict[str, int] = {}
-        for c in np.asarray(categories)[~off_mask]:
+        cat_weights = w if w is not None else np.ones(int((~off_mask).sum()))
+        for c, weight in zip(np.asarray(categories)[~off_mask], cat_weights, strict=True):
             key = str(int(c))
-            cat_counts[key] = cat_counts.get(key, 0) + 1
+            cat_counts[key] = cat_counts.get(key, 0) + int(max(round(weight), 1))
 
         nonzero = int((region_counts > 0).sum())
         mass = region_counts / max(region_counts.sum(), 1)
@@ -502,6 +655,15 @@ class Atlas:
                 for r in np.argsort(-region_counts)[:12]
                 if region_counts[r] > 0
             ],
+            # Each occupied cell's density against the reference corpus's own
+            # density in the same cell: 1.0 is "as common here as it is on the
+            # map". Emitted here rather than derived in the report, so a CI job
+            # can assert on it from the fingerprint alone — the alternative is
+            # loading the atlas artifact to divide by `region_size` yourself,
+            # which is a reference distribution nobody should have to fetch to
+            # read a number. Cells absent from this map have a density of zero
+            # by construction.
+            "region_density": self._density(region_counts),
             "coverage_gaps": self._gaps(region_counts),
             # How many subject areas the atlas actually carries regions for.
             # Not the size of the taxonomy: 31 categories are defined and only
@@ -521,6 +683,32 @@ class Atlas:
     #: is 86% accurate on held-out reference data, so a category with a handful
     #: of records is as likely to be probe error as to be real presence.
     GAP_SHARE = 0.005
+
+    def _density(self, region_counts: np.ndarray) -> dict[str, float]:
+        """Occupied cells, each as a multiple of the map's own density there.
+
+        The reference corpus is not spread evenly over the cells — some
+        neighbourhoods drew far more of it than others — so "3% of your records
+        are here" says nothing until it is divided by how much of the reference
+        corpus is there too. That divisor is ``region_size``, which older
+        artifacts do not carry; without it this is empty rather than wrong.
+        """
+        if self.region_size is None or not len(self.region_size):
+            return {}
+        sizes = np.asarray(self.region_size, dtype=np.float64)
+        reference = float(sizes.sum())
+        placed = float(region_counts.sum())
+        if reference <= 0 or placed <= 0:
+            return {}
+        expected = sizes / reference
+        out: dict[str, float] = {}
+        for cell in np.nonzero(region_counts)[0]:
+            if expected[cell] <= 0:
+                continue
+            out[str(int(cell))] = round(
+                float((region_counts[cell] / placed) / expected[cell]), 4
+            )
+        return out
 
     def _gaps(self, region_counts: np.ndarray) -> list[dict[str, Any]]:
         """Regions the atlas knows about that this corpus never reaches.
@@ -864,23 +1052,46 @@ def _diagnose(detail: dict[str, Any]) -> str:
     return "no single cause identified"
 
 
-def bundled_atlas_path() -> Path | None:
+#: The atlas this build of dropoutt reports against. Pinned, not resolved.
+#:
+#: Picking "whichever is newest on disk" is an implicit ``atlas=latest``, and a
+#: coverage number is only comparable to another coverage number from the same
+#: coordinate system. Two users on the same dropoutt version must get the same
+#: map; upgrading the map is a release decision, made by editing this line.
+DEFAULT_ATLAS_VERSION = "atlas-lite-v3"
+
+#: Older bundles, newest first. Used only when the pinned version is absent —
+#: an incomplete install — and the fallback is reported, never silent.
+FALLBACK_ATLAS_VERSIONS = ("atlas-lite-v2", "atlas-lite-v1", "atlas-lite-v0")
+
+
+def atlas_path_for(version: str) -> Path | None:
     from importlib import resources
 
-    # Prefer v1; fall back to v0 so an incomplete install still runs.
-    for name in ("atlas-lite-v2.npz", "atlas-lite-v1.npz", "atlas-lite-v0.npz"):
-        try:
-            ref = resources.files("dropoutt.data") / "atlas" / name
-            path = Path(str(ref))
-            if path.exists():
-                return path
-        except Exception:
-            continue
+    try:
+        ref = resources.files("dropoutt.data") / "atlas" / f"{version}.npz"
+        path = Path(str(ref))
+        return path if path.exists() else None
+    except Exception:
+        return None
+
+
+def bundled_atlas_path(version: str | None = None) -> Path | None:
+    """Path to a named atlas, or to the pinned default with fallbacks."""
+    if version is not None:
+        return atlas_path_for(version)
+    path = atlas_path_for(DEFAULT_ATLAS_VERSION)
+    if path is not None:
+        return path
+    for name in FALLBACK_ATLAS_VERSIONS:
+        path = atlas_path_for(name)
+        if path is not None:
+            return path
     return None
 
 
-def load_bundled() -> Atlas | None:
-    path = bundled_atlas_path()
+def load_bundled(version: str | None = None) -> Atlas | None:
+    path = bundled_atlas_path(version)
     if path is None:
         return None
     try:

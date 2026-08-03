@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import numpy as np
+import pytest
 
 from dropoutt.atlas.apply import Atlas
 from dropoutt.atlas.chunk import chunk_text
@@ -116,18 +117,21 @@ def test_pipeline_hash_is_stable():
 
 
 def test_bundled_v2_subject_areas_have_human_labels():
-    from dropoutt.atlas import load_bundled
+    from dropoutt.atlas.apply import load_bundled
     from dropoutt.atlas.compare import category_labels
 
-    atlas = load_bundled()
-    assert atlas is not None
+    # Named explicitly. This test is about v2's curated label file, not about
+    # whichever atlas happens to be pinned as the default.
+    atlas = load_bundled("atlas-lite-v2")
+    if atlas is None:
+        pytest.skip("atlas-lite-v2 is not bundled in this build")
     assert atlas.meta.get("version") == "atlas-lite-v2"
     labels = category_labels(atlas)
     assert len(labels) == atlas.n_l1 == 50
-    assert labels[1] == "Legal proceedings and court cases"
-    assert labels[34] == "Python programming"
+    assert labels[21] == "Legal proceedings and court cases"
+    assert labels[46] == "Python programming and code generation"
     assert "," not in labels[0]
-    assert atlas.meta.get("l1_terms")
+    assert atlas.meta.get("l1_labels_source", "").startswith("curated:")
 
 
 class _Encoding:
@@ -258,3 +262,116 @@ def test_v1_loader_reads_norm_and_idf(tmp_path):
     assert atlas.prototype_vectors.shape == (n_l2, 2, dim)
     cats = atlas.categorize(centroids[:3])
     assert cats.shape == (3,)
+
+
+def _tiny_atlas(tmp_path, *, lang_means=None, lang_labels=()):
+    """A two-parent, six-child atlas with a deliberately misleading L1 geometry."""
+    rng = np.random.default_rng(11)
+    dim, n_l2, n_l1 = 8, 6, 2
+    centroids = rng.normal(size=(n_l2, dim)).astype(np.float32)
+    centroids /= np.linalg.norm(centroids, axis=1, keepdims=True)
+    parents = np.array([0, 0, 0, 1, 1, 1], dtype=np.int32)
+    # L1 centroids that do NOT agree with the children they claim to summarise.
+    # This is the v2 situation in miniature; categorize must ignore them.
+    l1 = -np.stack([centroids[:3].mean(0), centroids[3:].mean(0)]).astype(np.float32)
+    l1 /= np.linalg.norm(l1, axis=1, keepdims=True)
+
+    arrays = dict(
+        centroids=centroids,
+        region_category=parents,
+        l1_centroids=l1,
+        coords=np.zeros((n_l2, 2), dtype=np.float32),
+        probe_coef=np.zeros((0, dim), dtype=np.float32),
+        probe_intercept=np.zeros(0, dtype=np.float32),
+        probe_classes=np.zeros(0, dtype=np.int32),
+        norm_mean=np.zeros(dim, dtype=np.float32),
+        norm_pca=np.zeros((0, dim), dtype=np.float32),
+        coarse_knots=np.tile(np.linspace(0.0, 1.0, 5), (n_l1, 1)).astype(np.float32),
+        coarse_expected=np.tile(np.linspace(0.0, 0.5, 5), (n_l1, 1)).astype(np.float32),
+        family_distinguishable=np.array([True, False]),
+        family_sibling_overlap=np.array([0.1, 0.9], dtype=np.float32),
+        meta=np.array([json.dumps({
+            "version": "tiny-v3", "embed_model": "fake",
+            "encoder_weight_hash": "deadbeef",
+            "off_atlas_threshold": -1.0, "soft_k": 3, "soft_temperature": 0.2,
+            "region_terms": [f"r{i}" for i in range(n_l2)],
+            "normalization": {"variant": "per_language" if lang_means is not None
+                              else "global", "lang_labels": list(lang_labels)},
+        })], dtype=object),
+        allow_pickle=True,
+    )
+    if lang_means is not None:
+        arrays["norm_lang_means"] = np.asarray(lang_means, dtype=np.float32)
+    path = tmp_path / "tiny.npz"
+    np.savez_compressed(path, **arrays)
+    return Atlas.load(path)
+
+
+def test_coarse_label_is_the_parent_of_the_fine_cell(tmp_path):
+    """Drilling down must never flip the coarse answer.
+
+    v2 took a separate arg-max over L1 centroids, and on its own shipped
+    reference records that disagreed with the parent of the nearest fine cell
+    for 24.9% of them. Here the L1 centroids are deliberately pointed the wrong
+    way: if categorize still consults them, every row disagrees.
+    """
+    atlas = _tiny_atlas(tmp_path)
+    rng = np.random.default_rng(3)
+    x = rng.normal(size=(500, 8)).astype(np.float32)
+
+    coarse = atlas.categorize(x)
+    _, _, nearest = atlas.assign_full(x)
+
+    assert np.array_equal(coarse, atlas.region_category[nearest])
+
+
+def test_per_language_centering_changes_placement_only_for_known_languages(tmp_path):
+    means = np.stack([np.full(8, 0.5, dtype=np.float32), np.zeros(8, dtype=np.float32)])
+    atlas = _tiny_atlas(tmp_path, lang_means=means, lang_labels=("tr", "en"))
+    assert atlas.uses_language_centering
+
+    x = np.tile(np.linspace(-1, 1, 8).astype(np.float32), (4, 1))
+    tr_first = atlas.project(x, ["tr", "en", "unknown", "de"])
+
+    # "en" mean is zero and unknown/de fall back to the global mean, which is
+    # also zero here, so only the Turkish row moves.
+    assert not np.allclose(tr_first[0], tr_first[1])
+    assert np.allclose(tr_first[1], tr_first[2])
+    assert np.allclose(tr_first[2], tr_first[3])
+
+
+def test_coarse_distance_correction_pulls_novelty_down(tmp_path):
+    atlas = _tiny_atlas(tmp_path)
+    raw = np.array([0.25, 0.5, 0.75], dtype=np.float32)
+
+    corrected = atlas.correct_coarse_distance(np.array([0, 0, 0]), raw)
+
+    # The table maps [0,1] onto [0,0.5]: a coarse distance overstates novelty,
+    # and without this every corpus is told it is unusual.
+    assert np.allclose(corrected, raw / 2, atol=1e-6)
+
+
+def test_family_flag_gates_naming_a_child_cell(tmp_path):
+    atlas = _tiny_atlas(tmp_path)
+    assert atlas.can_name_children(0) is True
+    assert atlas.can_name_children(1) is False
+    # Unknown families and older artifacts stay nameable rather than silent.
+    assert atlas.can_name_children(99) is True
+
+
+def test_containment_crosswalk_scores_a_clean_split_as_continuity():
+    import sys
+    from pathlib import Path as _Path
+
+    sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "tools"))
+    from build_atlas import containment_crosswalk
+
+    # One previous cell split cleanly into two; the other survives intact.
+    previous = np.array([0, 0, 0, 0, 1, 1, 1, 1], dtype=np.int32)
+    current = np.array([0, 0, 1, 1, 2, 2, 2, 2], dtype=np.int32)
+
+    result = containment_crosswalk(current, previous, 3, 2, "old")
+
+    assert result["summary"]["clean_split"] == 1
+    assert result["summary"]["unchanged"] == 1
+    assert result["summary"]["continuity_rate"] == 1.0

@@ -28,7 +28,7 @@ how much.
 - **Tier 3 verdict runs**, the micro-ablation harness that would convert
   findings from opinion into measurement.
 - **`marginal()` and `plan()`**, the operations that answer "what does adding
-  this dataset contribute" and "select under a token budget". `dropoutt diff`
+  this dataset contribute" and "select under a token budget". Nothing shipped
   shows the geometry two datasets stand in; it does not price the addition or
   select a mixture.
 - **The hosted control plane**, history, and approvals.
@@ -59,20 +59,18 @@ generic phrasing.
 **Parquet row groups are read whole.** There is no column projection, so scanning
 a wide Parquet dataset reads more than it needs.
 
-**`dropoutt diff` needs the full region histogram, which older fingerprints do
-not carry.** Region shares are computed from the `region_counts` field. A
-fingerprint written before that field existed carries only the stored top-twelve
-display head, and the comparison falls back to it, computing shares over a
-partial view of the corpus rather than over all of it. The run prints a note
-saying what share of each side it actually saw. Re-scan both sides for exact
-numbers.
+**There is no built-in way to compare two corpora.** The fingerprint carries
+everything needed — the full region histogram is written under `region_counts`
+precisely so two scans are comparable — but the command that read it was cut
+before 1.0 rather than frozen half-finished. Read the two fingerprints yourself
+in the meantime.
 
-**`dropoutt diff` compares distributions, not records.** It answers "how much of
-left sits in regions right never reaches", which is a statement about the shape
-of the two corpora on the atlas. It does not tell you that the same records
-appear on both sides. Record-level containment is what `T1-OVERLAP-001`
-measures, and that check only runs across the datasets discovered within a
-single scan.
+**The map's reference distribution is a proxy.** The shipped artifact records
+which subject area each region belongs to, and not how much reference text
+landed in it. So "the map spends 11% of itself on this subject" counts regions,
+which is how much resolution the clustering gave the area — a good proxy for how
+common it was, and not a measurement of it. Reported as region share for that
+reason, never as a share of the reference corpus.
 
 ## The atlas is a first version
 
@@ -80,8 +78,9 @@ The shipped `atlas-lite-v0` is built from a few hundred thousand records, its
 level-0 taxonomy probe is trained on labels bootstrapped from dataset
 provenance rather than from human annotation, and its regions are named from
 TF-IDF terms rather than by a language model. Its own held-out accuracy and
-region purity are recorded inside the artifact and printed by
-`dropoutt atlas`; read them before trusting a coverage number.
+region purity are recorded inside the artifact and travel into every
+fingerprint under the `coverage` facet; read them before trusting a coverage
+number.
 
 ## Things deliberately out of scope
 

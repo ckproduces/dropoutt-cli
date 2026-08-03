@@ -1,22 +1,481 @@
 # Changelog
 
+## Unreleased
+
+### The atlas places ten times as many records
+
+The atlas and the token budget shared one 20,000-record ceiling, which put a
+272,455-record corpus on the map with 6,852 of its records — few enough that a
+subject area holding two percent of the corpus was decided by a hundred of
+them. The two samples are now one bottom-k cut at two depths: 200,000 for the
+atlas, still 20,000 for the panel. A prefix of a bottom-k over a uniform hash
+is itself a uniform sample, so the budget keeps every property it had.
+
+They are split because they cost different things. Placement is one forward
+pass of a 128-dimension encoder per record — 30,000 records scan end to end in
+under seven seconds — while pricing is five real tokenizers over the same text,
+and tokens-per-character converges long before a histogram over 212 cells does.
+
+Merging the shard samples now goes through a bounded heap. Shards may keep
+three times their expected share so none of them discards a globally-small key,
+which meant the parent was offered three times the target and held all of it to
+throw two thirds away — tolerable at 20,000 and most of a gigabyte at 200,000.
+
+### Atlas coverage is weighted by dataset size
+
+The atlas sample is capped per dataset so that one huge dataset cannot dominate
+it. That is the right sample and it was the wrong histogram: a dataset of ten
+million records and one of ten thousand arrived at `Atlas.coverage` the same
+size, so every coverage number described the average of your datasets rather
+than your corpus. The token budget has always corrected for this in its own
+way; coverage did not.
+
+Each sampled record now carries how many corpus records it stands for, and the
+histogram is weighted by it. Occupancy, entropy, effective regions, subject
+shares and the gap list all derive from that histogram, so weighting it is the
+whole of the fix. `placed` and `off_atlas` stay sample counts — they are honest
+about being a sample — and `placed_estimated` is the weighted total beside them.
+
+### Report: the map is drawn, not described
+
+"Where your data sits" opened with four statistics and five sentences about a
+map the reader had never seen. It now opens with the map itself: one row per
+subject area, one chip per neighbourhood inside it, each chip carrying **and**
+colouring your density there against the reference corpus's density in the same
+place. All 48 areas are drawn whether or not the corpus touches them, because
+the empty rows are half of what the picture says.
+
+It is a real `<table>`, and the ratio is printed inside the chip rather than
+revealed by hovering it. Both of those were bought by dropping the sort
+control: `order` only applies to flex and grid children, so a sortable grid
+could not be a table, and a table is what repeats its header across a printed
+page. A number that exists only while a pointer is over it does not exist on
+paper, in a screenshot pasted into a ticket, or for anyone reading by keyboard
+— which is most of how this page is read.
+
+The scale is four stops, and they are the traffic light the data already
+implies: white, then green at parity, then yellow, then red for the densest
+cell in the corpus. Below parity the curve is squared rather than linear — a
+cell at 0.02x is one record where the map has fifty, and a linear ramp painted
+it a comfortable-looking green two percent of the way along. Ink is chosen per
+step by measured contrast against what actually renders; the previous version
+compared each fill against pure black while the page rendered near-black, which
+flattered the dark option and put 4.36:1 digits on the most saturated cells. A
+test now fails if any step drops under AA.
+
+A cell never reached is an outlined box with an `N` in it. An empty box at a
+hairline border was ambiguous between "nothing here" and "nothing rendered",
+and absence is what this section is for. A **Reach** column counts the
+subregions touched in each row, and the legend is one gradient rather than four
+swatches to interpolate between by eye.
+
+The two place lists are ranked by density against the map instead of by record
+count. Count asked "where is most of my data", which the grid above already
+answers — and answers mostly with a fact about the map, since a region the
+reference corpus spent forty cells on will hold more of anybody's data than one
+it spent four on. They are now the two ends of one ordering: what you have most
+of against the map, and what you have least of.
+
+The density ratios are emitted by `Atlas.coverage` rather than derived in the
+report, so `fingerprint.json` carries them and a CI job can assert on coverage
+without loading the atlas artifact to divide by `region_size` itself.
+
+The subject bar chart came out with it: it said the same thing one level
+coarser, without the map's own resolution beside it. Its one irreplaceable line
+— how much of the map this corpus never touches — is now a caption on the grid.
+
+### Report: a Markdown rendering, and a terminal that stops repeating it
+
+A scan runs in CI, and what a reviewer sees is a pull-request comment or a job
+log. Attaching 60 KB of HTML to either produces something nobody opens. Every
+scan now also writes `report.md`: the same reading of the same summary, as
+pasteable Markdown, with the density grid as a table of ratios. It is written
+whatever `--no-html` says, because that flag means "do not build the thing I
+would open in a browser" and this is the file for exactly that reader.
+
+The terminal is now triage. It answers *is anything wrong, and do I need to go
+and look*, and then says where looking happens — each artifact named with a
+word about what it is for. Everything it used to print in full was already in a
+file written milliseconds earlier: the detail and fix for each finding, the
+excerpts, the dataset table, the tokenizer panel, the off-map diagnosis. It is
+about twenty lines whatever the corpus, down from sixty.
+
+### Report: one theme, and the verdict caption sits with what it captions
+
+The page answered to `prefers-color-scheme`, so the same file was two different
+documents depending on whose laptop opened it — and the one thing a report is
+for is being forwarded. A density ramp tuned to read on white does not read on
+near-black. It is light, always, on screen and on paper.
+
+The verdict strip moved from the head of the page to the head of the findings.
+The sentence it carries is a count of what is directly below it and a name for
+the worst of them, which is a caption for that list and was a verdict on a
+corpus the reader had not been shown yet.
+
+Findings are now ordered by consequence first and size second. Size used to be
+promoted over nominal severity, which was defensible arithmetic and produced a
+page where a badge reading "warning" stood above five badged "would block" — and
+a reader who thinks the order is broken stops using it to decide what to read.
+
+Every section standfirst is gone, along with the panels and captions that
+restated a number already on the page: the licence finding printed "4 of 4
+datasets" twice one line apart, "estimated from a sample" said a count was soft
+without saying by how much, and a clean chat-template result took four lines to
+report the absence of a problem the reader never had.
+
+### Reader: a `.jsonl` holding a JSON array is read as records
+
+The extension is a claim about the file, not a fact about it. A pretty-printed
+array named `.jsonl` was read line by line, so every line was a parse error. On
+one 1.37M-record corpus that was 1,256,362 failures, and the damage did not stop
+at the parse count: the repeated `{` and `"license": ...` fragments became a
+157,045-copy duplicate cluster, and they were too short to identify so 55% of
+the corpus reported its language as unknown. One misread file, three wrong
+findings. The incremental span scanner that `read_json` already used now handles
+this case, and such a file is never line-split into shards.
+
+### Reader: tabular headers are mapped to layout keys, and the delimiter is sniffed
+
+A CSV carries whatever the author typed into the header row.
+`Question,Activation-Feed,Result` matched no layout, fell back to raw text, and
+had all three columns concatenated — which then produced "100% alike"
+near-duplicate pairs, because the shared category column dominated the shingles.
+Headers are now resolved against known layout keys, and the delimiter comes from
+the header row rather than from the extension, so a semicolon-separated export
+is no longer read as a single column.
+
+### Near-duplicates: stricter, and no longer double-charging exact copies
+
+The default MinHash preset is now `strict` (104 hashes, 8 bands of 13, Jaccard
+0.85) rather than `fineweb` (0.75). At 0.75 the check fired on records that
+share a template or a category column but say different things. Exact copies
+inside a near-duplicate cluster are counted by `T0-DUP-001` and are now excluded
+here, and no record is shown as its own near-copy. `fineweb` and `hf-neardedup`
+remain available by name.
+
+### Removed: two single-language checks
+
+`T0-ENC-002` (Turkish dotted/dotless I damage) and `T1-LANG-004` (Turkish text
+that lost its diacritics) are gone. The general language checks — composition,
+outliers, script mismatch — are unchanged.
+
+### Atlas: coarse and fine can no longer disagree
+
+`categorize` derived the coarse region from a separate arg-max over L1
+centroids while the fine cell came from an arg-max over L2 centroids. On the
+shipped v2 artifact's own reference records those two answers differed for
+**24.9%** of them, rising to 47.6% near the edge of a cell — drilling down could
+flip the coarse answer, which is what "lite is an exact prefix of the hierarchy"
+exists to rule out. The coarse label is now the parent of the assigned cell.
+
+### Atlas: soft assignment is actually used
+
+Top-5 soft assignment at T=0.08 had been implemented since v1 and called by
+nothing but a test, so every coverage number was the top-1 answer presented as
+the whole answer. Coverage now reports soft membership shares alongside the
+hard histogram.
+
+### Atlas: the shipped tables are read
+
+Per-cell distance references, radial prototypes and the co-occurrence graph were
+written into the artifact and never opened by any code path, and the
+coarse-resolution correction the spec calls mandatory did not exist. The
+correction table is now built and applied, and cells carry a flag saying whether
+their siblings are distinct enough for a report to name one of them.
+
+### Atlas: results name the encoder weights, and the version is pinned
+
+Coverage results carry `encoder_weight_hash` and the normalization variant. The
+bundled atlas is selected by a pinned version rather than "whichever file on
+disk is newest", which was an implicit `atlas=latest`.
+
+### Atlas build: collection is a separate, resumable, on-disk step
+
+`tools/fetch_corpus.py` fetches the reference corpus once, in parallel, to a
+gzipped shard per source plus a manifest, and skips anything already complete.
+Collection was 87% of the v2 build wall clock and was paid again on every
+re-cluster; nothing survived the process, so no two builds saw the same corpus.
+`tools/build_atlas.py` reads that cache and never touches the network.
+
+## 1.0.0
+
+The first stable release. The command surface is frozen: six commands, and from
+here they follow semantic versioning, so a flag will not change meaning inside a
+major version.
+
+### Atlas rebuilt as `atlas-lite-v1`
+
+The coordinate system was redesigned against the architecture spec: shared
+extract → chunk → dedup → SIF-embed (128-d) → frozen mean/PCA/L2 normalize →
+two-level k-means (40 L1 / 480 L2), soft assignment, distance calibration, and
+`pipeline_hash` on every coverage result. Reference sampling now spans math,
+code, instruction/chat, legal/finance, scientific, dialogue, structured data,
+and multilingual prose. Artifact budget raised to ≤ 5 MB; v1 ships at ~0.6 MB
+with IDF table, norm constants, L1+L2 centroids, and reference mass. `atlas-lite-v0`
+still loads; the package prefers v1.
+
+### The token budget was wrong, by up to 38%
+
+Measured against exact counts on a three-dataset corpus, the estimate printed
+without `--model` came in **12% to 38% high** depending on the tokenizer — while
+reporting a ±1% confidence interval that never contained the truth.
+
+The cause was the sampling design, not the arithmetic. The scan caps its sample
+per dataset so one huge dataset cannot swamp the atlas histogram, which means
+the sample is not a miniature of the corpus: a corpus that is 94% English by
+character produced a sample that was 60% English. Pooling that into a single
+tokens-per-character ratio priced the whole corpus at the blend of the *sample*.
+Tokens per character is about 0.19 in English and 0.28 in Turkish, so the gap
+was worth tens of percent.
+
+Each dataset is now priced at its own measured rate and the stratum totals
+added. Same sample, same tokenizer calls. On the corpus above the error drops
+from **+38% to −0.06%**, and the interval — now the stratified ratio estimator's
+standard error, with a finite-population correction so a dataset that was
+sampled in full contributes no uncertainty — contains the true value in every
+case. The `± sampling` column in the report is that interval.
+
+### The report describes before it complains
+
+The page used to open with a list of findings, so a reader handed a folder
+learned what was wrong with it before learning what it *was* — and learned what
+it was only by inference, since a finding mentions a property of a corpus
+exactly when that property is broken.
+
+Composition now leads: language distribution, how much of the corpus parsed into
+a structured training layout, which chat templates are already baked into the
+text, record size, the dataset table. Then the findings, then the token budget,
+then the map. The verdict stays above all of it as one line.
+
+The page is now built on the product's own design tokens, so a report opened
+next to the web app is recognisably the same product. Both themes ship, and
+print is a first-class target rather than an afterthought.
+
+### The atlas scatter plot is gone
+
+It was honest and useless. The 258 dots sat at fixed positions, so two reports
+could be held side by side — but the positions are a projection rather than
+distances, which had to be disclaimed in a caption directly under the picture,
+and having read the disclaimer there was nothing left to do with the dots.
+
+In its place: sentences that clear two gates. A subject 7.6x denser here than
+the map is built for. An area the map spends 11% of itself on that this corpus
+barely reaches. One place holding 29% of everything, whose records are 0.88
+alike — one template, not one topic. Both gates are needed and they fail in
+opposite directions: on a 200,000-record corpus every difference is
+statistically significant, so significance alone prints a page of 3% deviations;
+on a 400-record sample a 5x difference is what noise looks like, so effect size
+alone prints confident nonsense. Below 200 placed records no comparison is made
+at all.
+
+Two lists replace the single one: where the data piles up, and where it has only
+a toehold. Reaching a place is not covering it, and an occupancy count cannot
+tell the difference — which is how a narrow corpus comes to look broad.
+
+### The report opens itself
+
+A scan ends with an HTML file and the next thing anyone does is open it, so
+`scan` opens it.
+
+It is the default rather than a flag because the reasons not to are all
+detectable. Over SSH the window would appear on the machine doing the work
+rather than the one being looked at; in CI and under a batch scheduler there is
+no session to open into; in a pipe the caller asked for text. Each of those is
+checked before the default applies, along with `--quiet`, `--no-html`, and a
+Linux box with no `DISPLAY`. `--no-open` and `DROPOUTT_OPEN=0` turn it off;
+`DROPOUTT_OPEN=1` turns it on regardless, which is the X11-forwarding case where
+the SSH check is wrong.
+
+The report itself is now laid out for a phone as well as a monitor. That is less
+strange than it sounds: the file gets sent to someone, and where it gets opened
+is not where it was written.
+
+### Four commands removed
+
+`diff`, `index-eval`, `init` and `atlas` are gone. Each was useful and none was
+finished enough to freeze for a decade of semantic versioning. What they did:
+
+- `init` wrote a `dropoutt.toml`. The file is still read; write it by hand.
+- `index-eval` built a contamination index from your own held-out set. The ten
+  shipped benchmark indices are unaffected.
+- `atlas` printed the artifact's own quality numbers. They travel in the
+  `coverage` facet of every fingerprint.
+- `diff` compared two fingerprints. The data it read is still written — the full
+  region histogram is under `coverage.region_counts` precisely so two scans stay
+  comparable.
+
+### Speed, and one accelerator that was never actually running
+
+`minhash.py` reported `"backend": "rensa"` in every near-duplicate finding, and
+`dropoutt doctor` listed rensa as an installed accelerator with "speed only,
+identical clusters". Nothing in the package ever called it — numpy did the work
+on every machine, including the ones where the wheel was present.
+
+Wiring it up was the wrong fix. A Rust MinHash seeds its permutations
+differently, so the same corpus would produce different signatures, different
+LSH buckets and a different duplicate count depending on which wheels happened
+to be installed. The scan already guarantees its findings do not depend on how
+many cores it was given. So the claim is gone, and so is the dependency: the
+`fast` extra is now orjson alone.
+
+What did get faster, measured on a 53,000-record three-language corpus:
+
+- **Contamination hashing**, the single most expensive thing in a scan at about
+  a quarter of it. The word list is joined and encoded once and each 8-gram is
+  a `memoryview` slice of that one buffer, because the joined form of words
+  *i..i+n* is a substring of the joined form of all of them. Digests are
+  concatenated and read back with `frombuffer` instead of converted one at a
+  time. 27 million list slices, joins and string encodes per scan, gone. The
+  hashes are bit-identical — they have to be, the shipped indices are made of
+  them — and `tests/test_fastpaths.py` asserts it against the definition.
+- **Whitespace normalisation** is `str.split` rather than a regex. The two
+  agree on every codepoint in Unicode, and split-then-join is four times
+  faster. This runs three times per record.
+- **The text-file sniffer** walked every character of every `.txt` in Python.
+  Four characters can change its state, so numpy finds them and the loop visits
+  only those — 7x on a half-megabyte probe. It also ran twice per file, once in
+  discovery and once at read time; it is cached now.
+- **The chat-template detector** ran 34 substring searches over every record.
+  A delimiter cannot be present unless its first character is, and the gate is
+  derived from the delimiters rather than written by hand. 7x on ordinary prose.
+- Per-record set and dict rebuilds in schema induction and record normalisation
+  now happen once at import.
+
+Two latent bugs came out of the same pass. The incremental reader never trimmed
+its buffer when a chunk contained no records, so a mislabelled dump with a long
+records-free stretch was re-scanned from offset zero on every read — quadratic
+in the file size, against a docstring promising bounded memory. And that reader
+caught `Exception` around its JSON parse, so a `NameError` in the reader itself
+would have been reported as a malformed record.
+
+### Readable enough to open-source
+
+`report/summary.py` was 1,151 lines. It is now three modules: the reading of a
+scan, what the map says (`report/atlas_story.py`), and how a number becomes a
+phrase (`report/phrasing.py`). The progress display moved out of `cli.py` into
+`progress.py`; it was never about the command surface.
+
+`pyproject.toml` now carries the lint configuration, and every rule that is
+switched off says why in a comment. That deleted 56 identical `# noqa: PLC0415`
+suppressions, each marking the same deliberate decision — imports live inside
+functions so `--help` does not pay for numpy.
+
+The bidi-override regex in `report/escaping.py` contained its characters
+literally, which meant the source of the defence against direction-changing
+text was itself unreadable and rendered wrongly in an editor. It is written as
+escapes now.
+
+### A CLI that looks like one
+
+The product's mark, rasterised from its own icon, prints above the help. It is
+dropped when stdout is redirected, when `NO_COLOR` or `TERM=dumb` is set, when
+the terminal is narrower than 46 columns, and — the one that would otherwise
+crash the program — when the output stream cannot encode a block character,
+which is the default on a legacy Windows code page. A 7-bit rendering of the
+same mark covers that case.
+
+`-h` works as well as `--help` and `-V` as well as `--version`, and both have a
+subcommand spelling too: `dropoutt help`, `dropoutt help scan`, and `dropoutt
+version` all work, because guessing wrong about a tool's flag conventions should
+not produce a usage error. `scan` prints four worked examples.
+
 ## 0.2.0
 
-Publish polish: atlas report storytelling, scan speed, packaging.
+The scan got about thirteen times faster on a real corpus, and the report was
+rewritten for the person who has to decide whether to start a training run.
 
-### Atlas report
+### Speed
 
-Coverage panels (terminal + HTML) lead with what the atlas is for: what you
-cover, what you miss, and what sits off the map. User excerpts name regions
-before atlas captions; missing subject areas and off-map diagnosis are
-promoted; short-record exclusions and region cohesion appear when relevant.
+A 50,000-record SFT corpus went from **69 s to 13 s**, and a 200,000-record one
+from about four and a half minutes to **21 s**. A scan of four small text files
+did not get slower. Nothing was sampled away to get there; the checks see every
+record they saw before.
 
-### Scan performance
+Roughly half of it is the streaming pass now running across processes. A shard
+is a contiguous slice of the corpus in the order a serial scan would read it,
+each worker runs the real checks over its slice, and the parent folds the check
+objects together afterwards. Findings, examples and the fingerprint id are
+**identical** to a one-core run, which `tests/test_parallel.py` asserts. Under
+the byte threshold, and with `-j 1`, the same code path runs in the calling
+process, so there is no second implementation to keep in agreement.
 
-- Reuse the CLI discovery walk (no second filesystem scan).
-- Parallel layout induction across datasets (thread pool).
-- Chunked MinHash for long documents; one-pass surface features; batched
-  content hashing.
+Making that identity true forced three things to change, and each was already
+a latent problem:
+
+- The corpus digest was a chained hash over records in order, so it would have
+  depended on how many shards a machine chose. It is a sum now, and depends on
+  the records alone.
+- `T0-DUP-001` keyed records by `hash()`, which Python randomises per
+  interpreter — in separate processes the same text would have hashed
+  differently and every duplicate would have counted as unique.
+- The atlas and token-budget samples were the first N records of each dataset,
+  which no shard can reproduce. They are a bottom-k sample over a positional
+  hash now, so the sample is identical however the corpus is divided — and it
+  covers the whole corpus rather than its beginning, which matters whenever the
+  files are sorted by source, length or date.
+
+The other half is arithmetic that was being done more times than necessary:
+
+- Script detection was a Python loop over every character of every record. It
+  is a 65,536-entry lookup table now, applied with numpy.
+- Language identification calls fastText directly. The wrapper it went through
+  re-collapsed whitespace with a regex over text that was already normalised,
+  took a lock, and allocated a dict, for about 70 µs of overhead per record on
+  top of a prediction that costs less.
+- PII, identity and style patterns are gated by substrings derived from the
+  patterns themselves (`dropoutt/regexgate.py`). A case-insensitive regex scans
+  at 4–6 ns per character and a substring test at 0.36; sixteen of the former
+  per record was the second largest line in the profile. The gates are derived,
+  never hand-written, because a hand-written gate that drifts turns a check off
+  silently.
+- Near-duplicate and contamination scanning shared one normalisation pass
+  instead of each running their own; MinHash shingles are hashed with a
+  vectorised rolling hash; candidate pairs are verified as one matrix operation.
+- The ten benchmark indices are merged into one sorted array with a compressed
+  posting list. This removed 68 million dictionary lookups on the reference
+  corpus and cut the memory tenfold, which is what makes running it in twelve
+  processes affordable.
+- The tokenizer panel loads in parallel and reads a bounded sample; the embedder
+  and the panel warm up in the background while records are being read.
+
+Contamination hashes are untouched — the shipped `.idx` files are made of them
+and there is no text left anywhere to recompute them from.
+
+`PIPELINE_VERSION` is `0.2.0`: the corpus digest, the sample and the MinHash
+shingle hash all changed, so fingerprints from earlier versions describe
+something slightly different and must not collide.
+
+### The report
+
+Both the terminal output and `report.html` were rewritten around one shared
+reading of the scan (`dropoutt/report/summary.py`), so the two cannot drift.
+
+- **Failures lead.** The page opens with a sentence — "1 problem would fail a
+  fine-tuning run" — and then the problems, ordered by how much of the corpus
+  each touches, each with its size, its cost in tokens, what to do, and examples.
+- **Every number carries its unit.** Checks declare what they count. A finding
+  about datasets no longer outranks one about records because both read as
+  100%.
+- **The map is the centrepiece**, drawn at full width with the legend and the
+  dots agreeing on colour. Occupied ground is never drawn in the empty grey, and
+  the caption says the layout is not a distance.
+- **A place on the map is named by your own record** closest to its centre. The
+  atlas's five-word captions are shown beside that, as captions. The two atlas
+  findings no longer quote them at all: about forty percent of that text is
+  function words shared with other regions, and a finding ending in
+  "(such, used, other, also, some)" is noise presented as insight.
+- The terminal report is roughly half its former length; the dataset table, the
+  tokenizer comparison and the full off-map diagnosis live on the page, and the
+  last line says where the page is.
+- Several check titles were rewritten as problems rather than as topics —
+  `T0-ROLE-001` read "Conversation role structure is valid", which is what a
+  passing check would say.
+
+### Progress
+
+The scan shows a real progress bar with a record count, a percentage and a
+remaining time, sized from a record-length estimate measured during schema
+induction. Redirected output gets a line every 20,000 records instead.
 
 ### Packaging
 

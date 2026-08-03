@@ -51,6 +51,10 @@ artifacts/
 # Local atlas source catalog (links only; never commit)
 .atlas-sources/
 
+# Fetched reference corpus and build scratch. Several gigabytes, and
+# reproducible from tools/atlas_sources.py plus the manifest.
+.atlas-cache/
+
 # OS / editor
 .DS_Store
 Thumbs.db

@@ -11,7 +11,9 @@ acting on.
 
 from __future__ import annotations
 
-from ..context import ScanContext
+import numpy as np
+
+from ..context import ScanContext, dedup_words_of
 from ..minhash import DEFAULT_PRESET, PRESETS, LSHIndex, MinHasher, UnionFind
 from ..models import (
     CostClass,
@@ -28,14 +30,33 @@ from .base import Check, make_finding, register
 ALL_PROFILES = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN)
 
 
+def _exact_key(text: str) -> str:
+    """Whitespace- and case-insensitive identity of a record's text.
+
+    Near-duplicate clusters are full of exact copies, and the exact-duplicate
+    check has already counted those. Reporting them twice inflates the second
+    number and fills its examples with pairs the reader was shown a section
+    earlier — on one corpus the top six "near-copies" were the same four rows,
+    each matched against itself at 100%.
+    """
+    import hashlib
+    import re
+
+    collapsed = re.sub(r"\s+", " ", text.lower()).strip()
+    return hashlib.blake2b(collapsed.encode("utf-8", "surrogatepass"),
+                           digest_size=8).hexdigest()
+
+
 class _SignatureStore:
     """Shared MinHash state, built once and used by both checks below."""
 
     def __init__(self, preset_name: str = DEFAULT_PRESET) -> None:
+        self.preset_name = preset_name
         self.preset = PRESETS[preset_name]
         self.hasher = MinHasher(self.preset)
         self.index = LSHIndex(self.preset)
-        self.docs: dict[int, tuple[str, str, int, str, str]] = {}
+        #: key → (doc_id, file, index, excerpt, dataset, exact-text key)
+        self.docs: dict[int, tuple[str, str, int, str, str, str]] = {}
         self.counter = 0
         self.per_dataset: dict[str, int] = {}
         # Both checks below share this store, so the same record arrives twice.
@@ -44,6 +65,60 @@ class _SignatureStore:
         # total number of records.
         self._seen: set[tuple[str, int]] = set()
 
+    # -- crossing a process boundary --------------------------------------
+
+    def __getstate__(self) -> dict:
+        """Ship signatures as one array and leave the buckets behind.
+
+        The LSH buckets are a derived index: fourteen byte-string keys per
+        document, all of them reconstructible. Pickling them would send several
+        times the payload of the signatures they were built from, and pickling
+        fifty thousand small arrays individually is slower than sending one.
+        """
+        keys = sorted(self.docs)
+        sigs = self.index._sigs
+        stacked = (
+            np.stack([sigs[k] for k in keys]) if keys
+            else np.empty((0, self.preset.num_perm), dtype=np.uint32)
+        )
+        return {
+            "preset_name": self.preset_name,
+            "keys": keys,
+            "sigs": stacked,
+            "docs": [self.docs[k] for k in keys],
+            "per_dataset": self.per_dataset,
+            "counter": self.counter,
+        }
+
+    def __setstate__(self, state: dict) -> None:
+        self.__init__(state["preset_name"])  # type: ignore[misc]
+        self.counter = state["counter"]
+        self.per_dataset = state["per_dataset"]
+        sigs = state["sigs"]
+        for row, (key, doc) in enumerate(zip(state["keys"], state["docs"], strict=True)):
+            self.docs[key] = doc
+            self.index.add(key, sigs[row], doc[4])
+            self._seen.add((doc[1], doc[2]))
+
+    def merge(self, other: _SignatureStore) -> None:
+        """Append a later shard's signatures, renumbering its keys.
+
+        Keys are positions in the accepted-record sequence, so a shard's local
+        numbering becomes global by adding the count of everything before it.
+        Shards are contiguous and merged in order, so the result is the exact
+        numbering a serial pass would have produced.
+        """
+        base = self.counter
+        for local in sorted(other.docs):
+            doc = other.docs[local]
+            key = base + local
+            self.docs[key] = doc
+            self.index.add(key, other.index._sigs[local], doc[4])
+            self._seen.add((doc[1], doc[2]))
+        self.counter = base + other.counter
+        for dataset, count in other.per_dataset.items():
+            self.per_dataset[dataset] = self.per_dataset.get(dataset, 0) + count
+
     def add(self, doc: Document) -> None:
         if len(doc.text) < 40:
             return
@@ -51,14 +126,15 @@ class _SignatureStore:
         if location in self._seen:
             return
         self._seen.add(location)
-        sig = self.hasher.signature(doc.text)
+        sig = self.hasher.signature_from_words(dedup_words_of(doc))
         if sig is None:
             return
         key = self.counter
         self.counter += 1
         self.index.add(key, sig, doc.dataset)
         self.docs[key] = (doc.doc_id, doc.source_file, doc.source_index,
-                          excerpt(doc.text, 160), doc.dataset)
+                          excerpt(doc.text, 160), doc.dataset,
+                          _exact_key(doc.text))
         self.per_dataset[doc.dataset] = self.per_dataset.get(doc.dataset, 0) + 1
 
 
@@ -73,7 +149,7 @@ def _get_store(ctx: ScanContext) -> _SignatureStore:
 @register
 class NearDuplicates(Check):
     check_id = "T1-NDUP-001"
-    title = "Near-duplicate records"
+    title = "Records that are near-copies of each other"
     tier = 1
     profiles = ALL_PROFILES
     cost = CostClass.GLOBAL
@@ -105,39 +181,73 @@ class NearDuplicates(Check):
         if not clusters:
             return []
 
-        sizes = sorted((len(m) for m in clusters.values()), reverse=True)
-        redundant = sum(s - 1 for s in sizes)
+        # Count distinct texts per cluster, not members. A cluster of 40 records
+        # that are 39 exact copies of one text plus one near-copy contributes a
+        # single near-duplicate here; the other 39 belong to T0-DUP-001 and are
+        # already reported there.
+        distinct_sizes: list[int] = []
+        redundant = 0
+        exact_absorbed = 0
         by_dataset: dict[str, int] = {}
+        near_clusters = 0
         for members in clusters.values():
-            for m in members[1:]:
+            seen_text: dict[str, int] = {}
+            for m in members:
+                seen_text.setdefault(store.docs[m][5], m)
+            distinct = len(seen_text)
+            exact_absorbed += len(members) - distinct
+            if distinct < 2:
+                continue
+            near_clusters += 1
+            distinct_sizes.append(distinct)
+            redundant += distinct - 1
+            for m in list(seen_text.values())[1:]:
                 ds = store.docs[m][4]
                 by_dataset[ds] = by_dataset.get(ds, 0) + 1
 
+        if not redundant:
+            return []
+        distinct_sizes.sort(reverse=True)
+
+        # One example per record, and never a record paired with a copy of
+        # itself: that pair is an exact duplicate, not a near one.
         evidence: list[Evidence] = []
-        for a, b, j in sorted(pairs, key=lambda p: -p[2])[:6]:
+        shown: set[str] = set()
+        for a, b, j in sorted(pairs, key=lambda p: -p[2]):
             da, db = store.docs[a], store.docs[b]
+            if da[5] == db[5] or da[0] in shown or db[0] in shown:
+                continue
+            shown.add(da[0])
             evidence.append(
                 Evidence(da[0], da[1], da[2], da[3],
                          partner_doc_id=db[0], partner_excerpt=db[3], score=j)
             )
+            if len(evidence) >= 6:
+                break
 
+        detail = (
+            f"{redundant:,} near-copies across {near_clusters:,} clusters "
+            f"at Jaccard >= {store.preset.threshold} "
+            f"(largest cluster {distinct_sizes[0]:,} distinct texts); "
+            f"preset {store.preset.name}: {store.preset.description}"
+        )
+        if exact_absorbed:
+            detail += (
+                f". A further {exact_absorbed:,} cluster members are exact copies "
+                f"and are counted by T0-DUP-001 instead"
+            )
         return [
             make_finding(
                 self, count=redundant, total=store.counter,
-                detail=(
-                    f"{redundant} redundant records across {len(clusters)} clusters "
-                    f"at Jaccard >= {store.preset.threshold} "
-                    f"(largest cluster {sizes[0]}); preset {store.preset.name}: "
-                    f"{store.preset.description}"
-                ),
+                detail=detail,
                 evidence=evidence, by_dataset=by_dataset,
                 data={
                     "preset": store.preset.name,
                     "threshold": store.preset.threshold,
-                    "clusters": len(clusters),
-                    "largest_cluster": sizes[0],
-                    "cluster_sizes_top10": sizes[:10],
-                    "backend": store.hasher.backend,
+                    "clusters": near_clusters,
+                    "largest_cluster": distinct_sizes[0],
+                    "cluster_sizes_top10": distinct_sizes[:10],
+                    "exact_copies_excluded": exact_absorbed,
                 },
             )
         ]
@@ -148,6 +258,8 @@ class CrossDatasetOverlap(Check):
     check_id = "T1-OVERLAP-001"
     title = "Datasets overlap with each other"
     tier = 1
+    unit = "directed dataset pair"
+    total_unit = "dataset"
     profiles = ALL_PROFILES
     requires = (Requirement.MULTIPLE_DATASETS,)
     cost = CostClass.GLOBAL
@@ -234,6 +346,8 @@ class ContradictorySupervision(Check):
     check_id = "T1-DUP-002"
     title = "The same prompt is answered two different ways"
     tier = 1
+    unit = "prompt"
+    total_unit = "record"
     profiles = (Profile.SFT,)
     cost = CostClass.GLOBAL
     severity = Severity.WARNING
@@ -254,8 +368,37 @@ class ContradictorySupervision(Check):
     #: records costs 16 bytes per distinct prompt rather than the prompt itself.
     MAX_TRACKED = 2_000_000
 
+    MERGE_SUM = ("total",)
+    #: Folded together in ``merge`` below: a prompt whose two answers land in
+    #: different shards is exactly the case this check is about, and no
+    #: per-attribute rule can see it.
+    MERGE_CUSTOM = ("seen", "answers", "overflowed")
+    #: The digest function, bound once at construction.
+    MERGE_IGNORE = ("_hash",)
+
+    def merge(self, other: ContradictorySupervision) -> None:
+        super().merge(other)
+        self.overflowed = self.overflowed or other.overflowed
+        for pk, (first_ak, _n, first_record) in other.seen.items():
+            mine = self.seen.get(pk)
+            if mine is None:
+                if len(self.seen) >= self.MAX_TRACKED:
+                    self.overflowed = True
+                    continue
+                self.seen[pk] = (first_ak, _n, first_record)
+                if pk in other.answers:
+                    self.answers[pk] = set(other.answers[pk])
+                continue
+            # Both shards saw this prompt. The union of the answer digests is
+            # the distinct-answer count, and the earlier shard keeps the example
+            # because it holds the earlier record.
+            bucket = self.answers.setdefault(pk, {mine[0]})
+            bucket.add(first_ak)
+            bucket.update(other.answers.get(pk, ()))
+            self.seen[pk] = (mine[0], len(bucket), mine[2])
+
     def __init__(self) -> None:
-        from ..models import content_hash  # noqa: PLC0415
+        from ..models import content_hash
 
         self._hash = content_hash
         # prompt digest -> (first answer digest, distinct answers, an example)

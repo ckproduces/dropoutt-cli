@@ -14,7 +14,6 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -27,17 +26,25 @@ from .compat import (
     HAVE_TOKENIZERS,
     capability_report,
     json_dumps,
-    json_loads,
 )
-from .config import CONFIG_NAME, Config, cache_dir, parse_profile, resolve_model
+from .config import Config, cache_dir, parse_profile, resolve_model
 from .models import Profile
+from .progress import ProgressDisplay, start_warmup
 from .registry_data import resolve_model_alias
 
 app = typer.Typer(
     name="dropoutt",
-    help="Pre-flight checks and comparable fingerprints for LLM training datasets.",
+    help=(
+        "Pre-flight checks for LLM training data.\n\n"
+        "Point dropoutt at a folder and it reports what would go wrong in a "
+        "training run — broken loss masks, duplicates, contamination, language "
+        "damage, token cost — plus where the corpus sits on a fixed map of "
+        "public training data. Everything runs locally."
+    ),
     add_completion=False,
     invoke_without_command=True,
+    context_settings={"help_option_names": ["-h", "--help"]},
+    rich_markup_mode="rich",
 )
 console = Console()
 
@@ -47,88 +54,66 @@ EXIT_USAGE = 2
 EXIT_BLOCKED = 10
 
 
-class _ProgressDisplay:
-    """Spinner in a terminal, stable phase lines in redirected output."""
-
-    def __init__(self, *, enabled: bool = True) -> None:
-        self.enabled = enabled
-        self._status = None
-        self._last_phase = ""
-
-    def __enter__(self) -> "_ProgressDisplay":
-        # Rich's Console is created at import time; under CliRunner / pipes
-        # `console.is_terminal` can stay True while stdout is not a TTY. Gate
-        # the spinner on the live stream so redirected output gets stable phase
-        # lines (what CI and tests assert on).
-        if self.enabled and console.is_terminal and sys.stdout.isatty():
-            self._status = console.status("", spinner="dots")
-            self._status.start()
-        return self
-
-    def phase(self, label: str) -> None:
-        if not self.enabled or label == self._last_phase:
-            return
-        self._last_phase = label
-        if self._status is not None:
-            self._status.update(f"[cyan]working[/cyan] {escape(label)}")
-        else:
-            console.print(f"  [dim]{escape(label)}...[/dim]")
-
-    def records(self, dataset: str, count: int) -> None:
-        if not self.enabled:
-            return
-        label = f"Scanning {dataset} · {count:,} records"
-        if self._status is not None:
-            self._status.update(f"[cyan]working[/cyan] {escape(label)}")
-        elif count == 2_000 or count % 20_000 == 0:
-            console.print(f"  [dim]{escape(label)}[/dim]")
-
-    def finish(self, label: str | None = None) -> None:
-        if self._status is not None:
-            self._status.stop()
-            self._status = None
-        if self.enabled and label:
-            console.print(f"  [green]done[/green] {escape(label)}")
-
-    def __exit__(self, *_args) -> None:
-        self.finish()
-
-
 @app.command(
     no_args_is_help=True,
-    epilog="Example: dropoutt scan ./data --offline",
+    # Rich collapses single newlines in an epilog, so each example is its own
+    # paragraph. Four of them is the most that reads as a list rather than a
+    # wall.
+    epilog=(
+        "[b]Examples[/b]\n\n"
+        "[dim]$[/dim] dropoutt scan ./data\n\n"
+        "[dim]$[/dim] dropoutt scan ./data --model qwen3  "
+        "[dim]# exact token counts[/dim]\n\n"
+        "[dim]$[/dim] dropoutt scan ./data --target sft   "
+        "[dim]# exit 10 on blocking findings[/dim]\n\n"
+        "[dim]$[/dim] dropoutt scan ./data --offline      "
+        "[dim]# never touch the network[/dim]"
+    ),
 )
 def scan(
     path: Path = typer.Argument(..., help="File or directory to scan."),
-    model: Optional[str] = typer.Option(None, "--model", "-m",
-                                        help="Target model id or local path. Unlocks token checks."),
+    model: str | None = typer.Option(None, "--model", "-m",
+                                     help="Target model id or local path. Unlocks token checks."),
     profile: str = typer.Option("auto", "--profile", "-p",
                                 help="sft, corpus, preference, or auto."),
-    target: Optional[str] = typer.Option(None, "--target",
-                                         help="Declare what you are building. Enables blocking."),
-    seq_len: Optional[int] = typer.Option(
+    target: str | None = typer.Option(None, "--target",
+                                      help="Declare what you are building. Enables blocking."),
+    seq_len: int | None = typer.Option(
         None, "--seq-len", min=1, help="Training sequence length."
     ),
-    tier: Optional[int] = typer.Option(
+    tier: int | None = typer.Option(
         None, "--tier", min=0, help="Highest check tier to run. Defaults to config, then 1."
     ),
-    out: Optional[Path] = typer.Option(None, "--out", "-o",
-                                       help="Directory for findings, fingerprint and report."),
+    out: Path | None = typer.Option(None, "--out", "-o",
+                                    help="Directory for findings, fingerprint and report."),
     offline: bool = typer.Option(False, "--offline", help="Never touch the network."),
-    limit: Optional[int] = typer.Option(
+    limit: int | None = typer.Option(
         None, "--limit", min=1, help="Max records per file."
     ),
     no_html: bool = typer.Option(False, "--no-html", help="Skip the HTML report."),
+    no_open: bool = typer.Option(
+        False, "--no-open", help="Do not open the report when the scan finishes."
+    ),
     no_atlas: bool = typer.Option(False, "--no-atlas", help="Skip atlas coverage."),
     no_evidence: bool = typer.Option(
         False,
         "--no-evidence",
         help="Omit record excerpts and source locations from terminal and output reports.",
     ),
+    workers: int | None = typer.Option(
+        None, "--workers", "-j", min=1,
+        help="Processes for the scan pass. Defaults to one per core, less one.",
+    ),
     quiet: bool = typer.Option(False, "--quiet", "-q",
                                help="Suppress the report; write output files and exit."),
 ) -> None:
-    """Scan a dataset directory."""
+    """Check a folder of training data and write a report.
+
+    Runs every check that this install can run, writes findings.jsonl, a
+    comparable fingerprint and an HTML report, prints a summary, then opens the
+    report if there is a desktop to open it on. No flags are required; each
+    check that could not run names the one flag that would unlock it.
+    """
     if not path.exists():
         console.print(f"[red]No such path:[/red] {escape(str(path))}")
         raise typer.Exit(EXIT_USAGE)
@@ -138,10 +123,11 @@ def scan(
     from .discovery import discover
     from .fingerprint import build as build_fingerprint
     from .langid import LanguageDetector
+    from .parallel import MIN_BYTES_FOR_PARALLEL
     from .report import terminal as term_report
     from .runner import scan as run_scan
 
-    with _ProgressDisplay(enabled=not quiet) as activity:
+    with ProgressDisplay(enabled=not quiet) as activity:
         activity.phase("Discovering supported data files")
         preflight = discover(str(path))
         if not preflight.files or not any(file.readable for file in preflight.files):
@@ -197,6 +183,23 @@ def scan(
             model = resolved.model_id
             model_notes = list(resolved.notes)
 
+        # The embedding model and the tokenizer comparison panel are three and a
+        # half seconds of file reading that depend on nothing in the data. Start
+        # them now, in threads, so they land while records are being read.
+        #
+        # They are joined before the scan pass if that pass is going to fork
+        # workers, because forking from a process whose threads are inside a
+        # Rust library is how you get a child that hangs on its first
+        # allocation. Below the parallel threshold there is no fork and the
+        # warm-up overlaps the whole scan.
+        warmup = start_warmup(
+            offline=offline, want_embedder=not no_atlas, want_panel=model is None
+        )
+        will_fork = (
+            (workers is None or workers > 1)
+            and preflight.total_bytes >= MIN_BYTES_FOR_PARALLEL
+        )
+
         activity.phase("Loading local checks, benchmark indexes, and atlas")
         detector = LanguageDetector()
         contamination = load_indices(*_contamination_dirs())
@@ -209,8 +212,7 @@ def scan(
                     f"[red]Unknown eval_sets in dropoutt.toml:[/red] {', '.join(missing)}"
                 )
                 console.print(
-                    "  [dim]Run `dropoutt benchmarks` and check the names created by "
-                    "`dropoutt index-eval`.[/dim]"
+                    "  [dim]Run `dropoutt benchmarks` for the names that exist.[/dim]"
                 )
                 raise typer.Exit(EXIT_USAGE)
             contamination.benchmarks = {
@@ -219,6 +221,8 @@ def scan(
                 if name in requested
             }
         atlas_obj = None if no_atlas else load_bundled()
+        if will_fork:
+            warmup.shutdown(wait=True)
 
         result = run_scan(
             str(path),
@@ -239,6 +243,9 @@ def scan(
             phase=activity.phase,
             offline=offline,
             discovery=preflight,
+            workers=workers,
+            contamination_dirs=_contamination_dirs(),
+            eval_sets=list(cfg.eval_sets),
         )
 
         # Count the text that would actually be trained on, not the bytes on disk.
@@ -249,6 +256,7 @@ def scan(
         # runner already accumulates real character and word counts over the
         # normalised text; use those, and fall back to bytes only if it ran no
         # records at all.
+        warmup.shutdown(wait=True)
         activity.phase("Estimating token budget")
         scanned_chars = int(result.ctx.stats.get("total_chars", 0))
         total_chars = scanned_chars or sum(d.total_bytes for d in result.ctx.datasets)
@@ -273,6 +281,11 @@ def scan(
         activity.phase("Writing scan artifacts")
         out_dir = out or (path if path.is_dir() else path.parent) / ".dropoutt"
         out_dir.mkdir(parents=True, exist_ok=True)
+        # Read the result once. Both reports render the same reading, and
+        # building it twice is how they used to disagree.
+        from .report.summary import build as build_summary
+
+        story = build_summary(result, budget=budget, include_evidence=not no_evidence)
         _write_outputs(
             out_dir,
             result,
@@ -280,24 +293,36 @@ def scan(
             budget,
             write_html=not no_html,
             include_evidence=not no_evidence,
+            summary=story,
         )
         activity.finish(f"Scanned {result.records_scanned:,} records")
 
     for note in model_notes:
         console.print(f"  [yellow]note[/yellow] {escape(note)}")
-    if not quiet:
-        term_report.render(console, result, budget=budget, show_evidence=not no_evidence)
 
-    console.print(f"  [dim]wrote {escape(str(out_dir))}/fingerprint.json, findings.jsonl"
-                  f"{', report.html' if not no_html else ''}[/dim]")
+    # Most-human first: the order is the order someone picks one in.
+    written = (["report.html"] if not no_html else []) + [
+        "report.md", "findings.jsonl", "fingerprint.json",
+    ]
+    if not quiet:
+        # The terminal is triage; everything it leaves out is in one of these,
+        # so it names them rather than the caller announcing them separately.
+        term_report.render(
+            console, result, budget=budget, show_evidence=not no_evidence,
+            summary=story, out_dir=out_dir, written=written,
+        )
+    else:
+        console.print(f"  [dim]wrote {escape(str(out_dir))}/{', '.join(written)}[/dim]")
     if no_evidence:
         console.print("  [dim]record excerpts and source locations were omitted[/dim]")
     else:
-        artifacts = "findings.jsonl" + (", and report.html" if not no_html else "")
+        quoting = [name for name in written if name != "fingerprint.json"]
         console.print(
-            f"  [yellow]note[/yellow] {artifacts} may contain dataset excerpts and "
-            "source paths; use --no-evidence before exporting them"
+            f"  [yellow]note[/yellow] {', '.join(quoting)} may contain dataset "
+            "excerpts and source paths; use --no-evidence before exporting them"
         )
+    if not no_html and not no_open and not quiet:
+        _show(out_dir / "report.html")
 
     if result.ctx.blocking_enabled and result.blocking:
         console.print(f"\n  [bold red]{len(result.blocking)} blocking finding(s)[/bold red] "
@@ -306,308 +331,11 @@ def scan(
     raise typer.Exit(EXIT_OK)
 
 
-@app.command()
-def init(
-    path: Path = typer.Argument(Path("."), help="Directory to configure."),
-    model: Optional[str] = typer.Option(None, "--model", "-m"),
-    offline: bool = typer.Option(
-        False, "--offline", help="Resolve the model only from local files and caches."
-    ),
-    force: bool = typer.Option(False, "--force", help="Overwrite an existing config."),
-) -> None:
-    """Infer configuration from your data and write dropoutt.toml."""
-    from .discovery import discover
-    from .readers import read_file
-    from .runner import _infer_profile
-    from .schema_induction import induce
-
-    if not path.exists():
-        console.print(f"[red]No such path:[/red] {escape(str(path))}")
-        console.print("  [dim]Pass an existing dataset file or directory.[/dim]")
-        raise typer.Exit(EXIT_USAGE)
-
-    target_file = (path if path.is_dir() else path.parent) / CONFIG_NAME
-    if target_file.exists() and not force:
-        console.print(
-            f"[yellow]{escape(str(target_file))} already exists.[/yellow] "
-            "Use --force to overwrite."
-        )
-        raise typer.Exit(EXIT_USAGE)
-
-    resolved = None
-    with _ProgressDisplay() as activity:
-        activity.phase("Discovering supported data files")
-        disc = discover(str(path))
-        verdicts = {}
-        activity.phase("Inferring dataset layouts")
-        for ds in disc.datasets[:50]:
-            sample = []
-            for f in ds.files[:2]:
-                sample.extend(list(read_file(f, Path(f).suffix, limit=300)))
-            if sample:
-                verdicts[ds.name] = induce(sample)
-
-        profile = _infer_profile(verdicts)
-        notes = {"profile": f"inferred from {len(verdicts)} dataset(s)"}
-        offline = offline or _offline_from_environment()
-        cfg = Config(model=model, profile=profile.value, offline=offline)
-
-        if model:
-            activity.phase(f"Resolving model {model}")
-            resolved = resolve_model(model, offline=offline)
-            cfg.model = resolved.model_id
-            cfg.seq_len = resolved.seq_len
-            notes["model"] = (
-                "resolved from local files/cache" if offline else "resolved from the Hub"
-            )
-            if resolved.seq_len:
-                notes["seq_len"] = "from the model config"
-        activity.finish("Configuration inferred")
-
-    if resolved is not None:
-        for note in resolved.notes:
-            console.print(f"  [yellow]note[/yellow] {escape(note)}")
-        _render_confirmation(resolved)
-
-    target_file.write_text(cfg.to_toml(inferred_notes=notes), encoding="utf-8")
-    console.print(f"\n  Wrote [bold]{escape(str(target_file))}[/bold]")
-    console.print(f"  Detected profile: [bold]{profile.value}[/bold] "
-                  f"from {len(verdicts)} dataset(s)")
-    console.print("  [dim]Edit the file to declare a target if you want findings to block.[/dim]")
-
-
-@app.command(
-    no_args_is_help=True,
-    epilog=(
-        "Example: dropoutt diff ./candidate/.dropoutt/fingerprint.json "
-        "./mixture/.dropoutt/fingerprint.json"
-    ),
-)
-def diff(
-    left: Path = typer.Argument(..., help="Fingerprint of the dataset you are considering."),
-    right: Path = typer.Argument(..., help="Fingerprint of what you already have."),
-    full: bool = typer.Option(False, "--full", help="List every differing region."),
-) -> None:
-    """Compare two fingerprints against the shared atlas.
-
-    Directional, and read left-against-right: "what does LEFT cover that RIGHT
-    does not". That is the question worth asking before adding a dataset to a
-    mixture, and it is not symmetric — a small specialised corpus can be wholly
-    inside a large one while the large one is barely inside it.
-
-    Both arguments are fingerprint.json files written by `dropoutt scan`.
-    """
-    from .atlas.compare import compare
-
-    fps = [_read_fingerprint(left, "left"), _read_fingerprint(right, "right")]
-
-    a, b = fps
-    console.print()
-    console.rule("[bold]dropoutt diff[/bold]", style="dim")
-    console.print(f"  [dim]left [/dim] {escape(str(a.get('root', left)))}")
-    console.print(f"  [dim]right[/dim] {escape(str(b.get('root', right)))}")
-
-    if a.get("pipeline_version") != b.get("pipeline_version"):
-        console.print(f"\n  [yellow]note[/yellow] different pipeline versions "
-                      f"({escape(str(a.get('pipeline_version')))} against "
-                      f"{escape(str(b.get('pipeline_version')))}); measurements may "
-                      f"not mean the same thing")
-
-    _diff_shape(a, b)
-
-    cov_a = (a.get("facets", {}).get("coverage") or {}).get("values")
-    cov_b = (b.get("facets", {}).get("coverage") or {}).get("values")
-    result = compare(cov_a, cov_b)
-
-    console.print("\n  [bold]Atlas comparison[/bold]")
-    if not result.comparable:
-        console.print(f"    [yellow]not comparable[/yellow] [dim]{escape(result.reason)}[/dim]")
-        raise typer.Exit(EXIT_OK)
-
-    console.print(f"    Similarity   {result.similarity:.2f}  "
-                  f"[dim](1.0 = same distribution over regions)[/dim]")
-    console.print(f"    Shared       {result.shared_mass:.0%} of left sits in regions "
-                  f"right also occupies")
-    console.print(f"    New          [bold]{result.added_mass:.0%}[/bold] of left sits "
-                  f"in regions right never reaches")
-    if min(result.a_placed_share, result.b_placed_share) < 0.999:
-        # Restated over every record the left side sampled, so the three lines
-        # account for all of it. The two above are shares of the placed part
-        # only, which is the right denominator for a distribution and the wrong
-        # one for "how much of this dataset are we talking about".
-        console.print(f"    [dim]Of all left  {result.shared_of_all:.0%} shared, "
-                      f"{result.added_of_all:.0%} new, {result.a_unplaced:.0%} the atlas "
-                      f"cannot place[/dim]")
-        console.print(f"    [dim]Placed       {result.a_placed_share:.0%} of left and "
-                      f"{result.b_placed_share:.0%} of right landed on the atlas[/dim]")
-
-    if result.a_only:
-        console.print("\n    [bold]Only in left[/bold] [dim]— what adding it would "
-                      "bring[/dim]")
-        for r, share, terms in (result.a_only if full else result.a_only[:8]):
-            console.print(f"      {r:>3}  {share:>5.0%}  [dim]{escape(terms)}[/dim]")
-        if not full and len(result.a_only) > 8:
-            console.print(f"      [dim]and {len(result.a_only) - 8} more; --full to "
-                          f"list them[/dim]")
-    else:
-        console.print("\n    [dim]Every region left occupies is already covered by "
-                      "right.[/dim]")
-
-    if result.b_only:
-        console.print("\n    [bold]Only in right[/bold]")
-        for r, share, terms in (result.b_only if full else result.b_only[:5]):
-            console.print(f"      {r:>3}  {share:>5.0%}  [dim]{escape(terms)}[/dim]")
-
-    shifts = [row for row in result.category_shift if abs(row[2] - row[3]) >= 0.02]
-    if shifts:
-        console.print("\n    [bold]Category mix[/bold]")
-        table = Table(show_header=True, header_style="dim", box=None, padding=(0, 2),
-                      pad_edge=False)
-        table.add_column("category")
-        table.add_column("left", justify="right")
-        table.add_column("right", justify="right")
-        table.add_column("delta", justify="right")
-        for _cid, key, sa, sb in (shifts if full else shifts[:8]):
-            delta = sa - sb
-            style = "green" if delta > 0 else "red"
-            table.add_row(key, f"{sa:.0%}", f"{sb:.0%}",
-                          f"[{style}]{delta:+.0%}[/{style}]")
-        console.print(table)
-
-    for caveat in result.caveats:
-        console.print(f"\n  [yellow]note[/yellow] {escape(caveat)}")
-
-    partial = min(result.a_head_coverage, result.b_head_coverage)
-    if partial < 0.999:
-        console.print(f"\n  [yellow]note[/yellow] one side predates the full region "
-                      f"histogram, so shares are computed over the stored top regions: "
-                      f"{result.a_head_coverage:.0%} of left, "
-                      f"{result.b_head_coverage:.0%} of right. Re-scan for exact numbers.")
-    console.print("  [dim]This is geometry, not a recommendation. Whether new coverage "
-                  "helps depends on what you are training.[/dim]\n")
-    raise typer.Exit(EXIT_OK)
-
-
-def _diff_shape(a: dict, b: dict) -> None:
-    """Size and redundancy, side by side."""
-    sa = (a.get("facets", {}).get("shape") or {}).get("values", {})
-    sb = (b.get("facets", {}).get("shape") or {}).get("values", {})
-    ra = (a.get("facets", {}).get("redundancy") or {}).get("values", {})
-    rb = (b.get("facets", {}).get("redundancy") or {}).get("values", {})
-    if not sa and not sb:
-        return
-
-    table = Table(show_header=True, header_style="dim", box=None, padding=(0, 2),
-                  pad_edge=False)
-    table.add_column("")
-    table.add_column("left", justify="right")
-    table.add_column("right", justify="right")
-    rows = [
-        ("records", f"{sa.get('records', 0):,}", f"{sb.get('records', 0):,}"),
-        ("datasets", f"{sa.get('datasets', 0):,}", f"{sb.get('datasets', 0):,}"),
-        ("characters", f"{sa.get('total_chars', 0):,}", f"{sb.get('total_chars', 0):,}"),
-    ]
-    for label, key in (("near-duplicate rate", "near_duplicate_rate"),
-                       ("exact-duplicate rate", "exact_duplicate_rate")):
-        if key in ra or key in rb:
-            rows.append((label, f"{ra.get(key, 0):.1%}", f"{rb.get(key, 0):.1%}"))
-    console.print("\n  [bold]Shape[/bold]")
-    for label, x, y in rows:
-        table.add_row(label, x, y)
-    console.print(table)
-
-
-@app.command(
-    "index-eval",
-    no_args_is_help=True,
-    epilog=(
-        "Example: dropoutt index-eval ./holdout.jsonl "
-        "--name internal-eval --field question"
-    ),
-)
-def index_eval(
-    path: Path = typer.Argument(..., help="JSONL file holding your held-out evaluation set."),
-    name: str = typer.Option(..., "--name", "-n", help="Name for this benchmark."),
-    field: str = typer.Option("text", "--field", "-f", help="Field holding the eval text."),
-    force: bool = typer.Option(False, "--force", help="Overwrite an index with the same name."),
-) -> None:
-    """Build a contamination index from your own evaluation set, locally.
-
-    The index stores hashed 8-grams rather than raw text. Keep it inside the
-    evaluation set's trust boundary: known phrases can still be tested against
-    an unkeyed hash index.
-    """
-    from .contamination import BenchmarkIndex
-    from .readers import read_file
-
-    if not path.exists():
-        console.print(f"[red]No such file:[/red] {escape(str(path))}")
-        raise typer.Exit(EXIT_USAGE)
-    if not path.is_file():
-        console.print(f"[red]Not a file:[/red] {escape(str(path))}")
-        console.print("  [dim]Pass one JSONL or NDJSON evaluation file.[/dim]")
-        raise typer.Exit(EXIT_USAGE)
-    if path.suffix.lower() not in {".jsonl", ".ndjson"}:
-        console.print(f"[red]Unsupported evaluation file:[/red] {escape(str(path))}")
-        console.print("  [dim]`index-eval` accepts .jsonl or .ndjson files.[/dim]")
-        raise typer.Exit(EXIT_USAGE)
-    if not name.strip() or Path(name).name != name or name in {".", ".."}:
-        console.print(f"[red]Invalid benchmark name:[/red] {escape(repr(name))}")
-        console.print("  [dim]Use a filename-safe name without path separators.[/dim]")
-        raise typer.Exit(EXIT_USAGE)
-
-    idx = BenchmarkIndex(name=name, n_instances=0, source=path.name)
-    n = 0
-    with _ProgressDisplay() as activity:
-        activity.phase(f"Indexing {path.name}")
-        for rec in read_file(str(path), path.suffix):
-            if rec.error or not isinstance(rec.payload, dict):
-                continue
-            text = rec.payload.get(field)
-            if not isinstance(text, str) or not text.strip():
-                parts = [v for v in rec.payload.values() if isinstance(v, str)]
-                text = " ".join(parts)
-            if not text.strip():
-                continue
-            idx.add_instance(n, text)
-            n += 1
-            if n % 2_000 == 0:
-                activity.records(path.name, n)
-        activity.finish(f"Hashed {n:,} evaluation records" if n else None)
-    idx.n_instances = n
-    if n == 0:
-        console.print(f"[red]No evaluation text found in:[/red] {escape(str(path))}")
-        console.print(
-            f"  [dim]Field {field!r} was empty or absent. Pass --field with the "
-            "column containing the evaluation text.[/dim]"
-        )
-        raise typer.Exit(EXIT_USAGE)
-
-    # Always the cache, never the install tree. Writing into the package would
-    # put a user's private eval index inside site-packages and fail outright
-    # wherever the install is read-only, which is the normal case on a shared
-    # cluster. Both locations are searched at scan time, so this stays visible.
-    out_dir = cache_dir() / "contamination"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    dest = out_dir / f"{name}.idx"
-    if dest.exists() and not force:
-        console.print(
-            f"[yellow]{escape(str(dest))} already exists.[/yellow] Use --force to overwrite."
-        )
-        raise typer.Exit(EXIT_USAGE)
-    idx.save(dest)
-    console.print(f"  Indexed [bold]{n:,}[/bold] instances into {escape(str(dest))}")
-    console.print(
-        f"  [dim]{len(idx.postings):,} distinct 8-grams; no raw text was stored. "
-        "Keep the index inside the evaluation set's trust boundary.[/dim]"
-    )
-
-
-@app.command()
+@app.command(epilog="Example: dropoutt checks T0-DUP-001")
 def checks(
-    check_id: Optional[str] = typer.Argument(None, help="Show one check in detail."),
+    check_id: str | None = typer.Argument(None, help="Show one check in detail."),
 ) -> None:
-    """List the check catalog."""
+    """List every check, or explain one in detail."""
     from .checks.base import REGISTRY
 
     if check_id:
@@ -645,7 +373,7 @@ def checks(
 
 @app.command()
 def benchmarks() -> None:
-    """List the benchmark registry used for contamination scanning."""
+    """List the evaluation sets scanned for contamination."""
     from .contamination import load_indices
     from .registry_data import benchmarks as bench_data
 
@@ -667,7 +395,7 @@ def benchmarks() -> None:
 
 @app.command()
 def models() -> None:
-    """List known models and shorthand aliases."""
+    """List the models --model understands, and their shorthands."""
     from .registry_data import models as model_data
 
     data = model_data()
@@ -681,54 +409,9 @@ def models() -> None:
     console.print("\n  [dim]aliases: " + ", ".join(sorted(data["aliases"])) + "[/dim]\n")
 
 
-@app.command()
-def atlas() -> None:
-    """Show the bundled atlas and its own quality numbers.
-
-    The accuracy and purity figures are printed next to any coverage number for
-    a reason: an atlas whose level-0 probe is weak produces coverage histograms
-    that look precise and are not.
-    """
-    from .atlas import bundled_atlas_path, load_bundled
-
-    path = bundled_atlas_path()
-    if path is None:
-        console.print("[yellow]No atlas bundled with this install.[/yellow]")
-        raise typer.Exit(EXIT_OK)
-    atl = load_bundled()
-    if atl is None:
-        console.print(f"[red]Atlas at {path} could not be loaded.[/red]")
-        raise typer.Exit(EXIT_ERROR)
-
-    meta = atl.meta
-    console.print(f"\n  [bold]{meta.get('version')}[/bold]  {path}")
-    console.print(f"  artifact hash      {atl.artifact_hash}")
-    console.print(f"  embedding model    {atl.embed_model} ({atl.dim} dims)")
-    console.print(f"  regions            {atl.n_regions}")
-    console.print(f"  reference records  {meta.get('n_reference_records'):,}")
-    console.print(f"  off-atlas cutoff   {atl.off_threshold:.3f} cosine")
-    console.print("\n  [bold]Quality of this atlas[/bold]")
-    console.print(f"    level-0 held-out accuracy    {meta.get('l0_holdout_accuracy'):.3f}")
-    console.print(f"    region purity by taxonomy    {meta.get('region_purity_by_taxonomy'):.3f}")
-
-    manifest = meta.get("manifest", [])
-    ok = [m for m in manifest if m.get("collected")]
-    bad = [m for m in manifest if not m.get("collected")]
-    console.print(f"\n  built from {len(ok)} sources; {len(bad)} unavailable at build time")
-    for m in bad[:6]:
-        console.print(f"    [dim]skipped {m['hf_id']}[/dim]")
-
-    console.print("\n  [bold]Largest regions[/bold]")
-    terms = atl.region_terms
-    for i in range(min(8, len(terms))):
-        console.print(f"    {i:>3}  [dim]{terms[i]}[/dim]")
-    console.print("\n  [dim]This is a coordinate system, not a quality reference. "
-                  "It contains no notion of good or bad.[/dim]\n")
-
-
-@app.command()
+@app.command(epilog="Example: dropoutt fetch --model qwen3")
 def fetch(
-    model: Optional[str] = typer.Option(
+    model: str | None = typer.Option(
         None, "--model", "-m", help="Also fetch this model's tokenizer."
     ),
     all_: bool = typer.Option(
@@ -768,16 +451,15 @@ def fetch(
         console.print("    [yellow]skipped[/yellow] "
                       f"[dim]tokenizers not installed; {hint}[/dim]")
     else:
-        from .tokenizer_panel import load_tokenizer
-
         from .config import _load_tokenizer_config
+        from .tokenizer_panel import load_tokenizer
 
         seen: set[str] = set()
         for name, model_id in wanted:
             if model_id in seen:
                 continue
             seen.add(model_id)
-            with _ProgressDisplay() as activity:
+            with ProgressDisplay() as activity:
                 activity.phase(f"Fetching tokenizer {name}")
                 handle = load_tokenizer(model_id)
                 # Cache tokenizer_config.json in the same pass. It carries the chat
@@ -802,7 +484,7 @@ def fetch(
         console.print("    [yellow]skipped[/yellow] "
                       f"[dim]model2vec not installed; {hint}[/dim]")
     else:
-        with _ProgressDisplay() as activity:
+        with ProgressDisplay() as activity:
             activity.phase(f"Fetching atlas model {embed_mod.DEFAULT_MODEL}")
             emb = embed_mod.load()
         if emb is None:
@@ -827,8 +509,7 @@ def fetch(
 
 @app.command()
 def doctor() -> None:
-    """Show what is installed and what each missing piece costs."""
-    import sys  # noqa: PLC0415
+    """Show what is installed, and what each missing piece would unlock."""
 
     table = Table(show_header=True, header_style="dim", box=None, padding=(0, 2))
     table.add_column("component")
@@ -869,25 +550,87 @@ def _install_prefix() -> str:
     which is the default for venvs created by uv. In that case the shell's `pip`
     belongs to some other Python and the install silently lands out of reach.
     """
-    import importlib.util  # noqa: PLC0415
-    import sys  # noqa: PLC0415
+    import importlib.util
 
     if importlib.util.find_spec("pip") is not None:
         return f"{sys.executable} -m pip install"
     return "uv pip install"
 
 
+@app.command("version")
+def version_command() -> None:
+    """Print the version and exit."""
+    # highlight=False: rich colourises bare numbers, which would break the
+    # version into differently-styled fragments and make it harder to copy.
+    console.print(__version__, highlight=False)
+
+
+@app.command("help")
+def help_command(
+    ctx: typer.Context,
+    command: str | None = typer.Argument(None, help="Explain this command."),
+) -> None:
+    """Show this help, or the help for one command.
+
+    `--help` is the convention and `help` is what people type. Both work, and
+    both print the same text.
+    """
+    group_ctx = ctx.parent or ctx
+    group = group_ctx.command
+    if command is None:
+        console.print(group_ctx.get_help())
+        raise typer.Exit(EXIT_OK)
+
+    sub = group.get_command(group_ctx, command)
+    if sub is None:
+        console.print(f"[red]No such command:[/red] {escape(command)}")
+        known = ", ".join(sorted(group.list_commands(group_ctx)))
+        console.print(f"  [dim]There is: {known}.[/dim]")
+        raise typer.Exit(EXIT_USAGE)
+    # The parent context contributes "dropoutt" to the usage line, so info_name
+    # here is the bare command name.
+    console.print(sub.get_help(typer.Context(sub, info_name=command, parent=group_ctx)))
+    raise typer.Exit(EXIT_OK)
+
+
 @app.callback()
 def main(
     ctx: typer.Context,
-    version: bool = typer.Option(False, "--version", help="Show version and exit."),
+    version: bool = typer.Option(False, "--version", "-V",
+                                 help="Show version and exit."),
 ) -> None:
     if version:
-        console.print(__version__)
+        console.print(__version__, highlight=False)
         raise typer.Exit(EXIT_OK)
     if ctx.invoked_subcommand is None:
+        _greet()
         console.print(ctx.get_help())
+        console.print(
+            "  [dim]Start here:[/dim]  [bold]dropoutt scan ./data[/bold]\n"
+            "  [dim]No flags needed. Add --model to unlock token checks, "
+            "--target sft to fail CI on findings.[/dim]\n"
+        )
         raise typer.Exit(EXIT_OK)
+
+
+def _greet() -> None:
+    """The mark, when there is a person and a terminal to show it to.
+
+    Silent when stdout is redirected, when NO_COLOR is set, or when the console
+    cannot encode the characters — see :mod:`dropoutt.branding`. A banner that
+    lands in a CI log or crashes on a legacy Windows code page is worse than no
+    banner.
+    """
+    from .branding import banner, supports_unicode, wants_decoration
+
+    if not wants_decoration():
+        return
+    console.print()
+    # highlight=False: rich colourises bare numbers by default, which turns the
+    # version string into three differently-styled fragments.
+    console.print(banner(__version__, width=console.width,
+                         unicode_ok=supports_unicode()), highlight=False)
+    console.print()
 
 
 # --------------------------------------------------------------------------
@@ -909,19 +652,25 @@ def _contamination_dirs() -> tuple[Path, Path]:
 
 
 def _budget(result, total_chars: int, *, offline: bool):
-    """Estimate the token budget from a stratified sample.
+    """Estimate the token budget, stratified by dataset.
 
-    Tokens-per-character is stable within a corpus, so extrapolating from a few
-    hundred thousand sampled records against an exact character count gives an
-    interval rather than a guess.
+    Tokens-per-character is stable within one dataset and varies a lot between
+    them, so each dataset's sampled ratio is applied to that dataset's own
+    character count and the totals are added. Handing the estimator one pooled
+    sample instead prices the corpus at the sample's blend of languages rather
+    than its own, which is worth tens of percent on a mixed corpus.
     """
     from .tokenizer_panel import estimate_budget
 
-    sample_texts = result.ctx.stats.get("budget_sample", [])
+    stats = result.ctx.stats
     return estimate_budget(
-        sample_texts,
-        result.ctx.stats.get("total_chars", total_chars),
-        result.ctx.stats.get("total_words", 0),
+        stats.get("budget_sample", {}),
+        stats.get("total_chars", total_chars),
+        stats.get("total_words", 0),
+        chars_by_dataset=stats.get("chars_by_dataset", {}),
+        records_by_dataset={
+            ds.name: ds.record_count for ds in result.ctx.datasets
+        },
         offline=offline,
     )
 
@@ -934,11 +683,22 @@ def _write_outputs(
     *,
     write_html: bool,
     include_evidence: bool = True,
+    summary=None,
 ) -> None:
     from .report import html as html_report
+    from .report import markdown as md_report
 
     (out_dir / "fingerprint.json").write_text(
         json_dumps(fp.to_dict(), indent=True), encoding="utf-8"
+    )
+    # Always written, and not behind --no-html. The two flags mean opposite
+    # things: --no-html is "do not build the thing I would open in a browser",
+    # and this is the file for exactly that reader — a CI job pasting a summary
+    # into a pull request has no browser and wants this one most.
+    (out_dir / "report.md").write_text(
+        md_report.render(result, fp, budget, include_evidence=include_evidence,
+                         summary=summary),
+        encoding="utf-8",
     )
     with open(out_dir / "findings.jsonl", "w", encoding="utf-8") as fh:
         for f in result.findings:
@@ -971,70 +731,25 @@ def _write_outputs(
             }) + "\n")
     if write_html:
         (out_dir / "report.html").write_text(
-            html_report.render(result, fp, budget, include_evidence=include_evidence),
+            html_report.render(result, fp, budget, include_evidence=include_evidence,
+                               summary=summary),
             encoding="utf-8",
         )
 
 
-def _read_fingerprint(path: Path, side: str) -> dict:
-    """Read one diff operand and reject unrelated JSON or binary artifacts."""
-    example = (
-        "dropoutt diff ./candidate/.dropoutt/fingerprint.json "
-        "./mixture/.dropoutt/fingerprint.json"
-    )
-    if not path.exists():
-        console.print(f"[red]No such file:[/red] {escape(str(path))}")
-        console.print(f"  [dim]Expected the {side} fingerprint written by `dropoutt scan`.[/dim]")
-        console.print(f"  [dim]Example: {example}[/dim]")
-        raise typer.Exit(EXIT_USAGE)
-    if not path.is_file():
-        console.print(f"[red]Not a file:[/red] {escape(str(path))}")
-        console.print(f"  [dim]Pass a .dropoutt/fingerprint.json file. Example: {example}[/dim]")
-        raise typer.Exit(EXIT_USAGE)
-    if path.suffix.lower() != ".json":
-        console.print(f"[red]Not a fingerprint JSON file:[/red] {escape(str(path))}")
-        if path.suffix.lower() == ".npz":
-            console.print(
-                "  [dim]That is an atlas artifact. `dropoutt diff` compares two "
-                "fingerprints generated by `dropoutt scan`; it does not compare a "
-                "fingerprint with the bundled atlas file.[/dim]"
-            )
-        console.print(f"  [dim]Example: {example}[/dim]")
-        raise typer.Exit(EXIT_USAGE)
-    try:
-        value = json_loads(path.read_text(encoding="utf-8"))
-    except UnicodeError:
-        console.print(f"[red]Not a UTF-8 fingerprint JSON file:[/red] {escape(str(path))}")
-        console.print(f"  [dim]Example: {example}[/dim]")
-        raise typer.Exit(EXIT_USAGE) from None
-    except Exception:
-        console.print(f"[red]Invalid JSON fingerprint:[/red] {escape(str(path))}")
-        console.print(
-            "  [dim]Pass the .dropoutt/fingerprint.json file written by "
-            "`dropoutt scan`, without editing or converting it.[/dim]"
-        )
-        console.print(f"  [dim]Example: {example}[/dim]")
-        raise typer.Exit(EXIT_USAGE) from None
+def _show(report: Path) -> None:
+    """Open the finished report, when there is a screen in front of this process.
 
-    required = ("fingerprint_id", "schema_version", "pipeline_version", "facets")
-    missing = [key for key in required if not isinstance(value, dict) or key not in value]
-    if missing:
-        console.print(f"[red]Not a dropoutt fingerprint:[/red] {escape(str(path))}")
-        console.print(f"  [dim]Missing required field(s): {', '.join(missing)}.[/dim]")
-        console.print(f"  [dim]Example: {example}[/dim]")
-        raise typer.Exit(EXIT_USAGE)
-    if not isinstance(value["facets"], dict):
-        console.print(f"[red]Invalid dropoutt fingerprint:[/red] {escape(str(path))}")
-        console.print("  [dim]The `facets` field must be a JSON object. Re-run `dropoutt scan`.[/dim]")
-        raise typer.Exit(EXIT_USAGE)
-    for name, facet in value["facets"].items():
-        if not isinstance(facet, dict) or not isinstance(facet.get("values", {}), dict):
-            console.print(f"[red]Invalid dropoutt fingerprint:[/red] {escape(str(path))}")
-            console.print(
-                f"  [dim]Facet {name!r} has an invalid structure. Re-run `dropoutt scan`.[/dim]"
-            )
-            raise typer.Exit(EXIT_USAGE)
-    return value
+    Everything the scan promised is already on disk and already on screen by the
+    time this runs, so a desktop that cannot open a file is worth one dim line
+    and nothing more. See :mod:`dropoutt.desktop` for what counts as a reason
+    not to.
+    """
+    from .desktop import open_report
+
+    reason = open_report(report)
+    if reason is None:
+        console.print("  [dim]opened report.html[/dim]")
 
 
 def _without_source_locations(value):
@@ -1078,40 +793,12 @@ def _invalid_config(message: str) -> None:
     raise typer.Exit(EXIT_USAGE)
 
 
-def _render_confirmation(resolved) -> None:
-    """Render a couple of records and show the trainable span.
-
-    Asserting that we understand the template is cheap; demonstrating it takes
-    fifteen seconds and catches template and masking mismatches immediately.
-    """
-    if resolved.chat_template is None:
-        return
-    probe = [
-        {"role": "user", "content": "Merhaba, nasılsın?"},
-        {"role": "assistant", "content": "İyiyim, teşekkürler."},
-    ]
-    try:
-        out = resolved.chat_template.render(probe)
-    except Exception as exc:  # noqa: BLE001
-        console.print(f"  [red]template failed to render:[/red] {escape(str(exc))}")
-        return
-    console.print(f"\n  [bold]Template check[/bold] ({escape(resolved.model_id)})")
-    console.print(f"  [dim]{escape(repr(out.text))}[/dim]")
-    spans = out.generation_spans
-    if not spans:
-        _, spans = resolved.chat_template.spans_by_difference(probe)
-        console.print("  [dim]span source: difference (template has no generation tag)[/dim]")
-    else:
-        console.print("  [dim]span source: generation tag[/dim]")
-    for a, b in spans:
-        console.print(f"  trainable: [green]{escape(repr(out.text[a:b]))}[/green]")
-
 
 def run() -> None:
     """Console entry point with concise handling for genuine internal failures."""
     try:
         app()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         if os.environ.get("DROPOUTT_DEBUG", "").strip().lower() in {
             "1", "true", "yes", "on",
         }:

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from ..context import ScanContext
+from ..contamination import NGRAM
+from ..context import ScanContext, dedup_words_of
 from ..models import (
     CostClass,
     Document,
@@ -21,7 +22,7 @@ from ..registry_data import (
     pii_patterns,
     style_patterns,
 )
-from ..textutil import excerpt
+from ..textutil import eval_ngram_hashes, excerpt
 from .base import Check, make_finding, register
 
 ALL_PROFILES = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN)
@@ -44,6 +45,13 @@ class PIIAndSecrets(Check):
         "so the scan output stays safe to share."
     )
 
+    EVIDENCE_CAP = 8
+    MERGE_SUM = ("total", "affected")
+    MERGE_COUNTS = ("hits", "by_dataset")
+    MERGE_EVIDENCE = ("evidence",)
+    #: The mask table is loaded from the shipped pattern file, not accumulated.
+    MERGE_IGNORE = ("_masks",)
+
     def __init__(self) -> None:
         masks = {p["id"]: p["mask"] for p in pii_patterns()["patterns"]}
         self._masks = masks
@@ -55,9 +63,13 @@ class PIIAndSecrets(Check):
 
     def observe(self, doc: Document, ctx: ScanContext) -> None:
         self.total += 1
+        text = doc.text
+        lowered = doc.text_lower
         found: list[tuple[str, str, str]] = []
-        for pid, label, _sev, pattern, validator in compiled_pii():
-            for match in pattern.finditer(doc.text):
+        for pid, label, _sev, pattern, validator, gate in compiled_pii():
+            if gate and not gate.passes(text, lowered):
+                continue
+            for match in pattern.finditer(text):
                 value = match.group(0)
                 if validator:
                     fn = VALIDATORS.get(validator)
@@ -71,7 +83,7 @@ class PIIAndSecrets(Check):
         self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
         for pid, _label, _masked in found:
             self.hits[pid] = self.hits.get(pid, 0) + 1
-        if len(self.evidence) < 8:
+        if len(self.evidence) < self.EVIDENCE_CAP:
             kinds = ", ".join(f"{label}: {masked}" for _p, label, masked in found[:3])
             # Note: the excerpt is deliberately omitted. Showing surrounding
             # text would put the unmasked value back into the report.
@@ -99,11 +111,17 @@ class IdentityLeakage(Check):
     check_id = "T1-IDENT-001"
     title = "Assistant identity leakage and refusal boilerplate"
     tier = 1
+    unit = "response"
     profiles = (Profile.SFT, Profile.PREFERENCE, Profile.UNKNOWN)
     cost = CostClass.CHEAP
     severity = Severity.WARNING
     blocking_in = (Profile.SFT,)
     fix = "Remove or rewrite; otherwise your model will claim to be someone else's product."
+
+    EVIDENCE_CAP = 6
+    MERGE_SUM = ("total", "identity", "refusal")
+    MERGE_COUNTS = ("hits", "by_dataset")
+    MERGE_EVIDENCE = ("evidence",)
 
     def __init__(self) -> None:
         self.total = 0
@@ -114,14 +132,17 @@ class IdentityLeakage(Check):
         self.by_dataset: dict[str, int] = {}
 
     def observe(self, doc: Document, ctx: ScanContext) -> None:
-        text = doc.assistant_text or doc.text
+        use_assistant = bool(doc.assistant_text)
+        text = doc.assistant_text if use_assistant else doc.text
         if not text:
             return
         self.total += 1
+        lowered = doc.assistant_lower if use_assistant else doc.text_lower
         found_group = None
-        for group, pid, _lang, pattern in compiled_identity():
-            m = pattern.search(text)
-            if m:
+        for group, pid, _lang, pattern, gate in compiled_identity():
+            if gate and not gate.passes(text, lowered):
+                continue
+            if pattern.search(text):
                 self.hits[pid] = self.hits.get(pid, 0) + 1
                 found_group = found_group or group
                 if group == "identity_leakage":
@@ -133,7 +154,7 @@ class IdentityLeakage(Check):
         else:
             self.refusal += 1
         self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-        if len(self.evidence) < 6:
+        if len(self.evidence) < self.EVIDENCE_CAP:
             self.evidence.append(
                 Evidence(doc.doc_id, doc.source_file, doc.source_index, excerpt(text, 150))
             )
@@ -143,10 +164,10 @@ class IdentityLeakage(Check):
             return []
         parts = []
         if self.identity:
-            parts.append(f"{self.identity} records claim to be another vendor's assistant")
+            parts.append(f"{self.identity:,} records claim to be another vendor's assistant")
         if self.refusal:
             rate = self.refusal / self.total if self.total else 0
-            parts.append(f"{self.refusal} contain refusal boilerplate ({rate:.1%})")
+            parts.append(f"{self.refusal:,} contain refusal boilerplate ({rate:.1%})")
         severity = Severity.BLOCKING if self.identity else Severity.INFO
         return [
             make_finding(
@@ -162,8 +183,9 @@ class IdentityLeakage(Check):
 @register
 class StyleTics(Check):
     check_id = "T1-STYLE-001"
-    title = "Formulaic response openings"
+    title = "Responses that all open the same way"
     tier = 1
+    unit = "response"
     profiles = (Profile.SFT, Profile.PREFERENCE, Profile.UNKNOWN)
     cost = CostClass.CHEAP
     severity = Severity.INFO
@@ -173,6 +195,13 @@ class StyleTics(Check):
         "opening forty percent of responses is a style your model will inherit and reproduce "
         "on every answer it gives."
     )
+
+    EVIDENCE_CAP = 4
+    MERGE_SUM = ("total", "affected")
+    MERGE_COUNTS = ("hits",)
+    MERGE_EVIDENCE = ("evidence",)
+    #: Read from the shipped pattern file, identical in every shard.
+    MERGE_IGNORE = ("threshold",)
 
     def __init__(self) -> None:
         self.threshold = style_patterns()["flag_when_rate_exceeds"]
@@ -186,14 +215,17 @@ class StyleTics(Check):
         if not text:
             return
         self.total += 1
+        lowered = doc.assistant_lower
         matched = False
-        for pid, _lang, pattern in compiled_style_openers():
+        for pid, _lang, pattern, gate in compiled_style_openers():
+            if gate and not gate.passes(text, lowered):
+                continue
             if pattern.search(text):
                 self.hits[pid] = self.hits.get(pid, 0) + 1
                 matched = True
         if matched:
             self.affected += 1
-            if len(self.evidence) < 4:
+            if len(self.evidence) < self.EVIDENCE_CAP:
                 self.evidence.append(
                     Evidence(doc.doc_id, doc.source_file, doc.source_index, excerpt(text, 130))
                 )
@@ -224,6 +256,7 @@ class LicenceProvenance(Check):
     check_id = "T1-LIC-001"
     title = "Datasets have no recorded licence"
     tier = 1
+    unit = "dataset"
     profiles = ALL_PROFILES
     cost = CostClass.FREE
     severity = Severity.WARNING
@@ -243,11 +276,16 @@ class LicenceProvenance(Check):
         return [
             make_finding(
                 self, count=len(missing), total=len(ctx.datasets),
+                # The count is carried by the finding, and every report prints
+                # it beside the title. Repeating it here put "4 of 4 datasets"
+                # on the page twice, one line apart, which reads as a rendering
+                # bug rather than as emphasis.
                 detail=(
-                    f"{len(missing)} of {len(ctx.datasets)} datasets have no licence "
-                    f"recorded in a dataset card"
+                    "A dataset whose card records no licence cannot be cleared "
+                    "for training: the terms the text was published under are "
+                    "unknown, and so is whether they permit this use."
                 ),
-                by_dataset={m: 1 for m in missing},
+                by_dataset=dict.fromkeys(missing, 1),
                 data={"missing": missing[:50]},
             )
         ]
@@ -258,6 +296,7 @@ class BenchmarkContamination(Check):
     check_id = "T1-CONTAM-001"
     title = "Training data overlaps evaluation benchmarks"
     tier = 1
+    unit = "benchmark question"
     profiles = ALL_PROFILES
     requires = (Requirement.CONTAMINATION_INDEX,)
     cost = CostClass.GLOBAL
@@ -275,7 +314,10 @@ class BenchmarkContamination(Check):
     def observe(self, doc: Document, ctx: ScanContext) -> None:
         if ctx.contamination is None:
             return
-        ctx.contamination.observe(doc.text, doc.doc_id, doc.source_file, doc.source_index)
+        ctx.contamination.observe_hashes(
+            eval_ngram_hashes(dedup_words_of(doc), NGRAM),
+            doc.doc_id, doc.source_file, doc.source_index,
+        )
 
     def finalize(self, ctx: ScanContext) -> list[Finding]:
         if ctx.contamination is None:

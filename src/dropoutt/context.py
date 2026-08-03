@@ -31,6 +31,24 @@ F_LANG = "lang"                    # str | None
 F_LANG_CONF = "lang_conf"          # float | None
 F_NORM_TEXT = "norm_text"          # str, whitespace/case normalized
 F_SHINGLES = "shingles"            # list[int] hashed n-grams
+F_DEDUP_WORDS = "dedup_words"      # list[str], normalized word sequence
+
+
+def dedup_words_of(doc) -> list[str]:
+    """The normalized word sequence for one record, computed at most once.
+
+    Near-duplicate detection and contamination scanning both shingle the same
+    string. Each used to run the full normalization itself — an NFC pass, a
+    Turkish-aware case fold and two regex substitutions over every record,
+    twice.
+    """
+    words = doc.meta.get(F_DEDUP_WORDS)
+    if words is None:
+        from .textutil import dedup_words
+
+        words = dedup_words(doc.text)
+        doc.meta[F_DEDUP_WORDS] = words
+    return words
 
 
 @dataclass
@@ -46,11 +64,11 @@ class ScanContext:
     model_id: str | None = None
 
     datasets: list[DatasetRef] = field(default_factory=list)
-    tokenizer: "TokenizerHandle | None" = None
-    chat_template: "ChatTemplate | None" = None
-    detector: "LanguageDetector | None" = None
-    atlas: "Atlas | None" = None
-    contamination: "ContaminationIndex | None" = None
+    tokenizer: TokenizerHandle | None = None
+    chat_template: ChatTemplate | None = None
+    detector: LanguageDetector | None = None
+    atlas: Atlas | None = None
+    contamination: ContaminationIndex | None = None
 
     #: Total records seen, filled in by the runner.
     total_records: int = 0

@@ -3,7 +3,7 @@
 Most training data carries no language tag, so "wrong language label" is not the
 useful question. These checks report what is measurable without a label:
 detection confidence, deviation from a dataset's own modal language, script
-disagreement, and Turkish that has lost its diacritics.
+disagreement.
 
 Two deliberate constraints. Nothing under ``MIN_CHARS`` produces a language
 finding, because bag-of-n-gram identification is unreliable on short text and
@@ -25,7 +25,7 @@ from ..models import (
     Requirement,
     Severity,
 )
-from ..textutil import excerpt, is_ascii_folded_turkish
+from ..textutil import excerpt
 from .base import Check, make_finding, register
 
 ALL_PROFILES = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN)
@@ -44,6 +44,11 @@ class LanguageComposition(Check):
     cost = CostClass.CHEAP
     severity = Severity.INFO
     fix = "Informational. Compare the mix against what you intended to train."
+
+    MERGE_SUM = ("low_conf", "total")
+    MERGE_COUNTS = ("counts",)
+    MERGE_NESTED = ("by_dataset_lang",)
+    MERGE_EVIDENCE = ("evidence",)
 
     def __init__(self) -> None:
         self.counts: dict[str, int] = {}
@@ -64,7 +69,7 @@ class LanguageComposition(Check):
         )
         if lang == "unknown" and len(doc.text) >= MIN_CHARS:
             self.low_conf += 1
-            if len(self.evidence) < 5:
+            if len(self.evidence) < self.EVIDENCE_CAP:
                 self.evidence.append(
                     Evidence(doc.doc_id, doc.source_file, doc.source_index,
                              excerpt(doc.text, 140))
@@ -83,7 +88,7 @@ class LanguageComposition(Check):
                 f"install 'dropoutt[lid]' for a real detector"
             )
         if self.low_conf:
-            detail += f"; {self.low_conf} records of adequate length could not be identified"
+            detail += f"; {self.low_conf:,} records of adequate length could not be identified"
         return [
             make_finding(
                 self, count=self.low_conf, total=self.total, detail=detail,
@@ -113,6 +118,10 @@ class LanguageOutliers(Check):
         "telling you something regardless of what its card claims, and the 3% is where the "
         "collection bug is."
     )
+
+    MERGE_SUM = ("total",)
+    MERGE_NESTED = ("per_dataset",)
+    MERGE_FIRST = ("samples",)
 
     def __init__(self) -> None:
         self.per_dataset: dict[str, dict[str, int]] = {}
@@ -186,6 +195,11 @@ class ScriptMismatch(Check):
     severity = Severity.INFO
     fix = "Confirm this is intentional. Turkish in Arabic script is Ottoman, not a defect."
 
+    EVIDENCE_CAP = 4
+    MERGE_SUM = ("total", "count")
+    MERGE_COUNTS = ("pairs", "by_dataset")
+    MERGE_EVIDENCE = ("evidence",)
+
     def __init__(self) -> None:
         self.total = 0
         self.count = 0
@@ -205,7 +219,7 @@ class ScriptMismatch(Check):
             key = f"{result.lang} in {result.script}"
             self.pairs[key] = self.pairs.get(key, 0) + 1
             self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            if len(self.evidence) < 4:
+            if len(self.evidence) < self.EVIDENCE_CAP:
                 self.evidence.append(
                     Evidence(doc.doc_id, doc.source_file, doc.source_index,
                              f"{key} :: {excerpt(doc.text, 120)}")
@@ -221,56 +235,5 @@ class ScriptMismatch(Check):
                 detail="; ".join(f"{k} ({v})" for k, v in top),
                 evidence=self.evidence, by_dataset=self.by_dataset,
                 data={"pairs": dict(top)},
-            )
-        ]
-
-
-@register
-class AsciiFoldedTurkish(Check):
-    check_id = "T1-LANG-004"
-    title = "Turkish text has lost its diacritics"
-    tier = 1
-    profiles = ALL_PROFILES
-    cost = CostClass.CHEAP
-    severity = Severity.WARNING
-    fix = "Re-source the text with correct orthography; the diacritics cannot be restored reliably."
-    rationale = (
-        "Language identification will confidently call 'degil mi' Turkish, and it is, but it "
-        "is damaged Turkish. A model trained on it learns the wrong orthography and will "
-        "reproduce it. No general-purpose tool checks for this, and for a Turkish model it "
-        "matters more than most things that are checked."
-    )
-
-    def __init__(self) -> None:
-        self.total = 0
-        self.count = 0
-        self.evidence: list[Evidence] = []
-        self.by_dataset: dict[str, int] = {}
-
-    def observe(self, doc: Document, ctx: ScanContext) -> None:
-        if len(doc.text) < MIN_CHARS:
-            return
-        self.total += 1
-        if is_ascii_folded_turkish(doc.text):
-            self.count += 1
-            self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            if len(self.evidence) < 5:
-                self.evidence.append(
-                    Evidence(doc.doc_id, doc.source_file, doc.source_index,
-                             excerpt(doc.text, 150))
-                )
-
-    def finalize(self, ctx: ScanContext) -> list[Finding]:
-        if not self.count:
-            return []
-        rate = self.count / self.total if self.total else 0
-        return [
-            make_finding(
-                self, count=self.count, total=self.total,
-                detail=(
-                    f"{self.count} records ({rate:.1%}) read as Turkish but contain none of "
-                    f"the Turkish-specific characters"
-                ),
-                evidence=self.evidence, by_dataset=self.by_dataset,
             )
         ]

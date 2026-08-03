@@ -12,6 +12,7 @@ Checks that need global state accumulate during the pass and resolve in
 from __future__ import annotations
 
 import hashlib
+import heapq
 import time
 from collections.abc import Callable, Iterator, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -53,6 +54,32 @@ from .tokenizer_panel import CHARS_PER_TOKEN_FALLBACK, TokenizerHandle
 #: embedding is dominated by noise, for the same reason language identification
 #: is gated on length.
 ATLAS_MIN_CHARS = 80
+
+#: Records placed on the atlas, corpus-wide, split evenly across datasets.
+#:
+#: This was twenty thousand, shared with the token budget, which put a 272,000
+#: record corpus on the map with under seven thousand of its records — a sample
+#: small enough that a subject area holding two percent of the corpus was
+#: decided by a hundred records. Placement is one forward pass of a 128-dim
+#: encoder per record and the cost is close to linear, so the ceiling is set by
+#: what the parent can hold rather than by what the model can embed: at this
+#: target the sample is a few hundred megabytes of truncated text.
+ATLAS_SAMPLE_TARGET = 200_000
+
+#: Records priced by the tokenizer panel, corpus-wide. Deliberately not raised
+#: with the atlas: this sample is tokenized once per family in the panel, which
+#: is five passes of real tokenizers, and the quantity it estimates — tokens per
+#: character — converges long before a coverage histogram over 212 cells does.
+BUDGET_SAMPLE_TARGET = 20_000
+
+
+def _per_dataset(target: int, datasets: int) -> int:
+    """Split a corpus-wide sample target across datasets, with a floor.
+
+    The floor is what stops a corpus of two hundred small datasets from
+    sampling each of them a hundred records deep and calling it coverage.
+    """
+    return max(200, target // max(datasets, 1))
 
 
 @dataclass
@@ -148,7 +175,7 @@ def scan(
     ctx.stats["chars_by_dataset"] = {}
     # Stratified sample, capped per dataset so one huge dataset cannot dominate
     # the token ratio or the atlas histogram.
-    per_dataset_cap = max(200, 20_000 // max(len(disc.datasets), 1))
+    per_dataset_cap = _per_dataset(ATLAS_SAMPLE_TARGET, len(disc.datasets))
 
     if tokenizer is not None and chat_template is not None:
         _probe_offsets(ctx, tokenizer, chat_template)
@@ -306,7 +333,12 @@ def merge_shard_results(
     by_id = {check.check_id: check for check in active}
     scanned = 0
     content_total = 0
-    samples: dict[str, list[tuple[int, str, str, int]]] = {}
+    # Bottom-k again, and bounded. Shards are allowed to keep three times their
+    # expected share so that none of them discards a globally-small key, which
+    # means the parent is offered up to three times the target — at a 200,000
+    # record target that is most of a gigabyte of text held to throw two thirds
+    # of it away. Merging into a bounded heap keeps the peak at the target.
+    heaps: dict[str, list[tuple[int, str, str, int]]] = {}
     store = None
 
     for result in results:
@@ -321,9 +353,15 @@ def merge_shard_results(
         for note in result.degradations:
             ctx.degraded(note)
         for dataset in result.record_counts:
-            samples.setdefault(dataset, [])
+            heaps.setdefault(dataset, [])
         for dataset, rows in result.samples.items():
-            samples.setdefault(dataset, []).extend(rows)
+            heap = heaps.setdefault(dataset, [])
+            for key, text, lang, chars in rows:
+                entry = (-key, text, lang, chars)
+                if len(heap) < plan.sample_target:
+                    heapq.heappush(heap, entry)
+                elif entry[0] > heap[0][0]:
+                    heapq.heapreplace(heap, entry)
         for check_id, shard_check in result.checks.items():
             target = by_id.get(check_id)
             if target is None or target is shard_check:
@@ -356,12 +394,26 @@ def merge_shard_results(
     # of the per-shard smallest is the same set as taking them from the union,
     # which is what makes the sample independent of how the corpus was divided.
     budget_sample: dict[str, list[str]] = ctx.stats["budget_sample"]
-    atlas_sample: list[tuple[str, str, str, int]] = []
+    atlas_sample: list[tuple[str, str, str, int, float]] = []
     too_short = 0
-    for dataset in sorted(samples):
-        rows = sorted(samples[dataset])[: plan.sample_target]
-        for _key, text, lang, chars in rows:
-            budget_sample.setdefault(dataset, []).append(text)
+    budget_cap = _per_dataset(BUDGET_SAMPLE_TARGET, len(disc.datasets))
+    for dataset in sorted(heaps):
+        rows = [(-k, t, lang, c) for k, t, lang, c in sorted(heaps[dataset], reverse=True)]
+        # How many records of this dataset each sampled one stands for. The cap
+        # is per dataset, so a dataset of ten million and one of ten thousand
+        # arrive here the same size; without this the atlas histogram would
+        # describe the average of your datasets rather than your corpus. The
+        # token budget has always corrected for this in its own way — see
+        # `estimate_budget` — and coverage did not.
+        weight = (counts.get(dataset, 0) / len(rows)) if rows else 1.0
+        for position, (_key, text, lang, chars) in enumerate(rows):
+            # The two samples are the same bottom-k, cut at different depths.
+            # A prefix of a bottom-k over a uniform hash is itself a uniform
+            # sample, so the budget keeps the properties it always had while
+            # the atlas goes ten times deeper — placement is an embedding pass
+            # and pricing is five tokenizers over the same text.
+            if position < budget_cap:
+                budget_sample.setdefault(dataset, []).append(text)
             if ctx.atlas is None:
                 continue
             # Coverage comes from the same sample: the atlas describes a
@@ -377,7 +429,8 @@ def merge_shard_results(
                 # here is the record's real one, because the off-atlas
                 # attribution is a statement about the data, not about what was
                 # fed to the model.
-                atlas_sample.append((text[:2000], lang, dataset, chars))
+                atlas_sample.append((text[:2000], lang, dataset, chars,
+                                     max(weight, 1.0)))
             else:
                 too_short += 1
     if too_short:
@@ -558,9 +611,55 @@ def _compute_features(doc: Document, ctx: ScanContext) -> None:
     doc.meta[F_TOKEN_COUNT] = ctx.tokenizer.count(text)
 
 
+def _soft_membership(atlas, cells, weights) -> dict:
+    """Aggregate top-k soft assignment into shares over cells.
+
+    Hard assignment answers "which single cell is nearest", which for a record
+    that genuinely sits between two subjects is a coin flip presented as a fact.
+    The soft weights say how much of the record belongs where, and the mean
+    number of cells holding real weight is the honest measure of how mixed the
+    corpus is. Only cells above ``MEANINGFUL`` are counted, because the tail of
+    a softmax is not membership.
+    """
+    import numpy as _np
+
+    MEANINGFUL = 0.15
+    cells = _np.asarray(cells)
+    weights = _np.asarray(weights)
+    placed = weights.sum(axis=1) > 0
+    if not placed.any():
+        return {"placed": 0}
+    mass = _np.zeros(atlas.n_regions, dtype=_np.float64)
+    rows = cells[placed]
+    vals = weights[placed]
+    valid = rows >= 0
+    _np.add.at(mass, rows[valid], vals[valid])
+    total = float(mass.sum()) or 1.0
+    order = _np.argsort(-mass)[:12]
+    terms = atlas.region_terms
+    return {
+        "placed": int(placed.sum()),
+        "mean_cells_above_threshold": round(
+            float((vals > MEANINGFUL).sum(axis=1).mean()), 3
+        ),
+        "threshold": MEANINGFUL,
+        "top_cells": [
+            {
+                "cell_id": int(c),
+                "share": round(float(mass[c] / total), 4),
+                "terms": terms[int(c)] if int(c) < len(terms) else "",
+                "l1_id": int(atlas.region_category[int(c)]),
+                "nameable": atlas.can_name_children(int(atlas.region_category[int(c)])),
+            }
+            for c in order
+            if mass[c] > 0
+        ],
+    }
+
+
 def _compute_coverage(
     ctx: ScanContext,
-    sample: list[tuple[str, str, str, int]],
+    sample: list[tuple[str, str, str, int, float]],
     *,
     offline: bool = False,
     keep_examples: bool = True,
@@ -594,10 +693,19 @@ def _compute_coverage(
     langs = [row[1] for row in sample]
     datasets = [row[2] for row in sample]
     lengths = [row[3] for row in sample]
+    weights = [row[4] if len(row) > 4 else 1.0 for row in sample]
     try:
         emb = embedder.encode(texts)
-        regions, scores, nearest = ctx.atlas.assign_full(emb)
-        categories = ctx.atlas.categorize(emb)
+        # The detected language is passed in because the atlas may centre each
+        # record on its own language's mean. When the shipped atlas does not do
+        # that, this argument is ignored and the global mean is used.
+        regions, scores, nearest = ctx.atlas.assign_full(emb, langs)
+        categories = ctx.atlas.categorize(emb, langs)
+        # Soft membership: a document about medical billing is genuinely in two
+        # places, and hard assignment silently picks one. This existed in the
+        # atlas from the start and nothing ever called it, so every coverage
+        # number so far has been the top-1 answer presented as the whole answer.
+        soft_cells, soft_weights, _ = ctx.atlas.soft_assign(emb, langs)
     except Exception as exc:
         ctx.degraded(f"atlas assignment failed: {type(exc).__name__}")
         return
@@ -605,9 +713,12 @@ def _compute_coverage(
     coverage = ctx.atlas.coverage(
         regions, categories, langs,
         scores=scores, nearest=nearest, embeddings=emb,
-        lengths=lengths, datasets=datasets, texts=texts,
+        lengths=lengths, datasets=datasets, texts=texts, weights=weights,
     )
     coverage["sampled_records"] = len(texts)
+    coverage["soft_membership"] = _soft_membership(
+        ctx.atlas, soft_cells, soft_weights
+    )
 
     # Excerpts of the furthest off-atlas records, kept out of the coverage facet
     # on purpose. The facet is copied verbatim into fingerprint.json, which is

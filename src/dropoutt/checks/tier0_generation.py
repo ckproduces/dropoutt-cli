@@ -46,6 +46,7 @@ class EmbeddedRecords(Check):
     check_id = "T0-FORMAT-001"
     title = "Plain-text files are holding structured records"
     tier = 0
+    unit = "file"
     profiles = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN)
     cost = CostClass.FREE
     severity = Severity.INFO
@@ -86,11 +87,16 @@ class GeneratorScaffolding(Check):
     check_id = "T0-GEN-001"
     title = "Generator scaffolding sits outside the records"
     tier = 0
+    unit = "run of stray text"
+    total_unit = "dataset"
     profiles = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN)
     cost = CostClass.FREE
     severity = Severity.WARNING
     blocking_in = (Profile.SFT,)
-    fix = "Strip the text between records at generation time, and check whether it was meant to be inside them."
+    fix = (
+        "Strip the text between records at generation time, and check whether it "
+        "was meant to be inside them."
+    )
     rationale = (
         "Text between the records is whatever the generating model emitted around its output: "
         "a control tag it was told to honour and echoed instead, a preamble, a piece of "
@@ -143,6 +149,10 @@ class UnreadKeys(Check):
         "nothing. Bookkeeping columns such as id, source and language are ignored here."
     )
 
+    MERGE_SUM = ("count", "total", "chars")
+    MERGE_COUNTS = ("keys", "by_dataset")
+    MERGE_EVIDENCE = ("evidence",)
+
     def __init__(self) -> None:
         self.count = 0
         self.total = 0
@@ -161,7 +171,7 @@ class UnreadKeys(Check):
         for key, size in unread:
             self.keys[key] += 1
             self.chars += size
-        if len(self.evidence) < 5:
+        if len(self.evidence) < self.EVIDENCE_CAP:
             names = ", ".join(f"{k} ({n} chars)" for k, n in unread[:3])
             self.evidence.append(
                 Evidence(doc.doc_id, doc.source_file, doc.source_index,
@@ -193,6 +203,7 @@ class InconsistentReasoning(Check):
     check_id = "T0-REASON-001"
     title = "Only some responses carry a reasoning trace"
     tier = 0
+    unit = "response"
     profiles = CONVERSATIONAL
     cost = CostClass.FREE
     severity = Severity.WARNING
@@ -206,6 +217,11 @@ class InconsistentReasoning(Check):
         "to strip in most responses. A dataset that is 100% reasoning or 0% reasoning is a "
         "decision; a dataset that is 12% reasoning is an accident."
     )
+
+    EVIDENCE_CAP = 3
+    MERGE_SUM = ("with_trace", "total")
+    MERGE_COUNTS = ("by_dataset",)
+    MERGE_EVIDENCE = ("evidence",)
 
     def __init__(self) -> None:
         self.with_trace = 0
@@ -221,7 +237,7 @@ class InconsistentReasoning(Check):
         if REASONING_TAGS.search(answer):
             self.with_trace += 1
             self.by_dataset[doc.dataset] = self.by_dataset.get(doc.dataset, 0) + 1
-            if len(self.evidence) < 3:
+            if len(self.evidence) < self.EVIDENCE_CAP:
                 self.evidence.append(
                     Evidence(doc.doc_id, doc.source_file, doc.source_index,
                              excerpt(answer, 140))
@@ -256,6 +272,7 @@ class ResponseLengthCap(Check):
     check_id = "T0-TRUNC-002"
     title = "Responses stop at a generation length cap"
     tier = 0
+    unit = "response"
     profiles = CONVERSATIONAL
     cost = CostClass.FREE
     severity = Severity.WARNING
@@ -294,19 +311,38 @@ class ResponseLengthCap(Check):
     #: be wrong about a perfectly good dataset.
     MIN_CAP_CHARS = 200
     MIN_RECORDS = 200
+    #: How many candidate records keep enough context to be quoted. The wall
+    #: test itself reads every length; this is only for the three examples.
+    SAMPLE_CAP = 400
+
+    MERGE_CONCAT = ("lengths",)
+    #: Capped in ``merge`` below, in shard order.
+    MERGE_CUSTOM = ("longest",)
+    #: Built in finalize, once the ceiling is known.
+    MERGE_IGNORE = ("evidence",)
 
     def __init__(self) -> None:
         self.lengths: list[int] = []
         self.evidence: list[Evidence] = []
-        self.longest: list[tuple[int, Document]] = []
+        #: (length, doc id, file, index, tail) — a tuple rather than the whole
+        #: Document, so a shard can hand it back to the parent without carrying
+        #: four hundred full records through a pipe.
+        self.longest: list[tuple[int, str, str, int, str]] = []
+
+    def merge(self, other: ResponseLengthCap) -> None:
+        super().merge(other)
+        room = self.SAMPLE_CAP - len(self.longest)
+        if room > 0:
+            self.longest.extend(other.longest[:room])
 
     def observe(self, doc: Document, ctx: ScanContext) -> None:
         answer = doc.assistant_text.rstrip()
         if not answer:
             return
         self.lengths.append(len(answer))
-        if len(self.longest) < 400:
-            self.longest.append((len(answer), doc))
+        if len(self.longest) < self.SAMPLE_CAP:
+            self.longest.append((len(answer), doc.doc_id, doc.source_file,
+                                 doc.source_index, answer[-90:]))
 
     def finalize(self, ctx: ScanContext) -> list[Finding]:
         if len(self.lengths) < self.MIN_RECORDS:
@@ -335,11 +371,13 @@ class ResponseLengthCap(Check):
         tallest_below = max(below, default=0)
         if in_bucket < tallest_below * self.WALL_RATIO:
             return []
-        for n, doc in sorted(self.longest, key=lambda kv: -kv[0])[:3]:
+        for n, doc_id, source_file, source_index, tail in sorted(
+            self.longest, key=lambda row: -row[0]
+        )[:3]:
             if n > top - self.BUCKET:
                 self.evidence.append(
-                    Evidence(doc.doc_id, doc.source_file, doc.source_index,
-                             "ends: …" + excerpt(doc.assistant_text.rstrip()[-90:], 90))
+                    Evidence(doc_id, source_file, source_index,
+                             "ends: …" + excerpt(tail, 90))
                 )
         return [
             make_finding(
