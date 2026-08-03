@@ -14,9 +14,16 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.10", "3.12"]
+        # requires-python is >=3.10 and the classifiers claim through 3.14, so
+        # every version the package advertises gets exercised somewhere. The
+        # three-OS sweep stays on the endpoints to keep the matrix small.
         include:
           - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
             python-version: "3.13"
+          - os: ubuntu-latest
+            python-version: "3.14"
 
     steps:
       - uses: actions/checkout@v4
@@ -39,6 +46,26 @@ jobs:
         env:
           DROPOUTT_OFFLINE: "1"
           HF_HUB_OFFLINE: "1"
+
+  quality:
+    # Lint and type check once, on one interpreter. Neither depends on the OS,
+    # and running them across the whole matrix would say the same thing fifteen
+    # times. The package ships py.typed, so the type check is a promise to
+    # downstream users rather than a private convenience.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Ruff
+        run: ruff check .
+      - name: Mypy
+        run: mypy
 
   package:
     runs-on: ubuntu-latest

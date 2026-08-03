@@ -275,7 +275,7 @@ def scan(
         sample_cap=plan.sample_cap,
         want_atlas_sample=atlas is not None,
         want_language=detector is not None,
-        contamination_dirs=list(contamination_dirs or ()),
+        contamination_dirs=[str(p) for p in (contamination_dirs or ())],
         eval_sets=list(eval_sets or ()),
         model_for_tokenizer=model_id if tokenizer is not None else None,
         offline=offline,
@@ -586,13 +586,15 @@ def _compute_features(doc: Document, ctx: ScanContext) -> None:
     if ctx.chat_template is not None and doc.turns and not ctx.stats.get("offsets_unreliable"):
         try:
             messages = to_messages(doc)
-            result = ctx.chat_template.render(messages)
-            spans = result.generation_spans
-            if not result.spans_from_tag:
+            # Not `result`: that name already holds the language detection above,
+            # and reusing it for a render made the two indistinguishable.
+            render = ctx.chat_template.render(messages)
+            spans = render.generation_spans
+            if not render.spans_from_tag:
                 rendered, spans = ctx.chat_template.spans_by_difference(messages)
                 result_text = rendered
             else:
-                result_text = result.text
+                result_text = render.text
             doc.meta[F_RENDERED] = result_text
             enc = ctx.tokenizer._tok.encode(result_text, add_special_tokens=False)
             doc.meta[F_TOKEN_IDS] = list(enc.ids)
@@ -667,8 +669,15 @@ def _compute_coverage(
     """
     from .atlas import load_embedder
 
+    # Bound once. The caller only gets here with an atlas loaded; naming it in a
+    # local is what lets the rest of the function state that precondition rather
+    # than repeat an attribute access a type checker has to take on faith.
+    atlas = ctx.atlas
+    if atlas is None:
+        return
+
     embedder = load_embedder(
-        ctx.atlas.embed_model, offline=offline, out_dim=ctx.atlas.dim
+        atlas.embed_model, offline=offline, out_dim=atlas.dim
     )
     if embedder is None:
         ctx.degraded(
@@ -676,14 +685,14 @@ def _compute_coverage(
             "coverage was not computed"
         )
         return
-    if embedder.dim != ctx.atlas.dim:
+    if embedder.dim != atlas.dim:
         ctx.degraded(
-            f"atlas expects {ctx.atlas.dim}-dimensional embeddings but the loaded "
+            f"atlas expects {atlas.dim}-dimensional embeddings but the loaded "
             f"model produces {embedder.dim}; coverage was not computed"
         )
         return
-    if ctx.atlas.token_log_prob:
-        embedder = embedder.bind_idf(ctx.atlas.token_log_prob)
+    if atlas.token_log_prob:
+        embedder = embedder.bind_idf(atlas.token_log_prob)
 
     texts = [row[0] for row in sample]
     langs = [row[1] for row in sample]
@@ -695,25 +704,25 @@ def _compute_coverage(
         # The detected language is passed in because the atlas may centre each
         # record on its own language's mean. When the shipped atlas does not do
         # that, this argument is ignored and the global mean is used.
-        regions, scores, nearest = ctx.atlas.assign_full(emb, langs)
-        categories = ctx.atlas.categorize(emb, langs)
+        regions, scores, nearest = atlas.assign_full(emb, langs)
+        categories = atlas.categorize(emb, langs)
         # Soft membership: a document about medical billing is genuinely in two
         # places, and hard assignment silently picks one. This existed in the
         # atlas from the start and nothing ever called it, so every coverage
         # number so far has been the top-1 answer presented as the whole answer.
-        soft_cells, soft_weights, _ = ctx.atlas.soft_assign(emb, langs)
+        soft_cells, soft_weights, _ = atlas.soft_assign(emb, langs)
     except Exception as exc:
         ctx.degraded(f"atlas assignment failed: {type(exc).__name__}")
         return
 
-    coverage = ctx.atlas.coverage(
+    coverage = atlas.coverage(
         regions, categories, langs,
         scores=scores, nearest=nearest, embeddings=emb,
         lengths=lengths, datasets=datasets, texts=texts, weights=weights,
     )
     coverage["sampled_records"] = len(texts)
     coverage["soft_membership"] = _soft_membership(
-        ctx.atlas, soft_cells, soft_weights
+        atlas, soft_cells, soft_weights
     )
 
     # Excerpts of the furthest off-atlas records, kept out of the coverage facet
@@ -776,5 +785,5 @@ def _compute_coverage(
     if too_short:
         coverage["excluded_too_short"] = too_short
         coverage["min_chars"] = ATLAS_MIN_CHARS
-    coverage["atlas_hash"] = ctx.atlas.artifact_hash
+    coverage["atlas_hash"] = atlas.artifact_hash
     ctx.stats["atlas_coverage"] = coverage

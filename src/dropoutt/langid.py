@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import unicodedata
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -143,7 +144,9 @@ class LanguageDetector:
     HEAD_CHARS = 2000
 
     def __init__(self, floor: float | None = None) -> None:
-        self._model = None
+        # The fastText model, loaded on first use. Typed loosely because
+        # ftlangdetect is an optional extra.
+        self._model: Any = None
         if HAVE_FASTTEXT_LID:
             self.backend = "fasttext-lid.176"
             self.low_trust = False

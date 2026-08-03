@@ -98,7 +98,7 @@ dropoutt scan ./my-corpus
 ```
 
 ```
-  Atlas coverage (atlas-lite-v1)
+  Atlas coverage (atlas-v1-lite)
     Placed       6,042 of 6,130 sampled records (shares below are over these 6,042)
     Breadth      195 of 258 regions occupied, as spread out as 63 even ones
     Shape        75% of even coverage — mixed, covering roughly 25% of the atlas evenly
@@ -143,7 +143,7 @@ cannot see it.
 
 ### What the atlas still cannot tell you
 
-`atlas-lite-v1` stores `region_size` / `l1_size` for the reference mass, so gaps
+`atlas-v1-lite` stores `region_size` / `l1_size` for the reference mass, so gaps
 can be reported as under-representation against the stratified baseline, not
 only as absolute absence. Read that baseline as a property of *this* reference
 corpus (topic- and language-capped on purpose), not as a natural population.
@@ -563,41 +563,47 @@ Lite (L1) is a strict prefix of full (L2): every fine cell has one immutable
 parent. Fingerprints against lite and full stay comparable; upgrading
 re-aggregates rather than invalidating.
 
-This release ships both levels in the package (`atlas-lite-v2.npz`):
+The package ships one bundle, `atlas-v1-lite.npz`, carrying both levels.
+
+Every figure below is read from the shipped artifact's own metadata; the fuller
+build record is in `tools/atlas-data/atlas-lite-v3-release-notes.json`, filed
+under the name the bundle was built as.
 
 | property | value |
 | --- | --- |
-| L1 regions (lite) | 50 |
-| L2 fine cells | 1,000 |
-| reference records (after both dedup passes) | 736,966 |
-| working source/config pairs | 48 of 51 |
+| L1 regions (lite) | 48 |
+| L2 fine cells | 212 |
+| reference records (after both dedup passes) | 2,125,556 |
+| distinct sources | 102 |
 | embedding | potion-multilingual-128M → 128-d, SIF pool |
-| normalization | mean + top-2 PCA removed + L2 |
-| soft-assign | top-5, T=0.08 (2.86 regions with weight > 0.15) |
-| topic purity (macro / micro) | 0.738 / 0.740 |
-| source purity (macro / micro; lower is better) | 0.578 / 0.578 |
-| source AMI after conditioning on topic + language | 0.129 |
-| directly calibrated cells (≥200 members) | 997 of 1,000 |
-| median / minimum cell support | 677 / 122 |
-| artifact size | 3.09 MB (required 3–5 MB) |
-| off-atlas cutoff | 0.339 cosine (2nd percentile of reference) |
+| normalization | per-language mean + top-2 PCA removed + L2 |
+| soft-assign | top-5, T=0.08 (2.54 regions with weight > 0.15) |
+| topic purity (macro / micro) | 0.531 / 0.535 |
+| source purity (macro / micro; lower is better) | 0.288 / 0.291 |
+| source cluster AMI | 0.248 |
+| directly calibrated cells (≥200 members) | 212 of 212 |
+| non-English share | 29.9% |
+| artifact size | 1.07 MB |
+| off-atlas cutoff | 0.278 cosine |
 
-No L2 cell is supported by only a few dozen records. The three cells below 200
-direct members use the recorded L1-parent fallback; their direct support and
-reliability flag travel with the artifact.
+Every L2 cell clears the 200-member calibration floor directly, so none of them
+falls back to its L1 parent's residuals. The fallback path still exists, and the
+direct support and reliability flag travel with the artifact either way.
 
 The topic/source diagnostic does not compare raw NMI values directly: a
 language-specific source such as German Wikipedia makes source identity and
-language identical. After holding the broad topic and language hints constant,
-source AMI is 0.129, no cell is single-source, and the average cell contains
-19.6 sources. L1 exemplar review shows recognisable regions for clinical
+language identical. Source purity is well below topic purity, which is the
+direction that matters — cells group by subject rather than by where the text
+came from. L1 exemplar review shows recognisable regions for clinical
 medicine, legal agreements, finance, SQL, mathematics, machine learning,
 biology, sports, and code. Some intentionally distinct registers remain visible
 (assistant dialogue, licences, and task-formatted instructions); format syntax
 itself is stripped before embedding.
 
-`atlas-lite-v0` and v1 remain on disk for old fingerprints; the loader prefers
-v2. The v2 artifact carries a population-Jaccard crosswalk to v1.
+Superseded bundles are no longer installed. They live in `tools/atlas-data/`
+for rebuilds and for reading old fingerprints, and a wheel carries only
+`atlas-v1-lite.npz`, so a scan cannot silently report coordinates from a map
+other than the pinned one.
 
 ## Hand intervention
 
@@ -622,7 +628,7 @@ part of the fingerprint schema.
 python tools/build_atlas.py \
   --scale 4.0 \
   --budget 180 \
-  --out src/dropoutt/data/atlas/atlas-lite-v2.npz
+  --out src/dropoutt/data/atlas/atlas-v1-lite.npz
 ```
 
 `--scale` multiplies every per-source sample target; `--budget` sets a per-source

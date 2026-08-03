@@ -329,8 +329,12 @@ class ResponseLengthCap(Check):
         #: four hundred full records through a pipe.
         self.longest: list[tuple[int, str, str, int, str]] = []
 
-    def merge(self, other: ResponseLengthCap) -> None:
+    def merge(self, other: Check) -> None:
         super().merge(other)
+        # Shards are merged by check id, so this is always the same class. The
+        # signature stays the base one so the override does not narrow it.
+        if not isinstance(other, ResponseLengthCap):
+            return
         room = self.SAMPLE_CAP - len(self.longest)
         if room > 0:
             self.longest.extend(other.longest[:room])

@@ -1,6 +1,52 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
+
+The first stable release. The command surface is frozen: six commands, and from
+here they follow semantic versioning, so a flag will not change meaning inside a
+major version.
+
+### One atlas ships, and it is called `atlas-v1-lite`
+
+The package carried four generations of the map. Only the pinned one was ever
+loaded: `bundled_atlas_path` fell back to v2, v1 and v0 solely when the pinned
+file was missing, which in an installed wheel means a broken install, and no
+flag or config could select an older bundle. The other three were 3.7 MB that
+every user downloaded and nothing read.
+
+Shipping alongside them were the map's build inputs and build records — the
+curated L1 label files, the release notes, `build-diagnostics.json` — another
+150 KB, also never read at runtime, since labels are baked into the `.npz` at
+build time. All of it now lives in `tools/atlas-data/`, which no artifact
+includes. The wheel went from **9.1 MB to 5.3 MB**.
+
+The surviving bundle was `atlas-lite-v3`, a name that counted rebuilds of the
+map rather than describing what shipped. It is now `atlas-v1-lite`, rewritten
+inside the artifact as well as on disk, so `meta["version"]`, the report header
+and the `atlas_version` field of every fingerprint agree with the filename.
+Nothing had been published yet, so no stored fingerprint carries the old string.
+
+`FALLBACK_ATLAS_VERSIONS` is gone with the files it named. A missing bundle now
+returns `None` rather than quietly reporting coordinates from a different map,
+which was the failure the fallback could actually cause.
+
+One test moved with it: the curated-subject-area assertions ran against v2 and
+would have skipped silently forever once v2 stopped being bundled. They now run
+against the atlas that ships.
+
+### The shipped type hints are now checked
+
+The package ships `py.typed`, which tells every downstream user their own type
+checker may trust these annotations. Nothing had ever checked them. `mypy` now
+runs in CI over `src/`, and the 58 errors that first pass found are fixed rather
+than suppressed — mostly `Optional` values used past a guard a checker could not
+see, plus a handful of places where a heterogeneous dict was annotated `object`
+and every read of it was a type error waiting to be noticed.
+
+Two were worth more than the annotation: `desktop.blocked` declared `dict` and
+was handed `os.environ`, which is not one, and the shard config declared
+`contamination_dirs: list[str]` while the caller passed `Path` objects into a
+field the worker rebuilds with `Path(p)`.
 
 ### A cell's density is now an estimate, not a quotient
 
@@ -245,12 +291,6 @@ gzipped shard per source plus a manifest, and skips anything already complete.
 Collection was 87% of the v2 build wall clock and was paid again on every
 re-cluster; nothing survived the process, so no two builds saw the same corpus.
 `tools/build_atlas.py` reads that cache and never touches the network.
-
-## 1.0.0
-
-The first stable release. The command surface is frozen: six commands, and from
-here they follow semantic versioning, so a flag will not change meaning inside a
-major version.
 
 ### Atlas rebuilt as `atlas-lite-v1`
 

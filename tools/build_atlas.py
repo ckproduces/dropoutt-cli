@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build atlas-lite-v3 from the on-disk reference corpus.
+"""Build atlas-v1-lite from the on-disk reference corpus.
 
 Reads the cache written by ``tools/fetch_corpus.py``; never touches the network
 except to load the encoder weights. Everything large lives in a memory-mapped
@@ -61,21 +61,22 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from atlas_sources import (  # noqa: E402
+from atlas_sources import (
     AXIS_FLOORS,
     CODE_LANGUAGE_FLOOR,
     NON_ENGLISH_FLOOR,
     SOURCES,
 )
-from dropoutt.atlas.apply import Atlas  # noqa: E402
-from dropoutt.atlas.embed import DEFAULT_MODEL, TokenizedCorpus  # noqa: E402
-from dropoutt.atlas.embed import load as load_embedder  # noqa: E402
-from dropoutt.atlas.extract import extract_text  # noqa: E402
-from dropoutt.atlas.normalize import EMBED_DIM, SIF_A  # noqa: E402
-from dropoutt.atlas.pipeline import PIPELINE_VERSION, pipeline_hash  # noqa: E402
+
+from dropoutt.atlas.apply import Atlas
+from dropoutt.atlas.embed import DEFAULT_MODEL, TokenizedCorpus
+from dropoutt.atlas.embed import load as load_embedder
+from dropoutt.atlas.extract import extract_text
+from dropoutt.atlas.normalize import EMBED_DIM, SIF_A
+from dropoutt.atlas.pipeline import PIPELINE_VERSION, pipeline_hash
 
 SEED = 20260802
-VERSION = "atlas-lite-v3"
+VERSION = "atlas-v1-lite"
 
 N_L1 = 48
 L2_K_MIN = 4
@@ -974,7 +975,6 @@ def containment_crosswalk(current: np.ndarray, previous: np.ndarray,
     """
     pairs = np.zeros((n_current, n_previous), dtype=np.int64)
     np.add.at(pairs, (current.astype(np.int64), previous.astype(np.int64)), 1)
-    current_size = pairs.sum(axis=1)
     previous_size = pairs.sum(axis=0)
     majority_parent = pairs.argmax(axis=1)
 
@@ -1032,14 +1032,17 @@ def main() -> int:
     ap.add_argument("--cache", type=Path, default=Path(".atlas-cache"))
     ap.add_argument("--work", type=Path, default=None,
                     help="Scratch for memmaps (default <cache>/work). Reusable.")
+    # The bundle is the only atlas file inside the package. Its build inputs and
+    # the superseded bundles it is compared against live in tools/atlas-data/,
+    # so that a wheel carries one atlas and not the history of the map.
     ap.add_argument("--out", type=Path,
-                    default=Path("src/dropoutt/data/atlas/atlas-lite-v3.npz"))
+                    default=Path("src/dropoutt/data/atlas/atlas-v1-lite.npz"))
     ap.add_argument("--probes", type=Path,
                     default=Path(__file__).resolve().parent / "atlas_probes.json")
     ap.add_argument("--previous", type=Path,
-                    default=Path("src/dropoutt/data/atlas/atlas-lite-v2.npz"))
+                    default=Path("tools/atlas-data/atlas-lite-v2.npz"))
     ap.add_argument("--labels", type=Path,
-                    default=Path("src/dropoutt/data/atlas/l1_labels_v3.json"))
+                    default=Path("tools/atlas-data/l1_labels_v3.json"))
     ap.add_argument("--norm-sample", type=int, default=400_000)
     ap.add_argument("--reuse", action="store_true",
                     help="Reuse extraction/tokenization/embeddings already in --work.")
@@ -1131,7 +1134,7 @@ def main() -> int:
         stamp(f"  {result['n_tokens']:,} token occurrences in {timings['tokenize_s']:.0f}s")
 
     tokens = token_memmap(work, token_meta["n_tokens"])
-    vocab_size = int(np.asarray(embedder._model.embedding).shape[0])  # noqa: SLF001
+    vocab_size = int(np.asarray(embedder._model.embedding).shape[0])
 
     stamp("Fitting the IDF table from the cached tokens …")
     t0 = time.time()
@@ -1552,7 +1555,10 @@ def main() -> int:
     if size_mb > MAX_ARTIFACT_MB:
         stamp(f"WARNING: bundle is over the {MAX_ARTIFACT_MB:.0f} MB budget")
 
-    notes_path = args.out.with_name(args.out.stem + "-release-notes.json")
+    # Beside the build inputs, not beside the bundle. Deriving this from --out
+    # put release notes inside the package, where they shipped in every wheel
+    # and were never read at runtime.
+    notes_path = Path("tools/atlas-data") / (args.out.stem + "-release-notes.json")
     notes_path.write_text(json.dumps({
         "version": VERSION,
         "pipeline_hash": phash,

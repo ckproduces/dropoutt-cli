@@ -99,6 +99,7 @@ dev = [
     "dropoutt[all]",
     "pytest>=8.0",
     "ruff>=0.6",
+    "mypy>=1.11",
     "scikit-learn>=1.3",
 ]
 
@@ -107,7 +108,10 @@ dropoutt = "dropoutt.cli:run"
 
 [project.urls]
 Homepage = "https://dropoutt.com"
-Documentation = "https://dropoutt.com/docs"
+# dropoutt.com/docs is not published yet and returned 404, which is what the
+# PyPI sidebar would have linked to. Point at the docs that exist; switch back
+# when the site has that page.
+Documentation = "https://github.com/ckproduces/dropoutt-cli/tree/v1.0.0/docs"
 Source = "https://github.com/ckproduces/dropoutt-cli"
 Issues = "https://github.com/ckproduces/dropoutt-cli/issues"
 Changelog = "https://github.com/ckproduces/dropoutt-cli/blob/main/CHANGELOG.md"
@@ -137,6 +141,14 @@ exclude = ["**/.DS_Store"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src/dropoutt"]
+# Every optional extra is imported at its point of use, and the type check has
+# to pass on a machine where none of them are installed. Missing stubs for
+# tokenizers, pyarrow or model2vec are not type errors in this package.
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 100

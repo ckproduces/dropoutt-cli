@@ -19,6 +19,7 @@ import shutil
 import subprocess
 import sys
 import webbrowser
+from collections.abc import Mapping
 from pathlib import Path
 
 #: The shell is on the far end of a network connection. OpenSSH sets these for
@@ -47,23 +48,25 @@ def _falsey(value: str | None) -> bool:
     return (value or "").strip().lower() in {"0", "false", "no", "off"}
 
 
-def blocked(env: dict | None = None, stream=None) -> str | None:
+def blocked(env: Mapping[str, str] | None = None, stream=None) -> str | None:
     """Why the report should not be opened, or None if it should be.
 
     The string is written to be printed: it finishes the sentence "not opening
     the report: ...".
     """
-    env = os.environ if env is None else env
-    if _falsey(env.get("DROPOUTT_OPEN")):
+    # Read-only, and os.environ is not a dict. Mapping is what both it and a
+    # test's plain dict actually satisfy.
+    environ: Mapping[str, str] = os.environ if env is None else env
+    if _falsey(environ.get("DROPOUTT_OPEN")):
         return "DROPOUTT_OPEN is off"
-    if _truthy(env.get("DROPOUTT_OPEN")):
+    if _truthy(environ.get("DROPOUTT_OPEN")):
         return None
 
-    if any(env.get(name) for name in SSH_VARS):
+    if any(environ.get(name) for name in SSH_VARS):
         return "this looks like an SSH session"
-    if any(env.get(name) for name in CI_VARS):
+    if any(environ.get(name) for name in CI_VARS):
         return "this looks like CI"
-    if any(env.get(name) for name in BATCH_VARS):
+    if any(environ.get(name) for name in BATCH_VARS):
         return "this looks like a batch job"
 
     stream = sys.stdout if stream is None else stream
@@ -74,19 +77,21 @@ def blocked(env: dict | None = None, stream=None) -> str | None:
     if not interactive:
         return "output is not a terminal"
 
-    if sys.platform not in ALWAYS_GRAPHICAL and not _has_display(env):
+    if sys.platform not in ALWAYS_GRAPHICAL and not _has_display(environ):
         return "no display is available"
     return None
 
 
-def _has_display(env: dict) -> bool:
+def _has_display(env: Mapping[str, str]) -> bool:
     """Whether X11, Wayland, or the WSL bridge can show a window."""
     if env.get("DISPLAY") or env.get("WAYLAND_DISPLAY"):
         return True
     return bool(env.get("WSL_DISTRO_NAME")) and shutil.which("wslview") is not None
 
 
-def open_report(path: str | Path, env: dict | None = None, stream=None) -> str | None:
+def open_report(
+    path: str | Path, env: Mapping[str, str] | None = None, stream=None
+) -> str | None:
     """Show a written report to whoever ran the scan.
 
     Returns None once it has been handed to a browser, or the reason it was
@@ -94,8 +99,8 @@ def open_report(path: str | Path, env: dict | None = None, stream=None) -> str |
     findings have been printed, and a desktop that cannot open a file is not a
     reason to fail a scan that succeeded.
     """
-    env = os.environ if env is None else env
-    reason = blocked(env, stream)
+    environ: Mapping[str, str] = os.environ if env is None else env
+    reason = blocked(environ, stream)
     if reason:
         return reason
 
@@ -103,7 +108,7 @@ def open_report(path: str | Path, env: dict | None = None, stream=None) -> str |
     try:
         # WSL has no browser of its own. wslu's wslview hands the URL to
         # Windows, and Python's webbrowser does not know about it.
-        if env.get("WSL_DISTRO_NAME") and not env.get("DISPLAY"):
+        if environ.get("WSL_DISTRO_NAME") and not environ.get("DISPLAY"):
             wslview = shutil.which("wslview")
             if wslview:
                 subprocess.Popen(

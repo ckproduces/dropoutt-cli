@@ -9,9 +9,17 @@ from __future__ import annotations
 
 import contextlib
 import sys
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 from rich.markup import escape
+
+if TYPE_CHECKING:
+    # Annotations only. `Progress` is imported inside `_start_bar` so that a
+    # scan with redirected output never pays for it, and naming the types here
+    # must not undo that.
+    from rich.progress import Progress, TaskID
+    from rich.status import Status
 
 console = Console()
 
@@ -31,9 +39,9 @@ class ProgressDisplay:
 
     def __init__(self, *, enabled: bool = True) -> None:
         self.enabled = enabled
-        self._progress = None
-        self._status = None
-        self._task = None
+        self._progress: Progress | None = None
+        self._status: Status | None = None
+        self._task: TaskID | None = None
         self._last_phase = ""
         self._last_printed = 0
         self._live = enabled and console.is_terminal and sys.stdout.isatty()
@@ -70,6 +78,9 @@ class ProgressDisplay:
             return
         if self._progress is None:
             self._start_bar(total)
+        # _start_bar sets both, but that is not visible through the call.
+        if self._progress is None or self._task is None:
+            return
         self._progress.update(self._task, completed=min(done, total), total=max(total, done))
 
     def _start_bar(self, total: int) -> None:

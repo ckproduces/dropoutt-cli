@@ -38,7 +38,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from atlas_sources import SOURCES, Source  # noqa: E402
+import contextlib
+
+from atlas_sources import SOURCES, Source
 
 #: Bump when the on-disk record format changes. Shards written by an older
 #: fetcher are re-fetched rather than silently mixed with new ones.
@@ -156,7 +158,7 @@ def _iter_rows(ds, *, deadline: float, stall_seconds: float):
                 if time.time() > deadline:
                     break
             q.put(sentinel)
-        except Exception as exc:  # noqa: BLE001 - reported, not raised
+        except Exception as exc:
             q.put(exc)
 
     threading.Thread(target=worker, daemon=True).start()
@@ -242,7 +244,7 @@ def fetch_source(src: Source, cache: Path, *, budget: float, stall: float,
                     "via": "fallback",
                 }
             break
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             error = f"{type(exc).__name__}: {str(exc)[:200]}"
             ds = None
 
@@ -269,7 +271,7 @@ def fetch_source(src: Source, cache: Path, *, budget: float, stall: float,
                         break
         except TimeoutError as exc:
             note = f"stopped early: {exc}"
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             if rows:
                 note = f"partial: {type(exc).__name__}: {str(exc)[:120]}"
             else:
@@ -422,10 +424,8 @@ def reindex(cache: Path) -> Path:
             continue
         meta_path = d / "meta.json"
         if meta_path.exists():
-            try:
+            with contextlib.suppress(Exception):
                 metas.append(json.loads(meta_path.read_text(encoding="utf-8")))
-            except Exception:
-                pass
     if salvaged:
         log(f"  salvaged {salvaged} interrupted shards")
     return write_manifest(cache, metas, {"reindexed": True, "fetched": False})
@@ -536,7 +536,7 @@ def main() -> int:
             src = futures[future]
             try:
                 metas.append(future.result())
-            except Exception as exc:  # noqa: BLE001 - a worker must not kill the run
+            except Exception as exc:
                 metas.append({
                     "cache_format": CACHE_FORMAT, "slug": src.slug, "rows": 0,
                     "chars": 0, "complete": False, "target": src.target,
@@ -550,10 +550,8 @@ def main() -> int:
                 continue
             cached = args.cache / src.slug / "meta.json"
             if cached.exists():
-                try:
+                with contextlib.suppress(Exception):
                     metas.append(json.loads(cached.read_text(encoding="utf-8")))
-                except Exception:
-                    pass
 
     path = write_manifest(args.cache, metas, settings)
     manifest = json.loads(path.read_text(encoding="utf-8"))

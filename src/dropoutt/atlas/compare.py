@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, TypeGuard
 
 from ..registry_data import taxonomy
 
@@ -115,13 +115,17 @@ def concentration(coverage: dict[str, Any]) -> float | None:
     return max(0.0, min(1.0, float(ent) / float(top)))
 
 
-def is_usable(coverage: dict[str, Any] | None) -> bool:
+def is_usable(coverage: dict[str, Any] | None) -> TypeGuard[dict[str, Any]]:
     """Whether a coverage facet carries a histogram worth comparing.
 
     A high off-atlas rate does not make a facet unusable; it makes it partial,
     which `placed_share` quantifies and the comparison reports. The only genuinely
     unusable cases are an absent facet, one from a scan where nothing was placed,
     and one written by a version that suppressed the histogram outright.
+
+    Returning a ``TypeGuard`` rather than a plain ``bool`` is what tells a type
+    checker that everything past the guard in `compare` has a facet, not None —
+    the same thing the guard already told a reader.
     """
     if not coverage or coverage.get("status") != "ok":
         return False

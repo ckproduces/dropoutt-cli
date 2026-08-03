@@ -39,6 +39,7 @@ from __future__ import annotations
 import struct
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -270,6 +271,10 @@ class ContaminationIndex:
         start = self._own_start
         bench_of = self._own_bench
         inst_of = self._own_inst
+        # These are built together with `keys`, which was checked above, so a
+        # missing one means an index that never finished loading.
+        if start is None or bench_of is None or inst_of is None:
+            return
         covered: dict[tuple[int, int], int] = {}
         for p in hits.tolist():
             for k in range(int(start[p]), int(start[p + 1])):
@@ -327,9 +332,9 @@ class ContaminationIndex:
 
     # -- results ----------------------------------------------------------
 
-    def results(self) -> dict[str, dict[str, object]]:
+    def results(self) -> dict[str, dict[str, Any]]:
         """Apply the Tulu 3 rule and report per benchmark."""
-        out: dict[str, dict[str, object]] = {}
+        out: dict[str, dict[str, Any]] = {}
         for name, bench in self.benchmarks.items():
             best = self._best.get(name)
             sizes = np.asarray(bench.instance_size, dtype=np.float64)

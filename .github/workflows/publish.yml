@@ -1,0 +1,80 @@
+name: Publish
+
+# Trusted publishing (OIDC). No API token is stored anywhere: PyPI is
+# configured to trust this repository and this workflow filename, and the job
+# below exchanges a short-lived GitHub identity token for the upload.
+#
+# Pushing a v* tag publishes to PyPI. Running it by hand publishes to TestPyPI,
+# which is the rehearsal worth doing for a first or risky release — a version
+# number on real PyPI can never be reused, even after the file is deleted.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build twine
+          rm -rf dist/ build/
+          python -m build
+          twine check --strict dist/*
+
+      # A tag that disagrees with the packaged version is the one mistake this
+      # workflow cannot undo, so it fails before anything is uploaded.
+      - name: Tag must match the packaged version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          built=$(ls dist/*.tar.gz | sed -E 's/.*-([0-9][^-]*)\.tar\.gz/\1/')
+          echo "tag=$tag built=$built"
+          test "$tag" = "$built" || {
+            echo "::error::tag $GITHUB_REF_NAME does not match built version $built"
+            exit 1
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  testpypi:
+    # Manual runs rehearse against TestPyPI and never touch real PyPI.
+    if: github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  pypi:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

@@ -230,7 +230,7 @@ non-English corpora it is routinely this large.
 
 ### Atlas coverage
 
-Where your records land on `atlas-lite-v0`, a shared coordinate system. Covered
+Where your records land on `atlas-v1-lite`, a shared coordinate system. Covered
 in [section 7](#7-comparing-two-datasets).
 
 ### Not checked, and why

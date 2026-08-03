@@ -230,12 +230,17 @@ class Atlas:
         if emb.shape[1] > self.dim:
             emb = emb[:, : self.dim]
         labels = self.lang_labels
+        # `uses_language_centering` already established this above; restating it
+        # against a local is what makes that reachable to a checker.
+        lang_means = self.lang_means
+        if lang_means is None:
+            return self.norm.apply(emb)
         index = {label: i for i, label in enumerate(labels)}
         means = np.tile(self.norm.mean.reshape(1, -1), (len(emb), 1))
         for row, lang in enumerate(languages[: len(emb)]):
             slot = index.get(lang)
             if slot is not None:
-                means[row] = self.lang_means[slot]
+                means[row] = lang_means[slot]
         x = emb - means
         if self.norm.pca_components.size:
             comps = self.norm.pca_components
@@ -1163,11 +1168,7 @@ def _diagnose(detail: dict[str, Any]) -> str:
 #: coverage number is only comparable to another coverage number from the same
 #: coordinate system. Two users on the same dropoutt version must get the same
 #: map; upgrading the map is a release decision, made by editing this line.
-DEFAULT_ATLAS_VERSION = "atlas-lite-v3"
-
-#: Older bundles, newest first. Used only when the pinned version is absent —
-#: an incomplete install — and the fallback is reported, never silent.
-FALLBACK_ATLAS_VERSIONS = ("atlas-lite-v2", "atlas-lite-v1", "atlas-lite-v0")
+DEFAULT_ATLAS_VERSION = "atlas-v1-lite"
 
 
 def atlas_path_for(version: str) -> Path | None:
@@ -1182,17 +1183,13 @@ def atlas_path_for(version: str) -> Path | None:
 
 
 def bundled_atlas_path(version: str | None = None) -> Path | None:
-    """Path to a named atlas, or to the pinned default with fallbacks."""
-    if version is not None:
-        return atlas_path_for(version)
-    path = atlas_path_for(DEFAULT_ATLAS_VERSION)
-    if path is not None:
-        return path
-    for name in FALLBACK_ATLAS_VERSIONS:
-        path = atlas_path_for(name)
-        if path is not None:
-            return path
-    return None
+    """Path to a named atlas, or to the pinned default.
+
+    One atlas ships, so there is nothing to fall back to. An absent file means
+    a broken install, and returning None says that plainly rather than quietly
+    reporting coordinates from a different map.
+    """
+    return atlas_path_for(version if version is not None else DEFAULT_ATLAS_VERSION)
 
 
 def load_bundled(version: str | None = None) -> Atlas | None:

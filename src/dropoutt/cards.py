@@ -14,11 +14,12 @@ is adding a dependency to read ten lines.
 from __future__ import annotations
 
 import re
+from typing import Any
 
 _FM = re.compile(r"\A---\s*\n(.*?)\n---\s*(?:\n|\Z)", re.DOTALL)
 
 
-def parse_card(text: str) -> dict[str, object]:
+def parse_card(text: str) -> dict[str, Any]:
     """Extract the YAML front-matter of a dataset or model card."""
     match = _FM.match(text)
     if not match:
@@ -26,8 +27,8 @@ def parse_card(text: str) -> dict[str, object]:
     return _parse_block(match.group(1))
 
 
-def _parse_block(block: str) -> dict[str, object]:
-    out: dict[str, object] = {}
+def _parse_block(block: str) -> dict[str, Any]:
+    out: dict[str, Any] = {}
     current_key: str | None = None
     current_list: list[str] = []
 
@@ -80,9 +81,9 @@ def _value(v: str) -> object:
     return _scalar(v)
 
 
-def _normalize(raw: dict[str, object]) -> dict[str, object]:
+def _normalize(raw: dict[str, Any]) -> dict[str, Any]:
     """Coerce the fields we care about into predictable shapes."""
-    out: dict[str, object] = {}
+    out: dict[str, Any] = {}
 
     lic = raw.get("license")
     if isinstance(lic, list):

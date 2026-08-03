@@ -74,10 +74,11 @@ reason, never as a share of the reference corpus.
 
 ## The atlas is a first version
 
-The shipped `atlas-lite-v0` is built from a few hundred thousand records, its
+The shipped `atlas-v1-lite` is built from a few million records, its
 level-0 taxonomy probe is trained on labels bootstrapped from dataset
-provenance rather than from human annotation, and its regions are named from
-TF-IDF terms rather than by a language model. Its own held-out accuracy and
+provenance rather than from human annotation, and below the 48 curated subject
+areas its regions are captioned from TF-IDF terms rather than by a language
+model. Its own held-out accuracy and
 region purity are recorded inside the artifact and travel into every
 fingerprint under the `coverage` facet; read them before trusting a coverage
 number.

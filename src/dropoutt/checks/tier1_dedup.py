@@ -11,6 +11,8 @@ acting on.
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 
 from ..context import ScanContext, dedup_words_of
@@ -295,7 +297,7 @@ class CrossDatasetOverlap(Check):
         if not matched:
             return []
 
-        rows: list[dict[str, object]] = []
+        rows: list[dict[str, Any]] = []
         for src, targets in matched.items():
             denom = store.per_dataset.get(src, 0) or 1
             for tgt, keys in targets.items():
@@ -376,8 +378,17 @@ class ContradictorySupervision(Check):
     #: The digest function, bound once at construction.
     MERGE_IGNORE = ("_hash",)
 
-    def merge(self, other: ContradictorySupervision) -> None:
+    #: Set once MAX_TRACKED prompts are held, so the finding can say the count
+    #: is a floor. Declared here because ``merge`` reads it before ``reset``
+    #: runs on a fresh instance.
+    overflowed: bool = False
+
+    def merge(self, other: Check) -> None:
         super().merge(other)
+        # Shards are merged by check id, so this is always the same class. The
+        # signature stays the base one so the override does not narrow it.
+        if not isinstance(other, ContradictorySupervision):
+            return
         self.overflowed = self.overflowed or other.overflowed
         for pk, (first_ak, _n, first_record) in other.seen.items():
             mine = self.seen.get(pk)

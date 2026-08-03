@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 
 import numpy as np
-import pytest
 
 from dropoutt.atlas.apply import Atlas
 from dropoutt.atlas.chunk import chunk_text
@@ -116,21 +115,21 @@ def test_pipeline_hash_is_stable():
     assert len(pipeline_hash()) == 32
 
 
-def test_bundled_v2_subject_areas_have_human_labels():
-    from dropoutt.atlas.apply import load_bundled
+def test_bundled_subject_areas_have_human_labels():
+    from dropoutt.atlas.apply import DEFAULT_ATLAS_VERSION, load_bundled
     from dropoutt.atlas.compare import category_labels
 
-    # Named explicitly. This test is about v2's curated label file, not about
-    # whichever atlas happens to be pinned as the default.
-    atlas = load_bundled("atlas-lite-v2")
-    if atlas is None:
-        pytest.skip("atlas-lite-v2 is not bundled in this build")
-    assert atlas.meta.get("version") == "atlas-lite-v2"
+    # One atlas ships, so this tests the one the package actually reports
+    # against. It replaced the same assertions against atlas-lite-v2, which
+    # stopped being reachable through load_bundled when the superseded bundles
+    # moved to tools/atlas-data/ and the test silently skipped instead.
+    atlas = load_bundled()
+    assert atlas is not None, "the pinned atlas must be bundled"
+    assert atlas.meta.get("version") == DEFAULT_ATLAS_VERSION
     labels = category_labels(atlas)
-    assert len(labels) == atlas.n_l1 == 50
-    assert labels[21] == "Legal proceedings and court cases"
-    assert labels[46] == "Python programming and code generation"
-    assert "," not in labels[0]
+    assert len(labels) == atlas.n_l1 == 48
+    assert labels[30] == "Database schemas and query construction"
+    assert labels[46] == "Website boilerplate and page furniture"
     assert atlas.meta.get("l1_labels_source", "").startswith("curated:")
 
 
@@ -276,21 +275,21 @@ def _tiny_atlas(tmp_path, *, lang_means=None, lang_labels=()):
     l1 = -np.stack([centroids[:3].mean(0), centroids[3:].mean(0)]).astype(np.float32)
     l1 /= np.linalg.norm(l1, axis=1, keepdims=True)
 
-    arrays = dict(
-        centroids=centroids,
-        region_category=parents,
-        l1_centroids=l1,
-        coords=np.zeros((n_l2, 2), dtype=np.float32),
-        probe_coef=np.zeros((0, dim), dtype=np.float32),
-        probe_intercept=np.zeros(0, dtype=np.float32),
-        probe_classes=np.zeros(0, dtype=np.int32),
-        norm_mean=np.zeros(dim, dtype=np.float32),
-        norm_pca=np.zeros((0, dim), dtype=np.float32),
-        coarse_knots=np.tile(np.linspace(0.0, 1.0, 5), (n_l1, 1)).astype(np.float32),
-        coarse_expected=np.tile(np.linspace(0.0, 0.5, 5), (n_l1, 1)).astype(np.float32),
-        family_distinguishable=np.array([True, False]),
-        family_sibling_overlap=np.array([0.1, 0.9], dtype=np.float32),
-        meta=np.array([json.dumps({
+    arrays = {
+        "centroids": centroids,
+        "region_category": parents,
+        "l1_centroids": l1,
+        "coords": np.zeros((n_l2, 2), dtype=np.float32),
+        "probe_coef": np.zeros((0, dim), dtype=np.float32),
+        "probe_intercept": np.zeros(0, dtype=np.float32),
+        "probe_classes": np.zeros(0, dtype=np.int32),
+        "norm_mean": np.zeros(dim, dtype=np.float32),
+        "norm_pca": np.zeros((0, dim), dtype=np.float32),
+        "coarse_knots": np.tile(np.linspace(0.0, 1.0, 5), (n_l1, 1)).astype(np.float32),
+        "coarse_expected": np.tile(np.linspace(0.0, 0.5, 5), (n_l1, 1)).astype(np.float32),
+        "family_distinguishable": np.array([True, False]),
+        "family_sibling_overlap": np.array([0.1, 0.9], dtype=np.float32),
+        "meta": np.array([json.dumps({
             "version": "tiny-v3", "embed_model": "fake",
             "encoder_weight_hash": "deadbeef",
             "off_atlas_threshold": -1.0, "soft_k": 3, "soft_temperature": 0.2,
@@ -298,8 +297,8 @@ def _tiny_atlas(tmp_path, *, lang_means=None, lang_labels=()):
             "normalization": {"variant": "per_language" if lang_means is not None
                               else "global", "lang_labels": list(lang_labels)},
         })], dtype=object),
-        allow_pickle=True,
-    )
+        "allow_pickle": True,
+    }
     if lang_means is not None:
         arrays["norm_lang_means"] = np.asarray(lang_means, dtype=np.float32)
     path = tmp_path / "tiny.npz"

@@ -559,7 +559,7 @@ def _twins(coverage: dict) -> tuple[list[dict], str]:
     alike = list(block.get("most_alike") or [])
     if not alike:
         return [], ""
-    rows = []
+    rows: list[dict[str, Any]] = []
     for pair in alike[:5]:
         similarity = float(pair["similarity"])
         rows.append({
@@ -700,7 +700,7 @@ def density_ratio(value: float) -> str:
 def format_reach(value: float) -> str:
     """Effective reach for the grid: ``5`` not ``5.0``, else one decimal."""
     if abs(value - round(value)) < 1e-9:
-        return str(int(round(value)))
+        return str(round(value))
     return f"{value:.1f}"
 
 

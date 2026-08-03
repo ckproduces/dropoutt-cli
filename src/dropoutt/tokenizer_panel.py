@@ -41,6 +41,7 @@ import math
 import threading
 from dataclasses import dataclass, field
 from functools import lru_cache
+from typing import Any
 
 from .compat import HAVE_TOKENIZERS
 
@@ -84,7 +85,10 @@ class TokenizerHandle:
 
     name: str
     model_id: str | None
-    _tok: object | None = None
+    #: A ``tokenizers.Tokenizer`` when one loaded. Typed loosely because
+    #: ``tokenizers`` is an optional extra and must not be imported to describe
+    #: the attribute that holds it.
+    _tok: Any = None
     #: Set when no real tokenizer could be loaded.
     estimated: bool = False
     tokenizer_hash: str = ""

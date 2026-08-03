@@ -288,7 +288,7 @@ NON_ENGLISH_FLOOR = 0.30
 
 def axis_totals(rows_by_source: dict[str, int]) -> dict[str, int]:
     """Sum retained rows per axis, keyed by :attr:`Source.slug`."""
-    totals: dict[str, int] = {axis: 0 for axis in AXIS_FLOORS}
+    totals: dict[str, int] = dict.fromkeys(AXIS_FLOORS, 0)
     for src in SOURCES:
         totals[src.axis] = totals.get(src.axis, 0) + rows_by_source.get(src.slug, 0)
     return totals
