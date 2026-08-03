@@ -637,7 +637,7 @@ class Atlas:
             cat_counts[key] = cat_counts.get(key, 0) + int(max(round(weight), 1))
 
         nonzero = int((region_counts > 0).sum())
-        mass = region_counts / max(region_counts.sum(), 1)
+        mass = region_counts / max(int(region_counts.sum()), 1)
         entropy = float(-(mass[mass > 0] * np.log(mass[mass > 0])).sum())
         density, density_model = self._density(region_counts, effective_n)
 

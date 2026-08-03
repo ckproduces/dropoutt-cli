@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -576,7 +577,13 @@ def help_command(
     both print the same text.
     """
     group_ctx = ctx.parent or ctx
-    group = group_ctx.command
+    # The group, which owns the subcommands. Deliberately untyped: typer vendors
+    # its own copy of click, so this is a TyperGroup whose base classes have
+    # moved twice across click 8.x — under click 8.4 it does not derive from
+    # click.Group at all, and an isinstance guard on that silently sent every
+    # `help <command>` to the group's own help. Naming a class here would pin
+    # this to a private typer module path that is expected to move again.
+    group: Any = group_ctx.command
     if command is None:
         console.print(group_ctx.get_help())
         raise typer.Exit(EXIT_OK)

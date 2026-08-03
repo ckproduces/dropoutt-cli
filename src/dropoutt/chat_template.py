@@ -28,7 +28,7 @@ from __future__ import annotations
 import datetime as _dt
 import json as _json
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any
 
 from jinja2 import nodes
 from jinja2.ext import Extension
@@ -48,7 +48,11 @@ class GenerationExtension(Extension):
     """
 
     #: Jinja reads this off the class to learn which tag the extension owns.
-    tags: ClassVar[set[str]] = {"generation"}
+    #: RUF012 wants a ClassVar here and mypy forbids one: jinja2's Extension
+    #: declares `tags` as an instance attribute, and a subclass may not narrow
+    #: that to a class variable. The type checker is describing the base class,
+    #: so it wins.
+    tags: set[str] = {"generation"}  # noqa: RUF012
 
     def parse(self, parser):  # pragma: no cover - exercised via render
         lineno = next(parser.stream).lineno
