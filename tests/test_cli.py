@@ -3,12 +3,31 @@
 from __future__ import annotations
 
 import json
+import re
 
 from typer.testing import CliRunner
 
 from dropoutt.cli import _without_source_locations, app
 
 runner = CliRunner()
+
+_ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def plain(text: str) -> str:
+    """Output with styling removed.
+
+    rich treats GitHub Actions as a colour-capable terminal and forces escape
+    sequences on, which no ``NO_COLOR`` or ``TERM`` setting turns back off. The
+    same help text therefore arrives styled in CI and bare on a developer's
+    machine. Every assertion below is about the words, so the styling goes.
+    """
+    return _ANSI.sub("", text)
+
+
+def words(text: str) -> str:
+    """Styling removed and whitespace collapsed, for text rich may re-wrap."""
+    return " ".join(plain(text).split())
 
 
 def test_commands_with_required_arguments_show_full_help_when_empty():
@@ -17,8 +36,8 @@ def test_commands_with_required_arguments_show_full_help_when_empty():
     ):
         result = runner.invoke(app, [command])
         assert result.exit_code == 2
-        assert "Usage:" in result.output
-        assert example in result.output
+        assert "Usage:" in plain(result.output)
+        assert example in words(result.output)
         assert "Traceback" not in result.output
 
 
@@ -32,7 +51,7 @@ def test_the_published_command_surface_is_exactly_what_is_supported():
     result = runner.invoke(app, ["--help"])
     listed = {
         line.split()[1]
-        for line in result.output.splitlines()
+        for line in plain(result.output).splitlines()
         if line.startswith("\u2502 ") and len(line.split()) > 1
     }
     assert {"scan", "checks", "benchmarks", "models", "fetch", "doctor",
@@ -46,22 +65,22 @@ def test_help_and_version_work_as_words_as_well_as_flags():
     """Guessing wrong about a tool's conventions should not be a usage error."""
     from dropoutt import __version__
 
-    assert runner.invoke(app, ["version"]).output.strip() == __version__
-    assert runner.invoke(app, ["--version"]).output.strip() == __version__
+    assert plain(runner.invoke(app, ["version"]).output).strip() == __version__
+    assert plain(runner.invoke(app, ["--version"]).output).strip() == __version__
 
     spelled_out = runner.invoke(app, ["help"])
     assert spelled_out.exit_code == 0
-    assert "Usage:" in spelled_out.output
+    assert "Usage:" in plain(spelled_out.output)
 
     for command in ("scan", "checks", "doctor"):
         one = runner.invoke(app, ["help", command])
         assert one.exit_code == 0
-        assert f"Usage: dropoutt {command}" in " ".join(one.output.split())
+        assert f"Usage: dropoutt {command}" in words(one.output)
 
     unknown = runner.invoke(app, ["help", "wat"])
     assert unknown.exit_code == 2
-    assert "No such command" in unknown.output
-    assert "scan" in unknown.output
+    assert "No such command" in plain(unknown.output)
+    assert "scan" in plain(unknown.output)
 
 
 def test_a_scan_does_not_try_to_open_a_report_that_nobody_can_see(tmp_path, monkeypatch):

@@ -48,6 +48,16 @@ was handed `os.environ`, which is not one, and the shard config declared
 `contamination_dirs: list[str]` while the caller passed `Path` objects into a
 field the worker rebuilds with `Path(p)`.
 
+The same pass fixed a test suite that had been failing in CI while passing on
+every developer machine, for two reasons that both amounted to a test asserting
+something it could not see. rich treats GitHub Actions as a colour-capable
+terminal and no `NO_COLOR` or `TERM` setting turns that off, so three CLI tests
+compared help text against output wrapped in escape sequences; they now compare
+words. And two budget tests guarded on `HAVE_TOKENIZERS`, which only says the
+library imports — under `HF_HUB_OFFLINE` with a cold cache every tokenizer falls
+back to the character-ratio stand-in, so the measurement under test was never
+computed and a bare `return` reported that as a pass. They now skip.
+
 ### A cell's density is now an estimate, not a quotient
 
 `records / expected` is unusable in the tail, and the tail is most of the map.

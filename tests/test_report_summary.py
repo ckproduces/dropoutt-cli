@@ -502,7 +502,7 @@ def test_budget_prices_each_dataset_at_its_own_rate():
     single pooled tokens-per-character ratio charges the whole corpus at a blend
     it never had.
     """
-    from dropoutt.tokenizer_panel import HAVE_TOKENIZERS, estimate_budget
+    from dropoutt.tokenizer_panel import estimate_budget
 
     wide, dense = _budget_corpus()
     # The corpus is overwhelmingly `wide`; the sample is half and half.
@@ -514,8 +514,7 @@ def test_budget_prices_each_dataset_at_its_own_rate():
         records_by_dataset={"wide": len(wide) * 100, "dense": len(dense)},
     )
     assert report.estimates
-    if not HAVE_TOKENIZERS:
-        return
+    _real_tokenizer_or_skip()
 
     est = report.cheapest
     assert est is not None
@@ -535,6 +534,22 @@ def _pooled_rate(texts):
     return sum(counts) / sum(len(t) for t in texts)
 
 
+def _real_tokenizer_or_skip():
+    """Skip unless a real tokenizer actually loaded.
+
+    ``HAVE_TOKENIZERS`` only says the library imports. Under ``HF_HUB_OFFLINE``
+    with a cold cache — how CI runs — every panel entry falls back to the
+    character-ratio stand-in, ``cheapest`` is None, and the measurements these
+    tests are about are never computed. Guarding on the import alone let that
+    read as a pass.
+    """
+    from dropoutt.tokenizer_panel import PANEL, load_tokenizer
+
+    handle = load_tokenizer(PANEL[0][1])
+    if handle is None or handle.estimated:
+        pytest.skip("no real tokenizer available (offline with a cold cache)")
+
+
 def test_a_dataset_sampled_whole_contributes_no_uncertainty():
     """The finite-population correction is not decoration.
 
@@ -542,10 +557,9 @@ def test_a_dataset_sampled_whole_contributes_no_uncertainty():
     counted rather than estimated, and an interval that still widened for it
     would be reporting sampling error that does not exist.
     """
-    from dropoutt.tokenizer_panel import HAVE_TOKENIZERS, estimate_budget
+    from dropoutt.tokenizer_panel import estimate_budget
 
-    if not HAVE_TOKENIZERS:
-        return
+    _real_tokenizer_or_skip()
     wide, _ = _budget_corpus()
     chars = {"wide": sum(len(t) for t in wide)}
     report = estimate_budget(
