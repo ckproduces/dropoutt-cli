@@ -81,7 +81,7 @@ to structural validity and contamination.
   },
   "provenance": {
     "content_hash": "...", "config_hash": "...", "tokenizer_hash": "...",
-    "atlas_hash": "", "langid_backend": "fasttext-lid.176",
+    "atlas_hash": "", "langid_backend": "py3langid-97",
     "model_id": "Qwen/Qwen3-8B", "seq_len": 4096
   },
   "datasets": [

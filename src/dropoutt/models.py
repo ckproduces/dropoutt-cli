@@ -40,7 +40,19 @@ from typing import Any
 #: beginning; and near-duplicate shingles use a vectorised hash, which shifts
 #: MinHash estimates by a fraction of a percent. Contamination hashes are
 #: unchanged, because the shipped indices are made of them.
-PIPELINE_VERSION = "0.2.0"
+#: 0.3.0 changes three more. Language identification moved from
+#: fasttext-lid.176 to py3langid, which is a different classifier over a
+#: different label set, so every language share and every language-deviation
+#: count moves — the backend is named in `provenance.langid_backend`, but a
+#: version that did not move would let two incomparable language facets be
+#: diffed. The near-duplicate index now stops at a memory-derived ceiling and
+#: says so, so on a corpus above that ceiling its count is a floor over a prefix
+#: rather than a rate over the corpus. And the per-shard token-budget cap was
+#: sized against the total shard count rather than against how many shards a
+#: dataset actually spans, which made a parallel scan's token estimate differ
+#: from a serial one by 0.04%; they are identical now, and both differ slightly
+#: from what a parallel 0.2.0 scan reported.
+PIPELINE_VERSION = "0.3.0"
 FINGERPRINT_SCHEMA_VERSION = "fp-v0.1"
 
 

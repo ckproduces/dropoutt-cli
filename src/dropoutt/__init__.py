@@ -20,8 +20,8 @@ from __future__ import annotations
 #: The single source of truth for the package version. `pyproject.toml` reads it
 #: from here via `[tool.hatch.version]`, so bump it in this file only. Carrying
 #: the number in both places let them drift: 0.1.4 was tagged in pyproject while
-#: `dropoutt doctor` still reported 0.1.3 from this constant.
-__version__ = "1.0.0"
+#: the version command still reported 0.1.3 from this constant.
+__version__ = "1.1.0"
 
 from .models import (
     Confidence,

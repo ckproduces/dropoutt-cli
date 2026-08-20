@@ -11,14 +11,24 @@ Install from the checkout (or a built wheel):
 ```bash
 python3 -m venv .venv
 # Unix / macOS
-.venv/bin/pip install -e '.[all]'
+.venv/bin/pip install -e .
 # Windows
-.venv\Scripts\pip install -e ".[all]"
+.venv\Scripts\pip install -e .
 ```
 
-If the login node cannot build some of the optional wheels, drop `[all]` and add
-extras one at a time. `dropoutt doctor` reports what is missing and what its
-absence costs.
+There are no extras. Every dependency publishes a wheel for every Python and
+platform in the package's `requires-python` and classifiers, so a login node
+never has to build anything:
+
+```bash
+uv pip compile pyproject.toml --python-version 3.14 \
+    --python-platform windows --only-binary :all:
+```
+
+must resolve, and `tests/test_packaging.py` asserts the property. This is not a
+preference. A user on Windows and CPython 3.14 ran `pip install dropoutt`, hit a
+dependency with no wheel for that interpreter, and was told to install Microsoft
+Visual C++ Build Tools.
 
 Cache directory (tokenizers, atlas embedder): `DROPOUTT_CACHE`, else
 `XDG_CACHE_HOME/dropoutt`, else `%LOCALAPPDATA%\dropoutt` on Windows or
@@ -42,40 +52,47 @@ because it is the invocation that always works.
 
 ## The dependency rule
 
-> The core scan requires NumPy but not `tokenizers`. Token-dependent checks are
-> an optional extra, and every other compiled component is either optional or an
-> accelerator with a fallback.
+> Every dependency ships a wheel for every supported interpreter and platform.
+> Nothing is built at install time. A dependency that needs a C or C++ toolchain
+> is a dependency this package cannot have.
 
 | dependency | role | what happens without it |
 | --- | --- | --- |
 | `typer`, `rich`, `jinja2`, `numpy` | CLI, output, report, maths | required; all pure Python except numpy |
-| `tokenizers` | token counting, template rendering | token-dependent checks skip with an unlock hint |
+| `tokenizers` | token counting, template rendering | token-dependent checks skip with a hint |
 | `orjson` | JSONL parsing | falls back to stdlib `json`; slower, identical results |
-| `fasttext-langdetect` | language identification | falls back to a small character-profile detector; **less accurate**, and every finding it produces is marked low-trust |
-| `model2vec` | atlas embeddings | atlas coverage is reported as skipped |
-| `pyarrow` | Parquet, Arrow IPC, Feather, ORC | these columnar files are reported as unreadable with an install hint |
-| `zstandard` | `.zst` input | the file is reported as unreadable with an install hint; gzip, bzip2, and xz use the standard library |
+| `py3langid` | language identification, 97 languages | falls back to a small character-profile detector; **less accurate**, and every finding it produces is marked low-trust |
+| `model2vec`, `scipy` | atlas embeddings | atlas coverage is reported as skipped |
+| `pyarrow` | Parquet, Arrow IPC, Feather, ORC | these columnar files are reported as unreadable |
+| `zstandard` | `.zst` input | the file is reported as unreadable; gzip, bzip2, and xz use the standard library |
+
+All of these are installed by `pip install dropoutt`, so the "without it" column
+describes a broken environment rather than a choice — a pruned container image,
+a partially restored venv, a `site-packages` someone trimmed. The scan degrades
+and says what it lost instead of crashing on record four million.
 
 The language fallback is the only one where the difference is quality rather
 than speed, which is why its results are labelled rather than silently
 substituted.
 
-Check what you have:
+Check what you have, and what the scan would size itself against:
 
 ```bash
-dropoutt doctor
+dropoutt fetch
 ```
 
 ## Known wheel constraints
 
 `pyarrow` 25 and `numpy` 2.5 ship `manylinux_2_28` only. On an older CentOS-era
-login node, `pip install pyarrow` falls back to a source build and fails. That is
-why columnar formats are an optional extra and why the package declares `numpy>=1.24`
-rather than pinning to the newest.
+login node, `pip install pyarrow` falls back to a source build and fails. The
+package declares `numpy>=1.24` and `pyarrow>=14.0` rather than pinning to the
+newest so that an older resolver can find a wheel it can use.
 
-`fasttext-predict`, which `fasttext-langdetect` depends on, has cp312 wheels but
-none for cp313 and later. If your cluster runs a newer Python, install without
-the `lid` extra and the fallback detector takes over.
+`fasttext-langdetect` was the language backend through 1.0. It depends on
+`fasttext-predict`, which publishes no wheel for CPython 3.14 — so on that
+interpreter pip compiled it, and on Windows that means MSVC. It was replaced by
+`py3langid`, which is pure Python over numpy and carries its 768 KB model inside
+the wheel.
 
 ## Offline operation
 

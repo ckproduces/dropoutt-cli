@@ -1,7 +1,7 @@
 # Quickstart
 
 ```bash
-pip install -e '.[all]'
+pip install dropoutt
 dropoutt scan ./data
 ```
 
@@ -101,7 +101,8 @@ Every scan writes four files to `.dropoutt/`:
 | file | what it is |
 | --- | --- |
 | `report.html` | one self-contained file, no server, no CDN. Contains excerpts and paths unless the scan used `--no-evidence`. |
-| `report.md` | the same reading as text, for a pull-request comment or a CI log |
+| `report.md` | the same content as text, for a pull-request comment or a CI log |
+| `report.json` | the same content as one JSON document, for a dashboard or a coverage gate |
 | `fingerprint.json` | the comparable description of your dataset |
 | `findings.jsonl` | one record per finding, for scripting |
 

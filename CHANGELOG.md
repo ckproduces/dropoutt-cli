@@ -1,5 +1,178 @@
 # Changelog
 
+## 1.1.0
+
+Six problems users hit, and the research that came out of looking at them.
+
+### The install could fail, and did
+
+A user on Windows and CPython 3.14 ran `pip install dropoutt` and was told to
+install Microsoft Visual C++ Build Tools. The cause was not dropoutt: it was
+`fasttext-langdetect`, which depends on `fasttext-predict`, which publishes no
+wheel for CPython 3.14 — so pip fell through to compiling it from source, and on
+Windows that needs MSVC.
+
+Language identification is now **`py3langid`**: pure Python over numpy, 97
+languages, its 768 KB model inside the wheel, about 60 microseconds a call. It
+is a slightly weaker classifier than fastText on strings under twenty characters
+— which is stated in `langid.py` and discounted in the confidence score rather
+than hidden — and it cannot fail to install.
+
+The rule that replaced the incident: **every dependency must publish a wheel for
+every Python and platform in `requires-python` and the classifiers.** Nothing is
+built at install time. `tests/test_packaging.py` asserts it, and the check to
+run before adding a dependency is in `pyproject.toml`.
+
+### There are no extras, and no `doctor`
+
+`pip install dropoutt` installs everything. `[tokenizer]`, `[lid]`, `[atlas]`,
+`[parquet]`, `[zstd]`, `[fast]` and `[all]` are gone.
+
+Every one of them was a way to end up with a dropoutt that silently could not
+read your Parquet or identify your languages, and `dropoutt doctor` existed to
+explain which one you were missing. With nothing to choose, that table reads
+"yes" on every row, so the command is gone too. The part of it that stayed
+useful — *which* interpreter was probed, because installing with a `pip`
+belonging to a different Python is the classic way to be confused by a missing
+import — moved to `dropoutt fetch`, along with the machine a scan would size
+itself against.
+
+`pip install 'dropoutt[all]'` still works: pip warns about the unknown extra and
+installs everything, which is what it did before.
+
+### Two more formats
+
+`.mds` (MosaicML Streaming, decoded against the `index.json` beside the shard)
+and `.tar` (WebDataset, read as a stream, members grouped by basename). Both
+are what a large corpus actually ships as, and neither is self-describing the
+way JSONL and Parquet are. See `dropoutt/containers.py`.
+
+`index.json` next to a `.mds` shard is that shard's schema and is no longer read
+as a record. An `index.json` anywhere else is still somebody's data.
+
+### Memory is bounded now, not merely smaller
+
+Peak resident memory on a 480,000-record, 377 MB corpus: **4.9 GB → 3.9 GB** in
+the parent, **3.8 GB → 1.9 GB** in a single worker. The more important change is
+that it stops growing:
+
+- The per-shard sample cap was applied **per dataset**, so a shard spanning two
+  hundred datasets held two hundred shards' worth of sampled text — which is the
+  shape of a folder of mixed exports. The atlas sample is shard-wide now; only
+  the token budget stays stratified, because only it is.
+- Sampled text was carried at 4,000 characters when the embedder truncates to
+  2,000. Half of every sampled string crossed a process boundary and was thrown
+  away.
+- The parent held **every** shard's result until the last worker finished and
+  only then merged any of them. Results are folded on arrival and released.
+- The LSH band index was fourteen Python dictionaries per document — about
+  3.7 KB of object overhead around a 416-byte signature. It is a dense
+  `(documents, bands)` array of 64-bit hashes now, grouped by sorting: roughly
+  thirty times smaller, and faster.
+- The exact-duplicate tally was `dict[int, int]`, about 165 bytes per distinct
+  record. It is an array counted once with `np.unique`.
+- The near-duplicate index and the contradictory-supervision table now stop at a
+  ceiling derived from this machine's memory and **say so in the finding** — the
+  contract `ContradictorySupervision` has had since 1.0.
+- The atlas encoder tokenized the whole sample in one call: a hundred million
+  token ids and six transient arrays over them, to produce 100 MB of output.
+
+### Scans size themselves to the machine
+
+`os.cpu_count()` reports the host, not the quota. In a container limited to two
+cores on a 96-core node it said 96, and the scan forked twelve workers into a
+quota that could run two. The new `dropoutt.hardware` reads CPU affinity, the
+cgroup v1/v2 quota, hyperthread topology and free memory, plans the pool against
+all four, and reports which one bound it.
+
+Numeric libraries are pinned to one thread per worker — set in the parent before
+the pool is created, which is the only moment that works, since they read the
+environment when they load — and released for the atlas pass, which is the one
+phase that wants every core.
+
+GPUs are detected (`nvidia-smi`, `rocm-smi`, Apple silicon) and used for the one
+step in a scan that is arithmetic: the sparse-dense multiply behind the
+embeddings, when torch is present. Nothing else in a scan is GPU work, and
+saying so is more useful than implying otherwise. `DROPOUTT_NO_GPU` and
+`DROPOUTT_DEVICE` override detection.
+
+### Scanning a home directory finishes
+
+A user pointed a scan at their `Users` folder and waited far longer than the
+data justified.
+
+- Twenty-five more directory names are never descended into: `node_modules`,
+  `site-packages`, `Library`, `AppData`, `.cargo`, `miniconda3` and the rest.
+- Forty-odd filenames that are always toolchain metadata but have data
+  extensions — `package.json`, `tsconfig.json`, `CHANGELOG.md`,
+  `requirements.txt`, `config.json` — are passed over and counted rather than
+  induced, sniffed and reported as a dataset of one record each.
+- Hitting the file limit **stops the walk** instead of appending one skip record
+  per remaining file, which on a large tree built a list costing more memory
+  than the scan it described.
+- A `.txt` is read up to 16 MB rather than entirely into memory. A `.txt` in a
+  corpus is a document; a `.txt` in a home directory is a log or a core dump.
+  Truncation is reported through its own field, not as a parse error, so the
+  record still parses and still counts.
+- One `stat` per candidate, taken against the directory handle the walk already
+  holds where the platform offers one.
+
+### One report, four renderings
+
+The HTML page carried the dataset table, the language breakdown, the structure
+panel, the density grid, the places lists, the imbalances, the off-map
+diagnosis, the degradations and the provenance block. The Markdown file carried
+about a third of it. The terminal carried a tenth. There was no JSON report at
+all.
+
+That is the wrong shape for a tool whose readers mostly do not have a browser.
+`dropoutt.report.payload` is now the single assembled reading of a scan, and all
+four formats render it:
+
+- **`report.json` is new** — the same content as the page, for a dashboard or a
+  coverage gate, so nobody has to scrape HTML.
+- **`report.md`** gained composition, the dataset table, the overlap matrix, the
+  full tokenizer panel with its interval and method, the atlas statistics, the
+  places lists, the imbalances, the off-map diagnosis, the notes, the
+  degradations, the provenance block and the atlas identity.
+- **The terminal** prints the whole report by default, drawn with what a
+  terminal has: ten rows where the page has a hundred, and a count of what it
+  left out. `--brief` restores the old triage screen; `--quiet` is unchanged.
+
+`--no-evidence` is honoured once, where the payload is assembled, so it cannot
+be honoured in three places and forgotten in the fourth.
+
+### Correctness fixes that fell out
+
+- The atlas computed the same 200,000 × 212 similarity matrix **three times** —
+  `assign_full`, `categorize` and `soft_assign` each began by building it. One
+  pass now: 34% faster for that step and two fewer matrices resident.
+- The per-shard token-budget cap was sized against the *total* shard count
+  rather than against how many shards a dataset actually spans, so a parallel
+  scan's token estimate differed from a serial one by 0.04%. The two fingerprints
+  are byte-identical now.
+- Discovery, the shard planner and the reader each worked out what a file was
+  from `Path.suffix` separately, and disagreed on case: a `.JSONL` was dropped by
+  discovery although the reader would have read it. One function decides now.
+
+### Pipeline version 0.3.0
+
+Fingerprints from 1.1 are not comparable with fingerprints from 1.0. Three
+measurements moved: language shares and language-deviation counts, because the
+classifier changed; the near-duplicate count on corpora above the new index
+ceiling, which is now a floor over a prefix and labelled as one; and the token
+estimate on parallel scans, by the 0.04% described above.
+
+### Research
+
+`docs/research.md` — measured answers to five questions: whether the scan can be
+made faster (where the time goes, which levers were tried and rejected and why),
+whether the atlas encoder can be made smaller (it can: 489 MB → 63 MB for 99.6%
+identical placement, measured), what could be measured beyond semantic topic,
+whether a benchmark-overlap feature is doable (the overlap half yes, the
+score-estimate half no, with reasons), and how to make the coverage section
+legible on the first read.
+
 ## 1.0.0
 
 The first stable release. The command surface is frozen: six commands, and from

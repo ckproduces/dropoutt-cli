@@ -4,7 +4,7 @@
 what is wrong before you burn a training run finding out.
 
 ```bash
-pip install 'dropoutt[all]'
+pip install dropoutt
 dropoutt scan ./data
 ```
 
@@ -24,8 +24,8 @@ A local CLI that:
    from professional public datasets — so you see what you cover, what you miss,
    and what sits off the map.
 
-It runs on your CPU. Optional extras add tokenizers, Parquet, language ID, and
-atlas embeddings.
+It runs on your CPU. One install brings everything — there are no extras to
+choose between, and nothing in the dependency list needs a compiler.
 
 ## Install
 
@@ -34,46 +34,49 @@ Requires Python 3.10+.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install 'dropoutt[all]'        # or pip install dropoutt for core only
-dropoutt doctor                    # what is installed, what each missing piece costs
+pip install dropoutt
 ```
 
-| Extra | Purpose |
-| --- | --- |
-| *(core)* | Inventory, schema, dedup, overlap, contamination, PII, style |
-| `tokenizer` | Exact token counts, chat template, loss mask, packing |
-| `lid` | Language identification (938 KB model) |
-| `atlas` | Atlas coverage map (~500 MB embedder on first use) |
-| `parquet` | `.parquet`, `.arrow`, `.feather`, `.orc` |
-| `zstd` | `.zst` compressed input |
-| `fast` | `orjson` + Rust MinHash — same results, faster |
-| `all` | Everything above |
-| `dev` | `all` + pytest |
+That is the whole install. Every dependency publishes a wheel for every Python
+and platform dropoutt supports, so nothing is ever compiled at install time —
+which is what a user on Windows and CPython 3.14 hit when the language-detection
+dependency had no wheel and pip fell through to needing Visual C++ Build Tools.
+
+There used to be extras (`[atlas]`, `[parquet]`, `[lid]`, `[all]`). They are
+gone. Each one was a way to end up with a dropoutt that silently could not read
+your Parquet, and `pip install 'dropoutt[all]'` still works — pip warns about
+the unknown extra and installs everything, which is what you wanted anyway.
 
 If `dropoutt` is not on `PATH` (module systems, batch schedulers, some Windows
 setups): `python -m dropoutt` does the same thing.
 
 Supported inputs: JSON, JSONL/NDJSON, TXT, Markdown, CSV/TSV, Parquet, Arrow,
-Feather, ORC. Text formats may be gzip / bzip2 / xz / zstd compressed.
+Feather, ORC, `.mds` (MosaicML Streaming) and `.tar` (WebDataset). Text formats
+may be gzip / bzip2 / xz / zstd compressed.
 
 Works on macOS, Linux, and Windows. Cache defaults to `~/.cache/dropoutt`, or
 `%LOCALAPPDATA%\dropoutt` on Windows. Override with `DROPOUTT_CACHE`. See
-[docs/portability.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/portability.md) for offline / HPC use.
+[docs/portability.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/portability.md) for offline / HPC use.
 
 ## Quick start
 
 ```bash
 dropoutt scan ./my-corpus
-# writes .dropoutt/{report.html, report.md, findings.jsonl, fingerprint.json}
+# writes .dropoutt/{report.html, report.md, report.json, findings.jsonl, fingerprint.json}
 
 dropoutt scan ./my-corpus --model qwen3 --seq-len 4096 --target sft
 # unlocks token/mask checks and exit code 10 on blocking findings
 
 dropoutt checks                 # live catalog
 dropoutt checks T0-MASK-001     # one check in detail
-dropoutt doctor                 # what is installed, what each gap costs
 dropoutt fetch                  # pre-download everything --offline needs
 ```
+
+The whole report prints in the terminal, and the same content is written to
+`report.html`, `report.md` and `report.json` — the page, the pasteable version
+and the machine-readable one all say the same things. `--brief` prints the
+verdict and one line per finding instead; `--quiet` prints nothing and writes
+the files.
 
 The report is one self-contained file: no CDN, no web fonts, no network, opens
 from `file://`. A scan opens it for you when there is a desktop to open it on,
@@ -82,12 +85,15 @@ scheduler, or with output redirected. `--no-open` or `DROPOUTT_OPEN=0` turns
 that off; `DROPOUTT_OPEN=1` forces it, which is what you want with X11
 forwarding.
 
-Anything above 24 MB is scanned across processes — 200,000 SFT records in about
-20 seconds on a laptop. The result does not depend on how many cores you have:
-same findings, same examples, same fingerprint id on one core or on sixteen. Cap
-it with `-j` or `DROPOUTT_WORKERS` if you are sharing a node.
+Anything above 24 MB is scanned across processes, and the pool is sized against
+the machine this process can actually use — CPU affinity, any cgroup quota,
+hyperthread topology and free memory, not `os.cpu_count()`. Measured: 480,000
+records across eight datasets, 377 MB, in 38 seconds on a 14-core laptop. The
+result does not depend on how many cores you have: same findings, same examples,
+same fingerprint id on one core or on sixteen. Cap it with `-j` or
+`DROPOUTT_WORKERS` if you are sharing a node.
 
-**New here?** [docs/getting-started.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/getting-started.md).
+**New here?** [docs/getting-started.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/getting-started.md).
 
 ## What it catches
 
@@ -126,7 +132,7 @@ as findings: they are frequency counts over reference records, roughly 40% of
 that text is function words shared with other regions, and the subject-area
 names were assigned per source dataset rather than per record. What the map is
 trusted for is geometry. Details and the full list of what that costs:
-[docs/atlas.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/atlas.md).
+[docs/atlas.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/atlas.md).
 
 ## Exit codes
 
@@ -140,7 +146,7 @@ trusted for is geometry. Details and the full list of what that costs:
 ## Check catalog
 
 Identifiers are `T{tier}-{GROUP}-{nnn}` and are **never renumbered**. Mute by id
-in `dropoutt.toml`. Full narrative: [docs/checks.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/checks.md). Live list:
+in `dropoutt.toml`. Full narrative: [docs/checks.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/checks.md). Live list:
 `dropoutt checks`.
 
 ### Tier 0 — structural (CPU)
@@ -203,15 +209,15 @@ yet links acting on a finding to a measured change in model quality.
 
 ## Documentation
 
-- [Getting started](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/getting-started.md)
-- [CLI reference](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/cli.md)
-- [Check catalog](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/checks.md)
-- [Fingerprint](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/fingerprint.md)
-- [Atlas](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/atlas.md)
-- [Configuration](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/configuration.md)
-- [Portability / offline](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/portability.md)
-- [Limitations](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/limitations.md)
-- [Design rules](https://github.com/ckproduces/dropoutt-cli/blob/v1.0.0/docs/design.md)
+- [Getting started](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/getting-started.md)
+- [CLI reference](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/cli.md)
+- [Check catalog](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/checks.md)
+- [Fingerprint](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/fingerprint.md)
+- [Atlas](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/atlas.md)
+- [Configuration](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/configuration.md)
+- [Portability / offline](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/portability.md)
+- [Limitations](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/limitations.md)
+- [Design rules](https://github.com/ckproduces/dropoutt-cli/blob/v1.1.0/docs/design.md)
 
 ## What it will not do
 

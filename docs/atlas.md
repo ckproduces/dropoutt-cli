@@ -90,7 +90,7 @@ The geometry training itself (normalization plus both clustering levels) took
 ## Putting your data on it
 
 Coverage is computed on every `dropoutt scan` that has the atlas extra
-installed. It appears in the terminal, in `report.html`, and in the `coverage`
+installed. It appears in every output format, and in the `coverage`
 facet of `fingerprint.json`.
 
 ```bash
@@ -148,7 +148,7 @@ can be reported as under-representation against the stratified baseline, not
 only as absolute absence. Read that baseline as a property of *this* reference
 corpus (topic- and language-capped on purpose), not as a natural population.
 
-`--no-atlas` skips it. If it never appears, run `dropoutt doctor` — coverage
+`--no-atlas` skips it. If it never appears, run `dropoutt fetch` — coverage
 needs the `atlas` extra.
 
 ## Comparing two corpora

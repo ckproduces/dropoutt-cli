@@ -32,6 +32,29 @@ records, maps atlas coverage, finalizes checks, and writes artifacts. In a
 terminal this is a spinner; redirected batch output receives stable phase lines
 and periodic record counts instead of control sequences.
 
+### What it reads
+
+| extension | format |
+| --- | --- |
+| `.jsonl`, `.ndjson` | line-delimited JSON. A `.jsonl` that turns out to be one pretty-printed array is read as one. |
+| `.json` | a whole document: an array of records, an object of splits, or one object |
+| `.parquet` | Apache Parquet, split across workers by row group |
+| `.arrow`, `.feather` | Arrow IPC file or stream, and Feather V1 |
+| `.orc` | Apache ORC |
+| `.csv`, `.tsv` | delimiter detected from the header row |
+| `.txt`, `.md` | plain text — unless it turns out to be holding JSON records, which is sniffed rather than assumed |
+| `.mds` | MosaicML Streaming shards, decoded against the `index.json` beside them |
+| `.tar` | WebDataset shards: consecutive members sharing a basename are one sample |
+
+Text formats may be compressed with gzip, bzip2, xz or zstd. A `.tar.gz` is
+handled by the archive reader itself.
+
+Directories that never hold training data are not descended into — `node_modules`,
+`site-packages`, `Library`, `.git`, build caches and about twenty others — and
+filenames that are always toolchain metadata (`package.json`, `tsconfig.json`,
+`CHANGELOG.md`, `requirements.txt`, …) are passed over even though their
+extensions match. That is what makes pointing a scan at a home directory finish.
+
 | flag | default | meaning |
 | --- | --- | --- |
 | `--model`, `-m` | none | target model id, local path, or alias. Unlocks the token-dependent checks. |
@@ -45,8 +68,9 @@ and periodic record counts instead of control sequences.
 | `--no-html` | off | skip the HTML report |
 | `--no-open` | off | do not open the report when the scan finishes |
 | `--no-atlas` | off | skip atlas coverage |
-| `--no-evidence` | off | omit record excerpts and source locations from terminal output, `findings.jsonl`, `report.md`, and `report.html` |
-| `--workers`, `-j` | one per core, less one | processes used for the streaming pass |
+| `--no-evidence` | off | omit record excerpts and source locations from terminal output, `findings.jsonl`, `report.md`, `report.json`, and `report.html` |
+| `--workers`, `-j` | sized from the machine | processes used for the streaming pass |
+| `--brief` | off | print the verdict and one line per finding instead of the full report |
 | `--quiet`, `-q` | off | suppress the terminal report; only the output path is printed |
 
 ```bash
@@ -57,7 +81,14 @@ dropoutt scan ./data --target sft --quiet          # CI gate
 dropoutt scan ./data --limit 1000                  # quick look at a huge corpus
 dropoutt scan ./data --offline --no-evidence       # VPC-safe network and evidence settings
 dropoutt scan ./data -j 4                          # cap the scan at four processes
+dropoutt scan ./data --brief                       # verdict and one line per finding
 ```
+
+Left to itself, `--workers` reads the machine rather than `os.cpu_count()`: CPU
+affinity, any cgroup quota, physical cores rather than hyperthread siblings, and
+free memory — because peak memory is roughly linear in worker count and a
+96-core container with 8 GB is not a 96-worker machine. `dropoutt fetch` prints
+what it decided and which limit bound it. An explicit `-j` is obeyed exactly.
 
 ### Opening the report
 
@@ -94,7 +125,7 @@ online one. Populate the cache first with `dropoutt fetch`. If no cached chat
 template is found, the run says so before the report rather than counting raw
 text silently.
 
-Atlas coverage appears in the terminal report and in `report.html`: how many
+Atlas coverage appears in every output format: how many
 records were placed and out of how many, the regions occupied, the spread as a
 share of even coverage, the top categories and the top regions with their terms.
 Every share is over the placed records, and the placed count is printed next to
@@ -115,12 +146,28 @@ computed, the full region histogram also goes into `fingerprint.json`, which is
 comparable across machines. Record excerpts stay out of `fingerprint.json`, which
 is the artifact meant to be shareable.
 
-By default, terminal examples, `findings.jsonl`, `report.md`, and `report.html` contain
+By default, terminal examples, `findings.jsonl`, `report.md`, `report.json`, and `report.html` contain
 bounded record excerpts and source locations so findings can be inspected.
 Detected PII is masked, but arbitrary proprietary text is not. Use
 `--no-evidence` before moving these artifacts outside the dataset's trust
 boundary. The fingerprint never contains record excerpts, but it does contain
 the scan root, dataset names, aggregate measurements, and stable hashes.
+
+### What gets written
+
+| file | what it is |
+| --- | --- |
+| `report.html` | the page: one self-contained file, no CDN, opens from `file://` |
+| `report.md` | the same content as GitHub-flavoured Markdown, to paste into a PR or a ticket |
+| `report.json` | the same content as one JSON document, for a dashboard or a coverage gate |
+| `findings.jsonl` | one finding per line, for iterating over problems in a script |
+| `fingerprint.json` | the comparable measurement, deliberately free of anything quotable |
+
+The first three carry the same sections, in the same order, and so does the
+terminal. That is a property the test suite asserts: a finding that reaches the
+page reaches the log, and a section the page has is a section the Markdown file
+has. `--no-evidence` is honoured once, where the content is assembled, so it
+cannot be honoured in three formats and forgotten in the fourth.
 
 ## `dropoutt checks [CHECK_ID]`
 
@@ -200,31 +247,29 @@ precondition instead of requiring someone to inspect colored output.
 See [portability.md](portability.md) for the login-node to compute-node
 workflow, and for which cache variable holds which file.
 
-## `dropoutt doctor`
+## `dropoutt doctor` — removed in 1.1
 
-Show what is installed and what each missing component costs.
+`doctor` printed a table of which optional components were installed and what
+each missing one cost. There are no optional components any more: `pip install
+dropoutt` brings all of them, so the table read "yes" on every row and the
+command answered a question nobody had.
+
+The part that stayed useful — *which* Python was probed, because the classic way
+to be confused by a missing import is to have installed it with a `pip`
+belonging to a different interpreter — moved to `dropoutt fetch`, along with the
+machine a scan would size itself against:
 
 ```
-  component              status    without it                  install
-  orjson                 yes       speed only
-  tokenizers             yes       exact token counts, chat
-                                   template render, loss
-                                   mask checks
-  pyarrow                yes       reading .parquet files
-  rensa                  no        speed only, identical       pip install
-                                   clusters                    'dropoutt[fast]'
-  fasttext-langdetect    yes       accurate language
-                                   identification across
-                                   176 languages
-  model2vec              yes       atlas coverage
-
-  cache: ~/.cache/dropoutt
-  version: 0.1.3
+  This environment
+    python   /path/to/.venv/bin/python
+    cache    ~/.cache/dropoutt
+    version  1.1.0
+    machine  13 workers (bound by cores) on 14 usable cores · 48 GiB RAM · no GPU
 ```
 
-The last two lines are the resolved cache directory and the installed version,
-which is what you want when a scan on a cluster behaves differently from the
-same scan on your laptop.
+If a required package genuinely cannot be imported — a pruned container image, a
+partially restored environment — `fetch` names it and prints the repair command
+for this interpreter.
 
 ## Exit codes
 
@@ -246,6 +291,8 @@ be used in CI, which is why 1 is reserved for a genuine failure of the tool.
 | `DROPOUTT_OFFLINE` | when set to `1`, `true`, `yes`, or `on`, makes `scan` resolve only from local files and caches |
 | `DROPOUTT_OPEN` | `0` never opens the finished report; `1` always does, ignoring the SSH and headless checks |
 | `DROPOUTT_WORKERS` | default number of processes for the streaming pass; `-j` overrides it for one run |
+| `DROPOUTT_NO_GPU` | when truthy, skip accelerator detection entirely — for a node where `nvidia-smi` exists but hangs |
+| `DROPOUTT_DEVICE` | force the device the atlas targets (`cpu`, `cuda`, `mps`); overrides detection |
 | `DROPOUTT_DEBUG` | when truthy, show a traceback for an internal error instead of the concise exit-1 message |
 | `XDG_CACHE_HOME` | standard cache root; used as `$XDG_CACHE_HOME/dropoutt` when `DROPOUTT_CACHE` is unset |
 | `HF_HOME` | Hugging Face cache root. The tokenizers themselves are cached here, not under `DROPOUTT_CACHE`. |

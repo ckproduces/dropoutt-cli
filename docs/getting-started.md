@@ -15,7 +15,7 @@ If you read one section, read [Reading the output](#reading-the-output).
 ```bash
 cd ~/Documents/dropoutt-cli
 python3 -m venv .venv
-.venv/bin/pip install -e '.[all]'
+.venv/bin/pip install -e .
 ```
 
 `-e` is an editable install: the `dropoutt` command points back at the source
@@ -43,47 +43,44 @@ schedulers often strip from `PATH`. This always works instead:
 python -m dropoutt --version
 ```
 
-### What the extras cost you
+### There are no extras
 
-`[all]` pulls everything. On a constrained machine, install the core and add
-what you need:
+`pip install dropoutt` installs everything: tokenizers, Parquet and Arrow
+support, zstd, language identification and the atlas embeddings. There is
+nothing to choose and nothing to add later.
 
-| install | size | what you lose without it |
+Until 1.1 there were extras — `[tokenizer]`, `[lid]`, `[atlas]`, `[parquet]`,
+`[fast]`, `[all]` — and a `dropoutt doctor` command whose job was to tell you
+which one you were missing. Both are gone. Every extra was a way to end up with
+a dropoutt that silently could not read your Parquet, and the most common
+support question was people reading that table.
+
+The constraint that replaced them: **every dependency must publish a wheel for
+every Python and platform dropoutt supports.** Nothing is compiled at install
+time, so the install cannot fail for a reason you have to fix with a C++
+toolchain.
+
+Two downloads still happen on first use, and both are cached:
+
+| what | size | when |
 | --- | --- | --- |
-| `pip install -e .` | small | nothing structural — all Tier 0 checks run |
-| `'.[tokenizer]'` | moderate | exact token counts, chat-template rendering, loss-mask checks, packing |
-| `'.[lid]'` | 938 KB model | accurate language ID across 176 languages |
-| `'.[atlas]'` | ~500 MB model on first use | atlas coverage |
-| `'.[parquet]'` | 35–50 MB | reading `.parquet`, `.arrow`, `.feather`, and `.orc` files |
-| `'.[fast]'` | small | speed only, identical results |
+| the atlas embedding model | ~490 MB | the first scan that computes coverage |
+| tokenizers for the comparison panel | a few MB each | the first scan without `--model` |
 
-Ask the tool rather than guessing:
-
-```bash
-dropoutt doctor
-```
+`dropoutt fetch` pulls both ahead of time, and prints the interpreter, the cache
+location and the machine the scan would size itself against:
 
 ```
-  component              status    without it                  install
-  orjson                 yes       speed only
-  tokenizers             yes       exact token counts, chat
-                                   template render, loss
-                                   mask checks
-  pyarrow                yes       reading Parquet, Arrow, Feather, and ORC
-  rensa                  no        speed only, identical       pip install
-                                   clusters                    'dropoutt[fast]'
-  fasttext-langdetect    yes       accurate language
-                                   identification across
-                                   176 languages
-  model2vec              yes       atlas coverage
-
-  cache: /Users/you/.cache/dropoutt
-  version: 0.2.0
+  This environment
+    python   /Users/you/.venv/bin/python
+    cache    /Users/you/.cache/dropoutt
+    version  1.1.0
+    machine  13 workers (bound by cores) on 14 usable cores · 48 GiB RAM · no GPU
 ```
 
-Nothing here is required. A missing component removes checks; it never produces
-a wrong answer silently. Whatever is skipped is listed at the end of every scan
-with the flag that unlocks it.
+That interpreter line matters more than it looks: the classic way to be confused
+by a missing import is to have installed it with a `pip` belonging to a
+different Python, and a venv created by `uv` ships no `pip` at all.
 
 ---
 
@@ -164,6 +161,7 @@ T1-OVERLAP-001    ●        2    17% of 'alpaca_mix' records (10 of 60) also
   Written to tests/fixtures/messy/.dropoutt
     report.html       the map, the excerpts, every finding in full
     report.md         the same, as text — paste into a PR or a ticket
+    report.json       the same, as data — for a dashboard or a gate
     findings.jsonl    one finding per line, for scripts
     fingerprint.json  comparable measurements, for diffing runs
   No pass-or-fail verdict: no target declared. Pass --target sft to turn
@@ -370,11 +368,16 @@ Every scan writes to `.dropoutt/`:
 | file | what it is |
 | --- | --- |
 | `report.html` | one self-contained file — no server, no CDN. Contains excerpts and paths unless the scan used `--no-evidence`. |
-| `report.md` | the same reading as Markdown, sized to paste into a pull request or a CI log |
+| `report.md` | the same content as Markdown, to paste into a pull request or a CI log |
+| `report.json` | the same content as one JSON document, for a dashboard or a coverage gate |
 | `fingerprint.json` | the comparable description of the dataset |
 | `findings.jsonl` | one JSON object per finding, for scripting |
 
-**`report.html` and `report.md` may contain your data.** PII values are masked before they reach
+The first three carry the same sections, and so does the terminal — the page is
+not a richer report, it is the same report drawn differently. `--brief` prints
+the verdict and one line per finding instead of the whole thing.
+
+**`report.html`, `report.md` and `report.json` may contain your data.** PII values are masked before they reach
 it — there is a test that fails if a planted secret appears in a generated
 report — but excerpts of your text are in there. Treat it as you would treat the
 dataset.
@@ -422,7 +425,7 @@ dropoutt checks               # all 27 checks: id, tier, title, what each needs
 dropoutt checks T0-MASK-001   # one check in full
 dropoutt models               # known models, templates, licences
 dropoutt benchmarks           # benchmarks available for contamination scanning
-dropoutt doctor               # what is installed, and what each gap costs
+dropoutt fetch                # pre-download caches; prints this environment
 ```
 
 `dropoutt checks <id>` is the one to reach for when a finding is unclear:
@@ -509,15 +512,17 @@ Full detail in [portability.md](portability.md).
 **`A second file is being added to the wheel archive`** — you are on a checkout
 predating 0.1.1. Pull, then reinstall.
 
-**Everything says "language unknown"** — `fasttext-langdetect` is missing, so
-the pure-Python fallback ran. It is much weaker and the output says so. Install
-`'.[lid]'`.
+**Everything says "language unknown"** — `py3langid` could not be imported, so
+the built-in character-profile fallback ran. It is much weaker and the output
+says so. Every dependency ships with dropoutt, so this means a damaged install:
+`pip install --force-reinstall dropoutt`.
 
-**"atlas is present but its embedding model could not be loaded"** — install
-`'.[atlas]'`. The embedding model downloads once, about 500 MB.
+**"atlas is present but its embedding model could not be loaded"** — the
+embedding model downloads once, about 490 MB, and could not be fetched. Run
+`dropoutt fetch` where there is network, or check `DROPOUTT_CACHE`.
 
-**Token counts look wrong and say `character-ratio`** — no tokenizer backend.
-Install `'.[tokenizer]'`.
+**Token counts look wrong and say `character-ratio`** — `tokenizers` could not
+be imported. Same remedy as the language case: reinstall.
 
 **A check is firing on something you accept** — mute it with a reason:
 
