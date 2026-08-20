@@ -784,9 +784,26 @@ def test_the_density_grid_reaches_the_page_with_its_scale_explained(tmp_path):
     assert "display:table-header-group" in page
 
 
-def _table_of(page: str, row: str) -> int:
-    """Which table a row belongs to, so rows are compared with their siblings."""
-    return page[: page.index(row)].count("| --- ")
+def _table_blocks(page: str) -> list[list[str]]:
+    """Every Markdown table in the page, as its contiguous run of rows.
+
+    Grouped by adjacency rather than by counting header rules. A rule sits
+    *between* a table's header and its body, so counting rules before a line
+    puts the header in one bucket and the body in the next — which then collides
+    with the following table's header and compares rows that were never meant to
+    line up.
+    """
+    blocks: list[list[str]] = []
+    current: list[str] = []
+    for line in page.splitlines():
+        if line.startswith("|"):
+            current.append(line)
+        elif current:
+            blocks.append(current)
+            current = []
+    if current:
+        blocks.append(current)
+    return blocks
 
 
 def test_the_markdown_report_is_pasteable_and_honours_no_evidence(tmp_path):
@@ -822,13 +839,9 @@ def test_the_markdown_report_is_pasteable_and_honours_no_evidence(tmp_path):
     assert page.startswith("##")
     # A pipe inside a cell would add a column to the row it sits in and
     # misalign every cell after it, so every table row has the same shape.
-    widths = {}
-    for line in page.splitlines():
-        if not line.startswith("|"):
-            continue
-        columns = len(line.replace("\\|", "").split("|"))
-        widths.setdefault(_table_of(page, line), set()).add(columns)
-    assert all(len(seen) == 1 for seen in widths.values()), widths
+    for block in _table_blocks(page):
+        widths = {len(line.replace("\\|", "").split("|")) for line in block}
+        assert len(widths) == 1, (widths, block[:3])
 
     quiet = md_report.render(result, fp, None, include_evidence=False)
     assert planted not in quiet

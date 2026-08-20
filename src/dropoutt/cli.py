@@ -107,6 +107,10 @@ def scan(
     ),
     quiet: bool = typer.Option(False, "--quiet", "-q",
                                help="Suppress the report; write output files and exit."),
+    brief: bool = typer.Option(
+        False, "--brief",
+        help="Print the verdict and one line per finding instead of the full report.",
+    ),
 ) -> None:
     """Check a folder of training data and write a report.
 
@@ -303,14 +307,16 @@ def scan(
 
     # Most-human first: the order is the order someone picks one in.
     written = (["report.html"] if not no_html else []) + [
-        "report.md", "findings.jsonl", "fingerprint.json",
+        "report.md", "report.json", "findings.jsonl", "fingerprint.json",
     ]
     if not quiet:
-        # The terminal is triage; everything it leaves out is in one of these,
-        # so it names them rather than the caller announcing them separately.
+        # The screen carries the whole report; the files carry the same thing in
+        # other shapes, so it names them rather than the caller announcing them
+        # separately. `--brief` returns to the one-line-per-finding view.
         term_report.render(
             console, result, budget=budget, show_evidence=not no_evidence,
-            summary=story, out_dir=out_dir, written=written,
+            summary=story, out_dir=out_dir, written=written, brief=brief,
+            fingerprint=fp,
         )
     else:
         console.print(f"  [dim]wrote {escape(str(out_dir))}/{', '.join(written)}[/dim]")
@@ -694,18 +700,25 @@ def _write_outputs(
     summary=None,
 ) -> None:
     from .report import html as html_report
+    from .report import json_report
     from .report import markdown as md_report
 
     (out_dir / "fingerprint.json").write_text(
         json_dumps(fp.to_dict(), indent=True), encoding="utf-8"
     )
-    # Always written, and not behind --no-html. The two flags mean opposite
-    # things: --no-html is "do not build the thing I would open in a browser",
-    # and this is the file for exactly that reader — a CI job pasting a summary
-    # into a pull request has no browser and wants this one most.
+    # These two are always written, and not behind --no-html. The flags mean
+    # opposite things: --no-html is "do not build the thing I would open in a
+    # browser", and these are the files for exactly that reader — a CI job
+    # pasting a summary into a pull request, or a pipeline stage gating on
+    # coverage. Both carry the same content as the page.
     (out_dir / "report.md").write_text(
         md_report.render(result, fp, budget, include_evidence=include_evidence,
                          summary=summary),
+        encoding="utf-8",
+    )
+    (out_dir / "report.json").write_text(
+        json_report.render(result, fp, budget, include_evidence=include_evidence,
+                           summary=summary),
         encoding="utf-8",
     )
     with open(out_dir / "findings.jsonl", "w", encoding="utf-8") as fh:
