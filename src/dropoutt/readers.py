@@ -58,6 +58,12 @@ class RawRecord:
     error: str | None = None
     #: Raw text as read, kept for text-profile reading and for error evidence.
     raw_text: str = ""
+    #: Set when the record is real but shorter than what is on disk, because a
+    #: cap was hit. Deliberately not ``error``: a truncated record still parses,
+    #: still has a layout and still counts, and routing it through the parse
+    #: error path would drop its text and report it as malformed. What it needs
+    #: is for the scan to say the file was longer, which the runner does.
+    truncated: str | None = None
 
 
 def open_maybe_compressed(path: str, compressed: bool) -> io.TextIOBase:
@@ -69,7 +75,7 @@ def open_maybe_compressed(path: str, compressed: bool) -> io.TextIOBase:
         return io.TextIOWrapper(lzma.open(path, "rb"), encoding="utf-8", errors="replace")
     if compressed and path.endswith(".zst"):
         if not HAVE_ZSTANDARD:
-            raise RuntimeError("zstd support not installed; pip install 'dropoutt[zstd]'")
+            raise RuntimeError("zstd support not installed; reinstall dropoutt")
         import zstandard
 
         raw = open(path, "rb")  # noqa: SIM115 - closed with the wrapper this returns
@@ -275,6 +281,18 @@ def read_json(
             yield RawRecord(doc, path, 0)
 
 
+#: Most of one plain-text file that is read as a single record.
+#:
+#: A ``.txt`` in a training corpus is a document. A ``.txt`` in a home directory
+#: is a log, a database export or a core dump, and ``fh.read()`` on one of those
+#: is how a scan of a folder someone pointed at by accident becomes an
+#: out-of-memory kill. Sixteen megabytes is two orders of magnitude above any
+#: document a person wrote and two orders below the files that cause the
+#: problem. The truncation is recorded on the record so the report can say the
+#: file was longer than this rather than silently shortening a corpus.
+MAX_TEXT_RECORD_BYTES = 16 << 20
+
+
 def read_text(path: str, *, compressed: bool = False, limit: int | None = None,
               paragraph_split: bool = False) -> Iterator[RawRecord]:
     """Plain text, unless it turns out not to be.
@@ -293,11 +311,18 @@ def read_text(path: str, *, compressed: bool = False, limit: int | None = None,
         return
 
     with open_maybe_compressed(path, compressed) as fh:
-        content = fh.read()
+        content = fh.read(MAX_TEXT_RECORD_BYTES + 1)
+        truncated = len(content) > MAX_TEXT_RECORD_BYTES
+    if truncated:
+        content = content[:MAX_TEXT_RECORD_BYTES]
     if not content.strip():
         return
+    note = (
+        f"{path}: larger than {MAX_TEXT_RECORD_BYTES >> 20} MB, read up to that point"
+        if truncated else None
+    )
     if not paragraph_split:
-        yield RawRecord({"text": content}, path, 0, raw_text=content[:2000])
+        yield RawRecord({"text": content}, path, 0, raw_text=content[:2000], truncated=note)
         return
     for idx, block in enumerate(b for b in content.split("\n\n") if b.strip()):
         if limit is not None and idx >= limit:
@@ -412,7 +437,7 @@ def read_parquet(
     if not HAVE_PYARROW:
         yield RawRecord(
             None, path, 0,
-            error="parquet support not installed; pip install 'dropoutt[parquet]'",
+            error="parquet support not installed; reinstall dropoutt",
         )
         return
     import pyarrow.parquet as pq
@@ -447,7 +472,7 @@ def read_arrow(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
     if not HAVE_PYARROW:
         yield RawRecord(
             None, path, 0,
-            error="Arrow/Feather support not installed; pip install 'dropoutt[parquet]'",
+            error="Arrow/Feather support not installed; reinstall dropoutt",
         )
         return
 
@@ -490,7 +515,7 @@ def read_orc(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
     if not HAVE_PYARROW:
         yield RawRecord(
             None, path, 0,
-            error="ORC support not installed; pip install 'dropoutt[parquet]'",
+            error="ORC support not installed; reinstall dropoutt",
         )
         return
     from pyarrow import orc
@@ -508,7 +533,30 @@ def read_orc(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
         yield RawRecord(None, path, 0, error=f"{type(exc).__name__}: {exc}")
 
 
+def read_tar(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
+    """WebDataset shards: consecutive members sharing a basename are one sample."""
+    from .containers import read_tar as _read
+
+    for idx, (payload, error, raw) in enumerate(_read(path, limit=limit)):
+        yield RawRecord(payload, path, idx, error=error, raw_text=raw)
+
+
+def read_mds(path: str, *, limit: int | None = None) -> Iterator[RawRecord]:
+    """MosaicML Streaming shards, decoded against the sibling ``index.json``."""
+    from .containers import read_mds as _read
+
+    for idx, (payload, error, raw) in enumerate(_read(path, limit=limit)):
+        yield RawRecord(payload, path, idx, error=error, raw_text=raw)
+
+
 #: Formats whose records can be located without reading everything before them.
+#:
+#: `.mds` looks like it belongs here — it carries a byte offset per sample in
+#: its header, which is exactly what a splitter needs. It is left out because
+#: the win is small and the risk is not: a shard is one file among hundreds in a
+#: Streaming split, so the corpus already divides at file granularity, and a
+#: wrong offset in a binary format yields plausible garbage rather than a parse
+#: error. Revisit when someone scans a single multi-gigabyte shard.
 SPLITTABLE = (".jsonl", ".ndjson", ".parquet")
 
 
@@ -547,7 +595,7 @@ def read_file(path: str, suffix: str, *, compressed: bool = False,
             yield RawRecord(None, path, span.first_index, error=f"{type(exc).__name__}: {exc}")
         return
     try:
-        if compressed and suffix in {".parquet", ".arrow", ".feather", ".orc"}:
+        if compressed and suffix in {".parquet", ".arrow", ".feather", ".orc", ".mds"}:
             yield RawRecord(
                 None,
                 path,
@@ -572,6 +620,13 @@ def read_file(path: str, suffix: str, *, compressed: bool = False,
             yield from read_csv(path, compressed=compressed, limit=limit)
         elif suffix in (".txt", ".md"):
             yield from read_text(path, compressed=compressed, limit=limit)
+        elif suffix == ".tar":
+            # `compressed` is not forwarded: tarfile's stream mode detects and
+            # decodes gzip, bzip2 and xz itself, and a `.tar.gz` reaches here
+            # with its outer suffix already stripped by the classifier.
+            yield from read_tar(path, limit=limit)
+        elif suffix == ".mds":
+            yield from read_mds(path, limit=limit)
     except Exception as exc:
         yield RawRecord(
             None,

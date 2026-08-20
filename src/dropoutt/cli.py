@@ -448,7 +448,7 @@ def fetch(
     console.print("\n  [bold]Tokenizers[/bold]")
     if not HAVE_TOKENIZERS:
         failed = True
-        hint = escape("pip install 'dropoutt[tokenizer]'")
+        hint = escape("reinstall dropoutt")
         console.print("    [yellow]skipped[/yellow] "
                       f"[dim]tokenizers not installed; {hint}[/dim]")
     else:
@@ -481,7 +481,7 @@ def fetch(
     console.print("\n  [bold]Atlas embedding model[/bold]")
     if not HAVE_MODEL2VEC:
         failed = True
-        hint = escape("pip install 'dropoutt[atlas]'")
+        hint = escape("reinstall dropoutt")
         console.print("    [yellow]skipped[/yellow] "
                       f"[dim]model2vec not installed; {hint}[/dim]")
     else:
@@ -498,6 +498,8 @@ def fetch(
 
     console.print("\n  [dim]Bundled in the package, nothing to fetch: the atlas "
                   "artifact and the contamination indices.[/dim]")
+
+    _print_environment()
     if failed:
         console.print(
             "  [red]Cache preparation is incomplete.[/red] Fix the failures above "
@@ -508,40 +510,39 @@ def fetch(
                   "this same path.[/dim]\n")
 
 
-@app.command()
-def doctor() -> None:
-    """Show what is installed, and what each missing piece would unlock."""
+def _print_environment() -> None:
+    """The interpreter, the cache, the machine, and anything that failed to import.
 
-    table = Table(show_header=True, header_style="dim", box=None, padding=(0, 2))
-    table.add_column("component")
-    table.add_column("status")
-    table.add_column("without it")
-    table.add_column("install", style="dim")
-    missing = False
-    for name, info in capability_report().items():
-        status = "[green]yes[/green]" if info["available"] else "[yellow]no[/yellow]"
-        # Escape the extras syntax: rich would read `[fast]` as a style tag
-        # and silently drop it, turning the install hint into a wrong command.
-        hint = "" if info["available"] else escape(str(info["install"]))
-        missing = missing or not info["available"]
-        table.add_row(name, status, str(info["impact"]), hint)
-    console.print(table)
+    This is what `dropoutt doctor` existed for. The command is gone — with no
+    extras left there is no install decision for a capability table to inform,
+    and a table that reads "yes" on every row six times is a command people stop
+    running. What remains useful is the part that identifies *which* Python was
+    probed, because the classic way to be confused by a missing import is to
+    have installed it with a `pip` belonging to a different interpreter: a venv
+    created by `uv` ships no pip, so an activated shell falls through to
+    whichever pip is next on PATH and installs somewhere this process cannot
+    see. That, plus the machine the scan would size itself against, is printed
+    here — on the command whose whole job is preparing an environment.
+    """
+    from .hardware import plan
 
-    # The interpreter, not just the version. Every status above is an import
-    # against *this* Python, and the common way to be confused by this table is
-    # to install a package with a `pip` belonging to a different one. A venv
-    # created by `uv` ships no `pip`, so an activated shell falls through to
-    # whichever pip is next on PATH and installs somewhere this process cannot
-    # see. Printing the path makes that visible instead of baffling.
-    console.print(f"\n  python:  [dim]{escape(sys.executable)}[/dim]")
-    console.print(f"  cache:   [dim]{escape(str(cache_dir()))}[/dim]")
-    console.print(f"  version: [dim]{escape(__version__)}[/dim]")
+    console.print("\n  [bold]This environment[/bold]")
+    console.print(f"    python   [dim]{escape(sys.executable)}[/dim]")
+    console.print(f"    cache    [dim]{escape(str(cache_dir()))}[/dim]")
+    console.print(f"    version  [dim]{escape(__version__)}[/dim]")
+    console.print(f"    machine  [dim]{escape(plan().describe())}[/dim]")
 
+    missing = [name for name, info in capability_report().items() if not info["available"]]
     if missing:
-        console.print(f"\n  [dim]Install into the interpreter above, or the status "
-                      f"here will not change:[/dim]\n    [dim]{escape(_install_prefix())} "
-                      f"{escape('<package>')}[/dim]")
-    console.print()
+        console.print(
+            f"\n  [yellow]{len(missing)} required package(s) could not be imported:[/yellow] "
+            f"{escape(', '.join(missing))}"
+        )
+        console.print(
+            "  [dim]Every dependency ships with dropoutt, so this means a broken "
+            f"install rather than a missing extra. Repair it with:[/dim]\n"
+            f"    [dim]{escape(_install_prefix())} --force-reinstall dropoutt[/dim]"
+        )
 
 
 def _install_prefix() -> str:

@@ -85,7 +85,7 @@ class LanguageComposition(Check):
         if ctx.detector is not None and ctx.detector.low_trust:
             detail += (
                 f"; produced by the reduced-accuracy fallback backend ({backend}), "
-                f"install 'dropoutt[lid]' for a real detector"
+                f"reinstall dropoutt for a real detector"
             )
         if self.low_conf:
             detail += f"; {self.low_conf:,} records of adequate length could not be identified"

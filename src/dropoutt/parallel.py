@@ -43,7 +43,6 @@ when the files are sorted by source, length or date, which they usually are.
 from __future__ import annotations
 
 import hashlib
-import os
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -57,15 +56,30 @@ from .readers import WHOLE_FILE, RawRecord, ReadSpan, plan_splits, read_file
 #: pass covers this much in about that time.
 MIN_BYTES_FOR_PARALLEL = 24 << 20
 
-#: Leave a core for the parent, and stop before hyperthread siblings that share
-#: an execution unit with work which is already memory-bound.
-MAX_WORKERS = 12
-
 #: Headroom on the per-shard sample cap. The parent keeps the globally smallest
 #: ``target`` keys, so a shard only has to hold enough of its own smallest keys
 #: to be sure it is not hiding one of them. Three times its expected share is
 #: about forty standard deviations clear at the sizes involved.
 SAMPLE_HEADROOM = 3
+
+#: Characters of each sampled record kept in a shard's sample.
+#:
+#: This number is the single largest term in a scan's peak memory, and it used
+#: to be 4000 for no reason anyone could name. Both consumers want less: the
+#: atlas embedder truncates its input to 2000 characters before encoding, and
+#: the token-budget estimator wants a tokens-per-character ratio, which a
+#: two-thousand-character sample estimates as precisely as a four-thousand one.
+#: So half of every sampled string was carried across a process boundary, held
+#: in the parent, and thrown away.
+SAMPLE_TEXT_CHARS = 2000
+
+#: Bytes assumed per sampled record when sizing a cap against a memory budget.
+#: A Python ``str`` of ``SAMPLE_TEXT_CHARS`` costs its length in bytes for
+#: Latin-1 text and up to four times that for text the interpreter has to store
+#: as UCS-4; the tuple, the heap slot and the pickle buffer add the rest. Set at
+#: 2.5x the character count, which is above the measured cost of a Turkish or
+#: Arabic corpus and well above an English one.
+BYTES_PER_SAMPLE = int(SAMPLE_TEXT_CHARS * 2.5)
 
 _M64 = (1 << 64) - 1
 
@@ -117,12 +131,25 @@ class ScanPlan:
     shards: list[list[WorkItem]] = field(default_factory=list)
     workers: int = 1
     total_bytes: int = 0
-    #: Per-shard cap on kept samples, per dataset.
-    sample_cap: int = 20_000
-    #: Target sample size per dataset once shards are merged.
+    #: Per-shard cap on the atlas sample. Corpus-wide within the shard, *not*
+    #: per dataset — see :func:`run_shard`.
+    atlas_cap: int = 20_000
+    #: Per-shard cap on the token-budget sample, one entry per dataset. Sized
+    #: individually because a dataset that lives in two shards needs each of
+    #: them to keep more of it than a dataset spread across fifty.
+    budget_caps: dict[str, int] = field(default_factory=dict)
+    #: Cap for a dataset the planner did not see, which is every dataset on the
+    #: serial path where there is one shard and it holds everything.
+    budget_cap: int = 2_000
+    #: Target atlas sample size once shards are merged.
     sample_target: int = 20_000
     #: Rough record count, for the progress bar. Never used in a measurement.
     estimated_records: int = 0
+    #: Bytes the whole scan was allowed to spend on samples, and what the caps
+    #: above came out at. Reported so a scan that sampled less than it wanted
+    #: says why rather than being quietly less representative.
+    memory_budget: int = 0
+    sample_bound_by: str = "target"
 
     @property
     def parallel(self) -> bool:
@@ -130,10 +157,9 @@ class ScanPlan:
 
 
 def _suffix_of(path: str) -> tuple[str, bool]:
-    suffix = Path(path).suffix
-    if suffix in (".gz", ".zst", ".bz2", ".xz"):
-        return Path(path).with_suffix("").suffix, True
-    return suffix, False
+    from .discovery import effective_suffix
+
+    return effective_suffix(path)
 
 
 def worker_count(requested: int | None = None) -> int:
@@ -142,21 +168,20 @@ def worker_count(requested: int | None = None) -> int:
     Always one inside a worker. Without that guard, a caller who runs a scan
     from an unguarded script under the ``spawn`` start method gets a process
     that re-imports the script, starts another scan, and repeats.
+
+    Everything else is :func:`dropoutt.hardware.plan`, which reads CPU affinity,
+    any cgroup quota, hyperthread topology and free memory. ``os.cpu_count()``
+    was doing none of that: in a container limited to two cores on a 96-core
+    host it reported 96, and the scan forked twelve workers into a quota that
+    could run two of them.
     """
     import multiprocessing
 
+    from .hardware import plan
+
     if multiprocessing.current_process().name != "MainProcess":
         return 1
-    if requested is not None:
-        return max(1, requested)
-    env = os.environ.get("DROPOUTT_WORKERS")
-    if env:
-        try:
-            return max(1, int(env))
-        except ValueError:
-            pass
-    cpus = os.cpu_count() or 1
-    return max(1, min(MAX_WORKERS, cpus - 1))
+    return plan(requested).workers
 
 
 def pool_context(safe_to_fork: bool = True):
@@ -188,10 +213,13 @@ def plan_scan(
     *,
     workers: int | None,
     limit_per_file: int | None,
-    per_dataset_cap: int,
+    atlas_target: int,
+    budget_target: int,
+    datasets: int = 1,
     mean_record_bytes: float | None = None,
+    memory_budget: int | None = None,
 ) -> ScanPlan:
-    """Divide the corpus into contiguous shards of roughly equal size."""
+    """Divide the corpus into contiguous shards, and size what each may keep."""
     wanted = worker_count(workers)
     items: list[WorkItem] = []
     total = 0
@@ -211,24 +239,114 @@ def plan_scan(
                          file_salt(path), size)
             )
 
-    plan = ScanPlan(total_bytes=total, sample_target=per_dataset_cap, workers=wanted)
+    plan = ScanPlan(total_bytes=total, sample_target=atlas_target, workers=wanted)
     plan.estimated_records = _estimate_records(total, mean_record_bytes)
+
     if wanted < 2 or total < MIN_BYTES_FOR_PARALLEL or not items:
         plan.shards = [items]
         plan.workers = 1
-        plan.sample_cap = per_dataset_cap * SAMPLE_HEADROOM
-        return plan
+    else:
+        pieces = wanted * SHARDS_PER_WORKER
+        # A record limit is a debugging flag that counts per file. Splitting a
+        # file would apply it per piece and silently read several times as much.
+        if limit_per_file is None and len(items) < pieces:
+            items = _split_files(items, pieces)
+        plan.shards = _group(items, pieces)
 
-    pieces = wanted * SHARDS_PER_WORKER
-    # A record limit is a debugging flag that counts per file. Splitting a file
-    # would apply it per piece and silently read several times as much.
-    if limit_per_file is None and len(items) < pieces:
-        items = _split_files(items, pieces)
-    plan.shards = _group(items, pieces)
-    plan.sample_cap = max(
-        256, -(-per_dataset_cap * SAMPLE_HEADROOM // max(1, len(plan.shards)))
+    _size_samples(
+        plan, atlas_target=atlas_target, budget_target=budget_target,
+        datasets=max(1, datasets), memory_budget=memory_budget,
     )
     return plan
+
+
+def _size_samples(
+    plan: ScanPlan,
+    *,
+    atlas_target: int,
+    budget_target: int,
+    datasets: int,
+    memory_budget: int | None,
+) -> None:
+    """Decide how many records each shard may keep, and prove it fits in memory.
+
+    This is where a scan used to spend gigabytes. The old rule was one cap,
+    applied *per dataset* inside every shard, derived from the corpus-wide atlas
+    target of 200,000. On a forty-eight-shard scan that is 12,500 records per
+    dataset per shard — so a shard covering ten datasets held 125,000 sampled
+    strings, every worker held its own, and the parent then held all
+    forty-eight results at once before merging any of them. A corpus with a few
+    hundred datasets in it, which is exactly what a folder of mixed exports is,
+    turned into tens of gigabytes of resident sample.
+
+    Two things fix it. The atlas cap is now shard-wide rather than per dataset,
+    because the parent's atlas heap is corpus-wide and never wanted a per-dataset
+    split; the number of datasets a shard happens to span stops being a
+    multiplier. And both caps are then checked against a real memory budget
+    derived from this machine, so the answer on a 6 GB laptop is a smaller
+    sample rather than the OOM reaper.
+
+    The budget sample stays per dataset because it *is* stratified: each
+    dataset's tokens-per-character is applied to that dataset's own character
+    count. It is also two orders of magnitude smaller.
+    """
+    from .hardware import plan as hardware_plan
+
+    shards = max(1, len(plan.shards))
+    budget = memory_budget if memory_budget is not None else hardware_plan().memory_budget
+    plan.memory_budget = budget
+
+    # What the statistics want, before memory has an opinion. A shard keeps
+    # SAMPLE_HEADROOM times its expected share of the global bottom-k, which is
+    # what makes the merged sample identical however the corpus was divided.
+    #
+    # The atlas heap is corpus-wide, so every shard sees an equal expected share
+    # of it and one number covers them all.
+    want_atlas = max(256, -(-atlas_target * SAMPLE_HEADROOM // shards))
+
+    # The budget heaps are per dataset, and a dataset is *not* spread over every
+    # shard. Dividing its target by the total shard count is what made a
+    # parallel scan's token estimate differ from a serial one by 0.04%: eight
+    # datasets over fifty-two shards meant each dataset lived in about seven of
+    # them, each shard was allowed a fifty-second of the target, and the merged
+    # bottom-k was missing keys that a serial pass would have kept. The divisor
+    # is how many shards actually hold that dataset, and the cap never exceeds
+    # the target itself, because a dataset confined to one shard needs that
+    # shard to keep all of it and no more.
+    per_dataset = max(200, budget_target // max(1, datasets))
+    spread: dict[str, int] = {}
+    for shard in plan.shards:
+        for name in {item.dataset for item in shard}:
+            spread[name] = spread.get(name, 0) + 1
+    plan.budget_caps = {
+        name: min(per_dataset, max(64, -(-per_dataset * SAMPLE_HEADROOM // count)))
+        for name, count in spread.items()
+    }
+    want_budget = max(plan.budget_caps.values(), default=per_dataset)
+
+    # What memory allows. Live at once: every shard's atlas heap (workers run
+    # concurrently and the parent holds one result at a time), the per-dataset
+    # budget heaps inside them, and the parent's own merged heap of
+    # `atlas_target`. Sized against the widest case rather than the average.
+    live_shards = min(shards, max(1, plan.workers) + 1)
+    parent_cost = atlas_target * BYTES_PER_SAMPLE
+    per_shard_records = max(1, (budget - parent_cost) // (BYTES_PER_SAMPLE * live_shards))
+
+    if per_shard_records >= want_atlas + want_budget * datasets:
+        plan.atlas_cap, plan.budget_cap = want_atlas, want_budget
+        plan.sample_bound_by = "target"
+        return
+
+    # Squeezed. The budget sample is protected first: it is the smaller of the
+    # two by a wide margin, and losing it costs a token estimate that the report
+    # leads with, while a smaller atlas sample costs resolution on a histogram.
+    budget_cap = max(32, min(want_budget, per_shard_records // (2 * datasets)))
+    atlas_cap = max(64, per_shard_records - budget_cap * datasets)
+    plan.atlas_cap, plan.budget_cap = atlas_cap, budget_cap
+    plan.budget_caps = {
+        name: min(cap, budget_cap) for name, cap in plan.budget_caps.items()
+    }
+    plan.sample_bound_by = "memory"
 
 
 #: Bytes per record when nothing better is known. Only ever moves a progress
@@ -315,7 +433,11 @@ class ShardConfig:
     check_ids: list[str]
     minhash_preset: str
     limit_per_file: int | None
-    sample_cap: int
+    #: Shard-wide cap on the atlas sample, and per-dataset cap on the budget
+    #: sample. See :func:`_size_samples` for why they differ in that.
+    atlas_cap: int
+    budget_caps: dict[str, int]
+    budget_cap: int
     want_atlas_sample: bool
     want_language: bool
     contamination_dirs: list[str]
@@ -338,8 +460,13 @@ class ShardResult:
     total_chars: int = 0
     total_words: int = 0
     content_total: int = 0
-    #: dataset -> list of (sample key, text, language, characters)
-    samples: dict[str, list[tuple[int, str, str, int]]] = field(default_factory=dict)
+    #: (sample key, text, language, characters, dataset), shard-wide bottom-k.
+    #: The parent merges these into one corpus-wide heap.
+    atlas_samples: list[tuple[int, str, str, int, str]] = field(default_factory=list)
+    #: dataset -> list of (sample key, text, characters), bottom-k per dataset.
+    #: No language: the budget estimator prices characters, not languages, and
+    #: carrying the code doubled the tuple for a field nothing read.
+    budget_samples: dict[str, list[tuple[int, str, int]]] = field(default_factory=dict)
     record_counts: dict[str, int] = field(default_factory=dict)
     #: dataset -> characters of normalised text. The token budget extrapolates
     #: each dataset's own tokens-per-character against its own character count,
@@ -442,16 +569,28 @@ def run_shard(
     if ctx.contamination is not None:
         ctx.contamination.reset()
 
-    # Bottom-k sample per dataset, held as a max-heap on the negated key so the
-    # worst kept sample is the one that gets evicted.
+    # Bottom-k samples, held as max-heaps on the negated key so the worst kept
+    # sample is the one that gets evicted. Two of them, for two different
+    # questions: the atlas wants a corpus-wide sample and the token budget wants
+    # a stratified one, and keeping a single per-dataset heap sized for the
+    # larger of the two was what made a scan's memory scale with dataset count.
+    #
+    # A record that lands in both heaps is stored once. `text` is bound to one
+    # string object and both tuples reference it, so the second heap costs a
+    # pointer rather than a copy.
     from .context import F_LANG
 
-    heaps: dict[str, list[tuple[int, str, str, int]]] = {}
-    cap = config.sample_cap
+    atlas_heap: list[tuple[int, str, str, int, str]] = []
+    budget_heaps: dict[str, list[tuple[int, str, int]]] = {}
+    atlas_cap = config.atlas_cap if config.want_atlas_sample else 0
+    budget_caps = config.budget_caps
+    default_budget_cap = config.budget_cap
 
     for item in items:
         salt = item.salt
         for rec in iter_span_records(item, config.limit_per_file):
+            if rec.truncated:
+                ctx.degraded(rec.truncated)
             doc = to_document(rec, item.layout, item.dataset, index=rec.source_index)
             result.content_total += record_digest(doc)
             _compute_features(doc, ctx)
@@ -464,12 +603,23 @@ def run_shard(
 
             if len(text) > 20:
                 key = -sample_key(salt, rec.source_index)
-                heap = heaps.setdefault(item.dataset, [])
-                entry = (key, text[:4000], doc.meta.get(F_LANG) or "unknown", len(text))
-                if len(heap) < cap:
-                    heapq.heappush(heap, entry)
-                elif key > heap[0][0]:
-                    heapq.heapreplace(heap, entry)
+                kept = text[:SAMPLE_TEXT_CHARS]
+                length = len(text)
+                if atlas_cap:
+                    entry = (
+                        key, kept, doc.meta.get(F_LANG) or "unknown", length, item.dataset
+                    )
+                    if len(atlas_heap) < atlas_cap:
+                        heapq.heappush(atlas_heap, entry)
+                    elif key > atlas_heap[0][0]:
+                        heapq.heapreplace(atlas_heap, entry)
+                budget = budget_heaps.setdefault(item.dataset, [])
+                cap = budget_caps.get(item.dataset, default_budget_cap)
+                row = (key, kept, length)
+                if len(budget) < cap:
+                    heapq.heappush(budget, row)
+                elif key > budget[0][0]:
+                    heapq.heapreplace(budget, row)
 
             for check in active:
                 try:
@@ -483,9 +633,13 @@ def run_shard(
             if progress is not None and result.scanned % 2000 == 0:
                 progress(result.scanned)
 
-    result.samples = {
-        name: [(-k, text, lang, chars) for k, text, lang, chars in sorted(heap, reverse=True)]
-        for name, heap in heaps.items()
+    result.atlas_samples = [
+        (-k, text, lang, chars, dataset)
+        for k, text, lang, chars, dataset in sorted(atlas_heap, reverse=True)
+    ]
+    result.budget_samples = {
+        name: [(-k, text, chars) for k, text, chars in sorted(heap, reverse=True)]
+        for name, heap in budget_heaps.items()
     }
     result.checks = {check.check_id: check for check in active}
     result.minhash = ctx.stats.pop("_minhash_store", None)
@@ -496,7 +650,7 @@ def run_shard(
     return result
 
 
-def _run_shard_entry(payload):  # pragma: no cover - trivial process entry point
+def _run_shard_entry(payload):  # pragma: no cover - runs in a worker process
     return run_shard(payload)
 
 
@@ -507,15 +661,42 @@ def run_shards(
     ctx,
     progress: Callable[[int, int], None] | None = None,
     phase: Callable[[str], None] | None = None,
+    consume: Callable[[ShardResult], None] | None = None,
 ) -> list[ShardResult]:
-    """Run every shard, in this process or across a pool, and return them in order."""
+    """Run every shard, in this process or across a pool.
+
+    ``consume`` is called with each result **in shard order**, as soon as every
+    shard before it has been consumed. Pass it and the return value is empty:
+    the caller has already folded each result and this function drops its
+    reference, so the parent holds one shard's samples rather than all of them.
+    That was worth several gigabytes on a large corpus — the results used to
+    accumulate in a dict until the last worker finished, and only then get
+    merged.
+
+    Order is not an optimisation detail here. Shards are contiguous slices in
+    corpus order and every "keep the first N examples" rule in the check catalog
+    depends on them being folded in that order, so a result that finishes early
+    waits in the reorder buffer until its predecessors have been handed over.
+    """
+    ordered: list[ShardResult] = []
+    delivered = 0
+
+    def deliver(result: ShardResult) -> None:
+        nonlocal delivered
+        delivered += 1
+        if consume is None:
+            ordered.append(result)
+        else:
+            consume(result)
+
     if not plan.parallel:
         prime_worker(ctx)
         only = plan.shards[0] if plan.shards else []
         cb = None
         if progress is not None:
             cb = lambda done: progress(done, plan.estimated_records)  # noqa: E731
-        return [run_shard((config, 0, only), cb)]
+        deliver(run_shard((config, 0, only), cb))
+        return ordered
 
     from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -523,22 +704,31 @@ def run_shards(
     # benchmark index and language model already in memory.
     prime_worker(ctx)
     payloads = [(config, i, shard) for i, shard in enumerate(plan.shards)]
-    results: dict[int, ShardResult] = {}
+    pending: dict[int, ShardResult] = {}
+    next_index = 0
     done_records = 0
     if progress is not None:
         progress(0, plan.estimated_records)
+    from .hardware import single_threaded_children
+
     try:
-        with ProcessPoolExecutor(
+        # The limit is applied around pool *creation*: these libraries read the
+        # environment when they load, so a child that sets it in its own entry
+        # point is already too late. See `single_threaded_children`.
+        with single_threaded_children(), ProcessPoolExecutor(
             max_workers=min(plan.workers, len(plan.shards)),
             mp_context=pool_context(config.model_for_tokenizer is None),
         ) as pool:
             futures = {pool.submit(_run_shard_entry, p): p[1] for p in payloads}
             for future in as_completed(futures):
                 shard_result = future.result()
-                results[shard_result.index] = shard_result
+                pending[shard_result.index] = shard_result
                 done_records += shard_result.scanned
                 if progress is not None:
                     progress(done_records, plan.estimated_records)
+                while next_index in pending:
+                    deliver(pending.pop(next_index))
+                    next_index += 1
     except Exception as exc:
         # A pool that cannot start is not a reason to fail a scan. Fall back to
         # doing the same work here, which produces the same answer more slowly.
@@ -550,5 +740,32 @@ def run_shards(
         cb = None
         if progress is not None:
             cb = lambda done: progress(done, plan.estimated_records)  # noqa: E731
-        return [run_shard((config, 0, flat), cb)]
-    return [results[i] for i in sorted(results)]
+        ordered.clear()
+        result = run_shard((config, 0, flat), cb)
+        if consume is not None and delivered:
+            # Shards were already folded into live check objects before the pool
+            # died, and a check cannot be un-folded. The caller is told to throw
+            # its state away and start from this one serial result rather than
+            # being handed a second, overlapping set on top of a partial one.
+            raise ShardRestart(result) from None
+        if consume is not None:
+            consume(result)
+            return ordered
+        return [result]
+    for index in sorted(pending):
+        deliver(pending[index])
+    return ordered
+
+
+class ShardRestart(Exception):
+    """The pool failed mid-run; the enclosed serial result replaces everything.
+
+    Raised only when ``run_shards`` was streaming results to a consumer, because
+    that consumer has already folded some of them into live check objects and
+    those cannot be un-folded. The caller catches this, rebuilds its checks and
+    folds the single serial result instead.
+    """
+
+    def __init__(self, result: ShardResult) -> None:
+        super().__init__("parallel scan failed after partial merge")
+        self.result = result

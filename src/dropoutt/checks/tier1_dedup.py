@@ -32,7 +32,7 @@ from .base import Check, make_finding, register
 ALL_PROFILES = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN)
 
 
-def _exact_key(text: str) -> str:
+def _exact_key(text: str) -> int:
     """Whitespace- and case-insensitive identity of a record's text.
 
     Near-duplicate clusters are full of exact copies, and the exact-duplicate
@@ -40,67 +40,191 @@ def _exact_key(text: str) -> str:
     number and fills its examples with pairs the reader was shown a section
     earlier — on one corpus the top six "near-copies" were the same four rows,
     each matched against itself at 100%.
+
+    Returned as a 64-bit integer rather than the hex string it used to be, so
+    the store can hold one per record in a numpy array. Same digest, same
+    collision probability, an order of magnitude less memory.
     """
     import hashlib
     import re
 
     collapsed = re.sub(r"\s+", " ", text.lower()).strip()
-    return hashlib.blake2b(collapsed.encode("utf-8", "surrogatepass"),
-                           digest_size=8).hexdigest()
+    return int.from_bytes(
+        hashlib.blake2b(collapsed.encode("utf-8", "surrogatepass"), digest_size=8).digest(),
+        "big",
+    )
+
+
+def _digest64(text: str) -> int:
+    """A 64-bit content digest, as an integer.
+
+    Not ``models.content_hash``: that returns a 32-character hex string, which
+    costs 81 bytes as a Python object where the integer costs 32 and the
+    information is the same. Two of these are held per distinct prompt, so on a
+    million-prompt corpus the difference is a hundred megabytes.
+    """
+    import hashlib
+
+    return int.from_bytes(
+        hashlib.blake2b(text.encode("utf-8", "surrogatepass"), digest_size=8).digest(),
+        "big",
+    )
+
+
+def _example(doc: Document, prompt: str) -> tuple[str, str, int, str]:
+    """The location and a short quote for one record, for evidence."""
+    return (doc.doc_id, doc.source_file, doc.source_index, excerpt(prompt, 120))
+
+
+#: Bytes one tracked prompt costs: two digests, a count, and a location with a
+#: 120-character quote. Used to turn a memory budget into a prompt ceiling.
+BYTES_PER_TRACKED_PROMPT = 500
+
+
+def _prompt_capacity() -> int:
+    """Distinct prompts this machine will track for contradictions."""
+    from ..hardware import plan
+
+    budget = plan().memory_budget
+    return max(
+        ContradictorySupervision.MAX_TRACKED,
+        (budget // 8) // BYTES_PER_TRACKED_PROMPT,
+    )
 
 
 class _SignatureStore:
-    """Shared MinHash state, built once and used by both checks below."""
+    """Shared MinHash state, built once and used by both checks below.
 
-    def __init__(self, preset_name: str = DEFAULT_PRESET) -> None:
+    Held as parallel lists indexed by document key rather than as a dict of
+    tuples. Keys are dense — they are positions in the accepted-record sequence
+    — so the dict was a hash table whose keys were 0, 1, 2, …, costing about
+    230 bytes per record in slots, boxed integers and tuple headers to store
+    what a list stores in eight. On half a million records that is a hundred
+    megabytes for nothing, on top of the index itself.
+
+    Repeated strings are stored by reference. ``source_file`` and ``dataset``
+    are the same object for every record in a file, so the lists hold pointers
+    to one string rather than half a million copies.
+    """
+
+    #: Records this index will hold before it stops growing.
+    #:
+    #: A near-duplicate index is linear in the corpus and there is no way around
+    #: that: every record has to be compared with every other one, so every
+    #: record's signature has to be somewhere. At roughly a kilobyte apiece a
+    #: ten-million-record corpus is ten gigabytes of index, which is a scan that
+    #: does not finish on a laptop.
+    #:
+    #: So it stops, and says that it stopped. This is the same contract
+    #: ``ContradictorySupervision`` has had since 1.0: index a prefix, set
+    #: ``overflowed``, and have the finding state the count is a floor over the
+    #: first N records rather than a rate over the corpus. A number with its
+    #: coverage attached is useful; a number that quietly describes a tenth of
+    #: the corpus is not.
+    #:
+    #: Sized from the machine at construction; this is the floor and the value
+    #: used when nothing is known about available memory.
+    MAX_INDEXED = 750_000
+
+    def __init__(self, preset_name: str = DEFAULT_PRESET, *, capacity: int | None = None) -> None:
         self.preset_name = preset_name
         self.preset = PRESETS[preset_name]
         self.hasher = MinHasher(self.preset)
         self.index = LSHIndex(self.preset)
-        #: key → (doc_id, file, index, excerpt, dataset, exact-text key)
-        self.docs: dict[int, tuple[str, str, int, str, str, str]] = {}
+        self.capacity = capacity or self.MAX_INDEXED
+        #: True once ``capacity`` was reached and records began to be skipped.
+        self.overflowed = False
+        #: Records offered to the index, including those the ceiling rejected.
+        self.offered = 0
+        self._doc_ids: list[str] = []
+        self._files: list[str] = []
+        self._indexes: list[int] = []
+        self._excerpts: list[str] = []
+        self._datasets: list[str] = []
+        self._exact = np.zeros(0, dtype=np.uint64)
         self.counter = 0
         self.per_dataset: dict[str, int] = {}
-        # Both checks below share this store, so the same record arrives twice.
-        # Without this guard every document is indexed under two keys and each
-        # one becomes its own near-duplicate, which inflates the count past the
-        # total number of records.
-        self._seen: set[tuple[str, int]] = set()
+        # Both checks below share this store, so the same record arrives twice
+        # in a row. Without this guard every document is indexed under two keys
+        # and each one becomes its own near-duplicate, which inflates the count
+        # past the total number of records.
+        #
+        # One location rather than a set of every location seen. The two calls
+        # for a record are consecutive — they happen inside that record's own
+        # observe cycle, with no other record in between — so remembering the
+        # last one is exactly as correct as remembering all of them, and does
+        # not grow a 77 MB set alongside an index that already knows every
+        # record it holds.
+        self._last: tuple[str, int] | None = None
+
+    def doc(self, key: int) -> tuple[str, str, int, str, str, int]:
+        """``(doc_id, file, index, excerpt, dataset, exact key)`` for one key."""
+        return (
+            self._doc_ids[key], self._files[key], self._indexes[key],
+            self._excerpts[key], self._datasets[key], int(self._exact[key]),
+        )
+
+    def exact_key(self, key: int) -> int:
+        return int(self._exact[key])
+
+    def _push_exact(self, digest: int) -> None:
+        """Append one exact-text digest to the growable array.
+
+        Held as a 64-bit integer rather than the sixteen-character hex string it
+        used to be: same identity, 8 bytes instead of 73 once the string header
+        and the list slot are counted.
+        """
+        if self.counter >= self._exact.size:
+            grown = np.zeros(max(4096, self._exact.size * 2), dtype=np.uint64)
+            grown[: self._exact.size] = self._exact
+            self._exact = grown
+        self._exact[self.counter] = digest
+
+    @property
+    def keys(self) -> range:
+        return range(self.counter)
 
     # -- crossing a process boundary --------------------------------------
 
     def __getstate__(self) -> dict:
-        """Ship signatures as one array and leave the buckets behind.
+        """Ship signatures as one array and leave the band hashes behind.
 
-        The LSH buckets are a derived index: fourteen byte-string keys per
-        document, all of them reconstructible. Pickling them would send several
-        times the payload of the signatures they were built from, and pickling
-        fifty thousand small arrays individually is slower than sending one.
+        The band hashes are a derived index, reconstructible from the
+        signatures they were computed over, so sending them would be several
+        extra megabytes per shard for something the receiver can rebuild in
+        microseconds.
         """
-        keys = sorted(self.docs)
-        sigs = self.index._sigs
-        stacked = (
-            np.stack([sigs[k] for k in keys]) if keys
-            else np.empty((0, self.preset.num_perm), dtype=np.uint32)
-        )
         return {
             "preset_name": self.preset_name,
-            "keys": keys,
-            "sigs": stacked,
-            "docs": [self.docs[k] for k in keys],
+            "capacity": self.capacity,
+            "overflowed": self.overflowed,
+            "offered": self.offered,
+            "sigs": np.array(self.index._matrix(), copy=True),
+            "doc_ids": self._doc_ids,
+            "files": self._files,
+            "indexes": self._indexes,
+            "excerpts": self._excerpts,
+            "datasets": self._datasets,
+            "exact": self._exact[: self.counter],
             "per_dataset": self.per_dataset,
             "counter": self.counter,
         }
 
     def __setstate__(self, state: dict) -> None:
-        self.__init__(state["preset_name"])  # type: ignore[misc]
+        self.__init__(state["preset_name"], capacity=state["capacity"])  # type: ignore[misc]
         self.counter = state["counter"]
+        self.overflowed = state["overflowed"]
+        self.offered = state["offered"]
         self.per_dataset = state["per_dataset"]
+        self._doc_ids = state["doc_ids"]
+        self._files = state["files"]
+        self._indexes = state["indexes"]
+        self._excerpts = state["excerpts"]
+        self._datasets = state["datasets"]
+        self._exact = np.asarray(state["exact"], dtype=np.uint64)
         sigs = state["sigs"]
-        for row, (key, doc) in enumerate(zip(state["keys"], state["docs"], strict=True)):
-            self.docs[key] = doc
-            self.index.add(key, sigs[row], doc[4])
-            self._seen.add((doc[1], doc[2]))
+        for key in range(self.counter):
+            self.index.add(key, sigs[key], self._datasets[key])
 
     def merge(self, other: _SignatureStore) -> None:
         """Append a later shard's signatures, renumbering its keys.
@@ -111,39 +235,88 @@ class _SignatureStore:
         numbering a serial pass would have produced.
         """
         base = self.counter
-        for local in sorted(other.docs):
-            doc = other.docs[local]
-            key = base + local
-            self.docs[key] = doc
-            self.index.add(key, other.index._sigs[local], doc[4])
-            self._seen.add((doc[1], doc[2]))
-        self.counter = base + other.counter
+        self.offered += other.offered
+        self.overflowed = self.overflowed or other.overflowed
+        room = max(0, self.capacity - base)
+        taken = min(other.counter, room)
+        if taken < other.counter:
+            self.overflowed = True
+        for local in range(taken):
+            self.index.add(base + local, other.index.signature(local),
+                           other._datasets[local])
+            self._push_exact_at(base + local, int(other._exact[local]))
+        self._doc_ids.extend(other._doc_ids[:taken])
+        self._files.extend(other._files[:taken])
+        self._indexes.extend(other._indexes[:taken])
+        self._excerpts.extend(other._excerpts[:taken])
+        self._datasets.extend(other._datasets[:taken])
+        self.counter = base + taken
         for dataset, count in other.per_dataset.items():
             self.per_dataset[dataset] = self.per_dataset.get(dataset, 0) + count
+
+    def _push_exact_at(self, key: int, digest: int) -> None:
+        while key >= self._exact.size:
+            grown = np.zeros(max(4096, self._exact.size * 2), dtype=np.uint64)
+            grown[: self._exact.size] = self._exact
+            self._exact = grown
+        self._exact[key] = digest
 
     def add(self, doc: Document) -> None:
         if len(doc.text) < 40:
             return
         location = (doc.source_file, doc.source_index)
-        if location in self._seen:
+        if location == self._last:
             return
-        self._seen.add(location)
+        self._last = location
+        self.offered += 1
+        # The ceiling is checked before the signature is computed, so an
+        # overflowing scan stops paying for MinHash as well as for storage.
+        if self.counter >= self.capacity:
+            self.overflowed = True
+            return
         sig = self.hasher.signature_from_words(dedup_words_of(doc))
         if sig is None:
             return
         key = self.counter
+        self._push_exact(_exact_key(doc.text))
         self.counter += 1
         self.index.add(key, sig, doc.dataset)
-        self.docs[key] = (doc.doc_id, doc.source_file, doc.source_index,
-                          excerpt(doc.text, 160), doc.dataset,
-                          _exact_key(doc.text))
+        self._doc_ids.append(doc.doc_id)
+        self._files.append(doc.source_file)
+        self._indexes.append(doc.source_index)
+        self._excerpts.append(excerpt(doc.text, 160))
+        self._datasets.append(doc.dataset)
         self.per_dataset[doc.dataset] = self.per_dataset.get(doc.dataset, 0) + 1
+
+
+#: Bytes one indexed record costs: a 104-word signature, its band hashes, an
+#: excerpt and the small strings around them. Measured, not guessed — see the
+#: memory note in :class:`_SignatureStore`. Used only to turn a memory budget
+#: into a record ceiling.
+BYTES_PER_INDEXED_RECORD = 1100
+
+
+def _index_capacity() -> int:
+    """How many records this machine will let the near-duplicate index hold.
+
+    A quarter of the scan's sample memory budget, floored at the class default.
+    The near-duplicate index and the corpus sample are the two things that grow
+    with the corpus, and they are both bounded so that a scan's peak memory is a
+    function of the machine rather than of the dataset.
+    """
+    from ..hardware import plan
+
+    budget = plan().memory_budget
+    return max(_SignatureStore.MAX_INDEXED, (budget // 4) // BYTES_PER_INDEXED_RECORD)
 
 
 def _get_store(ctx: ScanContext) -> _SignatureStore:
     store = ctx.stats.get("_minhash_store")
     if store is None:
-        store = _SignatureStore(ctx.stats.get("minhash_preset", DEFAULT_PRESET))
+        store = _SignatureStore(
+            ctx.stats.get("minhash_preset", DEFAULT_PRESET),
+            capacity=_index_capacity(),
+        )
         ctx.stats["_minhash_store"] = store
     return store
 
@@ -193,9 +366,9 @@ class NearDuplicates(Check):
         by_dataset: dict[str, int] = {}
         near_clusters = 0
         for members in clusters.values():
-            seen_text: dict[str, int] = {}
+            seen_text: dict[int, int] = {}
             for m in members:
-                seen_text.setdefault(store.docs[m][5], m)
+                seen_text.setdefault(store.exact_key(m), m)
             distinct = len(seen_text)
             exact_absorbed += len(members) - distinct
             if distinct < 2:
@@ -204,7 +377,7 @@ class NearDuplicates(Check):
             distinct_sizes.append(distinct)
             redundant += distinct - 1
             for m in list(seen_text.values())[1:]:
-                ds = store.docs[m][4]
+                ds = store._datasets[m]
                 by_dataset[ds] = by_dataset.get(ds, 0) + 1
 
         if not redundant:
@@ -216,7 +389,7 @@ class NearDuplicates(Check):
         evidence: list[Evidence] = []
         shown: set[str] = set()
         for a, b, j in sorted(pairs, key=lambda p: -p[2]):
-            da, db = store.docs[a], store.docs[b]
+            da, db = store.doc(a), store.doc(b)
             if da[5] == db[5] or da[0] in shown or db[0] in shown:
                 continue
             shown.add(da[0])
@@ -238,6 +411,13 @@ class NearDuplicates(Check):
                 f". A further {exact_absorbed:,} cluster members are exact copies "
                 f"and are counted by T0-DUP-001 instead"
             )
+        if store.overflowed:
+            detail += (
+                f". The index holds {store.counter:,} of the {store.offered:,} "
+                f"eligible records — the ceiling this machine's memory allows — "
+                f"so this count is a floor over that prefix rather than a rate "
+                f"over the corpus"
+            )
         return [
             make_finding(
                 self, count=redundant, total=store.counter,
@@ -250,6 +430,9 @@ class NearDuplicates(Check):
                     "largest_cluster": distinct_sizes[0],
                     "cluster_sizes_top10": distinct_sizes[:10],
                     "exact_copies_excluded": exact_absorbed,
+                    "indexed": store.counter,
+                    "eligible": store.offered,
+                    "index_truncated": store.overflowed,
                 },
             )
         ]
@@ -287,8 +470,8 @@ class CrossDatasetOverlap(Check):
         # matched[a][b] = records in a that have a near-duplicate in b
         matched: dict[str, dict[str, set[int]]] = {}
         for key_a, key_b, _j in pairs:
-            ds_a = store.docs[key_a][4]
-            ds_b = store.docs[key_b][4]
+            ds_a = store._datasets[key_a]
+            ds_b = store._datasets[key_b]
             if ds_a == ds_b:
                 continue
             matched.setdefault(ds_a, {}).setdefault(ds_b, set()).add(key_a)
@@ -320,7 +503,7 @@ class CrossDatasetOverlap(Check):
 
         evidence: list[Evidence] = []
         for key_a, key_b, j in sorted(pairs, key=lambda p: -p[2]):
-            da, db = store.docs[key_a], store.docs[key_b]
+            da, db = store.doc(key_a), store.doc(key_b)
             if da[4] == db[4]:
                 continue
             evidence.append(
@@ -367,16 +550,23 @@ class ContradictorySupervision(Check):
     )
 
     #: Prompts are held as digests rather than text, so a corpus with millions of
-    #: records costs 16 bytes per distinct prompt rather than the prompt itself.
-    MAX_TRACKED = 2_000_000
+    #: records costs a digest per distinct prompt rather than the prompt itself.
+    #:
+    #: Even so this table is linear in distinct prompts, and at roughly 450 bytes
+    #: an entry two million of them is most of a gigabyte. The ceiling is sized
+    #: from the machine at construction, exactly as the near-duplicate index is;
+    #: this is the floor and the value used when memory cannot be measured. The
+    #: overflow contract is unchanged — the finding says the count is over the
+    #: first N distinct prompts rather than over the corpus.
+    MAX_TRACKED = 500_000
 
     MERGE_SUM = ("total",)
     #: Folded together in ``merge`` below: a prompt whose two answers land in
     #: different shards is exactly the case this check is about, and no
     #: per-attribute rule can see it.
     MERGE_CUSTOM = ("seen", "answers", "overflowed")
-    #: The digest function, bound once at construction.
-    MERGE_IGNORE = ("_hash",)
+    #: The digest function and the ceiling, both fixed at construction.
+    MERGE_IGNORE = ("_hash", "capacity")
 
     #: Set once MAX_TRACKED prompts are held, so the finding can say the count
     #: is a floor. Declared here because ``merge`` reads it before ``reset``
@@ -393,7 +583,7 @@ class ContradictorySupervision(Check):
         for pk, (first_ak, _n, first_record) in other.seen.items():
             mine = self.seen.get(pk)
             if mine is None:
-                if len(self.seen) >= self.MAX_TRACKED:
+                if len(self.seen) >= self.capacity:
                     self.overflowed = True
                     continue
                 self.seen[pk] = (first_ak, _n, first_record)
@@ -408,13 +598,12 @@ class ContradictorySupervision(Check):
             bucket.update(other.answers.get(pk, ()))
             self.seen[pk] = (mine[0], len(bucket), mine[2])
 
-    def __init__(self) -> None:
-        from ..models import content_hash
-
-        self._hash = content_hash
+    def __init__(self, *, capacity: int | None = None) -> None:
+        self._hash = _digest64
+        self.capacity = capacity or _prompt_capacity()
         # prompt digest -> (first answer digest, distinct answers, an example)
-        self.seen: dict[str, tuple[str, int, tuple[str, str, int, str]]] = {}
-        self.answers: dict[str, set[str]] = {}
+        self.seen: dict[int, tuple[int, int, tuple[str, str, int, str]]] = {}
+        self.answers: dict[int, set[int]] = {}
         self.total = 0
         self.overflowed = False
 
@@ -426,16 +615,19 @@ class ContradictorySupervision(Check):
         if len(prompt) < 20 or not answer:
             return
         self.total += 1
-        if len(self.seen) >= self.MAX_TRACKED:
-            self.overflowed = True
-            return
         pk = self._hash(" ".join(prompt.split()))
         ak = self._hash(" ".join(answer.split()))
-        record = (doc.doc_id, doc.source_file, doc.source_index, excerpt(prompt, 120))
-        if pk not in self.seen:
-            self.seen[pk] = (ak, 1, record)
+        existing = self.seen.get(pk)
+        if existing is None:
+            # New prompts stop being tracked at the ceiling; prompts already in
+            # the table keep accumulating answers, because a contradiction found
+            # among them is still a true contradiction.
+            if len(self.seen) >= self.capacity:
+                self.overflowed = True
+                return
+            self.seen[pk] = (ak, 1, _example(doc, prompt))
             return
-        first_ak, _n, first_record = self.seen[pk]
+        first_ak, _n, first_record = existing
         bucket = self.answers.setdefault(pk, {first_ak})
         bucket.add(ak)
         self.seen[pk] = (first_ak, len(bucket), first_record)
@@ -455,7 +647,7 @@ class ContradictorySupervision(Check):
             f"covering {affected:,} of {self.total:,} records"
         )
         if self.overflowed:
-            detail += f"; only the first {self.MAX_TRACKED:,} distinct prompts were tracked"
+            detail += f"; only the first {self.capacity:,} distinct prompts were tracked"
         return [
             make_finding(
                 self, count=len(conflicts), total=self.total, detail=detail,

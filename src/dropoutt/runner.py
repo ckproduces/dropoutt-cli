@@ -36,12 +36,13 @@ from .context import (
     F_TOKEN_IDS,
     ScanContext,
 )
-from .discovery import Discovery, discover
+from .discovery import Discovery, discover, effective_suffix
 from .models import Document, Finding, Profile, SkippedCheck
 from .normalize import to_messages
 from .parallel import (
     ScanPlan,
     ShardConfig,
+    ShardRestart,
     ShardResult,
     plan_scan,
     run_shards,
@@ -101,12 +102,8 @@ def _iter_dataset_records(
     dataset_files: list[str], *, limit: int | None = None
 ) -> Iterator[RawRecord]:
     for path in dataset_files:
-        suffix = Path(path).suffix
-        if suffix in (".gz", ".zst", ".bz2", ".xz"):
-            inner = Path(path).with_suffix("").suffix
-            yield from read_file(path, inner, compressed=True, limit=limit)
-        else:
-            yield from read_file(path, suffix, limit=limit)
+        suffix, compressed = effective_suffix(path)
+        yield from read_file(path, suffix, compressed=compressed, limit=limit)
 
 
 def scan(
@@ -260,9 +257,16 @@ def scan(
         layouts,
         workers=workers,
         limit_per_file=limit_per_file,
-        per_dataset_cap=atlas_sample_target,
+        atlas_target=atlas_sample_target if atlas is not None else 0,
+        budget_target=BUDGET_SAMPLE_TARGET,
+        datasets=len(disc.datasets),
         mean_record_bytes=mean_record_bytes,
     )
+    if plan.sample_bound_by == "memory":
+        ctx.degraded(
+            "the corpus sample was reduced to fit available memory; coverage and "
+            "token estimates are drawn from fewer records than usual"
+        )
     config = ShardConfig(
         root=disc.root,
         profile=ctx.profile,
@@ -272,7 +276,9 @@ def scan(
         check_ids=[c.check_id for c in active],
         minhash_preset=minhash_preset,
         limit_per_file=limit_per_file,
-        sample_cap=plan.sample_cap,
+        atlas_cap=plan.atlas_cap,
+        budget_caps=dict(plan.budget_caps),
+        budget_cap=plan.budget_cap,
         want_atlas_sample=atlas is not None,
         want_language=detector is not None,
         contamination_dirs=[str(p) for p in (contamination_dirs or ())],
@@ -283,8 +289,23 @@ def scan(
         eos_token_id=ctx.stats.get("eos_token_id"),
     )
 
-    results = run_shards(config, plan, ctx=ctx, progress=progress, phase=phase)
-    scanned = merge_shard_results(ctx, active, results, plan, disc)
+    # Streamed rather than collected. Each shard is folded the moment its
+    # predecessors have been, and its samples are released — so the parent holds
+    # one shard plus the bounded merged heaps instead of every shard at once.
+    merger = ShardMerger(ctx, active, disc)
+    try:
+        run_shards(config, plan, ctx=ctx, progress=progress, phase=phase,
+                   consume=merger.feed)
+    except ShardRestart as restart:
+        # The pool died after some shards had already been folded into live
+        # check objects, which cannot be un-folded. Everything is rebuilt and
+        # the single serial result is folded into the fresh state.
+        active = [type(check)() for check in active]
+        config.check_ids = [c.check_id for c in active]
+        merger = ShardMerger(ctx, active, disc)
+        _reset_accumulated(ctx)
+        merger.feed(restart.result)
+    scanned = merger.finish()
 
     # ---- atlas coverage --------------------------------------------------
     atlas_sample = ctx.stats.pop("_atlas_sample", [])
@@ -318,34 +339,43 @@ def scan(
     )
 
 
-def merge_shard_results(
-    ctx: ScanContext,
-    active: list,
-    results: list[ShardResult],
-    plan: ScanPlan,
-    disc: Discovery,
-) -> int:
-    """Fold every shard into the parent's context and check instances.
+class ShardMerger:
+    """Folds shard results into the parent, one at a time, in shard order.
 
-    Order matters and is guaranteed: shards are contiguous slices in corpus
-    order and arrive here sorted, so "the first eight examples" means the same
-    thing as it does in a one-shard scan.
+    Was a function taking the whole list. It is an object now because the parent
+    used to hold every shard's result until the last worker finished and only
+    then merge any of them — forty-eight shards' worth of sampled text resident
+    at once, which is most of where a scan's memory went. Each result is folded
+    on arrival and dropped; what stays resident is the bounded heaps below.
+
+    Order still matters and is still guaranteed: ``run_shards`` holds a reorder
+    buffer and hands results over in shard order, so "the first eight examples"
+    means the same thing as it does in a one-shard scan.
     """
-    by_id = {check.check_id: check for check in active}
-    scanned = 0
-    content_total = 0
-    # Bottom-k again, and bounded. Shards keep headroom so none discards a
-    # globally-small key; the parent merges into one corpus-wide heap of
-    # ATLAS_SAMPLE_TARGET so the atlas sample is min(total_records, 200_000)
-    # rather than a per-dataset split that under-samples large corpora.
-    atlas_heap: list[tuple[int, str, str, int, str]] = []
-    budget_heaps: dict[str, list[tuple[int, str, str, int]]] = {}
-    store = None
-    budget_cap = _per_dataset(BUDGET_SAMPLE_TARGET, len(disc.datasets))
 
-    for result in results:
-        scanned += result.scanned
-        content_total += result.content_total
+    def __init__(self, ctx: ScanContext, active: list, disc: Discovery) -> None:
+        self.ctx = ctx
+        self.disc = disc
+        self.by_id = {check.check_id: check for check in active}
+        self.scanned = 0
+        self.shards = 0
+        self.content_total = 0
+        self.counts: dict[str, int] = {}
+        self.store = None
+        # Bottom-k again, and bounded. Shards keep headroom so none discards a
+        # globally-small key; the parent merges into one corpus-wide heap of
+        # ATLAS_SAMPLE_TARGET so the atlas sample is min(total_records, 200_000)
+        # rather than a per-dataset split that under-samples large corpora.
+        self.atlas_heap: list[tuple[int, str, str, int, str]] = []
+        self.budget_heaps: dict[str, list[tuple[int, str, int]]] = {}
+        self.budget_cap = _per_dataset(BUDGET_SAMPLE_TARGET, len(disc.datasets))
+        self.atlas_cap = ATLAS_SAMPLE_TARGET if ctx.atlas is not None else 0
+
+    def feed(self, result: ShardResult) -> None:
+        ctx = self.ctx
+        self.shards += 1
+        self.scanned += result.scanned
+        self.content_total += result.content_total
         ctx.stats["total_chars"] += result.total_chars
         ctx.stats["total_words"] += result.total_words
         for dataset, count in result.chars_by_dataset.items():
@@ -354,23 +384,19 @@ def merge_shard_results(
             )
         for note in result.degradations:
             ctx.degraded(note)
-        for dataset in result.record_counts:
-            budget_heaps.setdefault(dataset, [])
-        for dataset, rows in result.samples.items():
-            budget = budget_heaps.setdefault(dataset, [])
-            for key, text, lang, chars in rows:
-                atlas_entry = (-key, text, lang, chars, dataset)
-                if len(atlas_heap) < ATLAS_SAMPLE_TARGET:
-                    heapq.heappush(atlas_heap, atlas_entry)
-                elif atlas_entry[0] > atlas_heap[0][0]:
-                    heapq.heapreplace(atlas_heap, atlas_entry)
-                budget_entry = (-key, text, lang, chars)
-                if len(budget) < budget_cap:
-                    heapq.heappush(budget, budget_entry)
-                elif budget_entry[0] > budget[0][0]:
-                    heapq.heapreplace(budget, budget_entry)
+        for dataset, count in result.record_counts.items():
+            self.counts[dataset] = self.counts.get(dataset, 0) + count
+            self.budget_heaps.setdefault(dataset, [])
+
+        for key, text, lang, chars, dataset in result.atlas_samples:
+            self._offer_atlas((-key, text, lang, chars, dataset))
+        for dataset, rows in result.budget_samples.items():
+            heap = self.budget_heaps.setdefault(dataset, [])
+            for key, text, chars in rows:
+                self._offer_budget(heap, (-key, text, chars))
+
         for check_id, shard_check in result.checks.items():
-            target = by_id.get(check_id)
+            target = self.by_id.get(check_id)
             if target is None or target is shard_check:
                 continue
             try:
@@ -378,65 +404,111 @@ def merge_shard_results(
             except Exception as exc:
                 ctx.degraded(f"check {check_id} failed to merge a shard: {type(exc).__name__}")
         if result.minhash is not None:
-            if store is None:
-                store = result.minhash
-            elif store is not result.minhash:
-                store.merge(result.minhash)
+            if self.store is None:
+                self.store = result.minhash
+            elif self.store is not result.minhash:
+                self.store.merge(result.minhash)
         if result.contamination is not None and ctx.contamination is not None:
             best, witnesses = result.contamination
             if best is not ctx.contamination._best:
                 ctx.contamination.merge_accumulator(best, witnesses)
+        # Everything this result carried is now folded in. Releasing the
+        # samples here rather than letting the caller's reference expire is what
+        # keeps peak memory at one shard rather than at the reorder buffer's
+        # high-water mark.
+        result.atlas_samples = []
+        result.budget_samples = {}
+        result.checks = {}
 
-    if store is not None:
-        ctx.stats["_minhash_store"] = store
+    def _offer_atlas(self, entry: tuple[int, str, str, int, str]) -> None:
+        if not self.atlas_cap:
+            return
+        if len(self.atlas_heap) < self.atlas_cap:
+            heapq.heappush(self.atlas_heap, entry)
+        elif entry[0] > self.atlas_heap[0][0]:
+            heapq.heapreplace(self.atlas_heap, entry)
 
-    counts: dict[str, int] = {}
+    def _offer_budget(self, heap: list, entry: tuple[int, str, int]) -> None:
+        if len(heap) < self.budget_cap:
+            heapq.heappush(heap, entry)
+        elif entry[0] > heap[0][0]:
+            heapq.heapreplace(heap, entry)
+
+    def finish(self) -> int:
+        """Resolve the merged heaps into the samples the rest of the scan reads."""
+        ctx = self.ctx
+        if self.store is not None:
+            ctx.stats["_minhash_store"] = self.store
+        for ds in self.disc.datasets:
+            ds.record_count = self.counts.get(ds.name, 0)
+
+        # Budget sample: stratified per dataset. Atlas sample: corpus-wide
+        # bottom-k of size min(total_records, ATLAS_SAMPLE_TARGET). Uniform over
+        # records, so each sampled row stands for scanned / n of the corpus.
+        budget_sample: dict[str, list[str]] = ctx.stats["budget_sample"]
+        for dataset in sorted(self.budget_heaps):
+            rows = sorted(self.budget_heaps[dataset], reverse=True)
+            if rows:
+                budget_sample[dataset] = [text for _key, text, _chars in rows]
+
+        atlas_sample: list[tuple[str, str, str, int, float]] = []
+        too_short = 0
+        atlas_rows = sorted(self.atlas_heap, reverse=True)
+        atlas_n = min(self.scanned, ATLAS_SAMPLE_TARGET, len(atlas_rows))
+        selected = atlas_rows[:atlas_n]
+        weight = (self.scanned / len(selected)) if selected else 1.0
+        if ctx.atlas is not None:
+            for _key, text, lang, chars, dataset in selected:
+                # Records below ATLAS_MIN_CHARS are excluded rather than placed.
+                # A twenty-character record cannot be positioned on a topical
+                # map, and including it inflates the off-atlas rate with records
+                # that were never placeable. Exclusions are counted, not hidden.
+                if chars >= ATLAS_MIN_CHARS:
+                    # The length kept here is the record's real one, not the
+                    # length of the truncated copy the embedder sees: the
+                    # off-atlas attribution is a statement about the data, not
+                    # about what was fed to the model.
+                    atlas_sample.append((text, lang, dataset, chars, max(weight, 1.0)))
+                else:
+                    too_short += 1
+        if too_short:
+            ctx.stats["atlas_too_short"] = too_short
+        ctx.stats["_atlas_sample"] = atlas_sample
+
+        ctx.total_records = self.scanned
+        ctx.stats["content_hash"] = format_content_hash(self.content_total)
+        ctx.stats["shards"] = self.shards
+        return self.scanned
+
+
+def _reset_accumulated(ctx: ScanContext) -> None:
+    """Undo the parent-side totals a partial merge left behind.
+
+    Only reached on the restart path, where a pool failed after some shards had
+    been folded. The check objects are rebuilt by the caller; these counters
+    live on the context and would otherwise be counted twice.
+    """
+    ctx.stats["total_chars"] = 0
+    ctx.stats["total_words"] = 0
+    ctx.stats["chars_by_dataset"] = {}
+    ctx.stats["budget_sample"] = {}
+    ctx.stats.pop("_minhash_store", None)
+    if ctx.contamination is not None:
+        ctx.contamination.reset()
+
+
+def merge_shard_results(
+    ctx: ScanContext,
+    active: list,
+    results: list[ShardResult],
+    plan: ScanPlan,
+    disc: Discovery,
+) -> int:
+    """Fold a complete list of shard results. Kept for callers holding a list."""
+    merger = ShardMerger(ctx, active, disc)
     for result in results:
-        for dataset, count in result.record_counts.items():
-            counts[dataset] = counts.get(dataset, 0) + count
-    for ds in disc.datasets:
-        ds.record_count = counts.get(ds.name, 0)
-
-    # Budget sample: stratified per dataset. Atlas sample: corpus-wide bottom-k
-    # of size min(total_records, ATLAS_SAMPLE_TARGET). Uniform over records, so
-    # each sampled row stands for scanned / n of the corpus.
-    budget_sample: dict[str, list[str]] = ctx.stats["budget_sample"]
-    for dataset in sorted(budget_heaps):
-        rows = [(-k, t, lang, c) for k, t, lang, c
-                in sorted(budget_heaps[dataset], reverse=True)]
-        for _key, text, _lang, _chars in rows:
-            budget_sample.setdefault(dataset, []).append(text)
-
-    atlas_sample: list[tuple[str, str, str, int, float]] = []
-    too_short = 0
-    atlas_rows = [(-k, t, lang, c, ds) for k, t, lang, c, ds
-                  in sorted(atlas_heap, reverse=True)]
-    atlas_n = min(scanned, ATLAS_SAMPLE_TARGET, len(atlas_rows))
-    selected = atlas_rows[:atlas_n]
-    weight = (scanned / len(selected)) if selected else 1.0
-    if ctx.atlas is not None:
-        for _key, text, lang, chars, dataset in selected:
-            # Records below ATLAS_MIN_CHARS are excluded rather than placed. A
-            # twenty-character record cannot be positioned on a topical map, and
-            # including it inflates the off-atlas rate with records that were
-            # never placeable. The count of exclusions is reported, not hidden.
-            if chars >= ATLAS_MIN_CHARS:
-                # The embedder sees the first 2000 characters; the length kept
-                # here is the record's real one, because the off-atlas
-                # attribution is a statement about the data, not about what was
-                # fed to the model.
-                atlas_sample.append((text[:2000], lang, dataset, chars,
-                                     max(weight, 1.0)))
-            else:
-                too_short += 1
-    if too_short:
-        ctx.stats["atlas_too_short"] = too_short
-    ctx.stats["_atlas_sample"] = atlas_sample
-
-    ctx.total_records = scanned
-    ctx.stats["content_hash"] = format_content_hash(content_total)
-    ctx.stats["shards"] = len(results)
-    return scanned
+        merger.feed(result)
+    return merger.finish()
 
 
 #: How many text files per dataset to sniff. The framing of a generation run is
@@ -701,16 +773,20 @@ def _compute_coverage(
     weights = [row[4] if len(row) > 4 else 1.0 for row in sample]
     try:
         emb = embedder.encode(texts)
-        # The detected language is passed in because the atlas may centre each
-        # record on its own language's mean. When the shipped atlas does not do
-        # that, this argument is ignored and the global mean is used.
-        regions, scores, nearest = atlas.assign_full(emb, langs)
-        categories = atlas.categorize(emb, langs)
-        # Soft membership: a document about medical billing is genuinely in two
-        # places, and hard assignment silently picks one. This existed in the
-        # atlas from the start and nothing ever called it, so every coverage
-        # number so far has been the top-1 answer presented as the whole answer.
-        soft_cells, soft_weights, _ = atlas.soft_assign(emb, langs)
+        # One pass over the similarity matrix for all of it. The detected
+        # language is passed in because the atlas may centre each record on its
+        # own language's mean; when the shipped atlas does not do that, the
+        # argument is ignored and the global mean is used.
+        #
+        # Soft membership is part of the same pass: a document about medical
+        # billing is genuinely in two places, and hard assignment silently picks
+        # one. It existed in the atlas from the start and nothing called it, so
+        # every coverage number before 1.1 was the top-1 answer presented as the
+        # whole answer.
+        placed = atlas.assign_all(emb, langs)
+        regions, scores, nearest = placed.best, placed.score, placed.nearest
+        categories = placed.categories
+        soft_cells, soft_weights = placed.soft_cells, placed.soft_weights
     except Exception as exc:
         ctx.degraded(f"atlas assignment failed: {type(exc).__name__}")
         return

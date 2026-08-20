@@ -42,12 +42,30 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import numpy as np
 
 from ..textutil import surface_shares
 from .normalize import NormConstants
+
+
+class AssignedRecords(NamedTuple):
+    """Everything one pass over the similarity matrix produces.
+
+    ``best`` is the region a record was placed in, or -1 for off-atlas.
+    ``score`` is its cosine similarity to the nearest centroid and ``nearest``
+    that centroid, placed or not. ``categories`` is the coarse label, derived
+    from ``nearest`` rather than computed separately so the two cannot disagree.
+    ``soft_cells`` and ``soft_weights`` are the top-k soft assignment.
+    """
+
+    best: np.ndarray
+    score: np.ndarray
+    nearest: np.ndarray
+    categories: np.ndarray
+    soft_cells: np.ndarray
+    soft_weights: np.ndarray
 
 #: Off-atlas rate bands. These grade how much of the corpus the atlas actually
 #: describes; they never gate whether the numbers are shown.
@@ -443,6 +461,75 @@ class Atlas:
         weights[off] = 0.0
         cell_ids[off] = -1
         return cell_ids.astype(np.int32), weights.astype(np.float32), best.astype(np.float32)
+
+    #: Rows per chunk in :meth:`assign_all`. The similarity matrix is
+    #: ``(rows, cells)`` and a scan places up to 200,000 records on a 212-cell
+    #: map, so the whole thing at once is 170 MB per copy and there are several
+    #: copies alive between the argpartition and the softmax. Thirty-two
+    #: thousand rows keeps that under 30 MB while leaving the matrix multiply
+    #: large enough to stay BLAS-bound.
+    ASSIGN_CHUNK = 32_768
+
+    def assign_all(
+        self, embeddings: np.ndarray, languages: list[str] | None = None
+    ) -> AssignedRecords:
+        """Every placement question, from one pass over the similarities.
+
+        ``assign_full``, ``categorize`` and ``soft_assign`` each begin by
+        projecting the embeddings and multiplying them against the centroids,
+        and a scan calls all three on the same array. That is the same 200,000
+        x 212 product computed three times over — the single largest piece of
+        arithmetic in the atlas pass, done twice for nothing — and three
+        similarity matrices alive at once.
+
+        This computes it once, in chunks, and derives all five outputs from it.
+        The results are identical to calling the three methods separately;
+        nothing here rounds differently or breaks a tie differently, because the
+        expressions are the same expressions.
+        """
+        emb = np.asarray(embeddings, dtype=np.float32)
+        if emb.ndim == 1:
+            emb = emb.reshape(1, -1)
+        rows = emb.shape[0]
+        cells = self.centroids.shape[0]
+        k = min(self.soft_k, cells)
+
+        nearest = np.zeros(rows, dtype=np.int64)
+        score = np.zeros(rows, dtype=np.float32)
+        soft_cells = np.zeros((rows, k), dtype=np.int32)
+        soft_weights = np.zeros((rows, k), dtype=np.float32)
+        temp = max(self.soft_temperature, 1e-6)
+
+        for start in range(0, rows, self.ASSIGN_CHUNK):
+            stop = min(rows, start + self.ASSIGN_CHUNK)
+            langs = languages[start:stop] if languages is not None else None
+            sims = self.project(emb[start:stop], langs) @ self.centroids.T
+
+            nearest[start:stop] = sims.argmax(axis=1)
+            score[start:stop] = sims.max(axis=1)
+
+            part = np.argpartition(-sims, kth=k - 1, axis=1)[:, :k]
+            part_sims = np.take_along_axis(sims, part, axis=1)
+            order = np.argsort(-part_sims, axis=1)
+            ids = np.take_along_axis(part, order, axis=1)
+            top = np.take_along_axis(part_sims, order, axis=1)
+            logits = top / temp
+            logits = logits - logits.max(axis=1, keepdims=True)
+            exp = np.exp(logits)
+            weights = exp / (exp.sum(axis=1, keepdims=True) + 1e-9)
+            off = top[:, 0] < self.off_threshold
+            weights[off] = 0.0
+            ids[off] = -1
+            soft_cells[start:stop] = ids
+            soft_weights[start:stop] = weights
+
+        best = np.where(score >= self.off_threshold, nearest, -1)
+        if self.region_category is not None and len(self.region_category):
+            categories = self.region_category[nearest].astype(np.int32)
+        else:
+            categories = self.categorize(emb, languages)
+        return AssignedRecords(best, score, nearest, categories,
+                               soft_cells, soft_weights)
 
     def categorize(self, embeddings: np.ndarray,
                    languages: list[str] | None = None) -> np.ndarray:

@@ -246,15 +246,15 @@ def _explain(req: Requirement) -> tuple[str, str]:
         ),
         Requirement.LANGID: (
             "language identification backend not installed",
-            "pip install 'dropoutt[lid]'",
+            "reinstall dropoutt",
         ),
         Requirement.EMBEDDINGS: (
             "embedding backend not installed",
-            "pip install 'dropoutt[atlas]'",
+            "reinstall dropoutt",
         ),
         Requirement.ATLAS: (
             "no atlas available",
-            "run dropoutt fetch, or pip install 'dropoutt[atlas]'",
+            "run dropoutt fetch, or reinstall dropoutt",
         ),
         Requirement.CONTAMINATION_INDEX: (
             "no benchmark indices found",

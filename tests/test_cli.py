@@ -46,6 +46,7 @@ def test_the_published_command_surface_is_exactly_what_is_supported():
 
     `diff`, `index-eval`, `init` and `atlas` were dropped before the first
     stable release: each was useful and none was finished enough to freeze.
+    `doctor` went in 1.1, with the extras it existed to help you choose between.
     Re-adding one is a deliberate act, not something a stray decorator does.
     """
     result = runner.invoke(app, ["--help"])
@@ -54,9 +55,9 @@ def test_the_published_command_surface_is_exactly_what_is_supported():
         for line in plain(result.output).splitlines()
         if line.startswith("\u2502 ") and len(line.split()) > 1
     }
-    assert {"scan", "checks", "benchmarks", "models", "fetch", "doctor",
+    assert {"scan", "checks", "benchmarks", "models", "fetch",
             "help", "version"} <= listed
-    for gone in ("diff", "index-eval", "init", "atlas"):
+    for gone in ("diff", "index-eval", "init", "atlas", "doctor"):
         assert gone not in listed
         assert runner.invoke(app, [gone]).exit_code == 2
 
@@ -72,7 +73,7 @@ def test_help_and_version_work_as_words_as_well_as_flags():
     assert spelled_out.exit_code == 0
     assert "Usage:" in plain(spelled_out.output)
 
-    for command in ("scan", "checks", "doctor"):
+    for command in ("scan", "checks", "fetch"):
         one = runner.invoke(app, ["help", command])
         assert one.exit_code == 0
         assert f"Usage: dropoutt {command}" in words(one.output)
@@ -244,17 +245,38 @@ def test_declared_version_has_exactly_one_source():
     assert re.fullmatch(r"\d+\.\d+\.\d+", dropoutt.__version__)
 
 
-def test_doctor_names_the_interpreter_it_probed():
-    """Every status in `doctor` is an import against one specific Python.
+def test_fetch_names_the_interpreter_and_the_machine_it_probed():
+    """Every import status is an import against one specific Python.
 
     Without the path, installing with a `pip` from a different environment looks
     like the tool ignoring the install. uv venvs ship no pip, so this is the
-    default way to hit it.
+    default way to hit it. This lived in `dropoutt doctor` until extras were
+    removed and the capability table stopped being a decision; what was worth
+    keeping moved to `fetch`, the other command whose job is an environment.
+
+    The machine line is here for the same reason: a scan sizes its worker pool
+    and its sample against this specific process's cores and memory, and inside
+    a container those are not the host's.
     """
+    import io
     import sys
     from pathlib import Path
 
-    result = CliRunner().invoke(app, ["doctor"])
-    assert result.exit_code == 0
+    from rich.console import Console
+
+    from dropoutt import __version__, cli
+
+    buf = io.StringIO()
+    # Written straight to a captured console rather than through `fetch`, which
+    # would download a tokenizer to reach this block.
+    cli.console = Console(file=buf, width=200, no_color=True)
+    try:
+        cli._print_environment()
+    finally:
+        cli.console = Console()
+    flat = buf.getvalue().replace("\n", "")
+
     # rich wraps long paths, so compare on the basename rather than the whole path.
-    assert Path(sys.executable).name in result.output.replace("\n", "")
+    assert Path(sys.executable).name in flat
+    assert __version__ in flat
+    assert "core" in flat and "machine" in flat

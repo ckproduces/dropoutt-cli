@@ -390,13 +390,17 @@ def test_atlas_quality_numbers_travel_with_the_artifact(tiny_atlas):
 # -- terminal rendering --------------------------------------------------
 
 
-def test_install_hints_survive_rich_markup():
-    """Regression: rich reads `[tokenizer]` as a style tag and deletes it.
+def test_install_hints_name_no_extras_and_survive_rich_markup():
+    """No hint may name an extra, and every hint must reach the screen intact.
 
-    The user was told to run `pip install 'dropoutt'`, which installs the core
-    package they already have and not the extra they were missing. Every install
-    hint reaches the terminal through markup, so every one of them must be
-    escaped at the render site.
+    Two regressions in one assertion, because the first caused the second.
+    dropoutt used to ship extras, so hints read `pip install 'dropoutt[lid]'` —
+    and rich reads `[lid]` as a style tag and silently deletes it, so the user
+    was told to run `pip install 'dropoutt'`, which installs the package they
+    already have and not the piece they were missing.
+
+    There are no extras now: one install brings everything. So the hint must not
+    invent one, and it must still render unchanged.
     """
     import io
 
@@ -408,13 +412,14 @@ def test_install_hints_survive_rich_markup():
         hint = str(info.get("install") or "")
         if not hint:
             continue
+        assert "dropoutt[" not in hint, (
+            f"{name}: install hint names an extra, and extras were removed in 1.1"
+        )
         buf = io.StringIO()
         Console(file=buf, width=120, no_color=True).print(f"[dim]{_m(hint)}[/dim]")
-        rendered = buf.getvalue()
-        extra = hint.split("[", 1)[1].split("]", 1)[0]
-        assert f"[{extra}]" in rendered, (
-            f"{name}: the extras name was eaten by rich markup; "
-            f"hint {hint!r} rendered as {rendered.strip()!r}"
+        assert hint in buf.getvalue(), (
+            f"{name}: the hint was altered by rich markup; "
+            f"{hint!r} rendered as {buf.getvalue().strip()!r}"
         )
 
 

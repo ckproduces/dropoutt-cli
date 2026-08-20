@@ -54,49 +54,54 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-# Core stays deliberately small. NumPy is the only compiled core dependency.
-# Tokenizers, file-format support, model backends, and speed accelerators are
-# optional. See docs/portability.md.
+# One install, everything works. There are no extras.
+#
+# The extras were a portability story that did not survive contact with users:
+# every one of them was a way to end up with a dropoutt that silently could not
+# read your Parquet or identify your languages, and the most common support
+# question was a capability table explaining which flag would have prevented it.
+#
+# The hard constraint that replaced them: **every dependency here must publish a
+# wheel for every Python and platform in `requires-python` and the classifiers
+# above.** Nothing in this list may be built from source at install time. That
+# is not a preference — a user on Windows and CPython 3.14 hit
+# `fasttext-predict`, which has no wheel for that interpreter, and pip fell
+# through to compiling it, which failed on "Microsoft Visual C++ 14.0 or greater
+# is required". A dependency that needs a C++ toolchain to install is a
+# dependency this package cannot have.
+#
+# Check before adding one:
+#
+#     uv pip compile pyproject.toml --python-version 3.14 \
+#         --python-platform windows --only-binary :all:
+#
+# It must resolve. `tests/test_packaging.py` asserts the same property.
 dependencies = [
     "typer>=0.12",
     "rich>=13.0",
     "jinja2>=3.1",
     "numpy>=1.24",
     "tomli>=2.0; python_version < '3.11'",
-]
-
-[project.optional-dependencies]
-# Faster JSON. Same results, and skipped automatically if unavailable.
-fast = [
+    # Faster JSON on the deserialize-heavy JSONL path.
     "orjson>=3.9",
-]
-# Exact token counting and chat-template rendering against a real tokenizer.
-tokenizer = [
+    # Exact token counting and chat-template rendering. Pure-Rust, abi3 wheels.
     "tokenizers>=0.15",
     "huggingface_hub>=0.23",
-]
-# Arrow columnar formats. Heaviest single dependency (35-50 MB), never in core.
-parquet = [
+    # Arrow columnar formats: .parquet, .arrow, .feather, .orc.
     "pyarrow>=14.0",
-]
-# Zstandard input. gzip, bzip2 and xz use the standard library.
-zstd = [
+    # Zstandard input. gzip, bzip2 and xz use the standard library.
     "zstandard>=0.22",
-]
-# Language identification. lid.176.ftz is a 938 KB model.
-lid = [
-    "fasttext-langdetect>=1.0",
-]
-# Atlas coverage. Static CPU embeddings, no torch.
-atlas = [
+    # Language identification over 97 languages. Pure Python plus numpy, 768 KB
+    # of model data in the wheel, and nothing to compile. Replaced
+    # fasttext-langdetect, which is the dependency that broke Windows installs.
+    "py3langid>=0.3",
+    # Atlas coverage. Static CPU embeddings, no torch.
     "model2vec>=0.4",
     "scipy>=1.10",
 ]
-all = [
-    "dropoutt[fast,tokenizer,parquet,zstd,lid,atlas]",
-]
+
+[project.optional-dependencies]
 dev = [
-    "dropoutt[all]",
     "pytest>=8.0",
     "ruff>=0.6",
     "mypy>=1.11",

@@ -133,3 +133,70 @@ def test_split_files_preserve_record_numbering(tmp_path, monkeypatch):
               for row in ((r.source_index, r.payload) for r in read_file(path, ".jsonl", span=span))]
     assert pieces == whole
     assert parallel.MIN_BYTES_FOR_PARALLEL > 0
+
+
+def test_sharded_scan_keeps_the_same_token_budget_sample(tmp_path, monkeypatch):
+    """The stratified budget sample must not depend on the shard count.
+
+    The atlas sample is corpus-wide and the budget sample is per dataset, and
+    that difference is what makes the per-shard cap for the two different. Size
+    the budget cap by the *total* number of shards and it is too small: a
+    dataset lives in only some of them, so each of those has to hold a larger
+    share of that dataset's bottom-k than an even split would suggest. When it
+    was sized the wrong way the merged sample lost keys a serial pass kept, and
+    the corpus token estimate moved by 0.04% depending on how many cores the
+    machine had.
+    """
+    from dropoutt import parallel
+
+    root = tmp_path / "data"
+    root.mkdir()
+    for name in ("alpha", "beta"):
+        folder = root / name
+        folder.mkdir()
+        for shard in range(4):
+            lines = [
+                json.dumps({"text": f"{name} record {shard * 500 + i} " + "content " * (3 + i % 9)})
+                for i in range(500)
+            ]
+            (folder / f"part-{shard}.jsonl").write_text("\n".join(lines) + "\n")
+
+    monkeypatch.setattr(parallel, "MIN_BYTES_FOR_PARALLEL", 1)
+    serial = scan(str(root), workers=1)
+    sharded = scan(str(root), workers=4)
+
+    assert sharded.ctx.stats["shards"] > 1
+    assert sharded.ctx.stats["budget_sample"] == serial.ctx.stats["budget_sample"]
+
+
+def test_shard_sample_caps_do_not_multiply_with_dataset_count(tmp_path):
+    """One shard's sample must not grow with the number of datasets it spans.
+
+    The atlas cap used to be applied per dataset inside every shard, so a shard
+    covering two hundred datasets held two hundred times one shard's worth of
+    sampled text. That is the shape of a folder of mixed exports, and it is
+    where the gigabytes went.
+    """
+    from dropoutt.discovery import discover
+    from dropoutt.parallel import plan_scan
+
+    root = tmp_path / "many"
+    root.mkdir()
+    for i in range(40):
+        (root / f"set{i}.jsonl").write_text(
+            json.dumps({"text": f"record {i} " + "content " * 20}) + "\n"
+        )
+    disc = discover(str(root))
+    layouts = {ds.name: "text" for ds in disc.datasets}
+
+    few = plan_scan(disc, layouts, workers=4, limit_per_file=None,
+                    atlas_target=200_000, budget_target=20_000, datasets=1)
+    many = plan_scan(disc, layouts, workers=4, limit_per_file=None,
+                     atlas_target=200_000, budget_target=20_000,
+                     datasets=len(disc.datasets))
+
+    # The atlas cap is shard-wide, so it is the same either way.
+    assert few.atlas_cap == many.atlas_cap
+    # And the budget caps shrink as the target is split across more datasets,
+    # rather than each dataset claiming the full target.
+    assert max(many.budget_caps.values(), default=0) <= few.budget_cap

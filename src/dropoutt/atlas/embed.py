@@ -28,6 +28,13 @@ from .normalize import EMBED_DIM, SIF_A, sif_weights_from_probs, truncate
 DEFAULT_MODEL = "minishlab/potion-multilingual-128M"
 NEEDED_FILES = ("config.json", "model.safetensors", "tokenizer.json")
 
+#: Documents encoded per pass in the weighted path. At 512 tokens each this is
+#: about eight million token ids, so the six transient arrays that
+#: :meth:`Embedder.encode_tokenized` builds over them are tens of megabytes
+#: rather than gigabytes. Large enough that the sparse multiply is still one
+#: sizeable BLAS call rather than thousands of small ones.
+ENCODE_CHUNK = 16_384
+
 
 @dataclass(frozen=True)
 class TokenizedCorpus:
@@ -71,10 +78,6 @@ class Embedder:
         return int(self.out_dim)
 
     @property
-    def full_dim(self) -> int:
-        return int(self._model.dim)
-
-    @property
     def weight_hash(self) -> str:
         return self._weight_hash
 
@@ -85,11 +88,35 @@ class Embedder:
         *,
         weighted: bool | None = None,
     ) -> np.ndarray:
-        """Embed texts to ``out_dim`` (default 128). Not L2-normalised yet."""
+        """Embed texts to ``out_dim`` (default 128). Not L2-normalised yet.
+
+        Chunked, and that is the whole reason this method is not two lines. The
+        weighted path used to tokenize the entire sample at once, which for two
+        hundred thousand documents of up to 512 tokens means a hundred million
+        token ids — and then, in ``encode_tokenized``, six more arrays of that
+        same length for the probabilities, the SIF weights, the column indices
+        and the sparse matrix. Together that is several gigabytes of transient,
+        all of it to produce a result that is 200,000 x 128 floats: a hundred
+        megabytes. It was the largest single allocation a scan made, and it was
+        pure working set.
+
+        Chunking changes nothing about the answer — SIF pooling is per document,
+        so document *i*'s vector does not depend on document *j* — and caps the
+        transient at :data:`ENCODE_CHUNK` documents' worth.
+        """
         use_weighted = bool(self._token_log_prob) if weighted is None else weighted
         if use_weighted and self._token_log_prob:
-            tokens = self.tokenize(texts, batch_size=max(batch_size, 1024))
-            return self.encode_tokenized(tokens)
+            if len(texts) <= ENCODE_CHUNK:
+                return self.encode_tokenized(
+                    self.tokenize(texts, batch_size=max(batch_size, 1024))
+                )
+            out = np.zeros((len(texts), self.out_dim), dtype=np.float32)
+            for start in range(0, len(texts), ENCODE_CHUNK):
+                part = texts[start : start + ENCODE_CHUNK]
+                out[start : start + len(part)] = self.encode_tokenized(
+                    self.tokenize(part, batch_size=max(batch_size, 1024))
+                )
+            return out
         vecs = self._model.encode(
             texts, batch_size=batch_size, max_length=512, show_progress_bar=False
         )
@@ -134,7 +161,16 @@ class Embedder:
         )
 
     def encode_tokenized(self, tokens: TokenizedCorpus) -> np.ndarray:
-        """SIF-pool a token cache with one sparse-dense matrix multiply."""
+        """SIF-pool a token cache with one sparse-dense matrix multiply.
+
+        The multiply is the only real arithmetic in a scan: two hundred thousand
+        documents by up to 512 tokens by 128 dimensions is around thirteen
+        billion multiply-accumulates. On a CPU that is seconds; on a GPU it is
+        not, so :func:`_gpu_matmul` takes it when the machine has one and the
+        problem is big enough to pay for moving the operands across the bus.
+        Everything before this line — tokenizing, weighting — stays on the CPU,
+        because it is memory shuffling rather than arithmetic.
+        """
 
         from scipy.sparse import csr_matrix
 
@@ -180,7 +216,10 @@ class Embedder:
             dtype=np.float32,
         )
         matrix.sum_duplicates()
-        vectors = matrix @ np.asarray(table[observed_ids, : self.out_dim], dtype=np.float32)
+        dense = np.asarray(table[observed_ids, : self.out_dim], dtype=np.float32)
+        vectors = _gpu_matmul(matrix, dense)
+        if vectors is None:
+            vectors = matrix @ dense
         return np.asarray(vectors, dtype=np.float32)
 
     def token_log_prob(
@@ -227,6 +266,54 @@ class Embedder:
             out_dim=self.out_dim,
             weight_hash=self._weight_hash,
         )
+
+
+#: Below this many documents the sparse multiply finishes on a CPU before a GPU
+#: has finished being handed the operands. Moving a small matrix to a device and
+#: back is dominated by the transfer and by the one-off cost of initialising the
+#: runtime, which for CUDA is a second or two of the scan's total.
+GPU_MIN_DOCS = 20_000
+
+
+def _gpu_matmul(matrix, dense: np.ndarray) -> np.ndarray | None:
+    """Sparse-dense multiply on an accelerator, or None to stay on the CPU.
+
+    Returns None — rather than raising — for every reason not to: no GPU, no
+    torch to address it with, a problem too small to be worth the transfer, or
+    anything at all going wrong on the device. A coverage number that silently
+    depends on which machine produced it would be a bug; a coverage number that
+    took two seconds longer is not. So the CPU path is always the fallback and
+    always produces the same answer.
+    """
+    from ..hardware import accelerator
+
+    if matrix.shape[0] < GPU_MIN_DOCS:
+        return None
+    device = accelerator()
+    if device == "cpu":
+        return None
+    try:
+        import torch
+
+        if device == "rocm":
+            # ROCm builds of torch present themselves as CUDA.
+            device = "cuda"
+        if device == "cuda" and not torch.cuda.is_available():
+            return None
+        if device == "mps" and not torch.backends.mps.is_available():
+            return None
+        coo = matrix.tocoo()
+        indices = torch.from_numpy(
+            np.vstack([coo.row, coo.col]).astype(np.int64)
+        ).to(device)
+        values = torch.from_numpy(coo.data.astype(np.float32)).to(device)
+        sparse = torch.sparse_coo_tensor(
+            indices, values, tuple(matrix.shape), device=device
+        ).coalesce()
+        rhs = torch.from_numpy(dense).to(device)
+        return torch.sparse.mm(sparse, rhs).cpu().numpy()
+    except Exception:
+        return None
 
 
 def local_model_dir(model_id: str, cache_root: Path) -> Path:
@@ -306,6 +393,28 @@ def _load_uncached(
         )
     except Exception:
         return None
+
+
+# A note for whoever profiles this next, so the same dead end is not walked
+# twice. `StaticModel.from_pretrained` costs about 1.3 GB resident for
+# potion-multilingual-128M, and the weights are 489 MB — a 500,353 x 256 float32
+# table, of which the atlas uses the first 128 columns, because the potion
+# models are Matryoshka and the atlas is a 128-dimensional space. Reading only
+# those columns straight out of the safetensors file and building the
+# StaticModel by hand does work and saves about 255 MB.
+#
+# It is not done, because it is not equivalent. The model config sets
+# `normalize: true`, so `StaticModel.encode` L2-normalises its output — over
+# whatever width the table has. Loading 128 columns normalises over 128; loading
+# 256 and truncating afterwards, which is what `Embedder.encode` does, leaves a
+# vector that is not unit length. The two differ by up to 0.057 per component on
+# real text. The weighted path is unaffected (it reads the table directly and
+# never calls `encode`), but the unweighted one is, and an embedding that
+# depends on which loader ran is a coordinate system that is no longer
+# comparable across scans. A quarter of a gigabyte is not worth that.
+#
+# The saving is real and still available: it needs the truncation and the
+# normalisation to be the same operation in both paths first.
 
 
 def _file_hash(path: Path | None) -> str:

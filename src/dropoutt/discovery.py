@@ -16,20 +16,80 @@ from pathlib import Path
 from .models import DatasetRef
 
 #: Directories that never contain training data.
+#:
+#: The list grew after a user pointed a scan at their home directory. The walk
+#: itself is fast — it is what happens to each file afterwards that is not — so
+#: the cheapest possible fix is to never see the file. Everything here is a
+#: place whose contents are generated, vendored or installed, and a `.json` or
+#: `.md` inside one of them is a manifest, a lockfile or a changelog rather than
+#: a training record.
 SKIP_DIRS = {
-    ".git", ".hg", ".svn", "node_modules", "__pycache__", ".venv", "venv",
-    ".mypy_cache", ".pytest_cache", ".dropoutt", ".ipynb_checkpoints", ".idea",
-    ".vscode", "site-packages", ".cache",
+    # Version control and editor state.
+    ".git", ".hg", ".svn", ".idea", ".vscode", ".ipynb_checkpoints",
+    # Language package trees and their caches.
+    "node_modules", "__pycache__", ".venv", "venv", "site-packages",
+    "bower_components", "vendor", ".bundle", ".gem", ".cargo", ".rustup",
+    ".nuget", ".m2", ".gradle", ".ivy2", ".pub-cache", "Pods",
+    # Tool caches.
+    ".mypy_cache", ".pytest_cache", ".ruff_cache", ".cache", ".tox", ".nox",
+    ".npm", ".yarn", ".pnpm-store", ".nvm", ".terraform", ".dropoutt",
+    # Build output. Named exactly, and only at the level the walk finds them,
+    # because a dataset called `build` is possible and a compiled `build/`
+    # directory holding training data is not.
+    ".next", ".nuxt", ".svelte-kit", ".parcel-cache", ".gradle-cache",
+    # Environment managers that install thousands of packages under one root.
+    "miniconda3", "anaconda3", "miniforge3", "pkgs",
+    # Operating-system trees under a home directory. Every one of these is
+    # gigabytes of application state, and none of it is a corpus.
+    "Library", "Applications", "AppData", ".Trash", "$RECYCLE.BIN",
+    "System Volume Information", "OneDriveTemp",
 }
 
+#: Extensions this tool can read, and what each one is.
+#:
+#: `.mds` (MosaicML Streaming) and `.tar` (WebDataset) are container formats —
+#: one file holding many records in a layout of their own. See
+#: :mod:`dropoutt.containers`.
 DATA_SUFFIXES = {
     ".jsonl", ".ndjson", ".json", ".parquet", ".arrow", ".feather", ".orc",
-    ".txt", ".md", ".csv", ".tsv",
+    ".txt", ".md", ".csv", ".tsv", ".mds", ".tar",
 }
 COMPRESSED = {".gz", ".zst", ".bz2", ".xz"}
 
 #: Filenames that indicate the directory is a Hugging Face dataset.
 CARD_NAMES = {"README.md", "dataset_infos.json", "dataset_dict.json"}
+
+#: Files whose extension is in :data:`DATA_SUFFIXES` and which are never
+#: training data. Matched on the whole lowercased filename, so a dataset that
+#: genuinely is called `train.json` is untouched.
+#:
+#: This is the other half of the home-directory fix. A developer's tree is full
+#: of `package.json`, `tsconfig.json` and `CHANGELOG.md`, and each one costs a
+#: sniff, a schema induction and its own single-file "dataset" in the report —
+#: which is how a scan came back describing four thousand datasets of one record
+#: each. Every name here is a fixed convention of some toolchain, not a guess
+#: about content.
+NOT_DATA_NAMES = {
+    # JavaScript / TypeScript.
+    "package.json", "package-lock.json", "tsconfig.json", "jsconfig.json",
+    "composer.json", "composer.lock", "bun.lock", "deno.json", "deno.lock",
+    "angular.json", "nx.json", "turbo.json", "biome.json", ".eslintrc.json",
+    ".babelrc.json", ".prettierrc.json", "manifest.json", "lerna.json",
+    "jest.config.json", "tslint.json",
+    # Python / Rust / Go / Ruby packaging.
+    "pipfile.lock", "poetry.lock", "uv.lock", "cargo.lock", "go.sum",
+    "gemfile.lock", "pdm.lock", "renovate.json",
+    # Model and tokenizer metadata that lives beside weights. These are read
+    # deliberately elsewhere; as records they are one dict of hyperparameters.
+    "config.json", "generation_config.json", "tokenizer_config.json",
+    "special_tokens_map.json", "preprocessor_config.json", "model_index.json",
+    "adapter_config.json", "quantize_config.json", "chat_template.json",
+    # Documentation conventions.
+    "readme.md", "changelog.md", "contributing.md", "license.md", "code_of_conduct.md",
+    "security.md", "authors.md", "notice.md", "history.md", "todo.md",
+    "requirements.txt", "constraints.txt", "license.txt", "notice.txt",
+    "authors.txt", "copying.txt", "install.txt", "manifest.in",
+}
 
 
 @dataclass(slots=True)
@@ -55,6 +115,12 @@ class Discovery:
     total_bytes: int = 0
     #: Dataset names produced by folding sharded siblings together.
     shard_families: list[str] = field(default_factory=list)
+    #: Files whose extension matched but which were passed over, by reason.
+    #: Counted rather than listed: on a home directory this is hundreds of
+    #: thousands of files, and a list of them is not a report.
+    passed_over: dict[str, int] = field(default_factory=dict)
+    #: Directories not descended into, by name. Same reasoning.
+    skipped_dirs: int = 0
 
     @property
     def format_counts(self) -> dict[str, int]:
@@ -160,26 +226,52 @@ def discover(root: str, *, follow_symlinks: bool = False, max_files: int = 200_0
     # before it can tell a naming convention from a coincidence.
     pending: list[tuple[str, Path, int]] = []
     count = 0
-    for dirpath, dirnames, filenames in os.walk(root_path, followlinks=follow_symlinks):
-        dirnames[:] = sorted(
-            d for d in dirnames if d not in SKIP_DIRS and not d.startswith(".")
-        )
+    limit_hit = False
+    for dirpath, dirnames, filenames, dirfd in _walk(root_path, follow_symlinks):
+        keep = [d for d in dirnames if d not in SKIP_DIRS and not d.startswith(".")]
+        disc.skipped_dirs += len(dirnames) - len(keep)
+        dirnames[:] = sorted(keep)
+        if limit_hit:
+            # Nothing below this point can be read, so there is no reason to
+            # keep walking into it. Recording one skip per remaining file used
+            # to build a list with millions of entries in it, which cost more
+            # memory than the scan it was describing.
+            dirnames[:] = []
+            continue
+        # `index.json` beside a MosaicML shard is that shard's column schema,
+        # not a record. It is only metadata in that company: an `index.json`
+        # anywhere else is somebody's data and is read as such.
+        local_cards = CARD_NAMES
+        if any(n.lower().endswith(".mds") for n in filenames):
+            local_cards = CARD_NAMES | {"index.json"}
+
         for name in sorted(filenames):
             if count >= max_files:
+                limit_hit = True
                 disc.skipped_files.append((name, "file limit reached"))
-                continue
-            fp = Path(dirpath) / name
-            suffix, compressed = _classify(fp)
+                break
+            suffix, compressed = _classify_name(name)
             if suffix not in DATA_SUFFIXES:
                 continue
-            if name in CARD_NAMES:
+            if name in local_cards:
                 continue
+            lowered = name.lower()
+            if lowered in NOT_DATA_NAMES:
+                disc.passed_over["known non-data filename"] = (
+                    disc.passed_over.get("known non-data filename", 0) + 1
+                )
+                continue
+            # One stat per candidate, taken relative to the directory handle
+            # the walk already holds where the platform offers one. On a tree
+            # with a hundred thousand candidates that is a hundred thousand
+            # path resolutions saved.
             try:
-                size = fp.stat().st_size
+                size = os.stat(name, dir_fd=dirfd).st_size if dirfd is not None \
+                    else os.stat(os.path.join(dirpath, name)).st_size
             except OSError as exc:
-                disc.skipped_files.append((str(fp), str(exc)))
+                disc.skipped_files.append((os.path.join(dirpath, name), str(exc)))
                 continue
-
+            fp = Path(dirpath) / name
             rel = str(fp.relative_to(root_path))
             ref = FileRef(str(fp), rel, size, suffix, compressed)
             disc.files.append(ref)
@@ -209,13 +301,57 @@ def discover(root: str, *, follow_symlinks: bool = False, max_files: int = 200_0
     return disc
 
 
+def _walk(root: Path, follow_symlinks: bool):
+    """``os.walk``, yielding the directory file descriptor where there is one.
+
+    ``os.fwalk`` hands back an open descriptor per directory, which lets the
+    size check below be a ``fstatat`` rather than a full path resolution. It
+    does not exist on Windows, where the same loop runs through ``os.walk`` and
+    ``dirfd`` is None.
+    """
+    fwalk = getattr(os, "fwalk", None)
+    if fwalk is None:  # pragma: no cover - Windows
+        for dirpath, dirnames, filenames in os.walk(root, followlinks=follow_symlinks):
+            yield dirpath, dirnames, filenames, None
+        return
+    yield from fwalk(root, follow_symlinks=follow_symlinks)
+
+
+def effective_suffix(path: str | Path) -> tuple[str, bool]:
+    """``(".jsonl", True)`` for ``train.jsonl.zst``. The one place this is decided.
+
+    Discovery, the shard planner and the reader dispatch all have to agree on
+    what a file is, and each of them used to work it out from ``Path.suffix``
+    separately. They disagreed on case: discovery matched ``.JSONL`` against a
+    lowercase set and dropped the file, while the reader would have read it
+    fine.
+    """
+    return _classify_name(os.path.basename(str(path)))
+
+
 def _classify(path: Path) -> tuple[str, bool]:
     """Return the effective data suffix, seeing through compression."""
-    suffixes = path.suffixes
-    if suffixes and suffixes[-1] in COMPRESSED:
-        inner = suffixes[-2] if len(suffixes) > 1 else ""
-        return inner, True
-    return path.suffix, False
+    return _classify_name(path.name)
+
+
+def _classify_name(name: str) -> tuple[str, bool]:
+    """The same, from a filename alone.
+
+    Split by hand rather than through ``Path.suffixes``, which allocates a
+    ``Path`` and a list per call. The walk asks this of every file it sees, so
+    on a home directory it is called a million times and the allocation shows
+    up in the profile ahead of the actual reading.
+    """
+    stem, dot, suffix = name.rpartition(".")
+    if not dot:
+        return "", False
+    suffix = "." + suffix.lower()
+    if suffix in COMPRESSED:
+        inner_stem, inner_dot, inner = stem.rpartition(".")
+        if not inner_dot or not inner_stem:
+            return "", True
+        return "." + inner.lower(), True
+    return suffix, False
 
 
 def _attach_cards(root: Path, disc: Discovery) -> None:

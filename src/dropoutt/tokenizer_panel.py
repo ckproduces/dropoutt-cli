@@ -360,7 +360,7 @@ def estimate_budget(
     if not HAVE_TOKENIZERS:
         report.notes.append(
             "No tokenizer backend installed, so token counts are a crude "
-            "character-ratio estimate. Install 'dropoutt[tokenizer]' for real counts."
+            "character-ratio estimate. Reinstall dropoutt for real counts."
         )
         est = total_chars / CHARS_PER_TOKEN_FALLBACK
         report.estimates.append(

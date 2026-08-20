@@ -9,24 +9,47 @@ hard case, and a bag-of-n-grams model will confuse them on a five-word snippet
 no matter which implementation is used.
 
 It does not call the fallback backend equivalent to the real one. When
-``fasttext-langdetect`` is missing, a small character-profile detector is used
-instead; it covers a handful of languages, is materially less accurate, and
-every result it produces is marked low-trust so the report can say so.
+``py3langid`` is missing, a small character-profile detector is used instead; it
+covers a handful of languages, is materially less accurate, and every result it
+produces is marked low-trust so the report can say so.
+
+**Why not fastText.** ``fasttext-langdetect`` was the backend through 1.0, and
+it is a better classifier on short text than what replaced it. It is also a
+compiled extension whose publisher does not build a wheel for every supported
+interpreter, and a missing wheel is not a degraded install — pip falls through
+to compiling it, so a Windows user on CPython 3.14 running ``pip install
+dropoutt`` was told to install Microsoft Visual C++ Build Tools. ``py3langid`` is
+pure Python over numpy, covers 97 languages, ships its model inside the wheel,
+and costs about sixty microseconds a call. Trading a few points of accuracy on
+sub-twenty-character strings for an install that cannot fail is the right trade
+for a tool whose first impression is the install.
+
+The accuracy that was traded away is bounded and stated rather than hidden: see
+:data:`SHORT_TEXT_CHARS` for the length below which this backend's confidence is
+discounted, because that is exactly where the difference lives.
 """
 
 from __future__ import annotations
 
+import threading
 import unicodedata
 from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
 
-from .compat import HAVE_FASTTEXT_LID
+from .compat import HAVE_PY3LANGID
 from .textutil import codepoints
 
 #: Below this, we emit "unknown" rather than a language.
 DEFAULT_FLOOR = 0.55
+
+#: Text shorter than this is where a bag-of-n-grams classifier is least
+#: reliable and most confident, which is the worst combination. py3langid
+#: returns normalised posteriors, and on a single word those are routinely above
+#: 0.9 for the wrong language ("Merhaba" scores 0.87 German). Confidence is
+#: scaled down linearly below this length so the floor does its job.
+SHORT_TEXT_CHARS = 60
 
 #: Languages that are routinely confused with one another. When the detector
 #: picks one of these with middling confidence, the finding says so explicitly
@@ -134,50 +157,75 @@ def dominant_script(text: str) -> str:
     return _SCRIPT_NAMES[int(np.bincount(ids, minlength=len(_SCRIPT_NAMES)).argmax())]
 
 
+#: One identifier per process, shared by every detector instance. Building it
+#: unpickles about a megabyte of numpy arrays; a scan constructs a
+#: ``LanguageDetector`` in the parent and again in each worker, and paying that
+#: once per worker instead of once per instance is the whole point of the cache.
+#: Forked workers inherit it already built, copy-on-write.
+_IDENTIFIER: Any = None
+_IDENTIFIER_LOCK = threading.Lock()
+
+
+def _identifier() -> Any:
+    """The py3langid model, loaded once. None when the backend is unavailable."""
+    global _IDENTIFIER
+    if _IDENTIFIER is None:
+        with _IDENTIFIER_LOCK:
+            if _IDENTIFIER is None:
+                from py3langid.langid import MODEL_FILE, LanguageIdentifier
+
+                # norm_probs=True turns the raw log-likelihoods into posteriors
+                # that sum to one. Without it the "confidence" is an unbounded
+                # negative number, and every threshold in this module — the
+                # floor, the confusable gate, the short-text discount — is
+                # written against a probability.
+                _IDENTIFIER = LanguageIdentifier.from_pickled_model(
+                    MODEL_FILE, norm_probs=True
+                )
+    return _IDENTIFIER
+
+
 class LanguageDetector:
     """Wraps whichever backend is available."""
 
-    #: How much of a record is fed to identification. fastText is a bag of
+    #: How much of a record is fed to identification. The classifier is a bag of
     #: character n-grams, so the tail of a long document adds nothing the head
     #: has not already said, and slicing before ``strip`` keeps a megabyte-long
     #: record from being copied twice.
     HEAD_CHARS = 2000
 
     def __init__(self, floor: float | None = None) -> None:
-        # The fastText model, loaded on first use. Typed loosely because
-        # ftlangdetect is an optional extra.
         self._model: Any = None
-        if HAVE_FASTTEXT_LID:
-            self.backend = "fasttext-lid.176"
+        if HAVE_PY3LANGID:
+            self.backend = "py3langid-97"
             self.low_trust = False
             self.floor = DEFAULT_FLOOR if floor is None else floor
         else:
             self.backend = "builtin-fallback"
             self.low_trust = True
             # The fallback is capped at 0.75 by construction and scores lower
-            # than fastText on the same text, so applying the same floor would
-            # reject everything and report a corpus as entirely unidentifiable.
+            # than the real backend on the same text, so applying the same floor
+            # would reject everything and report a corpus as unidentifiable.
             self.floor = 0.30 if floor is None else floor
 
     def _predict(self, normalized: str) -> tuple[str, float]:
-        """One call into fastText's pybind layer.
+        """One classification, with the short-text discount applied.
 
-        ``ftlangdetect.detect`` is not used at scan time. It re-collapses
-        whitespace with a regex over text this class has already normalised,
-        takes a lock to look up a model in a dict, and allocates a TypedDict per
-        call — about seventy microseconds of pure overhead on top of a
-        prediction that costs less than that. The model object and the
-        normalisation contract are the same either way.
+        py3langid returns a normalised posterior, which on a handful of
+        characters is confident and wrong often enough to matter — it is a
+        multinomial naive Bayes over byte n-grams, and a short string simply
+        does not carry enough of them. Rather than let the floor be crossed by
+        noise, the score is scaled by how much text the decision was actually
+        made on. Above :data:`SHORT_TEXT_CHARS` the scale is 1 and this is the
+        model's own number.
         """
         if self._model is None:
-            from ftlangdetect.detect import get_or_load_model
-
-            self._model = get_or_load_model(True)
-        predictions = self._model.f.predict(normalized + "\n", 1, 0.0, "strict")
-        if not predictions:
-            raise RuntimeError("fastText returned no prediction")
-        probability, label = predictions[0]
-        return label.replace("__label__", ""), min(float(probability), 1.0)
+            self._model = _identifier()
+        lang, probability = self._model.classify(normalized)
+        score = min(float(probability), 1.0)
+        if len(normalized) < SHORT_TEXT_CHARS:
+            score *= len(normalized) / SHORT_TEXT_CHARS
+        return str(lang), score
 
     def detect(self, text: str) -> LangResult:
         head = text[: self.HEAD_CHARS + 64].strip() if len(text) > self.HEAD_CHARS else text.strip()
@@ -189,8 +237,6 @@ class LanguageDetector:
 
         if not self.low_trust:
             try:
-                # fastText treats a newline as a record separator and rejects
-                # any string containing one, so whitespace is collapsed first.
                 lang, score = self._predict(" ".join(head[: self.HEAD_CHARS].split()))
             except Exception:
                 return LangResult("unknown", 0.0, script, self.low_trust)

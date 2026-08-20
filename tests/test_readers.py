@@ -53,7 +53,8 @@ def test_missing_zstd_support_is_an_actionable_record_error(monkeypatch, tmp_pat
     rows = list(readers.read_file(str(path), ".jsonl", compressed=True))
 
     assert len(rows) == 1
-    assert "dropoutt[zstd]" in rows[0].error
+    assert "zstd support not installed" in rows[0].error
+    assert "reinstall dropoutt" in rows[0].error
 
 
 @pytest.mark.skipif(not readers.HAVE_PYARROW, reason="pyarrow not installed")
@@ -168,3 +169,89 @@ def test_semicolon_delimited_csv_is_not_read_as_one_column(tmp_path):
     rows = list(readers.read_file(str(path), ".csv"))
 
     assert rows[0].payload == {"question": "Nedir bu?", "answer": "Bir cevap."}
+
+
+# -- discovery skips ------------------------------------------------------
+
+
+def test_a_home_directory_shaped_tree_is_walked_past_rather_than_read(tmp_path):
+    """A user pointed a scan at their home folder and waited a very long time.
+
+    None of what follows is training data, and every one of these files used to
+    cost a sniff, a schema induction and its own single-file "dataset" in the
+    report. The walk is cheap; what happens to a file afterwards is not, so the
+    fix is to never see the file.
+    """
+    from dropoutt.discovery import discover
+
+    (tmp_path / "real").mkdir()
+    (tmp_path / "real" / "train.jsonl").write_text('{"text": "a genuine record"}\n')
+
+    for folder in ("node_modules", "Library", ".venv", "__pycache__", ".git"):
+        nested = tmp_path / folder / "deep"
+        nested.mkdir(parents=True)
+        (nested / "data.jsonl").write_text('{"text": "not training data"}\n')
+
+    project = tmp_path / "project"
+    project.mkdir()
+    # Every one of these has an extension dropoutt reads, which is why a name
+    # list is needed at all — `poetry.lock` is filtered by its extension alone.
+    for name in ("package.json", "tsconfig.json", "CHANGELOG.md",
+                 "requirements.txt", "config.json"):
+        (project / name).write_text('{"name": "x"}\n' if name.endswith(".json") else "text\n")
+
+    found = discover(str(tmp_path))
+    kept = {ref.rel for ref in found.files}
+
+    assert kept == {"real/train.jsonl"}
+    assert found.skipped_dirs >= 5
+    assert found.passed_over.get("known non-data filename") == 5
+
+
+def test_a_dataset_named_like_a_config_file_is_still_read(tmp_path):
+    """The skip list is filenames, not paths, and it must not eat real data."""
+    from dropoutt.discovery import discover
+
+    (tmp_path / "train.json").write_text('[{"text": "a record"}]')
+    (tmp_path / "my-package.json").write_text('[{"text": "another"}]')
+    found = discover(str(tmp_path))
+    assert {ref.rel for ref in found.files} == {"train.json", "my-package.json"}
+
+
+def test_the_file_limit_stops_the_walk_instead_of_listing_what_it_skipped(tmp_path):
+    """Recording one skip per remaining file built a list of millions of entries.
+
+    On a home directory that cost more memory than the scan it was describing.
+    """
+    from dropoutt.discovery import discover
+
+    for i in range(40):
+        (tmp_path / f"set{i}.jsonl").write_text('{"text": "record"}\n')
+    found = discover(str(tmp_path), max_files=5)
+    assert len(found.files) == 5
+    assert len(found.skipped_files) == 1
+
+
+def test_a_very_large_text_file_is_read_up_to_a_bound(tmp_path):
+    """`.txt` in a corpus is a document; `.txt` in a home directory is a log."""
+    from dropoutt import readers
+
+    path = tmp_path / "huge.txt"
+    path.write_text("word " * 400_000)  # 2 MB
+    rows = list(readers.read_text(str(path)))
+    assert len(rows) == 1
+    assert rows[0].truncated is None
+
+    original = readers.MAX_TEXT_RECORD_BYTES
+    try:
+        readers.MAX_TEXT_RECORD_BYTES = 1 << 10
+        rows = list(readers.read_text(str(path)))
+    finally:
+        readers.MAX_TEXT_RECORD_BYTES = original
+    assert len(rows) == 1
+    assert len(rows[0].payload["text"]) == 1 << 10
+    # Truncation is not a parse error: the record still parses, still has a
+    # layout and still counts. It is reported through its own field so the scan
+    # can say the file was longer rather than calling it malformed.
+    assert rows[0].error is None
+    assert "larger than" in (rows[0].truncated or "")

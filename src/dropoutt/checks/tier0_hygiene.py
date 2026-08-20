@@ -6,6 +6,9 @@ None of these need a model. All of them are cheap enough to run on every commit.
 from __future__ import annotations
 
 from hashlib import blake2b as _blake
+from typing import Any, NamedTuple
+
+import numpy as _np
 
 from ..context import ScanContext
 from ..models import CostClass, Document, Evidence, Finding, Profile, Severity
@@ -26,6 +29,64 @@ ALL_PROFILES = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN
 #: the duplicate report is already complete in aggregate — counts come from the
 #: unbounded tally — and the extra examples buy nothing.
 FIRST_SEEN_CAP = 50_000
+
+
+class _DigestTally:
+    """A multiset of 64-bit digests, stored as an array and counted at the end.
+
+    The obvious structure is ``dict[int, int]`` — digest to how many times it
+    was seen — and that is what this was. It costs about 165 bytes per distinct
+    record: a boxed key, a boxed count and a hash-table slot, to hold sixteen
+    bytes of information. On a corpus with few duplicates almost every record is
+    distinct, so it is 165 bytes per *record*, and the exact-duplicate check was
+    the third-largest thing a scan held in memory after the near-duplicate index.
+
+    Appending to a growable array costs eight. The counting that the dictionary
+    was doing incrementally happens once, in ``counts``, as a sort — which is
+    also faster than several million dictionary probes, and which the check
+    already had to wait for because "is this a repeat?" is only answerable once
+    every record has been seen.
+
+    Only digests seen more than once come back out. Singletons are the answer to
+    a question nobody asks, and there are millions of them.
+    """
+
+    def __init__(self) -> None:
+        self._keys = _np.zeros(0, dtype=_np.uint64)
+        self._size = 0
+
+    def add(self, digest: int) -> None:
+        if self._size >= self._keys.size:
+            grown = _np.zeros(max(4096, self._keys.size * 2), dtype=_np.uint64)
+            grown[: self._keys.size] = self._keys
+            self._keys = grown
+        self._keys[self._size] = digest
+        self._size += 1
+
+    def extend(self, other: _DigestTally) -> None:
+        needed = self._size + other._size
+        if needed > self._keys.size:
+            grown = _np.zeros(max(4096, needed, self._keys.size * 2), dtype=_np.uint64)
+            grown[: self._keys.size] = self._keys
+            self._keys = grown
+        self._keys[self._size : needed] = other._keys[: other._size]
+        self._size = needed
+
+    def counts(self) -> _Repeats:
+        if not self._size:
+            return _Repeats(_np.zeros(0, dtype=_np.uint64), _np.zeros(0, dtype=_np.int64))
+        keys, counts = _np.unique(self._keys[: self._size], return_counts=True)
+        keep = counts > 1
+        return _Repeats(keys[keep], counts[keep].astype(_np.int64))
+
+
+class _Repeats(NamedTuple):
+    keys: Any
+    counts: Any
+
+    @property
+    def size(self) -> int:
+        return int(self.keys.size)
 
 
 @register
@@ -124,29 +185,36 @@ class ExactDuplicates(Check):
 
     EVIDENCE_CAP = 4
     MERGE_SUM = ("total",)
-    MERGE_COUNTS = ("exact", "ws")
     MERGE_FIRST = ("origin",)
     MERGE_FIRST_CAP = FIRST_SEEN_CAP
+    #: Concatenated in ``merge`` — see :class:`_DigestTally`, which is not a
+    #: shape any of the per-attribute rules describe.
+    MERGE_CUSTOM = ("exact", "ws")
     #: Derived in finalize from the merged tables above.
     MERGE_IGNORE = ("by_dataset", "dup_chars")
 
     def __init__(self) -> None:
         self.total = 0
-        self.exact: dict[int, int] = {}
-        self.ws: dict[int, int] = {}
+        self.exact = _DigestTally()
+        self.ws = _DigestTally()
         #: key -> (dataset, characters, evidence) for the first copy seen.
         self.origin: dict[int, tuple[str, int, Evidence]] = {}
         self.by_dataset: dict[str, int] = {}
         self.dup_chars = 0
+
+    def merge(self, other: Check) -> None:
+        super().merge(other)
+        if isinstance(other, ExactDuplicates):
+            self.exact.extend(other.exact)
+            self.ws.extend(other.ws)
 
     def observe(self, doc: Document, ctx: ScanContext) -> None:
         if not doc.text.strip():
             return
         self.total += 1
         key = self._key(doc.text)
-        skey = self._key(normalize_ws(doc.text).lower())
-        self.exact[key] = self.exact.get(key, 0) + 1
-        self.ws[skey] = self.ws.get(skey, 0) + 1
+        self.exact.add(key)
+        self.ws.add(self._key(normalize_ws(doc.text).lower()))
         if key not in self.origin and len(self.origin) < FIRST_SEEN_CAP:
             self.origin[key] = (
                 doc.dataset,
@@ -156,12 +224,14 @@ class ExactDuplicates(Check):
             )
 
     def finalize(self, ctx: ScanContext) -> list[Finding]:
-        exact_extra = sum(v - 1 for v in self.exact.values() if v > 1)
-        ws_extra = sum(v - 1 for v in self.ws.values() if v > 1)
+        exact_counts = self.exact.counts()
+        exact_extra = int((exact_counts.counts - 1).sum()) if exact_counts.size else 0
+        ws_counts = self.ws.counts()
+        ws_extra = int((ws_counts.counts - 1).sum()) if ws_counts.size else 0
         if not exact_extra and not ws_extra:
             return []
-        clusters = sum(1 for v in self.exact.values() if v > 1)
-        largest = max(self.exact.values()) if self.exact else 0
+        clusters = int(exact_counts.size)
+        largest = int(exact_counts.counts.max()) if exact_counts.size else 0
 
         # Wasted characters and the per-dataset split are derived here rather
         # than counted as records arrive, because "is this a repeat?" depends on
@@ -169,9 +239,10 @@ class ExactDuplicates(Check):
         # copies are attributed to the dataset the text first appeared in, which
         # is also the only attribution that does not change with the order the
         # files happen to be read in.
-        for key, count in self.exact.items():
-            if count < 2:
-                continue
+        repeated = dict(
+            zip(exact_counts.keys.tolist(), exact_counts.counts.tolist(), strict=True)
+        )
+        for key, count in repeated.items():
             entry = self.origin.get(key)
             if entry is None:
                 continue
@@ -180,8 +251,7 @@ class ExactDuplicates(Check):
             self.dup_chars += chars * (count - 1)
 
         evidence = [
-            entry[2] for key, entry in self.origin.items()
-            if self.exact.get(key, 0) > 1
+            entry[2] for key, entry in self.origin.items() if key in repeated
         ][: self.EVIDENCE_CAP]
         detail = (
             f"{exact_extra:,} redundant copies across {clusters:,} exact clusters "

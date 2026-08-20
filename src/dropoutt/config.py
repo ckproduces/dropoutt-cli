@@ -141,7 +141,7 @@ def resolve_model(model: str, *, offline: bool = False) -> ResolvedModel:
     tok = load_tokenizer(model_id, offline=offline)
     if tok is None:
         if not HAVE_TOKENIZERS:
-            notes.append("tokenizers not installed; install 'dropoutt[tokenizer]'")
+            notes.append("tokenizers not installed; reinstall dropoutt")
         else:
             notes.append(f"could not load a tokenizer for {model_id}")
         return ResolvedModel(model_id, None, None, None, notes)
