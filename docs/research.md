@@ -415,6 +415,14 @@ question a reader has is "what should I add".
   The atlas has a version, a size and a composition, and all of it currently
   lives in a footer.
 
+### The proposal, drawn
+
+`docs/coverage-redesign.html` is the sequence above as working mockups, built
+from a real scan — 1,498 records of real multilingual text, 1,464 placed, on
+`atlas-v1-lite`. Open it in a browser. Every number in it came out of
+`report.json`, including the 212 per-neighbourhood densities behind the coverage
+bar and the full 48-row grid behind the disclosure.
+
 ### How to know whether it worked
 
 The A/B test needs a comprehension task, not a preference question. Give the
