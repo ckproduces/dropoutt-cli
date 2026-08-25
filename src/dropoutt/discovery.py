@@ -272,7 +272,10 @@ def discover(root: str, *, follow_symlinks: bool = False, max_files: int = 200_0
                 disc.skipped_files.append((os.path.join(dirpath, name), str(exc)))
                 continue
             fp = Path(dirpath) / name
-            rel = str(fp.relative_to(root_path))
+            # Forward slashes on every OS: `rel` names files in reports and
+            # degradation notes, and the same corpus scanned on Windows and
+            # Linux should describe its files with the same strings.
+            rel = fp.relative_to(root_path).as_posix()
             ref = FileRef(str(fp), rel, size, suffix, compressed)
             disc.files.append(ref)
             disc.total_bytes += size
