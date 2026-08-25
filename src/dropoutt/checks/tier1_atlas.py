@@ -66,7 +66,7 @@ class TopicalConcentration(Check):
     )
     rationale = (
         "Occupancy counts a region the same whether it holds one record or a third of the "
-        "corpus, so '34 of 212 regions occupied' can describe a broad corpus or a corpus that "
+        "corpus, so '34 of 215 regions occupied' can describe a broad corpus or a corpus that "
         "is really two regions with noise around them. Effective coverage sums "
         "min(1, density_ratio) over subregions — parity is a full score, thinner coverage a "
         "fraction — and the gap between occupied and effective is the finding. This is "

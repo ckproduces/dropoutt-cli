@@ -641,15 +641,15 @@ def _probe_offsets(ctx: ScanContext, tok: TokenizerHandle, tpl: ChatTemplate) ->
         ctx.stats["offsets_unreliable"] = True
 
 
-def _compute_features(doc: Document, ctx: ScanContext) -> None:
-    """Compute the shared per-record features exactly once."""
-    text = doc.text
+def _store_language(doc: Document, result) -> None:
+    doc.meta[F_LANG] = result.lang
+    doc.meta[F_LANG_CONF] = result.confidence
+    doc.meta["_lang_result"] = result
 
-    if ctx.detector is not None and text:
-        result = ctx.detector.detect(text)
-        doc.meta[F_LANG] = result.lang
-        doc.meta[F_LANG_CONF] = result.confidence
-        doc.meta["_lang_result"] = result
+
+def _compute_tokens(doc: Document, ctx: ScanContext) -> None:
+    """Token count, and where a chat template applies, the rendered form."""
+    text = doc.text
 
     if ctx.tokenizer is None:
         doc.meta[F_TOKEN_COUNT] = max(1, int(len(text) / CHARS_PER_TOKEN_FALLBACK))
@@ -679,6 +679,49 @@ def _compute_features(doc: Document, ctx: ScanContext) -> None:
             doc.meta["render_error"] = f"{type(exc).__name__}: {exc}"
 
     doc.meta[F_TOKEN_COUNT] = ctx.tokenizer.count(text)
+
+
+def _compute_features(doc: Document, ctx: ScanContext) -> None:
+    """Compute the shared per-record features exactly once."""
+    if ctx.detector is not None and doc.text:
+        _store_language(doc, ctx.detector.detect(doc.text))
+    _compute_tokens(doc, ctx)
+
+
+def _compute_features_batch(docs: list[Document], ctx: ScanContext) -> None:
+    """:func:`_compute_features` for a batch, computed by column.
+
+    Same values, three shapes of work instead of one. Language identification
+    goes to the batched classifier, which is where most of the saving is. The
+    no-tokenizer estimate is a division that does not need a function call.
+    Exact counting goes through ``encode_batch_fast``, which tokenizes the batch
+    in Rust rather than crossing the boundary once per record — except for
+    records that need a chat template rendered, which is per-record work and
+    stays that way.
+    """
+    if ctx.detector is not None:
+        with_text = [doc for doc in docs if doc.text]
+        if with_text:
+            detected = ctx.detector.detect_many([doc.text for doc in with_text])
+            for doc, result in zip(with_text, detected, strict=True):
+                _store_language(doc, result)
+
+    if ctx.tokenizer is None:
+        for doc in docs:
+            doc.meta[F_TOKEN_COUNT] = max(1, int(len(doc.text) / CHARS_PER_TOKEN_FALLBACK))
+        return
+
+    templated = ctx.chat_template is not None and not ctx.stats.get("offsets_unreliable")
+    plain: list[Document] = []
+    for doc in docs:
+        if templated and doc.turns:
+            _compute_tokens(doc, ctx)
+        else:
+            plain.append(doc)
+    if plain:
+        counts = ctx.tokenizer.count_batch([doc.text for doc in plain])
+        for doc, count in zip(plain, counts, strict=True):
+            doc.meta[F_TOKEN_COUNT] = count
 
 
 def _soft_membership(atlas, cells, weights) -> dict:
@@ -797,6 +840,17 @@ def _compute_coverage(
         lengths=lengths, datasets=datasets, texts=texts, weights=weights,
     )
     coverage["sampled_records"] = len(texts)
+    # What measured these numbers, not what the atlas was fitted with. Since
+    # 1.2 the encoder is applied in its quantised form, so a report that named
+    # the build-time weights would be describing a table this scan never read.
+    # `encoder_built_with` exists only when the two genuinely differ — an atlas
+    # fitted in the same quantised coordinate system it is applied in has one
+    # hash, and reporting it twice would invent a distinction.
+    if embedder.weight_hash:
+        built_with = coverage.get("encoder_weight_hash", "")
+        coverage["encoder_weight_hash"] = embedder.weight_hash
+        if built_with and built_with != embedder.weight_hash:
+            coverage["encoder_built_with"] = built_with
     coverage["soft_membership"] = _soft_membership(
         atlas, soft_cells, soft_weights
     )

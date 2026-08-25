@@ -139,6 +139,12 @@ def _script_table() -> np.ndarray:
     return _SCRIPT_TABLE
 
 
+#: How much of a record the script decision is made on. A writing system does
+#: not change half way down a document often enough to be worth reading the
+#: rest of it.
+SCRIPT_HEAD_CHARS = 2000
+
+
 def dominant_script(text: str) -> str:
     """Which writing system most of the letters in this text belong to.
 
@@ -147,7 +153,7 @@ def dominant_script(text: str) -> str:
     consumer is :meth:`LanguageDetector.script_mismatch`, which treats "Other"
     and "None" identically.
     """
-    codes = codepoints(text[:2000])
+    codes = codepoints(text[:SCRIPT_HEAD_CHARS])
     if codes.size == 0:
         return "None"
     ids = _script_table()[codes[codes < 0x10000]]
@@ -155,6 +161,32 @@ def dominant_script(text: str) -> str:
     if ids.size == 0:
         return "None"
     return _SCRIPT_NAMES[int(np.bincount(ids, minlength=len(_SCRIPT_NAMES)).argmax())]
+
+
+def dominant_scripts(texts: list[str]) -> list[str]:
+    """:func:`dominant_script` for a batch, in one pass of array arithmetic.
+
+    Same answer, one set of numpy calls for the batch instead of five per
+    record. The per-record function stays because a single call through the
+    batch machinery would cost more than it saves.
+    """
+    if not texts:
+        return []
+    parts = [codepoints(t[:SCRIPT_HEAD_CHARS]) for t in texts]
+    lengths = np.fromiter((p.size for p in parts), dtype=np.int64, count=len(parts))
+    codes = np.concatenate(parts) if len(parts) > 1 else parts[0]
+    owner = np.repeat(np.arange(len(texts), dtype=np.int64), lengths)
+    inside = codes < 0x10000
+    ids = np.zeros(codes.size, dtype=np.uint8)
+    ids[inside] = _script_table()[codes[inside]]
+    letters = ids != 0
+    width = len(_SCRIPT_NAMES)
+    tally = np.bincount(
+        owner[letters] * width + ids[letters], minlength=len(texts) * width
+    ).reshape(len(texts), width)
+    # Bin 0 is "not a letter" and is never incremented, so a row whose argmax is
+    # 0 is a record with no letters in it at all.
+    return [_SCRIPT_NAMES[i] if i else "None" for i in tally.argmax(axis=1).tolist()]
 
 
 #: One identifier per process, shared by every detector instance. Building it
@@ -167,7 +199,15 @@ _IDENTIFIER_LOCK = threading.Lock()
 
 
 def _identifier() -> Any:
-    """The py3langid model, loaded once. None when the backend is unavailable."""
+    """The classifier, loaded once. Raises when the backend is unavailable.
+
+    What comes back is :class:`~.ngram_langid.NgramModel`, which reads the
+    py3langid model and classifies a batch with array arithmetic instead of the
+    per-byte Python loop the library ships. It is built only after proving
+    itself against the automaton it was derived from; if that proof fails on
+    some future model file, the library's own identifier is used and the scan
+    is slower rather than wrong.
+    """
     global _IDENTIFIER
     if _IDENTIFIER is None:
         with _IDENTIFIER_LOCK:
@@ -179,9 +219,15 @@ def _identifier() -> Any:
                 # negative number, and every threshold in this module — the
                 # floor, the confusable gate, the short-text discount — is
                 # written against a probability.
-                _IDENTIFIER = LanguageIdentifier.from_pickled_model(
+                identifier = LanguageIdentifier.from_pickled_model(
                     MODEL_FILE, norm_probs=True
                 )
+                try:
+                    from .ngram_langid import NgramModel
+
+                    _IDENTIFIER = NgramModel(identifier)
+                except Exception:
+                    _IDENTIFIER = identifier
     return _IDENTIFIER
 
 
@@ -208,8 +254,13 @@ class LanguageDetector:
             # would reject everything and report a corpus as unidentifiable.
             self.floor = 0.30 if floor is None else floor
 
-    def _predict(self, normalized: str) -> tuple[str, float]:
-        """One classification, with the short-text discount applied.
+    def _model_ready(self) -> Any:
+        if self._model is None:
+            self._model = _identifier()
+        return self._model
+
+    def _discount(self, score: float, length: int) -> float:
+        """The short-text discount.
 
         py3langid returns a normalised posterior, which on a handful of
         characters is confident and wrong often enough to matter — it is a
@@ -219,16 +270,28 @@ class LanguageDetector:
         made on. Above :data:`SHORT_TEXT_CHARS` the scale is 1 and this is the
         model's own number.
         """
-        if self._model is None:
-            self._model = _identifier()
-        lang, probability = self._model.classify(normalized)
-        score = min(float(probability), 1.0)
-        if len(normalized) < SHORT_TEXT_CHARS:
-            score *= len(normalized) / SHORT_TEXT_CHARS
-        return str(lang), score
+        score = min(score, 1.0)
+        return score * length / SHORT_TEXT_CHARS if length < SHORT_TEXT_CHARS else score
+
+    def _predict(self, normalized: str) -> tuple[str, float]:
+        """One classification, with the short-text discount applied."""
+        lang, probability = self._model_ready().classify(normalized)
+        return str(lang), self._discount(float(probability), len(normalized))
+
+    def _head(self, text: str) -> str:
+        return (
+            text[: self.HEAD_CHARS + 64].strip()
+            if len(text) > self.HEAD_CHARS
+            else text.strip()
+        )
+
+    def _verdict(self, lang: str, score: float, script: str) -> LangResult:
+        if score < self.floor:
+            return LangResult("unknown", score, script, self.low_trust)
+        return LangResult(lang, score, script, self.low_trust)
 
     def detect(self, text: str) -> LangResult:
-        head = text[: self.HEAD_CHARS + 64].strip() if len(text) > self.HEAD_CHARS else text.strip()
+        head = self._head(text)
         script = dominant_script(head)
         if len(head) < 12:
             # Too short to be worth an answer. Saying "unknown" here is more
@@ -242,10 +305,63 @@ class LanguageDetector:
                 return LangResult("unknown", 0.0, script, self.low_trust)
         else:
             lang, score = _fallback_detect(head, script)
+        return self._verdict(lang, score, script)
 
-        if score < self.floor:
-            return LangResult("unknown", score, script, self.low_trust)
-        return LangResult(lang, score, script, self.low_trust)
+    def detect_many(self, texts: list[str]) -> list[LangResult]:
+        """:meth:`detect` for a batch, classified in one pass.
+
+        Identical answers, and the reason it exists: the classifier is a bag of
+        byte n-grams, so a batch of records is one count over one concatenated
+        buffer rather than a Python loop per record over a Python loop per byte.
+        It was the largest single cost in a scan and is now the third.
+        """
+        if not texts:
+            return []
+        heads = [self._head(t) for t in texts]
+        scripts = dominant_scripts(heads)
+        results: list[LangResult | None] = [None] * len(texts)
+
+        pending: list[int] = []
+        normalized: list[str] = []
+        for i, head in enumerate(heads):
+            if len(head) < 12:
+                results[i] = LangResult("unknown", 0.0, scripts[i], self.low_trust)
+            elif self.low_trust:
+                lang, score = _fallback_detect(head, scripts[i])
+                results[i] = self._verdict(lang, score, scripts[i])
+            else:
+                pending.append(i)
+                normalized.append(" ".join(head[: self.HEAD_CHARS].split()))
+
+        if normalized:
+            try:
+                labels, scores = self._classify_many(normalized)
+            except Exception:
+                for i in pending:
+                    results[i] = LangResult("unknown", 0.0, scripts[i], self.low_trust)
+            else:
+                lengths = np.fromiter(
+                    (len(n) for n in normalized), dtype=np.float64, count=len(normalized)
+                )
+                scores = np.minimum(scores, 1.0)
+                short = lengths < SHORT_TEXT_CHARS
+                scores[short] *= lengths[short] / SHORT_TEXT_CHARS
+                for slot, i in enumerate(pending):
+                    results[i] = self._verdict(
+                        str(labels[slot]), float(scores[slot]), scripts[i]
+                    )
+        return [r for r in results if r is not None]
+
+    def _classify_many(self, texts: list[str]) -> tuple[list[str], np.ndarray]:
+        model = self._model_ready()
+        batched = getattr(model, "classify_many", None)
+        if batched is not None:
+            return batched(texts)
+        pairs = [model.classify(t) for t in texts]
+        return (
+            [str(lang) for lang, _ in pairs],
+            np.array([float(p) for _, p in pairs], dtype=np.float64),
+        )
 
     def script_mismatch(self, result: LangResult) -> bool:
         expected = EXPECTED_SCRIPT.get(result.lang)

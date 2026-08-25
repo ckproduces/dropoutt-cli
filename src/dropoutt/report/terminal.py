@@ -437,11 +437,14 @@ def _render_small_print(console: Console, data: dict) -> None:
 
     identity = (data["atlas"] or {}).get("identity")
     if identity:
+        built = identity.get("encoder_built_with") or ""
         console.print(
             f"    [dim]Coverage measured against {_m(identity['version'])}, encoder "
-            f"{_m(identity['embed_model'])}, pipeline "
-            f"{_m(identity['pipeline_hash'][:12])}. Comparable only to numbers "
-            f"measured against the same three.[/dim]"
+            f"{_m(identity['embed_model'])} "
+            f"{_m(identity['encoder_weight_hash'][:12])}"
+            + (f" (quantised from {_m(built[:12])})" if built else "")
+            + f", pipeline {_m(identity['pipeline_hash'][:12])}. Comparable only to "
+            "numbers measured against the same three.[/dim]"
         )
     console.print(
         "    [dim]Findings are structural observations about the files. No "

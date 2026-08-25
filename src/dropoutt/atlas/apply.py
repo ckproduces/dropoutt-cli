@@ -644,7 +644,13 @@ class Atlas:
             "embed_model": self.embed_model,
             # A result that names its atlas and pipeline but not the encoder
             # weights is not self-describing: the same pipeline over different
-            # weights produces different coordinates.
+            # weights produces different coordinates. This is the hash the atlas
+            # was *built* against; the scan overwrites it with the hash of the
+            # encoder that actually produced these numbers. The shipped atlas
+            # is fitted on the same quantised table every install derives, so
+            # the two normally agree; when they differ — an atlas applied
+            # through weights it was not fitted on — the scan keeps this one
+            # as `encoder_built_with` so the report says so.
             "encoder_weight_hash": self.encoder_weight_hash,
             "normalization_variant": self.meta.get("normalization", {}).get("variant"),
             "off_atlas_cutoff": round(self.off_threshold, 5),

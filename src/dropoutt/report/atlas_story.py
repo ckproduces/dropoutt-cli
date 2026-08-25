@@ -499,7 +499,7 @@ THIN_SHARE = 0.005
 def _thin_share(coverage: dict) -> float:
     """What the toehold regions hold between them.
 
-    Occupancy — "you reach 34 of 212 places" — counts a region holding one
+    Occupancy — "you reach 34 of 215 places" — counts a region holding one
     record the same as one holding a third of the corpus, which is exactly how
     a narrow corpus comes to look broad. This is the other half of that number,
     and it feeds the insight rather than a list.

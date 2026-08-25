@@ -505,8 +505,12 @@ def _small_print(data: dict) -> list[str]:
             + (f", {identity['normalization_variant']} normalization"
                if identity.get("normalization_variant") else "")
             + f". Pipeline `{identity['pipeline_hash'][:12]}`, encoder weights "
-              f"`{identity['encoder_weight_hash'][:12]}`. Coverage numbers are only "
-              f"comparable to numbers measured against the same three."
+              f"`{identity['encoder_weight_hash'][:12]}`"
+            + (f", quantised from the weights the atlas was fitted on "
+               f"(`{identity['encoder_built_with'][:12]}`)"
+               if identity.get("encoder_built_with") else "")
+            + ". Coverage numbers are only "
+              "comparable to numbers measured against the same three."
         )
         out.append("")
 

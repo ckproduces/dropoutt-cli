@@ -107,8 +107,11 @@ class TokenizerHandle:
         if self._tok is None:
             return [max(1, int(len(t) / CHARS_PER_TOKEN_FALLBACK)) for t in texts]
         # encode_batch_fast skips offset tracking, which is pure overhead when
-        # only the length is wanted.
-        encs = self._tok.encode_batch_fast(texts, add_special_tokens=False)
+        # only the length is wanted. It appeared in tokenizers 0.20 and this
+        # package's floor is 0.15, so fall back to encode_batch rather than
+        # make the whole scan a hostage of whatever pinned an older wheel.
+        encode = getattr(self._tok, "encode_batch_fast", None) or self._tok.encode_batch
+        encs = encode(texts, add_special_tokens=False)
         return [len(e.ids) for e in encs]
 
 

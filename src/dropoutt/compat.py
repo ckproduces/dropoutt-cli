@@ -109,15 +109,23 @@ except ImportError:
 
 
 # --------------------------------------------------------------------------
-# Atlas embeddings. No fallback: without an embedding model there is no honest
-# way to place records on the atlas, so coverage is reported as skipped.
+# Atlas embeddings. The encoder is a quantised lookup table this package stores
+# and reads itself, so the only import it needs is a tokenizer — which is the
+# same one the token checks already require. There is no fallback: without an
+# encoder there is no honest way to place records on the atlas, so coverage is
+# reported as skipped.
+#
+# model2vec used to load it. It was dropped in 1.2: it copies the whole table on
+# the way in (1.3 GB resident for a 489 MB file), it pulls joblib, tqdm and rich
+# behind it, and every part of it this package used was a table lookup and a
+# pooled average that live in atlas/embed.py now.
 # --------------------------------------------------------------------------
 try:
-    from model2vec import StaticModel as _StaticModel  # noqa: F401
+    import scipy.sparse as _scipy_sparse  # noqa: F401
 
-    HAVE_MODEL2VEC = True
+    HAVE_SCIPY = True
 except ImportError:
-    HAVE_MODEL2VEC = False
+    HAVE_SCIPY = False
 
 
 #: What every dependency is for, and what its absence costs. All of them are
@@ -155,8 +163,8 @@ def capability_report() -> dict[str, dict[str, Any]]:
             "impact": "language identification across 97 languages",
             "install": REINSTALL,
         },
-        "model2vec": {
-            "available": HAVE_MODEL2VEC,
+        "scipy": {
+            "available": HAVE_SCIPY,
             "impact": "atlas coverage",
             "install": REINSTALL,
         },

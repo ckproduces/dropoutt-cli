@@ -23,7 +23,7 @@ from rich.table import Table
 
 from . import __version__
 from .compat import (
-    HAVE_MODEL2VEC,
+    HAVE_SCIPY,
     HAVE_TOKENIZERS,
     capability_report,
     json_dumps,
@@ -485,11 +485,11 @@ def fetch(
                           f"[dim]{escape(model_id)}[/dim]{extra}")
 
     console.print("\n  [bold]Atlas embedding model[/bold]")
-    if not HAVE_MODEL2VEC:
+    if not HAVE_SCIPY:
         failed = True
         hint = escape("reinstall dropoutt")
         console.print("    [yellow]skipped[/yellow] "
-                      f"[dim]model2vec not installed; {hint}[/dim]")
+                      f"[dim]scipy not installed; {hint}[/dim]")
     else:
         with ProgressDisplay() as activity:
             activity.phase(f"Fetching atlas model {embed_mod.DEFAULT_MODEL}")
@@ -499,8 +499,13 @@ def fetch(
             console.print("    [red]failed[/red] [dim]could not download "
                           f"{escape(embed_mod.DEFAULT_MODEL)}[/dim]")
         else:
+            # The published weights are converted on the way in and the original
+            # is deleted, so what is cached is not what was downloaded. Say so:
+            # a user comparing the cache against the model card would otherwise
+            # find four hundred megabytes missing and no explanation.
             console.print(f"    [green]ok[/green]  [dim]{escape(emb.name)} "
-                          f"({emb.dim} dims)[/dim]")
+                          f"({emb.dim} dims, stored int8, "
+                          f"{_dir_size(embed_mod.local_model_dir(emb.name, cache_dir()))})[/dim]")
 
     console.print("\n  [dim]Bundled in the package, nothing to fetch: the atlas "
                   "artifact and the contamination indices.[/dim]")
@@ -514,6 +519,11 @@ def fetch(
         raise typer.Exit(EXIT_ERROR)
     console.print("  [dim]Now run scans with --offline. Keep DROPOUTT_CACHE set to "
                   "this same path.[/dim]\n")
+
+
+def _dir_size(path) -> str:
+    total = sum(f.stat().st_size for f in path.rglob("*") if f.is_file())
+    return f"{total / (1 << 20):.0f} MB"
 
 
 def _print_environment() -> None:

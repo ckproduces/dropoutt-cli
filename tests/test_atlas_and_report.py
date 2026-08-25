@@ -175,9 +175,15 @@ def test_a_cells_density_is_shrunk_by_how_much_evidence_is_behind_it():
 
     # A corpus drawn from the map itself has nothing to report, and every cell
     # comes back at parity rather than at whatever the sampling noise was.
+    # The fitted prior must dominate every cell's expected count — that is what
+    # "the prior wins" means operationally. The old bound of 1e6 pinned the
+    # moments fit hitting its ceiling, which is a property of one draw against
+    # one region_size vector: the fit subtracts two same-order noisy
+    # quantities, so a refit artifact can leave a small positive excess for the
+    # same seed while every density still reads parity.
     same = scan(9_000, share)
     assert all(abs(v - 1.0) < 0.05 for v in same["region_density"].values())
-    assert same["density_model"]["prior_strength"] >= 1e6
+    assert same["density_model"]["prior_strength"] >= 3 * 9_000 * share.max()
 
     # Lopsided and well sampled: the signal survives essentially untouched.
     lopsided = (share ** 4) / (share ** 4).sum()

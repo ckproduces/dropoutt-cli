@@ -8,7 +8,7 @@ import numpy as np
 
 from dropoutt.atlas.apply import Atlas
 from dropoutt.atlas.chunk import chunk_text
-from dropoutt.atlas.embed import Embedder
+from dropoutt.atlas.embed import Embedder, QuantizedTable
 from dropoutt.atlas.extract import detect_format, extract_text
 from dropoutt.atlas.normalize import fit_norm
 from dropoutt.atlas.pipeline import pipeline_hash, population_crosswalk
@@ -128,8 +128,13 @@ def test_bundled_subject_areas_have_human_labels():
     assert atlas.meta.get("version") == DEFAULT_ATLAS_VERSION
     labels = category_labels(atlas)
     assert len(labels) == atlas.n_l1 == 48
-    assert labels[30] == "Database schemas and query construction"
-    assert labels[46] == "Website boilerplate and page furniture"
+    assert len(set(labels.values())) == 48, "every subject area needs its own name"
+    # Ids are k-means numbering and renumber on a refit, so pin id-to-name for
+    # the shipped clustering (1.2 refit) and membership for names that must
+    # exist under any numbering.
+    assert labels[45] == "Database schemas and query construction"
+    assert labels[21] == "Website boilerplate and page furniture"
+    assert "C and C++ source code" in labels.values()
     assert atlas.meta.get("l1_labels_source", "").startswith("curated:")
 
 
@@ -148,16 +153,16 @@ class _Tokenizer:
         return [_Encoding([int(part) for part in text.split()]) for text in texts]
 
 
-class _StaticModel:
-    def __init__(self):
-        self.tokenizer = _Tokenizer()
-        self.embedding = np.arange(40, dtype=np.float32).reshape(10, 4)
-        self.dim = 4
+def _fake_encoder(out_dim=3):
+    table = QuantizedTable.from_float(
+        np.arange(40, dtype=np.float32).reshape(10, 4), width=4
+    )
+    tokenizer = _Tokenizer()
+    return Embedder(table, tokenizer, "fake", out_dim=out_dim), table, tokenizer
 
 
 def test_sparse_sif_pool_matches_weighted_token_average():
-    model = _StaticModel()
-    base = Embedder(model, "fake", out_dim=3)
+    base, table, _ = _fake_encoder()
     tokens = base.tokenize(["1 1 2", "", "2 3"], batch_size=2, max_length=8)
     probs, ids, log_probs = base.token_log_prob(tokens)
     embedder = base.bind_idf(probs)
@@ -171,7 +176,7 @@ def test_sparse_sif_pool_matches_weighted_token_average():
         p = np.array([np.exp(probs[token_id]) for token_id in token_ids])
         weights = 1e-3 / (1e-3 + p)
         weights /= weights.sum()
-        expected[row] = weights @ model.embedding[token_ids, :3]
+        expected[row] = weights @ table.rows(np.array(token_ids), 3)
 
     assert np.allclose(actual, expected, atol=1e-6)
     assert tokens.indptr.tolist() == [0, 3, 3, 5]
@@ -180,16 +185,28 @@ def test_sparse_sif_pool_matches_weighted_token_average():
 
 
 def test_weighted_encode_batch_tokenizes_each_text_once():
-    model = _StaticModel()
-    base = Embedder(model, "fake", out_dim=3)
+    base, _, tokenizer = _fake_encoder()
     tokens = base.tokenize(["1 2", "2 3", "3 4"])
     probs, _, _ = base.token_log_prob(tokens)
-    model.tokenizer.calls = 0
+    tokenizer.calls = 0
 
     result = base.bind_idf(probs).encode(["1 2", "2 3", "3 4"], batch_size=64)
 
     assert result.shape == (3, 3)
-    assert model.tokenizer.calls == 1
+    assert tokenizer.calls == 1
+
+
+def test_quantised_rows_stay_within_a_step_of_the_weights_they_replace():
+    """int8 with a per-row scale, so the error is bounded by half a step."""
+    rng = np.random.default_rng(0)
+    table = rng.normal(size=(64, 128)).astype(np.float32)
+    quantized = QuantizedTable.from_float(table)
+
+    restored = quantized.rows(np.arange(64))
+    step = np.abs(table).max(axis=1) / 127.0
+
+    assert restored.shape == (64, 128)
+    assert np.all(np.abs(restored - table) <= step[:, None] / 2 + 1e-6)
 
 
 def test_population_crosswalk_uses_shared_members_not_coordinates():

@@ -82,6 +82,7 @@ def atlas_identity(result) -> dict[str, Any] | None:
         "version": cov.get("atlas_version", ""),
         "pipeline_hash": cov.get("pipeline_hash", "") or "",
         "encoder_weight_hash": cov.get("encoder_weight_hash", "") or "",
+        "encoder_built_with": cov.get("encoder_built_with", "") or "",
         "embed_model": cov.get("embed_model", "") or "",
         "normalization_variant": cov.get("normalization_variant") or "",
         "n_l1": cov.get("n_l1"),

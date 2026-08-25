@@ -21,7 +21,7 @@ from __future__ import annotations
 #: from here via `[tool.hatch.version]`, so bump it in this file only. Carrying
 #: the number in both places let them drift: 0.1.4 was tagged in pyproject while
 #: the version command still reported 0.1.3 from this constant.
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 from .models import (
     Confidence,

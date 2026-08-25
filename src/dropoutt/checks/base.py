@@ -7,6 +7,13 @@ Every check is an object with two hooks:
     whatever state they need here. This is what keeps 20-plus checks to one
     pass over the data rather than twenty.
 
+``observe_batch(docs, ctx)``
+    Called once per batch of records, in order, and by default just loops
+    ``observe`` over them. A check overrides it when a batch lets it answer
+    something once instead of per record — a substring test against the whole
+    batch's text, a digest that wants to be an array. The scan pass reads
+    records in batches for exactly this reason; see ``parallel.RECORD_BATCH``.
+
 ``finalize(ctx)``
     Called once at the end, returning findings. Checks that need global state
     (near-duplicate clusters, the cross-dataset overlap matrix, contamination
@@ -120,6 +127,24 @@ class Check:
 
     def observe(self, doc: Document, ctx: ScanContext) -> None:
         """Called once per record."""
+
+    def observe_batch(self, docs: list[Document], ctx: ScanContext) -> None:
+        """Called once per batch of records, in order.
+
+        The scan pass hands checks a batch rather than a record so that the ones
+        with something to gain from seeing a column of records can take it — a
+        substring gate that can be answered for the whole batch at once, a
+        hash that wants to be an array. A check with nothing to gain overrides
+        nothing and this loop runs, which is what the scan pass used to do
+        inline, error handling included: one record that makes a check raise
+        costs that record and not the batch around it.
+        """
+        observe = self.observe
+        for doc in docs:
+            try:
+                observe(doc, ctx)
+            except Exception as exc:
+                ctx.degraded(f"check {self.check_id} errored: {type(exc).__name__}")
 
     def finalize(self, ctx: ScanContext) -> list[Finding]:
         """Called once after all records. Returns any findings."""

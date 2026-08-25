@@ -224,7 +224,7 @@ dropoutt fetch --model qwen3 --all   # that model plus the panel
     ok      qwen3  Qwen/Qwen3-8B
 
   Atlas embedding model
-    ok  minishlab/potion-multilingual-128M (256 dims)
+    ok  minishlab/potion-multilingual-128M (128 dims, stored int8, 81 MB)
 
   Bundled in the package, nothing to fetch: the atlas artifact and the
 contamination indices.

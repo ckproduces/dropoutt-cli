@@ -11,6 +11,8 @@ acting on.
 
 from __future__ import annotations
 
+import re as _re
+from collections.abc import Callable
 from typing import Any
 
 import numpy as np
@@ -46,13 +48,17 @@ def _exact_key(text: str) -> int:
     collision probability, an order of magnitude less memory.
     """
     import hashlib
-    import re
 
-    collapsed = re.sub(r"\s+", " ", text.lower()).strip()
+    collapsed = _WHITESPACE_RUN.sub(" ", text.lower()).strip()
     return int.from_bytes(
         hashlib.blake2b(collapsed.encode("utf-8", "surrogatepass"), digest_size=8).digest(),
         "big",
     )
+
+
+#: Compiled once. `re.sub` with a pattern string re-enters the module cache on
+#: every call, and this one runs on every record of every scan.
+_WHITESPACE_RUN = _re.compile(r"\s+")
 
 
 def _digest64(text: str) -> int:
@@ -149,13 +155,13 @@ class _SignatureStore:
         # and each one becomes its own near-duplicate, which inflates the count
         # past the total number of records.
         #
-        # One location rather than a set of every location seen. The two calls
-        # for a record are consecutive — they happen inside that record's own
-        # observe cycle, with no other record in between — so remembering the
-        # last one is exactly as correct as remembering all of them, and does
-        # not grow a 77 MB set alongside an index that already knows every
-        # record it holds.
-        self._last: tuple[str, int] | None = None
+        # The locations of the batch most recently offered, and nothing older.
+        # The scan pass hands both checks the same batch back to back, with no
+        # other record in between, so remembering one batch is exactly as
+        # correct as remembering every record ever seen — and is bounded by
+        # ``parallel.RECORD_BATCH`` rather than growing a 77 MB set alongside an
+        # index that already knows every record it holds.
+        self._last: set[tuple[str, int]] = set()
 
     def doc(self, key: int) -> tuple[str, str, int, str, str, int]:
         """``(doc_id, file, index, excerpt, dataset, exact key)`` for one key."""
@@ -261,13 +267,46 @@ class _SignatureStore:
             self._exact = grown
         self._exact[key] = digest
 
+    def add_batch(
+        self,
+        docs: list[Document],
+        on_error: Callable[[Document, Exception], None] | None = None,
+    ) -> None:
+        """Offer a batch, ignoring one that has already been offered.
+
+        Both checks below share this store and both are handed the same batch,
+        so the second call has to be a no-op. Without it every record is indexed
+        twice, becomes its own near-duplicate, and the count exceeds the number
+        of records in the corpus.
+
+        Errors are per record, exactly like the default ``observe_batch`` loop:
+        a record that raises costs that record. Letting one propagate would
+        cost the rest of the batch twice over — the caller's per-batch handler
+        would skip the remaining records, and ``_last`` already covers the
+        whole batch, so the sibling check's call would no-op them too.
+        """
+        seen = self._last
+        offered = {(doc.source_file, doc.source_index) for doc in docs}
+        if offered and offered <= seen:
+            return
+        self._last = offered
+        for doc in docs:
+            try:
+                self._add(doc)
+            except Exception as exc:
+                if on_error is not None:
+                    on_error(doc, exc)
+
     def add(self, doc: Document) -> None:
+        location = (doc.source_file, doc.source_index)
+        if location in self._last:
+            return
+        self._last = {location}
+        self._add(doc)
+
+    def _add(self, doc: Document) -> None:
         if len(doc.text) < 40:
             return
-        location = (doc.source_file, doc.source_index)
-        if location == self._last:
-            return
-        self._last = location
         self.offered += 1
         # The ceiling is checked before the signature is computed, so an
         # overflowing scan stops paying for MinHash as well as for storage.
@@ -340,6 +379,14 @@ class NearDuplicates(Check):
 
     def observe(self, doc: Document, ctx: ScanContext) -> None:
         _get_store(ctx).add(doc)
+
+    def observe_batch(self, docs: list[Document], ctx: ScanContext) -> None:
+        _get_store(ctx).add_batch(
+            docs,
+            on_error=lambda _doc, exc: ctx.degraded(
+                f"check {self.check_id} errored: {type(exc).__name__}"
+            ),
+        )
 
     def finalize(self, ctx: ScanContext) -> list[Finding]:
         store = _get_store(ctx)
@@ -458,6 +505,14 @@ class CrossDatasetOverlap(Check):
 
     def observe(self, doc: Document, ctx: ScanContext) -> None:
         _get_store(ctx).add(doc)
+
+    def observe_batch(self, docs: list[Document], ctx: ScanContext) -> None:
+        _get_store(ctx).add_batch(
+            docs,
+            on_error=lambda _doc, exc: ctx.degraded(
+                f"check {self.check_id} errored: {type(exc).__name__}"
+            ),
+        )
 
     def finalize(self, ctx: ScanContext) -> list[Finding]:
         store = _get_store(ctx)

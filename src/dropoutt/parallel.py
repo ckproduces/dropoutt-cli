@@ -46,7 +46,10 @@ import hashlib
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:  # pragma: no cover - numpy is imported at point of use
+    import numpy as np
 
 from .models import Profile
 from .readers import WHOLE_FILE, RawRecord, ReadSpan, plan_splits, read_file
@@ -96,6 +99,26 @@ def sample_key(salt: int, index: int) -> int:
     return x ^ (x >> 31)
 
 
+def sample_keys(salt: int, indexes: Any) -> np.ndarray:
+    """:func:`sample_key` for a whole batch of positions at once.
+
+    The same three-round mix on the same 64-bit lane. numpy's unsigned integers
+    wrap where Python's grow, which is what the masking in the scalar version
+    is there to emulate, so the two produce identical keys — asserted in
+    ``tests/test_batching.py``. The caller must keep the result unsigned:
+    casting to int64 wraps every key above 2^63 negative, which reorders the
+    bottom-k selection for half the keyspace and silently changes which
+    records a scan samples.
+    """
+    import numpy as np
+
+    idx = np.asarray(indexes, dtype=np.uint64)
+    x = np.uint64(salt) ^ ((idx + np.uint64(1)) * np.uint64(0x9E3779B97F4A7C15))
+    x = (x ^ (x >> np.uint64(30))) * np.uint64(0xBF58476D1CE4E5B9)
+    x = (x ^ (x >> np.uint64(27))) * np.uint64(0x94D049BB133111EB)
+    return x ^ (x >> np.uint64(31))
+
+
 def file_salt(path: str) -> int:
     return int.from_bytes(
         hashlib.blake2b(path.encode("utf-8", "surrogatepass"), digest_size=8).digest(),
@@ -122,6 +145,34 @@ class WorkItem:
 #: core idle while the rest wait, and so the progress bar moves more than once
 #: per core.
 SHARDS_PER_WORKER = 4
+
+#: Records handed to the checks at a time.
+#:
+#: The scan pass used to be one dictionary-shaped ``Document`` at a time all the
+#: way down: one language classification, one script decision, one numpy call
+#: per array operation, per record. Most of that work is the same arithmetic on
+#: every record and wants to be done on a column of them, which is what this
+#: constant makes possible — the batch is the unit the shared features and the
+#: checks both see.
+#:
+#: 256 because the transient cost is linear in it (the language classifier's
+#: count matrix is the largest term, about 23 MB here) while the amortisation
+#: is not: 64 already recovers most of the win and 1024 measured no faster.
+RECORD_BATCH = 256
+
+#: A batch also closes early once its records total this many characters on
+#: disk. The count alone is not a memory bound: a batch pins every record's
+#: ``Document`` — text, cached word lists, rendered templates — through the
+#: shared features and every check, and 256 records of a long-document corpus
+#: (books, transcripts) would hold hundreds of megabytes per worker where 1.1
+#: held one record. Batch boundaries change nothing about the answer — every
+#: per-record path sees the same records in the same order — so this only caps
+#: the transient. 4 MB keeps a typical web corpus at the full 256 records.
+BATCH_CHAR_BUDGET = 4_000_000
+
+#: Records between progress updates. The bar is drawn by another process over a
+#: queue; telling it about every batch would cost more than the batch.
+PROGRESS_EVERY = 2000
 
 
 @dataclass
@@ -540,17 +591,55 @@ def iter_span_records(item: WorkItem, limit: int | None) -> Iterator[RawRecord]:
     )
 
 
+def _batched(
+    records: Iterator, size: int, char_budget: int = BATCH_CHAR_BUDGET
+) -> Iterator[list]:
+    """Group a record stream into lists of at most ``size`` records.
+
+    A batch also closes once its records total ``char_budget`` characters of
+    raw text, so a corpus of megabyte-long documents does not pin hundreds of
+    megabytes of ``Document`` state per worker. ``raw_text`` is the full line
+    for the record formats where records get that large; readers that cap it
+    also cap the payload the batch would pin.
+    """
+    batch: list = []
+    chars = 0
+    append = batch.append
+    for record in records:
+        append(record)
+        chars += len(record.raw_text)
+        if len(batch) >= size or chars >= char_budget:
+            yield batch
+            batch = []
+            chars = 0
+            append = batch.append
+    if batch:
+        yield batch
+
+
 def run_shard(
     payload: tuple[ShardConfig, int, list[WorkItem]],
     progress: Callable[[int], None] | None = None,
 ) -> ShardResult:
-    """Scan one shard. Runs in a worker process, or in the caller for one shard."""
+    """Scan one shard. Runs in a worker process, or in the caller for one shard.
+
+    A batch at a time, not a record at a time. Everything a record needs that is
+    the same arithmetic on every record — identifying its language, deciding its
+    script, sizing it, keying it for the sample — is done on a column of
+    :data:`RECORD_BATCH` records, and the checks are offered the same batch
+    through :meth:`Check.observe_batch`. Checks that have nothing to gain from
+    seeing a batch do not have to know one exists: the default implementation
+    loops, with the same per-record error handling this function used to do
+    itself, so an unconverted check behaves exactly as it did.
+    """
     import heapq
+
+    import numpy as np
 
     from . import checks as _checks_pkg  # noqa: F401  (registers the catalog)
     from .checks.base import REGISTRY
     from .normalize import to_document
-    from .runner import _compute_features, record_digest
+    from .runner import _compute_features_batch, record_digest
 
     config, index, items = payload
     ctx = _worker_context(config)
@@ -582,55 +671,96 @@ def run_shard(
 
     atlas_heap: list[tuple[int, str, str, int, str]] = []
     budget_heaps: dict[str, list[tuple[int, str, int]]] = {}
+    reported = 0
     atlas_cap = config.atlas_cap if config.want_atlas_sample else 0
     budget_caps = config.budget_caps
     default_budget_cap = config.budget_cap
 
     for item in items:
         salt = item.salt
-        for rec in iter_span_records(item, config.limit_per_file):
-            if rec.truncated:
-                ctx.degraded(rec.truncated)
-            doc = to_document(rec, item.layout, item.dataset, index=rec.source_index)
-            result.content_total += record_digest(doc)
-            _compute_features(doc, ctx)
-            text = doc.text
-            result.total_chars += len(text)
-            result.total_words += text.count(" ") + 1 if text else 0
-            result.chars_by_dataset[item.dataset] = (
-                result.chars_by_dataset.get(item.dataset, 0) + len(text)
+        dataset = item.dataset
+        layout = item.layout
+        cap = budget_caps.get(dataset, default_budget_cap)
+        budget: list[tuple[int, str, int]] | None = None
+        for records in _batched(
+            iter_span_records(item, config.limit_per_file), RECORD_BATCH
+        ):
+            docs = []
+            content_total = 0
+            for rec in records:
+                if rec.truncated:
+                    ctx.degraded(rec.truncated)
+                doc = to_document(rec, layout, dataset, index=rec.source_index)
+                content_total += record_digest(doc)
+                docs.append(doc)
+            result.content_total += content_total
+
+            _compute_features_batch(docs, ctx)
+
+            texts = [doc.text for doc in docs]
+            lengths = np.fromiter(
+                (len(text) for text in texts), dtype=np.int64, count=len(texts)
+            )
+            chars = int(lengths.sum())
+            result.total_chars += chars
+            result.total_words += sum(
+                text.count(" ") + 1 for text in texts if text
+            )
+            result.chars_by_dataset[dataset] = (
+                result.chars_by_dataset.get(dataset, 0) + chars
             )
 
-            if len(text) > 20:
-                key = -sample_key(salt, rec.source_index)
-                kept = text[:SAMPLE_TEXT_CHARS]
-                length = len(text)
-                if atlas_cap:
-                    entry = (
-                        key, kept, doc.meta.get(F_LANG) or "unknown", length, item.dataset
-                    )
-                    if len(atlas_heap) < atlas_cap:
-                        heapq.heappush(atlas_heap, entry)
-                    elif key > atlas_heap[0][0]:
-                        heapq.heapreplace(atlas_heap, entry)
-                budget = budget_heaps.setdefault(item.dataset, [])
-                cap = budget_caps.get(item.dataset, default_budget_cap)
-                row = (key, kept, length)
-                if len(budget) < cap:
-                    heapq.heappush(budget, row)
-                elif key > budget[0][0]:
-                    heapq.heapreplace(budget, row)
+            long_enough = np.flatnonzero(lengths > 20)
+            if long_enough.size:
+                # Kept uint64 end to end: `int()` of a numpy uint64 grows into
+                # a Python int, so the negation below is the exact key the
+                # scalar `sample_key` path produced and the selection is
+                # byte-identical with 1.1.
+                keys = sample_keys(
+                    salt,
+                    np.fromiter(
+                        (records[i].source_index for i in long_enough.tolist()),
+                        dtype=np.int64,
+                        count=long_enough.size,
+                    ),
+                )
+                for slot, position in enumerate(long_enough.tolist()):
+                    key = -int(keys[slot])
+                    text = texts[position]
+                    kept = text[:SAMPLE_TEXT_CHARS]
+                    length = len(text)
+                    if atlas_cap:
+                        entry = (
+                            key,
+                            kept,
+                            docs[position].meta.get(F_LANG) or "unknown",
+                            length,
+                            dataset,
+                        )
+                        if len(atlas_heap) < atlas_cap:
+                            heapq.heappush(atlas_heap, entry)
+                        elif key > atlas_heap[0][0]:
+                            heapq.heapreplace(atlas_heap, entry)
+                    if budget is None:
+                        budget = budget_heaps.setdefault(dataset, [])
+                    row = (key, kept, length)
+                    if len(budget) < cap:
+                        heapq.heappush(budget, row)
+                    elif key > budget[0][0]:
+                        heapq.heapreplace(budget, row)
 
             for check in active:
                 try:
-                    check.observe(doc, ctx)
+                    check.observe_batch(docs, ctx)
                 except Exception as exc:
                     ctx.degraded(f"check {check.check_id} errored: {type(exc).__name__}")
-            result.scanned += 1
-            result.record_counts[item.dataset] = (
-                result.record_counts.get(item.dataset, 0) + 1
+
+            result.scanned += len(docs)
+            result.record_counts[dataset] = (
+                result.record_counts.get(dataset, 0) + len(docs)
             )
-            if progress is not None and result.scanned % 2000 == 0:
+            if progress is not None and result.scanned - reported >= PROGRESS_EVERY:
+                reported = result.scanned
                 progress(result.scanned)
 
     result.atlas_samples = [
