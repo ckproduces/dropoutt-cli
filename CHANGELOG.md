@@ -1,5 +1,195 @@
 # Changelog
 
+## 1.2.0
+
+Six things that were planned and not shipped in 1.1, and two pieces of research.
+
+### The language classifier stopped being a Python loop over bytes
+
+py3langid classifies by stepping a deterministic automaton one byte at a time —
+a dict lookup and a list extend per byte — which made it **41% of the streaming
+scan pass**, larger than deduplication and larger than every content check
+together.
+
+The loop cannot be vectorised, because each state depends on the last. What it
+*computes* can be. The automaton is Aho-Corasick over byte n-grams, so the
+feature vector it accumulates is exactly a count of how often each feature's byte
+string occurs in the text — a bag of n-grams, countable over a whole batch of
+records at once with no automaton involved.
+
+`dropoutt/ngram_langid.py` recovers each feature's byte string from the
+transition table by breadth-first search and then **proves the recovery is
+exact** before using it, in two exhaustive halves: for all 9,118 states of the
+shipped model, the output set must equal the set of features whose recovered
+pattern is a suffix of that state's string, and every one of the 2.3 million
+transitions must land on the longest suffix of its state-plus-byte that is
+itself a state — the defining Aho-Corasick property, and the half a corrupted
+table can silently lack while its outputs still line up. The check runs at
+load in about a quarter of a second, and the fast path refuses to build when
+either half fails.
+
+Measured on 9,000 real multilingual documents: **170.2 µs → 49.3 µs per
+document, 3.45×, with no label differing** and probabilities agreeing to 6e-5.
+In situ on a 118,616-record corpus, language identification went from 24.0 s to
+8.8 s of one core.
+
+Two smaller things came with it. py3langid renormalises all 97 log-probabilities
+into a distribution — 9,409 exponentials — and then reads one entry; that entry
+is the same float computed with 97. And script detection is now one pass of array
+arithmetic per batch rather than five numpy calls per record.
+
+### The scan pass reads a batch at a time
+
+`run_shard` was one dictionary-shaped `Document` at a time all the way down. It
+now reads `RECORD_BATCH` records at a time, computes the shared features by
+column — language, script, sizes, sample keys — and hands the same batch to the
+checks through a new `Check.observe_batch`.
+
+The default `observe_batch` is the loop it replaced, error handling included, so
+a check with nothing to gain from a batch does not have to know one exists and
+behaves exactly as before. The two near-duplicate checks override it, because
+they share one MinHash store and are handed the same batch back to back.
+
+**The fingerprint is byte-identical.** A 118,616-record multilingual corpus
+produces the same `fp_…` before and after, so `PIPELINE_VERSION` did *not* move:
+a version bump invalidates every stored fingerprint, and this release measures
+the same numbers. Scans from 1.1 and 1.2 are comparable.
+
+End to end: **24.5 s → 19.1 s**, CPU 194 s → 143 s, peak resident 3.39 GB →
+3.00 GB.
+
+### A dense matrix multiply cost the scan its workers
+
+Worth writing down because it cost an afternoon and would cost it again.
+
+The first version of the batched classifier used a dense
+`(records × features) @ (features × classes)` multiply, and the scan got
+*slower* — 23.6 s to 53.1 s — with `parallel scan unavailable
+(BrokenProcessPool), ran on one core` in the report.
+
+On macOS numpy links against Accelerate, whose `gemm` dispatches through
+libdispatch, and a process that has called it cannot be forked and then call it
+again: the child dies of SIGSEGV before raising anything Python can catch.
+`gemv`, SciPy's sparse multiply and `einsum` are all unaffected, which is why
+py3langid's own `np.dot` had never tripped it.
+
+**Nothing on the scan path may reach a BLAS `gemm`.** The multiply is phrased
+sparsely now, which produces identical numbers, and `tests/test_fork_safety.py`
+holds the line.
+
+### The atlas encoder is stored the way it is used
+
+`potion-multilingual-128M` is a 500,353 × 256 float32 table: 489 MB on disk,
+about 1.3 GB resident. The atlas is a **128-dimensional** space and the potion
+models are Matryoshka, so half of that table was downloaded, held in memory, and
+never read.
+
+The encoder is now the first 128 columns at one byte per weight with a per-row
+scale. There is **no second, uncompressed build** — that would be two coordinate
+systems with one name. Measured on 9,000 real documents through the shipped
+atlas: **99.74% of records land in the same cell**, 99.79% in the same subject
+area. On a full 118,616-record scan, 115,884 placed records became 115,883 and
+effective reach moved by 0.02%.
+
+| | 1.1 | 1.2 |
+| --- | ---: | ---: |
+| encoder cache on disk | 507 MB | **81 MB** |
+| loading it | 1.51 s | **0.58 s** |
+| peak resident, atlas phase | 2.30 GB | **1.62 GB** |
+
+The conversion runs once from the published weights and deletes the original —
+including the copy `huggingface_hub` would otherwise keep in its own cache. It
+is deterministic — a fixed slice, a fixed scale, round-half-to-even — so every
+install derives byte-identical codes and `encoder_weight_hash` stays a statement
+about the coordinate system rather than about one machine. **That hash changes
+in this release**, and so does `pipeline_hash`, which contains it: 1.1 and 1.2
+coverage numbers are different measurements, and the identity block says so. If
+a scan ever applies an atlas through weights it was not fitted on, the report
+carries the fitted hash alongside as `encoder_built_with`; for the shipped
+atlas the two are the same table, because of what comes next.
+
+### The atlas was refitted where it now lives
+
+An atlas fitted on float32 coordinates and applied through int8 ones is two
+coordinate systems with one name — the exact thing quantisation was not allowed
+to introduce. So `atlas-v1-lite` was rebuilt in the quantised coordinate
+system, **on the training data of the previous build, verified rather than
+assumed**: all 105 sources re-fetched at unchanged upstream revisions with
+identical per-source row counts (the four the fetch budget had cut short were
+truncated back to the previous build's exact rows, and one source re-fetched
+through the same fallback the original build had silently used); all 10,560
+record ids the original labeling pass had sampled — ids derived from content
+and stream position — found again; and the dedup arithmetic reproduced to the
+record, 2,426,279 rows → 2,188,896 after near-exact dedup → 2,125,556
+reference records, each number equal to the 2026-08-03 build's. Getting there
+required pinning `datasketch` 1.6.5: 2.0.0 dedups the same corpus to a
+different 2,188,251, which is the kind of dependency drift a rebuild is
+supposed to surface.
+
+The refit measures slightly better than the map it replaces — topic purity
+0.540/0.544 macro/micro against 0.531/0.535 — with 215 fine cells against 212
+under the same budget. What does not survive a refit is k-means numbering:
+cluster ids permute, so the curated subject-area names were carried across by
+optimal centroid matching, verified against each region's tf-idf terms, and
+the eight regions the refit genuinely reorganised — pets split from plants,
+digit puzzles from number theory, a red-team dialogue region from assistant
+advice — were re-curated from fresh samples of their member records. The
+artifact's crosswalk table maps every old cell to where its records went.
+
+**`model2vec` is gone.** Everything this package used it for was a table lookup
+and a pooled average; it copied the whole table on the way in and pulled joblib,
+tqdm and rich behind it. The safetensors file is read directly. This also
+removes the normalisation-width hazard noted in 1.1: a table that is 128 wide
+has one answer.
+
+If you downgrade to 1.1 after running 1.2, the model is re-downloaded in
+full, because 1.1 looks for the files this release deletes.
+
+### The accelerated multiply was unreachable
+
+`GPU_MIN_DOCS` was 20,000 while the encoder chunks at 16,384, so no batch could
+ever reach the threshold: the device path shipped in 1.1 as code that could not
+run. It is 4,096 now, a test keeps the two in order, and the path engages only
+when `DROPOUTT_DEVICE` names a device. Not by accident: a device multiply
+accumulates in a different order than SciPy's, its float32 answer differs in
+the last ulps, and a near-tie cell assignment can flip — so by default every
+machine measures the same numbers, and opting in is a statement about which of
+your own reports are comparable.
+
+### The coverage redesign was rejected
+
+The five-step redesign proposed in `docs/research.md` §5 — and the mockups that
+went with it — are not being built. The report has one design, four renderings
+are held to be equivalents of each other, and restructuring the lead visual of
+one of them on the strength of an unmeasured hypothesis trades a known design
+for an unknown one. `docs/coverage-redesign.html` is deleted rather than left in
+the tree to be mistaken for a plan. The diagnosis of *why* readers struggled is
+kept, along with the two changes worth making inside the current design.
+
+### Research
+
+`docs/research.md` gains two sections, both measured rather than argued.
+
+**Sentiment, intent and formality: train, borrow, or probe?** A linear probe over
+the 128-dimensional embedding a scan already computes was measured against public
+benchmarks and against a published transformer on the same test set. Task type:
+93.5% from six kilobytes of coefficients, and no public model has the right
+taxonomy anyway — ship it. Formality: 75.1% against a reported 85.2% for a
+four-language transformer — ship it with the gap stated. Sentiment: 60.6% where
+chance is 48.3% — ship nothing, because a column that is right three times in
+five is worse than no column. The deciding number is cost: the transformer runs
+at 185 documents a second, which would make a 19-second scan take eleven minutes
+for one facet. The probe also transfers zero-shot from English to Turkish at
+80.3% where a bag of words is at chance, which is the property that matters for
+a tool that exists partly to be honest about Turkish.
+
+**The Pareto frontier.** 321 MB of dependencies, of which pyarrow is 127 MB (28
+of those are Arrow Flight and Substrait, which nothing here touches) and scipy is
+99 MB for two calls. Both were rewritten in pure numpy and measured: 3× and 4.2×
+slower with far larger transients, so the 99 MB stays. `huggingface_hub` cannot
+be dropped because `tokenizers` requires it. The wheel this project publishes is
+5.3 MB. The available size win was the model cache, and it has been taken.
+
 ## 1.1.0
 
 Six problems users hit, and the research that came out of looking at them.

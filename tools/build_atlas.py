@@ -1039,8 +1039,12 @@ def main() -> int:
                     default=Path("src/dropoutt/data/atlas/atlas-v1-lite.npz"))
     ap.add_argument("--probes", type=Path,
                     default=Path(__file__).resolve().parent / "atlas_probes.json")
+    # The immediately previous shipped bundle: the 2026-08-03 v1-lite, fitted
+    # on the float32 encoder before the 1.2 refit moved the atlas into the
+    # quantised coordinate system. The crosswalk this produces is "where did
+    # the shipped map's records go", which is the lineage a release note needs.
     ap.add_argument("--previous", type=Path,
-                    default=Path("tools/atlas-data/atlas-lite-v2.npz"))
+                    default=Path("tools/atlas-data/atlas-v1-lite-f32enc.npz"))
     ap.add_argument("--labels", type=Path,
                     default=Path("tools/atlas-data/l1_labels_v3.json"))
     ap.add_argument("--norm-sample", type=int, default=400_000)
@@ -1134,7 +1138,7 @@ def main() -> int:
         stamp(f"  {result['n_tokens']:,} token occurrences in {timings['tokenize_s']:.0f}s")
 
     tokens = token_memmap(work, token_meta["n_tokens"])
-    vocab_size = int(np.asarray(embedder._model.embedding).shape[0])
+    vocab_size = embedder.vocab_size
 
     stamp("Fitting the IDF table from the cached tokens …")
     t0 = time.time()
@@ -1544,11 +1548,12 @@ def main() -> int:
         probe_coef=np.zeros((0, EMBED_DIM), dtype=np.float32),
         probe_intercept=np.zeros(0, dtype=np.float32),
         probe_classes=np.zeros(0, dtype=np.int32),
-        # NB: no allow_pickle kwarg. savez_compressed treats every keyword as
-        # an array to save, so passing it stores a stray array literally named
-        # "allow_pickle" instead of configuring anything. Pickling is enabled on
-        # the load side, which is where the flag actually exists.
-        meta=np.array([json.dumps(meta)], dtype=object),
+        # A plain unicode array, not dtype=object: an object array can only be
+        # read back with allow_pickle=True, and an artifact that third parties
+        # may open should not require unpickling to read a JSON string. The
+        # shipped v1-lite bundle has always been readable without pickle;
+        # keep it that way.
+        meta=np.array([json.dumps(meta)]),
     )
     size_mb = args.out.stat().st_size / 1e6
     stamp(f"\nWrote {args.out} ({size_mb:.2f} MB)")

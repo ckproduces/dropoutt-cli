@@ -45,9 +45,8 @@ ingest → detect format → extract text → chunk → dedup → embed
 4. **Embed with `potion-multilingual-128M`.** The fast tokenizer runs once.
    Its flat token-ID cache fits both the unigram table and a CSR document/token
    matrix; one sparse-dense multiply pools all documents with
-   `w = a/(a+p)`, `a=1e-3`. The embedding table is subset to observed tokens,
-   then 256 dimensions are truncated to 128 (Matryoshka). No per-record Python
-   pooling loop, torch, or GPU.
+   `w = a/(a+p)`, `a=1e-3`. The embedding table is subset to observed tokens.
+   No per-record Python pooling loop, no torch, no model2vec.
 5. **Freeze normalization.** Mean removal, drop top-2 principal components
    (all-but-the-top), L2. Constants ship in the artifact; the client applies
    them and never refits.
@@ -62,7 +61,9 @@ ingest → detect format → extract text → chunk → dedup → embed
    residuals from siblings under the same L1 parent.
 
 Every result carries `atlas_version` + `pipeline_hash`. Encoder weights stay on
-disk (≈ 500 MB); the artifact stores their content hash, not the weights.
+disk — 63 MB since 1.2, quantised on first use from the 489 MB published file,
+which is then deleted — and the artifact stores their content hash, not the
+weights.
 
 ### Measured v2 build time
 
@@ -231,8 +232,15 @@ a single assignment.
 ### How a record is actually placed
 
 1. Format-aware extraction pulls natural-language content (keys/syntax dropped).
-2. The text is embedded by `potion-multilingual-128M` with SIF pooling, truncated
-   to 128 dimensions, then corrected with the frozen mean/PCA/L2 constants.
+2. The text is embedded by `potion-multilingual-128M` with SIF pooling, then
+   corrected with the frozen mean/PCA/L2 constants. Since 1.2 the encoder is
+   stored as its first 128 columns at one byte per weight with a per-row scale —
+   63 MB instead of 489 MB — and the atlas is fitted in that quantised
+   coordinate system, on the same reference corpus as before, so the encoder a
+   scan applies is the encoder the map was built with. The report names it in
+   `atlas.identity.encoder_weight_hash`; if a scan ever applies an atlas
+   through weights it was not fitted on, the fitted hash is kept alongside as
+   `encoder_built_with` so the report says so.
 3. Cosine similarity is computed against all fine (L2) centroids. Soft
    assignment keeps the top-5 with a temperature tuned so a typical document
    holds weight on ~2–3 regions; the hard nearest cell still drives the
@@ -572,19 +580,19 @@ under the name the bundle was built as.
 | property | value |
 | --- | --- |
 | L1 regions (lite) | 48 |
-| L2 fine cells | 212 |
+| L2 fine cells | 215 |
 | reference records (after both dedup passes) | 2,125,556 |
 | distinct sources | 102 |
-| embedding | potion-multilingual-128M → 128-d, SIF pool |
+| embedding | potion-multilingual-128M, first 128 columns, int8 per-row scale, SIF pool |
 | normalization | per-language mean + top-2 PCA removed + L2 |
-| soft-assign | top-5, T=0.08 (2.54 regions with weight > 0.15) |
-| topic purity (macro / micro) | 0.531 / 0.535 |
-| source purity (macro / micro; lower is better) | 0.288 / 0.291 |
-| source cluster AMI | 0.248 |
-| directly calibrated cells (≥200 members) | 212 of 212 |
-| non-English share | 29.9% |
-| artifact size | 1.07 MB |
-| off-atlas cutoff | 0.278 cosine |
+| soft-assign | top-5, T=0.08 (2.57 regions with weight > 0.15) |
+| topic purity (macro / micro) | 0.540 / 0.544 |
+| source purity (macro / micro; lower is better) | 0.298 / 0.295 |
+| source cluster AMI | 0.252 |
+| directly calibrated cells (≥200 members) | 215 of 215 |
+| non-English share | 31.1% |
+| artifact size | 1.08 MB |
+| off-atlas cutoff | 0.277 cosine |
 
 Every L2 cell clears the 200-member calibration floor directly, so none of them
 falls back to its L1 parent's residuals. The fallback path still exists, and the
