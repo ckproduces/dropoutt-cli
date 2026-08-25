@@ -51,6 +51,11 @@ artifacts/
 # Local atlas source catalog (links only; never commit)
 .atlas-sources/
 
+# Cell samples and LLM labeling scratch from atlas label curation. The durable
+# output is tools/atlas-data/l1_labels_v3.json; the scratch that produced it
+# was 33 MB in every clone for no reader.
+.atlas-label-work/
+
 # Fetched reference corpus and build scratch. Several gigabytes, and
 # reproducible from tools/atlas_sources.py plus the manifest.
 .atlas-cache/
