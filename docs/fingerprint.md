@@ -24,6 +24,11 @@ The last three matter more than they look. Silently upgrading the language
 model, the embedding model or the atlas would produce different findings under
 an identical id, which would break the reproducibility claim outright.
 
+`atlas_hash` is empty for every scan from 1.3, because a scan does not load the
+atlas — `dropoutt atlas` does. That moves the id of an unchanged corpus, which
+is why `pipeline_version` moved to 0.4.0 in the same release: two fingerprints
+that measured different things must not be diffable as if they had not.
+
 ## Facets and evidence grades
 
 The fingerprint is a **description, not a scorecard**. Different facets have very
@@ -114,6 +119,8 @@ way.
 
 ## What is not in this release
 
-`coverage` is populated when the bundled atlas and its embedding backend are
-available. `difficulty` is not computed at all; it needs Tier 2. See
-[limitations.md](limitations.md).
+`coverage` is populated by `dropoutt atlas`, not by `dropoutt scan`. A scan
+still writes the facet — two fingerprints have to have the same shape to be
+comparable — with the single value
+`status: "not computed by scan (run dropoutt atlas)"`. `difficulty` is not
+computed at all; it needs Tier 2. See [limitations.md](limitations.md).

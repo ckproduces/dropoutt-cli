@@ -35,8 +35,9 @@ jobs:
           cache: pip
 
       - name: Install package
-        # Core + test deps. Optional extras (atlas model download, lid wheels)
-        # are exercised where available; scans in tests often pass --no-atlas.
+        # Core + test deps. Everything ships in the one install; the only
+        # download left is the atlas encoder, and the two tests that need it
+        # skip when it is not already in the cache rather than fetching it.
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"

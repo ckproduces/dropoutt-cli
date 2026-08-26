@@ -244,6 +244,7 @@ class AtlasStory:
     gaps: list[dict] = field(default_factory=list)
     gaps_line: str = ""
     categories: list[dict] = field(default_factory=list)
+
     #: Every subject area of the map, occupied or not, each carrying its own
     #: fine cells. The whole map rather than the part this corpus reached,
     #: because the empty rows are half of what the picture says.
@@ -261,6 +262,32 @@ class AtlasStory:
     unreached_density: float = 0.0
     version: str = ""
     probe_accuracy: float | None = None
+
+    def redact(self) -> AtlasStory:
+        """Drop every field that quotes a record, in place, and return self.
+
+        ``--no-evidence`` is a promise that a report can cross a dataset's trust
+        boundary, and until 1.3 the HTML page broke it: the payload the Markdown,
+        JSON and terminal renderings read blanked these strings, but the page
+        rendered the story object directly and printed the record nearest each
+        crowded region verbatim — under a footer saying excerpts had been
+        omitted. Redacting the story itself puts the promise in one place, above
+        every renderer, rather than in each of them.
+
+        What stays is aggregate: counts, shares, densities, dataset names, and
+        the atlas's own captions, which are words from the reference corpus and
+        never from yours.
+        """
+        for place in (*self.places, *self.thin_places):
+            place.yours = ""
+        if self.dominant is not None:
+            self.dominant.yours = ""
+        for item in self.imbalances:
+            item.yours = ""
+        for insight in self.insights:
+            insight.evidence = ""
+        self.off_examples = []
+        return self
 
 
 #: A corpus this concentrated is one thing rather than a mixture. Not a fault:
@@ -836,7 +863,7 @@ def _off_line(story: AtlasStory) -> str:
 # What the map actually says
 # --------------------------------------------------------------------------
 #
-# The page used to draw all 258 regions as a scatter plot. It was honest — the
+# The page used to draw every region as a scatter plot. It was honest — the
 # layout is fixed, so two reports could be held side by side — and it was
 # useless: the positions are a projection, not distances, which had to be
 # disclaimed in a caption directly under the picture, and having read the

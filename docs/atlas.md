@@ -90,51 +90,78 @@ The geometry training itself (normalization plus both clustering levels) took
 
 ## Putting your data on it
 
-Coverage is computed on every `dropoutt scan` that has the atlas extra
-installed. It appears in every output format, and in the `coverage`
-facet of `fingerprint.json`.
+Coverage is drawn by `dropoutt atlas`, which is its own command from 1.3 rather
+than a section of the scan report. It writes `atlas.html`, `atlas.md` and
+`atlas.json` beside the scan's artifacts.
 
 ```bash
-dropoutt scan ./my-corpus
+dropoutt atlas ./my-corpus
+dropoutt atlas ./my-corpus --sample 20000   # a coarser map, sooner
 ```
 
+Splitting it out was not tidying. Placement runs every sampled record through a
+neural encoder — the one part of a scan whose cost had nothing to do with which
+checks were enabled — and it needs an 81 MB model that a scan otherwise has no
+use for. It also answers a different question. A scan asks what would break a
+training run and gives you a list to act on; the map asks where the corpus sits,
+and the answer is right or wrong only against a goal the tool has not been told.
+Those two things sharing an exit code and a report was the mistake.
+
+`fingerprint.json` still carries a `coverage` facet either way, so two
+fingerprints have the same shape and can be compared. A scan fills it with
+`not computed by scan (run dropoutt atlas)`.
+
 ```
-  Atlas coverage (atlas-v1-lite)
-    Placed       6,042 of 6,130 sampled records (shares below are over these 6,042)
-    Breadth      195 of 258 regions occupied, as spread out as 63 even ones
-    Shape        75% of even coverage — mixed, covering roughly 25% of the atlas evenly
-    Where the corpus sits
-        1     801   13%  doğru, adım, hipotez, olduğunu, cevap
-            yours: Bir ilaç organizeri için kullanım talimatlarını düzenliyorum…
-       55     338    6%  kontrol, yüksek, farklı, düşük, else
-            yours: Aşağıda 8-12 yaş arası çocuklar için hazırlanmış bir bilgilen…
-    Subject areas
-        85%  General conversation and assistance
-         5%  Turkish literature, idiom and culture
-         5%  News and current events
-    Not in this corpus (13 of 20 subject areas the atlas covers are empty or near-empty here)
-      Code generation                    11 regions, 1 records here
-      Reading comprehension over a passage 10 regions, 7 records here
-      Arithmetic and word problems        8 regions, 26 records here
-      Religion, ethics and philosophy     7 regions, 0 records here
+  ◧◨ Where this corpus sits on the map
+     atlas-v1-lite
+
+  4,000 records   ·   1 dataset   ·   en 100%
+
+    Effective coverage 26.9 of 215 (29 subregions hold any records) (mixed)
+    3,969 of 4,000 sampled records placed · 31 off the map (0.8%) · 0 too short to place
+
+    Density is your share of a subject area against the map's own. 1.0× is parity.
+  subject area                              share    density    reach
+  Film and television                       22.5%       9.2×      2/5
+  Creative writing and fiction              17.7%       6.6×      4/4
+  Web development troubleshooting           12.8%       3.9×      1/6
+  Digit and counting puzzles                10.7%       6.6×      2/4
+  Open-source licensing and file headers     9.0%       3.1×      2/6
+    7 further areas reached; 31 of the map's 48 subject areas never reached
+
+    22% of your data sits in a single place on the map
+      877 records land there, 0.54 alike on average. Below 0.85 that is a
+      subject, not a template: they say the same kind of thing in enough
+      different ways to be worth keeping.
+      "Known for his Hollywood blockbusters with complex storytelling, Nolan…"
+
+    Film and television — 9.7× denser here than on the map
+      The map spends 5 of its 215 places on that subject; 23% of your placed
+      records land there. That is what a specialist corpus looks like, and it is
+      only a problem if you meant to build a general one.
+
+    Of the 29 places you reach, 9 hold 3% of your data between them
+      Real presence in 20 places, a toehold in the rest. An occupancy count
+      reads a place holding one record the same as one holding a third of the
+      corpus, which is how a narrow corpus comes to look broad.
 ```
+
+Trimmed: the run also prints what you have most and least of, where you are
+farthest from the map in both directions, and the off-map diagnosis.
 
 | line | how to read it |
 | --- | --- |
-| Placed | how many sampled records landed on the atlas. Every share below is over these. |
-| Breadth | two numbers, because occupancy alone is unreadable. **Occupied** counts a region holding one record the same as one holding a third of the corpus. **Effective** is the exponential of the region entropy: how many *evenly used* regions the corpus is as spread out as. The gap between them is the size of the tail. |
-| Shape | region entropy against the entropy of a corpus spread evenly, with the reading attached. Low is not bad: a specialised corpus *should* be concentrated and a pretraining mixture should not, and the tool has not been told which you are building. |
-| Where the corpus sits | the busiest regions. The five terms are the atlas's label for that region *in the reference corpus*; the `yours:` line is your own record sitting closest to the region's centre, which is what makes the label mean anything. Suppressed by `--no-evidence` and never written to `fingerprint.json`. |
-| Subject areas | level-0 categories, over placed records |
-| Not in this corpus | **the part a histogram of your own data cannot give you.** A histogram says what is present. It takes a fixed coordinate system to say what is *absent*, and that is the whole reason the atlas is a frozen artifact rather than a clustering of whatever was scanned. Listed, never judged: whether a gap matters depends on what you are building. |
-| Off-atlas | records too far from every centroid to place. Described, never grounds for withholding the rest. |
+| Effective coverage | two numbers, because occupancy alone is unreadable. The count in brackets says how many subregions hold *any* records, which reads a subregion holding one record the same as one holding a third of the corpus. Effective coverage sums `min(1, density)` over subregions: parity is a full score, thinner coverage a fraction, and over-representation does not count past one. The gap between them is the size of the tail. |
+| Placed / off the map / too short | every share below is over the placed records, and all three counts are printed so you can see what the shares are not about. Placement needs at least 80 characters; below that an embedding is noise. |
+| Density | your share of a subject area against *the map's* share of the same one. 1.0× is parity. This is the number a histogram of your own data cannot give you: a histogram says what is present, and it takes a fixed coordinate system to say what is absent or thin. |
+| Reach | `min(1, density)` summed over that area's subregions, against how many it has. `2/5` means you cover two subregions' worth of five, however unevenly your records are spread across them. |
+| What the map says | sentences that clear both a size gate and a significance gate. Nothing appears for being true; it appears for being large *and* true. |
+| the quoted record | your own record sitting closest to a region's centre — the only description of a neighbourhood that is true by construction. The atlas's own five-word captions describe the reference corpus, not yours. Suppressed by `--no-evidence`. |
+| Off the map | records too far from every centroid to place. Described, never grounds for withholding the rest. |
 
-A category counts as a gap below 0.5% of placed records rather than at exactly
-zero, because the level-0 probe is 86% accurate on held-out reference data and a
-category holding a handful of records is as likely to be probe error as presence.
-The denominator is the 20 categories the atlas carries regions for, not the 31
-the taxonomy defines — 11 never drew enough reference data to be clustered, and
-counting those as gaps would blame the corpus for the atlas's own limits.
+Nothing here is a verdict. A specialised corpus *should* be concentrated and a
+pretraining mixture should not, and the tool has not been told which you are
+building.
 
 When a scan covers more than one dataset, a further section reports the cosine
 between each pair's region histograms. Two datasets can share no wording and
@@ -149,8 +176,9 @@ can be reported as under-representation against the stratified baseline, not
 only as absolute absence. Read that baseline as a property of *this* reference
 corpus (topic- and language-capped on purpose), not as a natural population.
 
-`--no-atlas` skips it. If it never appears, run `dropoutt fetch` — coverage
-needs the `atlas` extra.
+If the map cannot be drawn at all, `dropoutt atlas` exits 1 and says why. The
+usual cause is an encoder that is not in the cache and cannot be downloaded: run
+`dropoutt fetch` first, then `--offline` works everywhere.
 
 ## Comparing two corpora
 
@@ -158,13 +186,13 @@ One corpus on the map is a description. Two is a decision, and that is the
 question the atlas exists to answer: **what does this dataset cover that the one
 I already have does not?**
 
-Scan both and compare their fingerprints. Every scan writes the full region
-histogram under `coverage.region_counts`, which is what makes two scans
+Place both and compare what came back. `atlas.json` carries the full region
+histogram under `atlas.subject_areas[].cells`, which is what makes two runs
 comparable at all:
 
 ```bash
-dropoutt scan ./candidate  --out ./fp/candidate
-dropoutt scan ./have       --out ./fp/have
+dropoutt atlas ./candidate  --out ./maps/candidate
+dropoutt atlas ./have       --out ./maps/have
 ```
 
 What that comparison looks like, Python code instructions against Turkish
@@ -217,6 +245,14 @@ discarded. Re-scanning fixes the second.
 depends on what you are training, which the tool does not know.
 
 ## Region labels: the five words
+
+> The measurements in this section and in
+> [Reading the quality numbers](#reading-the-quality-numbers) were taken on the
+> 258-region build that preceded `atlas-v1-lite`. They are kept because the
+> failure modes they describe are properties of the *method*, which has not
+> changed, and because a measurement is worth more than a description of one.
+> The shipped artifact has 215 regions and twelve label slots each; the one
+> number re-measured against it is noted below.
 
 Each region prints with five words next to it:
 
@@ -283,7 +319,9 @@ against the other regions, so a word that is common *everywhere* still floats to
 the top. Only those 16 effective stopwords hold it back. `their` appears as a
 label word in **33 of 258 regions**, `they` in 21, `about` in 18. Across the whole
 atlas, **21.6% of the 1,290 label slots are filled by a word that appears in at
-least 8 regions** — words that by construction cannot distinguish anything.
+least 8 regions** — words that by construction cannot distinguish anything. On
+the shipped 215-region artifact the same measurement is 14.1% of 2,580 slots:
+better, and still one slot in seven spent on a word that separates nothing.
 
 **No lemmatisation, and Turkish is agglutinative.** Inflections of one stem are
 counted as separate words and eat multiple slots. **21% of regions spend two or

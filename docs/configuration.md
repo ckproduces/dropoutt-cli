@@ -49,7 +49,7 @@ checks = []
 | `seq_len` | training sequence length, for the truncation forecast |
 | `tier` | highest check tier to run |
 | `minhash_preset` | `fineweb` or `hf-neardedup`; the report always states which |
-| `offline` | never access the network during `scan`; resolve models and atlas assets from local files and caches |
+| `offline` | never access the network during `scan` or `atlas`; resolve models and the atlas encoder from local files and caches |
 | `eval_sets` | optional allowlist of bundled or locally indexed benchmark names; absent means use every available index |
 | `mute.checks` | check ids to silence |
 

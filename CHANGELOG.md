@@ -1,5 +1,110 @@
 # Changelog
 
+## 1.3.0
+
+One change, and what a code review found while making it.
+
+### The map is its own command
+
+`dropoutt scan` no longer draws the coverage map. `dropoutt atlas ./data` does.
+
+The map had been a section of the scan report since 0.1, and two things were
+wrong with that. It answers a different question: a scan asks what would break a
+training run and hands you a list to act on, while the map asks where the corpus
+sits, and the answer to that is right or wrong only against a goal the tool has
+never been told. A specialised dataset *should* be concentrated. Reporting both
+under one verdict, one exit code and one report meant the half that can be acted
+on and the half that cannot were presented as the same kind of thing.
+
+And it costs differently. Placement runs every sampled record through a
+128-dimensional neural encoder — the one part of a scan whose cost had nothing to
+do with which checks were enabled — and needs an 81 MB model a scan otherwise has
+no use for. `--no-atlas` existed because of that, which is the shape of a flag
+that should have been a command.
+
+```bash
+dropoutt scan ./data      # what would go wrong
+dropoutt atlas ./data     # where it sits, and what it misses
+```
+
+The split is at the catalog, not at the reading pass. `dropoutt atlas` runs the
+same discovery, the same schema induction, the same sharded read and the same
+bottom-k sample a scan runs, and resolves two checks out of thirty-six —
+`T1-ATLAS-001` and `T1-ATLAS-002`, which run here and nowhere else. A scan and a
+map over the same corpus place the same records.
+
+What is new rather than moved:
+
+- **`--sample`**, the resolution knob. The default places up to 200,000 records;
+  on a large corpus that is the difference between a subject area decided by a
+  hundred records and one decided by thousands. Lower it for a first look — the
+  shape of the answer arrives long before the last digit of it does.
+- **`atlas.html`, `atlas.md`, `atlas.json`**, named apart from `report.*` so one
+  folder holds a scan and a map without either overwriting the other. The page
+  renders the same markup the scan report used to; there is no second copy of it
+  to drift.
+- **A language line drawn from the placed sample** rather than from the scan's
+  language check, which does not run here. It describes the population the
+  coverage numbers are about, which is the sample and not the corpus.
+- **Exit code 1 when no map can be drawn**, with the reason. Two causes account
+  for nearly all of it: no encoder — run `dropoutt fetch` — or no record long
+  enough to place, which needs 80 characters. A corpus of labels or one-word rows
+  has no position on a topical map, and a pipeline reading an empty page as "no
+  coverage" is the failure this stops. A corpus whose records are all *far* from
+  everything still exits 0 and says so: that is an answer, and often the
+  interesting one.
+
+`--no-atlas` is gone rather than accepted and ignored. A flag that still parses
+but no longer does anything is worse than one that errors, because a CI job
+passing it would go on believing it had switched something off.
+
+`fingerprint.json` keeps its `coverage` facet either way — two fingerprints have
+to have the same shape to be comparable — and a scan fills it with
+`status: "not computed by scan (run dropoutt atlas)"` rather than implying
+something is broken.
+
+**`pipeline_version` moves to 0.4.0**, and a 1.2 fingerprint will not compare
+against a 1.3 one. Two things changed under it. The `coverage` facet a scan
+writes is that status string rather than a region histogram. And `atlas_hash`,
+one of the six inputs to `fingerprint_id`, is empty for every scan rather than
+naming the artifact — so the id of an unchanged corpus moves. Leaving the
+version where it was would have let two fingerprints that measured different
+things be diffed as if they had not.
+
+### `--no-evidence` did not reach the HTML page's map
+
+Found while splitting the renderers, and it predates this release.
+
+`--no-evidence` is a promise that a report can cross a dataset's trust boundary.
+It was enforced in the payload that the Markdown, JSON and terminal renderings
+read, and those three blanked every quoted record correctly. The HTML page does
+not read that payload; it renders the story object directly. So a scan run with
+`--no-evidence` printed the record nearest each crowded region, the record behind
+each imbalance, and the furthest off-map excerpts into `report.html` — verbatim,
+under a footer stating that excerpts had been omitted.
+
+The redaction now happens once, on the story itself, above every renderer. What
+survives is aggregate: counts, shares, densities, dataset names, and the atlas's
+own captions, which are words from the reference corpus and never from yours.
+
+Anyone who shared a `--no-evidence` HTML report from a scan with coverage
+computed should assume it quoted records.
+
+### Also
+
+- **Report sections are numbered by what renders.** Three of the six are
+  conditional, and with the map gone a scan's page would have read 01, 02, 05,
+  06 — leaving the reader looking for two sections that were never there.
+- The `T1-ATLAS-*` skip line now names the command that produces them instead of
+  suggesting a reinstall.
+- `CROWDED_REGION_SHARE` documented itself against a 258-region atlas. The
+  shipped one has 215; the threshold is unchanged and its justification now
+  matches the artifact.
+- The label-quality measurements in `docs/atlas.md` are marked as taken on the
+  258-region build that preceded `atlas-v1-lite`, with one of them re-measured
+  against what ships: 14.1% of 2,580 label slots hold a word appearing in eight
+  or more regions, down from 21.6% of 1,290.
+
 ## 1.2.0
 
 Six things that were planned and not shipped in 1.1, and two pieces of research.

@@ -156,7 +156,10 @@ def build(
     if ctx.atlas is not None:
         coverage = dict(ctx.stats.get("atlas_coverage", {}))
     else:
-        coverage["status"] = "not computed (no atlas available)"
+        # A scan does not draw the map; `dropoutt atlas` does. The facet stays
+        # in the schema either way so two fingerprints have the same shape, and
+        # says which command fills it rather than implying something is broken.
+        coverage["status"] = "not computed by scan (run dropoutt atlas)"
     facets["coverage"] = Facet(
         "coverage", coverage,
         "Correct direction depends entirely on your goal. A coding dataset should be narrow.",

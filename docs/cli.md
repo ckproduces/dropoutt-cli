@@ -5,9 +5,9 @@ script lands in the environment's `bin/`, which module systems and batch
 schedulers often leave off `PATH`; the module form works from any interpreter
 that can import the package.
 
-`dropoutt` with no command prints the mark and the help. `scan`, which takes a
-required argument, prints its complete help and a set of examples when run with
-no arguments.
+`dropoutt` with no command prints the mark and the help. `scan` and `atlas`,
+which take a required argument, print their complete help and a set of examples
+when run with no arguments.
 
 Help and version are spelled both ways, because a tool should not answer a
 reasonable guess with a usage error:
@@ -21,14 +21,15 @@ dropoutt -V
 
 The commands below are the whole surface, and it is stable: `dropoutt` follows
 semantic versioning from 1.0, so a command or a flag will not change meaning
-inside a major version.
+inside a major version. `atlas` was added in 1.3 and `--no-atlas` removed with
+it — the map did not change meaning, it moved to a command of its own.
 
 ## `dropoutt scan PATH`
 
 Scan a file or directory.
 
 The CLI shows the active phase while it discovers files, infers layouts, scans
-records, maps atlas coverage, finalizes checks, and writes artifacts. In a
+records, finalizes checks, and writes artifacts. In a
 terminal this is a spinner; redirected batch output receives stable phase lines
 and periodic record counts instead of control sequences.
 
@@ -67,7 +68,6 @@ extensions match. That is what makes pointing a scan at a home directory finish.
 | `--limit` | none | max records per file, for a fast look |
 | `--no-html` | off | skip the HTML report |
 | `--no-open` | off | do not open the report when the scan finishes |
-| `--no-atlas` | off | skip atlas coverage |
 | `--no-evidence` | off | omit record excerpts and source locations from terminal output, `findings.jsonl`, `report.md`, `report.json`, and `report.html` |
 | `--workers`, `-j` | sized from the machine | processes used for the streaming pass |
 | `--brief` | off | print the verdict and one line per finding instead of the full report |
@@ -125,26 +125,13 @@ online one. Populate the cache first with `dropoutt fetch`. If no cached chat
 template is found, the run says so before the report rather than counting raw
 text silently.
 
-Atlas coverage appears in every output format: how many
-records were placed and out of how many, the regions occupied, the spread as a
-share of even coverage, the top categories and the top regions with their terms.
-Every share is over the placed records, and the placed count is printed next to
-it. The HTML report also plots occupied regions on the atlas's frozen 2D
-coordinates; circle size encodes sampled record count. The level-0 probe accuracy
-is printed underneath it.
-
-Records that did not place are described rather than merely counted: the most
-likely reason, the similarity distribution against the cutoff, the regions they
-were nearest to anyway, the rate broken down by language and by dataset, and the
-few furthest excerpts. Similarity to a region rises steeply with record length, so
-a high off-atlas rate is usually a statement about how short the records are
-before it is one about their subject; the reported reason says which. See
-[atlas.md](atlas.md#off-atlas-data).
-
-`--no-atlas` skips the assignment step and the block with it. When coverage is
-computed, the full region histogram also goes into `fingerprint.json`, which is
-comparable across machines. Record excerpts stay out of `fingerprint.json`, which
-is the artifact meant to be shareable.
+A scan does not draw the coverage map. That is
+[`dropoutt atlas`](#dropoutt-atlas-path), and it is a separate command from 1.3
+onwards: it is a different question — where the corpus sits rather than what is
+wrong with it — and a different cost, because placement runs every sampled record
+through a neural encoder that has to be downloaded once. `fingerprint.json` keeps
+its `coverage` facet either way, so two fingerprints have the same shape; a scan
+fills it with `not computed by scan (run dropoutt atlas)`.
 
 By default, terminal examples, `findings.jsonl`, `report.md`, `report.json`, and `report.html` contain
 bounded record excerpts and source locations so findings can be inspected.
@@ -168,6 +155,89 @@ terminal. That is a property the test suite asserts: a finding that reaches the
 page reaches the log, and a section the page has is a section the Markdown file
 has. `--no-evidence` is honoured once, where the content is assembled, so it
 cannot be honoured in three formats and forgotten in the fourth.
+
+## `dropoutt atlas PATH`
+
+Place a corpus on the atlas and draw where it sits.
+
+The atlas is a frozen coordinate system, not a collection of good datasets: one
+map of 215 subregions across 48 subject areas, fitted once on public data, so
+two corpora placed on it can be compared and a gap can be named. A typical
+coverage plot fits UMAP or k-means on the sample in front of it, which means the
+next folder gets a new projection and neighbourhoods stop meaning the same
+thing. This command only assigns your records to bins that already exist.
+
+It reads the same files a scan reads, in the same way, and samples the same
+records — placement and a scan of the same corpus see the same sample. What it
+does with them is different: every sampled record goes through a 128-dimensional
+static encoder, which is the one part of the old scan whose cost had nothing to
+do with the checks, and which has to be downloaded on first use. `dropoutt fetch`
+gets it ahead of time; after that `--offline` works.
+
+| flag | default | meaning |
+| --- | --- | --- |
+| `--out`, `-o` | `<path>/.dropoutt` | output directory |
+| `--offline` | off | never touch the network; resolve the encoder from the cache |
+| `--sample` | 200,000 | records to place, or the corpus if it is smaller |
+| `--limit` | none | max records per file, for a fast look |
+| `--no-html` | off | skip the HTML page |
+| `--no-open` | off | do not open the page when the run finishes |
+| `--no-evidence` | off | omit record excerpts and source locations from the terminal, `atlas.md`, `atlas.json` and `atlas.html` |
+| `--workers`, `-j` | sized from the machine | processes used for the reading pass |
+| `--quiet`, `-q` | off | suppress the map; only the output path is printed |
+
+```bash
+dropoutt atlas ./data
+dropoutt atlas ./data --sample 20000       # a coarser map, sooner
+dropoutt atlas ./data --offline            # encoder from the cache
+dropoutt atlas ./data --no-evidence -q     # nothing quoted, nothing printed
+```
+
+`--sample` is the resolution knob. The default places up to 200,000 records,
+which on a large corpus is the difference between a subject area decided by a
+hundred records and one decided by thousands. Lower it for a first look; the
+shape of the answer arrives long before the last digit of it does.
+
+### What it reports
+
+| section | what you learn |
+| --- | --- |
+| the map | every subject area, its subregions, and how densely you sit on each. Reach sums `min(1, density)` over subregions, so parity is a full score and over-representation does not count past one |
+| what the map says | the handful of sentences that clear both a size gate and a significance gate. Nothing is shown for being true; it is shown for being large *and* true |
+| what you have most of | the crowded places, each named by *your own record* nearest its centre — the only description of a neighbourhood that is true by construction |
+| what you have least of | the sparsest places you reach. Reaching a place is not covering it, and an occupancy count cannot tell the difference |
+| farthest from the map | where you are most over- or under-represented against the reference, and which direction to move |
+| off the map | records unlike the reference geography, with a diagnosis. Similarity rises steeply with record length, so a high off-map rate is usually a statement about how short the records are before it is one about their subject |
+
+Two checks run here and nowhere else: `T1-ATLAS-001`, when the corpus covers
+very little of the map, and `T1-ATLAS-002`, when one crowded area holds
+near-identical records — a template rather than a topic, which shingle-based
+duplicate detection cannot see. Neither can fail a build. Concentration is
+correct for a specialised dataset and wrong for a pretraining mixture, and the
+tool has not been told which one you are building.
+
+### What gets written
+
+| file | what it is |
+| --- | --- |
+| `atlas.html` | the map, as one self-contained page that opens from `file://` |
+| `atlas.md` | the same content as Markdown, to paste into a PR or a ticket |
+| `atlas.json` | the same content as one JSON document, schema `dropoutt.atlas/1` |
+
+They are named `atlas.*` rather than `report.*` so one folder can hold a scan and
+a map without either overwriting the other.
+
+### When no map can be drawn
+
+Exit code 1, with the reason. Two causes account for almost all of it: the
+encoder could not be loaded — run `dropoutt fetch` — or no record was long
+enough to place, which needs at least 80 characters of text. A corpus of labels,
+ids or one-word rows has no position on a topical map, and an empty page
+presented as "no coverage" is the failure this stops.
+
+A corpus whose records are all *far* from everything on the map is not that
+case. It exits 0 and says so: that every record you have looks like nothing in
+the reference geography is an answer, and often the most interesting one.
 
 ## `dropoutt checks [CHECK_ID]`
 

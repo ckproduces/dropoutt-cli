@@ -4,9 +4,15 @@ Exit codes are three-valued on purpose. A checker that returns the same code for
 "found problems" and "crashed" cannot be used in CI.
 
     0   completed, whether or not findings were reported
-    1   internal error
+    1   the command could not produce its output at all
     2   usage error
     10  blocking findings, and only when a target profile was declared
+
+Code 1 was "internal error" while every command either wrote its artifacts or
+raised. `dropoutt atlas` added a third outcome: the corpus was read and no map
+could be drawn from it — no encoder, or nothing long enough to place. That is
+not a crash and not a finding, and a pipeline stage reading an empty page as
+"no coverage" is the failure this stops.
 """
 
 from __future__ import annotations
@@ -37,10 +43,11 @@ app = typer.Typer(
     name="dropoutt",
     help=(
         "Pre-flight checks for LLM training data.\n\n"
-        "Point dropoutt at a folder and it reports what would go wrong in a "
+        "`dropoutt scan` points at a folder and reports what would go wrong in a "
         "training run — broken loss masks, duplicates, contamination, language "
-        "damage, token cost — plus where the corpus sits on a fixed map of "
-        "public training data. Everything runs locally."
+        "damage, token cost. `dropoutt atlas` points at the same folder and "
+        "reports where it sits on a fixed map of public training data. "
+        "Everything runs locally."
     ),
     add_completion=False,
     invoke_without_command=True,
@@ -53,6 +60,11 @@ EXIT_OK = 0
 EXIT_ERROR = 1
 EXIT_USAGE = 2
 EXIT_BLOCKED = 10
+
+#: The checks `dropoutt atlas` resolves, and the only ones that read the map.
+#: Named here rather than discovered by prefix so adding a T1-ATLAS check is a
+#: decision about which command runs it.
+ATLAS_CHECKS = ("T1-ATLAS-001", "T1-ATLAS-002")
 
 
 @app.command(
@@ -95,7 +107,6 @@ def scan(
     no_open: bool = typer.Option(
         False, "--no-open", help="Do not open the report when the scan finishes."
     ),
-    no_atlas: bool = typer.Option(False, "--no-atlas", help="Skip atlas coverage."),
     no_evidence: bool = typer.Option(
         False,
         "--no-evidence",
@@ -118,12 +129,16 @@ def scan(
     comparable fingerprint and an HTML report, prints a summary, then opens the
     report if there is a desktop to open it on. No flags are required; each
     check that could not run names the one flag that would unlock it.
+
+    The coverage map is not part of this. It reads every sampled record through
+    a neural encoder, which is the one part of a scan whose cost is not a
+    function of the checks, and it answers a different question — where a corpus
+    sits, rather than what is wrong with it. `dropoutt atlas` draws it.
     """
     if not path.exists():
         console.print(f"[red]No such path:[/red] {escape(str(path))}")
         raise typer.Exit(EXIT_USAGE)
 
-    from .atlas import load_bundled
     from .contamination import load_indices
     from .discovery import discover
     from .fingerprint import build as build_fingerprint
@@ -198,14 +213,14 @@ def scan(
         # allocation. Below the parallel threshold there is no fork and the
         # warm-up overlaps the whole scan.
         warmup = start_warmup(
-            offline=offline, want_embedder=not no_atlas, want_panel=model is None
+            offline=offline, want_embedder=False, want_panel=model is None
         )
         will_fork = (
             (workers is None or workers > 1)
             and preflight.total_bytes >= MIN_BYTES_FOR_PARALLEL
         )
 
-        activity.phase("Loading local checks, benchmark indexes, and atlas")
+        activity.phase("Loading local checks and benchmark indexes")
         detector = LanguageDetector()
         contamination = load_indices(*_contamination_dirs())
         if cfg.eval_sets:
@@ -225,7 +240,6 @@ def scan(
                 for name, index in contamination.benchmarks.items()
                 if name in requested
             }
-        atlas_obj = None if no_atlas else load_bundled()
         if will_fork:
             warmup.shutdown(wait=True)
 
@@ -239,7 +253,7 @@ def scan(
             chat_template=chat_template,
             detector=detector,
             contamination=contamination if not contamination.is_empty else None,
-            atlas=atlas_obj,
+            atlas=None,
             max_tier=tier,
             minhash_preset=cfg.minhash_preset,
             muted=tuple(cfg.mute),
@@ -335,6 +349,190 @@ def scan(
         console.print(f"\n  [bold red]{len(result.blocking)} blocking finding(s)[/bold red] "
                       f"under target profile {result.ctx.profile.value}")
         raise typer.Exit(EXIT_BLOCKED)
+    raise typer.Exit(EXIT_OK)
+
+
+@app.command(
+    no_args_is_help=True,
+    epilog=(
+        "[b]Examples[/b]\n\n"
+        "[dim]$[/dim] dropoutt atlas ./data\n\n"
+        "[dim]$[/dim] dropoutt atlas ./data --sample 20000  "
+        "[dim]# a coarser map, sooner[/dim]\n\n"
+        "[dim]$[/dim] dropoutt atlas ./data --offline       "
+        "[dim]# encoder from the cache[/dim]"
+    ),
+)
+def atlas(
+    path: Path = typer.Argument(..., help="File or directory to place on the map."),
+    out: Path | None = typer.Option(None, "--out", "-o",
+                                    help="Directory for the map artifacts."),
+    offline: bool = typer.Option(False, "--offline", help="Never touch the network."),
+    sample: int | None = typer.Option(
+        None, "--sample", min=100,
+        help="Records to place. Defaults to 200,000, or the corpus if it is smaller.",
+    ),
+    limit: int | None = typer.Option(
+        None, "--limit", min=1, help="Max records per file."
+    ),
+    no_html: bool = typer.Option(False, "--no-html", help="Skip the HTML page."),
+    no_open: bool = typer.Option(
+        False, "--no-open", help="Do not open the page when the run finishes."
+    ),
+    no_evidence: bool = typer.Option(
+        False,
+        "--no-evidence",
+        help="Omit record excerpts and source locations from terminal and output files.",
+    ),
+    workers: int | None = typer.Option(
+        None, "--workers", "-j", min=1,
+        help="Processes for the reading pass. Defaults to one per core, less one.",
+    ),
+    quiet: bool = typer.Option(False, "--quiet", "-q",
+                               help="Suppress the map; write the files and exit."),
+) -> None:
+    """Place a corpus on the atlas and draw where it sits.
+
+    The atlas is a frozen coordinate system, not a collection of good datasets:
+    one map of 215 subregions fitted once on public data, so two corpora placed
+    on it can be compared and a gap can be named. This command samples records,
+    encodes them, and reports what the corpus is dense in, what it only touches,
+    what it never reaches, and what looks like nothing on the map at all.
+
+    It is separate from `dropoutt scan` because it is a different question and a
+    different cost. A scan asks what is wrong with the data and reads it once;
+    this reads every sampled record through a neural encoder, and the encoder is
+    downloaded on first use. Nothing here can fail a build — coverage is right
+    or wrong only against a goal, and the tool has not been told yours.
+    """
+    if not path.exists():
+        console.print(f"[red]No such path:[/red] {escape(str(path))}")
+        raise typer.Exit(EXIT_USAGE)
+
+    from .atlas import load_bundled
+    from .discovery import discover
+    from .langid import LanguageDetector
+    from .parallel import MIN_BYTES_FOR_PARALLEL
+    from .report import terminal as term_report
+    from .runner import ATLAS_MIN_CHARS
+    from .runner import scan as run_scan
+
+    with ProgressDisplay(enabled=not quiet) as activity:
+        activity.phase("Discovering supported data files")
+        preflight = discover(str(path))
+        if not preflight.files or not any(file.readable for file in preflight.files):
+            activity.finish()
+            console.print(f"[red]No supported data files found in:[/red] {escape(str(path))}")
+            raise typer.Exit(EXIT_USAGE)
+
+        activity.phase("Reading configuration")
+        try:
+            cfg = Config.load(path)
+        except ValueError as exc:
+            activity.finish()
+            console.print(f"[red]Invalid dropoutt.toml:[/red] {escape(str(exc))}")
+            raise typer.Exit(EXIT_USAGE) from None
+        offline = offline or cfg.offline or _offline_from_environment()
+        if cfg.profile != "auto":
+            _validate_profile(cfg.profile, option="profile", allow_auto=False)
+
+        # The encoder is the long pole and depends on nothing in the data, so it
+        # starts loading now. It is joined before the reading pass forks, for the
+        # reason given in `scan`: forking a process whose threads are inside a
+        # Rust library produces a child that hangs on its first allocation.
+        warmup = start_warmup(offline=offline, want_embedder=True, want_panel=False)
+        will_fork = (
+            (workers is None or workers > 1)
+            and preflight.total_bytes >= MIN_BYTES_FOR_PARALLEL
+        )
+
+        activity.phase("Loading the atlas")
+        atlas_obj = load_bundled()
+        if atlas_obj is None:
+            activity.finish()
+            warmup.shutdown(wait=True)
+            console.print("[red]No atlas is available in this install.[/red]")
+            console.print("  [dim]The atlas artifact ships inside the package; "
+                          "reinstall dropoutt to restore it.[/dim]")
+            raise typer.Exit(EXIT_ERROR)
+        detector = LanguageDetector()
+        if will_fork:
+            warmup.shutdown(wait=True)
+
+        result = run_scan(
+            str(path),
+            profile=parse_profile(cfg.profile) if cfg.profile != "auto" else Profile.UNKNOWN,
+            detector=detector,
+            atlas=atlas_obj,
+            # The map is the whole point of this command, so its two checks run
+            # whatever tier the config asked a scan for. Mutes are still obeyed:
+            # a check silenced in dropoutt.toml stays silenced here.
+            max_tier=1,
+            muted=tuple(cfg.mute),
+            limit_per_file=limit,
+            atlas_sample=sample,
+            only_checks=ATLAS_CHECKS,
+            progress=activity.records,
+            phase=activity.phase,
+            offline=offline,
+            discovery=preflight,
+            workers=workers,
+        )
+        warmup.shutdown(wait=True)
+
+        # "none placed" is an answer, not a failure: it says every record you
+        # have looks like nothing on this map, which is worth a page. A status
+        # of anything else means the machinery did not run, and a page drawn
+        # from that would be a blank one presented as a measurement.
+        coverage = result.ctx.stats.get("atlas_coverage") or {}
+        if coverage.get("status") not in ("ok", "none placed"):
+            activity.finish()
+            console.print("[red]No map could be drawn for this corpus.[/red]")
+            if not coverage:
+                # Nothing reached the encoder. Almost always length: the sample
+                # skips records under 21 characters outright and placement needs
+                # ATLAS_MIN_CHARS, so a corpus of labels, ids or one-word rows
+                # produces an empty sample rather than a bad map.
+                console.print(
+                    f"  [dim]None of the {result.records_scanned:,} records were long "
+                    f"enough to place. Placement needs at least {ATLAS_MIN_CHARS} "
+                    "characters of text; below that an embedding is noise.[/dim]"
+                )
+            for note in result.ctx.degradations:
+                console.print(f"  [dim]{escape(note)}[/dim]")
+            if not offline:
+                console.print("  [dim]If the encoder could not be downloaded, run "
+                              "`dropoutt fetch` and try again.[/dim]")
+            raise typer.Exit(EXIT_ERROR)
+
+        activity.phase("Writing the map")
+        # Read once. Every rendering below shows the same reading, and building
+        # it three times is how the scan's four outputs used to disagree.
+        from .report.summary import build as build_summary
+
+        story = build_summary(result, include_evidence=not no_evidence)
+        out_dir = out or (path if path.is_dir() else path.parent) / ".dropoutt"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        written = _write_atlas(
+            out_dir, result, write_html=not no_html,
+            include_evidence=not no_evidence, summary=story,
+        )
+        activity.finish(f"Placed {result.records_scanned:,} records")
+
+    if not quiet:
+        term_report.render_atlas(
+            console, result, show_evidence=not no_evidence, summary=story,
+            out_dir=out_dir, written=written,
+        )
+    else:
+        console.print(f"  [dim]wrote {escape(str(out_dir))}/{', '.join(written)}[/dim]")
+    if not no_evidence:
+        console.print(
+            f"  [yellow]note[/yellow] {', '.join(written)} may contain dataset "
+            "excerpts and source paths; use --no-evidence before exporting them"
+        )
+    if not no_html and not no_open and not quiet:
+        _show(out_dir / "atlas.html")
     raise typer.Exit(EXIT_OK)
 
 
@@ -633,6 +831,8 @@ def main(
             "  [dim]Start here:[/dim]  [bold]dropoutt scan ./data[/bold]\n"
             "  [dim]No flags needed. Add --model to unlock token checks, "
             "--target sft to fail CI on findings.[/dim]\n"
+            "  [dim]Then:[/dim]        [bold]dropoutt atlas ./data[/bold]"
+            "  [dim]— where that corpus sits on the map.[/dim]\n"
         )
         raise typer.Exit(EXIT_OK)
 
@@ -766,6 +966,49 @@ def _write_outputs(
                                summary=summary),
             encoding="utf-8",
         )
+
+
+def _write_atlas(
+    out_dir: Path,
+    result,
+    *,
+    write_html: bool,
+    include_evidence: bool,
+    summary=None,
+) -> list[str]:
+    """Write the map in every shape, and name what was written.
+
+    Named `atlas.*` rather than `report.*` so a folder can hold both a scan and
+    a map without either overwriting the other. Markdown and JSON are always
+    written, for the same reason the scan writes them regardless of `--no-html`:
+    the reader who is going to consume this in CI is not the reader who opens a
+    browser.
+    """
+    from .report import html as html_report
+    from .report import markdown as md_report
+    from .report.payload import build_atlas
+
+    (out_dir / "atlas.md").write_text(
+        md_report.render_atlas(result, include_evidence=include_evidence,
+                               summary=summary),
+        encoding="utf-8",
+    )
+    (out_dir / "atlas.json").write_text(
+        json_dumps(
+            build_atlas(result, include_evidence=include_evidence, summary=summary),
+            indent=True,
+        ),
+        encoding="utf-8",
+    )
+    written = ["atlas.md", "atlas.json"]
+    if write_html:
+        (out_dir / "atlas.html").write_text(
+            html_report.render_atlas(result, include_evidence=include_evidence,
+                                     summary=summary),
+            encoding="utf-8",
+        )
+        written.insert(0, "atlas.html")
+    return written
 
 
 def _show(report: Path) -> None:

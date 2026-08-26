@@ -21,8 +21,8 @@ A local CLI that:
 2. **Fingerprints** the corpus so two datasets can be compared without shipping
    records.
 3. **Maps** your data onto a frozen **atlas** — a latent coordinate system built
-   from professional public datasets — so you see what you cover, what you miss,
-   and what sits off the map.
+   from public datasets — so you see what you cover, what you miss, and what sits
+   off the map. That is `dropoutt atlas`, its own command since 1.3.
 
 It runs on your CPU. One install brings everything — there are no extras to
 choose between, and nothing in the dependency list needs a compiler.
@@ -56,7 +56,7 @@ may be gzip / bzip2 / xz / zstd compressed.
 
 Works on macOS, Linux, and Windows. Cache defaults to `~/.cache/dropoutt`, or
 `%LOCALAPPDATA%\dropoutt` on Windows. Override with `DROPOUTT_CACHE`. See
-[docs/portability.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/portability.md) for offline / HPC use.
+[docs/portability.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/portability.md) for offline / HPC use.
 
 ## Quick start
 
@@ -66,6 +66,9 @@ dropoutt scan ./my-corpus
 
 dropoutt scan ./my-corpus --model qwen3 --seq-len 4096 --target sft
 # unlocks token/mask checks and exit code 10 on blocking findings
+
+dropoutt atlas ./my-corpus      # where that corpus sits on the map
+# writes .dropoutt/{atlas.html, atlas.md, atlas.json}
 
 dropoutt checks                 # live catalog
 dropoutt checks T0-MASK-001     # one check in detail
@@ -93,7 +96,7 @@ result does not depend on how many cores you have: same findings, same examples,
 same fingerprint id on one core or on sixteen. Cap it with `-j` or
 `DROPOUTT_WORKERS` if you are sharing a node.
 
-**New here?** [docs/getting-started.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/getting-started.md).
+**New here?** [docs/getting-started.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/getting-started.md).
 
 ## What it catches
 
@@ -108,14 +111,31 @@ Bugs that waste a whole training run without appearing in the logs:
   look like chat.
 - **Directional overlap** — a small set wholly contained in a large one.
 - **Language damage** — e.g. Turkish that lost its diacritics (`degil mi`).
-- **Atlas shape** — specialised vs broad coverage, missing subject areas, and
-  regions of near-identical writing that shingle dedup cannot see.
+(Coverage shape — specialised vs broad, missing subject areas, and regions of
+near-identical writing that shingle dedup cannot see — comes from
+`dropoutt atlas`, below.)
 
-## Atlas (coverage map)
+## `dropoutt atlas` — the coverage map
 
-The atlas is a **frozen topical map** compressed from high-quality public
-datasets (258 regions, static multilingual embeddings, CPU-only). Every scan
-with the `atlas` extra places a sample of your records on that map and reports:
+```bash
+dropoutt atlas ./my-corpus
+```
+
+The atlas is a **frozen topical map** compressed from public datasets: 215
+subregions across 48 subject areas, static multilingual embeddings, CPU-only.
+Frozen is the point — a coverage plot that fits UMAP or k-means on the sample in
+front of it gives the next folder a new projection, so its neighbourhoods mean
+something different and two runs cannot be compared. Here the bins already
+exist, and a run only decides which of them your records fall into.
+
+It is a separate command from 1.3, and was a section of the scan report before
+that. Two reasons. It answers a different question — where the corpus sits, not
+what is wrong with it, and coverage is right or wrong only against a goal the
+tool has not been told. And it costs differently: placement runs every sampled
+record through a neural encoder that has to be downloaded once, which is the one
+part of a scan whose cost had nothing to do with which checks were enabled.
+
+It writes `atlas.html`, `atlas.md` and `atlas.json`, and reports:
 
 | Section | What you learn |
 | --- | --- |
@@ -127,26 +147,30 @@ with the `atlas` extra places a sample of your records on that map and reports:
 | **Same ground** | Datasets that occupy the same regions even when they share no wording, i.e. merging them adds volume and not coverage |
 | **Off the map** | Records unlike the reference geography, with a diagnosis (often length or markup, not “bad data”) |
 
+`--sample` is the resolution knob: the default places up to 200,000 records,
+which on a large corpus is the difference between a subject area decided by a
+hundred records and one decided by thousands. Nothing here can fail a build.
+
 The atlas's own five-word captions for a region are shown as captions and never
 as findings: they are frequency counts over reference records, roughly 40% of
 that text is function words shared with other regions, and the subject-area
 names were assigned per source dataset rather than per record. What the map is
 trusted for is geometry. Details and the full list of what that costs:
-[docs/atlas.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/atlas.md).
+[docs/atlas.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/atlas.md).
 
 ## Exit codes
 
 | Code | Meaning |
 | --- | --- |
 | 0 | Completed (findings or not) |
-| 1 | Internal error |
+| 1 | The command could not produce its output at all |
 | 2 | Usage error |
 | 10 | Blocking findings — only when `--target` was declared |
 
 ## Check catalog
 
 Identifiers are `T{tier}-{GROUP}-{nnn}` and are **never renumbered**. Mute by id
-in `dropoutt.toml`. Full narrative: [docs/checks.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/checks.md). Live list:
+in `dropoutt.toml`. Full narrative: [docs/checks.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/checks.md). Live list:
 `dropoutt checks`.
 
 ### Tier 0 — structural (CPU)
@@ -184,8 +208,8 @@ in `dropoutt.toml`. Full narrative: [docs/checks.md](https://github.com/ckproduc
 | `T1-NDUP-001` | Near-duplicate records (MinHash; reports, does not delete) |
 | `T1-DUP-002` | Same prompt answered two different ways |
 | `T1-OVERLAP-001` | Datasets overlap with each other (directional) |
-| `T1-ATLAS-001` | Corpus sits in very few topical regions |
-| `T1-ATLAS-002` | A crowded region holds near-identical records |
+| `T1-ATLAS-001` | Corpus sits in very few topical regions — `dropoutt atlas` only |
+| `T1-ATLAS-002` | A crowded region holds near-identical records — `dropoutt atlas` only |
 | `T1-CONTAM-001` | Training data overlaps evaluation benchmarks |
 | `T1-LANG-001` | Language composition and detection confidence |
 | `T1-LANG-002` | Records deviate from the dataset’s main language |
@@ -202,22 +226,22 @@ yet links acting on a finding to a measured change in model quality.
 
 | What you give | What it unlocks |
 | --- | --- |
-| nothing | inventory, schema, dedup, overlap, bundled contamination, language, PII, atlas (if installed) |
+| nothing | inventory, schema, dedup, overlap, bundled contamination, language, PII, style |
 | `--model` | exact tokens, fertility, truncation, template, loss mask, stop token, packing |
 | `--target` | pass-or-fail gating (exit 10) |
-| the `atlas` extra | where the corpus sits on the map, and what it misses |
+| `dropoutt atlas` | where the corpus sits on the map, and what it misses |
 
 ## Documentation
 
-- [Getting started](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/getting-started.md)
-- [CLI reference](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/cli.md)
-- [Check catalog](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/checks.md)
-- [Fingerprint](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/fingerprint.md)
-- [Atlas](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/atlas.md)
-- [Configuration](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/configuration.md)
-- [Portability / offline](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/portability.md)
-- [Limitations](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/limitations.md)
-- [Design rules](https://github.com/ckproduces/dropoutt-cli/blob/v1.2.0/docs/design.md)
+- [Getting started](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/getting-started.md)
+- [CLI reference](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/cli.md)
+- [Check catalog](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/checks.md)
+- [Fingerprint](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/fingerprint.md)
+- [Atlas](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/atlas.md)
+- [Configuration](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/configuration.md)
+- [Portability / offline](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/portability.md)
+- [Limitations](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/limitations.md)
+- [Design rules](https://github.com/ckproduces/dropoutt-cli/blob/v1.3.0/docs/design.md)
 
 ## What it will not do
 

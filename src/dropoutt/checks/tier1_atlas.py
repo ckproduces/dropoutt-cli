@@ -28,7 +28,7 @@ ALL_PROFILES = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN
 
 #: A single region holding more than this share of placed records is worth a
 #: sentence. Chosen against the atlas's own geometry rather than by taste: with
-#: 258 regions, even mass is 0.4% per region, so 20% is fifty times even.
+#: 215 regions, even mass is 0.47% per region, so 20% is forty times even.
 CROWDED_REGION_SHARE = 0.20
 
 #: Mean pairwise cosine inside a crowded region, above which its contents are

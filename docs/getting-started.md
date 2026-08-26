@@ -64,7 +64,7 @@ Two downloads still happen on first use, and both are cached:
 
 | what | size | when |
 | --- | --- | --- |
-| the atlas embedding model | ~490 MB | the first scan that computes coverage |
+| the atlas embedding model | ~81 MB cached | the first `dropoutt atlas` |
 | tokenizers for the comparison panel | a few MB each | the first scan without `--model` |
 
 `dropoutt fetch` pulls both ahead of time, and prints the interpreter, the cache
@@ -228,8 +228,10 @@ non-English corpora it is routinely this large.
 
 ### Atlas coverage
 
-Where your records land on `atlas-v1-lite`, a shared coordinate system. Covered
-in [section 7](#7-comparing-two-datasets).
+Not here. Where your records land on `atlas-v1-lite`, a shared coordinate
+system, is `dropoutt atlas ./data` — a separate command since 1.3, because it
+answers a different question at a different cost. Covered in
+[section 7](#7-where-the-corpus-sits).
 
 ### Not checked, and why
 
@@ -361,7 +363,7 @@ trusted in a pipeline.
 
 ---
 
-## 6. The three output files
+## 6. The output files
 
 Every scan writes to `.dropoutt/`:
 
@@ -413,6 +415,50 @@ grade so you know how much weight it holds:
 or bad direction. `conditional` means acting on it helps only under conditions
 the tool cannot verify for you. Full schema in
 [fingerprint.md](fingerprint.md).
+
+---
+
+## 7. Where the corpus sits
+
+A scan tells you what is wrong with the data. It does not tell you what the data
+is *about*, or what it is missing — and those are the questions you have when you
+are deciding whether to buy, merge or build a dataset rather than fix one.
+
+```bash
+dropoutt atlas ./my-corpus
+```
+
+This places a sample of your records on `atlas-v1-lite`: one map of 215
+subregions across 48 subject areas, fitted once on public data and frozen. The
+freezing is the whole point. A coverage plot that fits UMAP or k-means on
+whatever sample it was handed gives the next folder a new projection, so its
+neighbourhoods mean something different and two runs cannot be compared. Here
+the bins already exist, and a run only decides which of them your records fall
+into.
+
+What comes back:
+
+- **The map** — every subject area, and how densely you sit on each against how
+  much of the reference lives there. 1.0× is parity.
+- **What you have most of** — the crowded places, each named by *your own record*
+  nearest its centre. That is the only description of a neighbourhood that is
+  true by construction; the atlas's own five-word captions describe the
+  reference corpus, not yours.
+- **What you have least of** — the sparsest places you reach. Reaching a place is
+  not covering it.
+- **Off the map** — records unlike anything in the reference geography, with a
+  diagnosis. Usually length or markup, not "bad data".
+
+It writes `atlas.html`, `atlas.md` and `atlas.json` next to the scan's files.
+
+Two things it will not do. It will not fail a build: concentration is correct
+for a specialised dataset and wrong for a pretraining mixture, and nothing has
+told it which you are building. And it will not call a region good or bad — the
+atlas is a coordinate system, like latitude and longitude, with no notion of
+quality in it at all.
+
+The first run downloads the encoder, about 81 MB once cached. `dropoutt fetch`
+gets it ahead of time; after that `--offline` works.
 
 ---
 
@@ -517,9 +563,11 @@ the built-in character-profile fallback ran. It is much weaker and the output
 says so. Every dependency ships with dropoutt, so this means a damaged install:
 `pip install --force-reinstall dropoutt`.
 
-**"atlas is present but its embedding model could not be loaded"** — the
-embedding model downloads once, about 490 MB, and could not be fetched. Run
-`dropoutt fetch` where there is network, or check `DROPOUTT_CACHE`.
+**`dropoutt atlas` exits 1 saying no map could be drawn** — usually the
+embedding model. It downloads once and is stored quantised at about 81 MB. Run
+`dropoutt fetch` where there is network, or check `DROPOUTT_CACHE`. The other
+cause is length: placement needs at least 80 characters of text per record, and
+a corpus of labels or one-word rows has no position on a topical map.
 
 **Token counts look wrong and say `character-ratio`** — `tokenizers` could not
 be imported. Same remedy as the language case: reinstall.

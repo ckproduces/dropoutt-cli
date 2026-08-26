@@ -5,11 +5,32 @@ from __future__ import annotations
 import json
 import re
 
+import pytest
 from typer.testing import CliRunner
 
 from dropoutt.cli import _without_source_locations, app
 
 runner = CliRunner()
+
+
+def _encoder_is_cached() -> bool:
+    """Whether `dropoutt atlas` can run without reaching the network.
+
+    The atlas artifact ships in the package; its encoder does not, and no test
+    in this suite is allowed to download one. The two tests below drive the real
+    command end to end, so they run when a `dropoutt fetch` has already happened
+    on this machine and skip when it has not, rather than turning a clean
+    checkout's test run into an 81 MB download.
+    """
+    from dropoutt.atlas import DEFAULT_MODEL, embed
+    from dropoutt.config import cache_dir
+
+    return embed.local_model_dir(DEFAULT_MODEL, cache_dir()).exists()
+
+
+needs_encoder = pytest.mark.skipif(
+    not _encoder_is_cached(), reason="atlas encoder is not in the cache; run dropoutt fetch"
+)
 
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
@@ -44,10 +65,13 @@ def test_commands_with_required_arguments_show_full_help_when_empty():
 def test_the_published_command_surface_is_exactly_what_is_supported():
     """The 1.0 surface is a promise, so it is asserted rather than assumed.
 
-    `diff`, `index-eval`, `init` and `atlas` were dropped before the first
-    stable release: each was useful and none was finished enough to freeze.
-    `doctor` went in 1.1, with the extras it existed to help you choose between.
-    Re-adding one is a deliberate act, not something a stray decorator does.
+    `diff`, `index-eval` and `init` were dropped before the first stable
+    release: each was useful and none was finished enough to freeze. `doctor`
+    went in 1.1, with the extras it existed to help you choose between. `atlas`
+    was dropped with them and came back in 1.3 — deliberately, because the map
+    turned out to be a second question with a second cost rather than a section
+    of the scan report. Adding one is that kind of decision, not something a
+    stray decorator does.
     """
     result = runner.invoke(app, ["--help"])
     listed = {
@@ -55,9 +79,9 @@ def test_the_published_command_surface_is_exactly_what_is_supported():
         for line in plain(result.output).splitlines()
         if line.startswith("\u2502 ") and len(line.split()) > 1
     }
-    assert {"scan", "checks", "benchmarks", "models", "fetch",
+    assert {"scan", "atlas", "checks", "benchmarks", "models", "fetch",
             "help", "version"} <= listed
-    for gone in ("diff", "index-eval", "init", "atlas", "doctor"):
+    for gone in ("diff", "index-eval", "init", "doctor"):
         assert gone not in listed
         assert runner.invoke(app, [gone]).exit_code == 2
 
@@ -92,7 +116,7 @@ def test_a_scan_does_not_try_to_open_a_report_that_nobody_can_see(tmp_path, monk
     opened: list[str] = []
     monkeypatch.setattr(desktop.webbrowser, "open", lambda url: opened.append(url) or True)
 
-    result = runner.invoke(app, ["scan", str(tmp_path), "--offline", "--no-atlas"])
+    result = runner.invoke(app, ["scan", str(tmp_path), "--offline"])
 
     assert result.exit_code == 0
     assert (tmp_path / ".dropoutt" / "report.html").exists()
@@ -116,7 +140,7 @@ def test_no_evidence_removes_excerpts_from_written_outputs(tmp_path):
 
     result = runner.invoke(app, [
         "scan", str(data),
-        "--offline", "--no-atlas", "--no-evidence", "--quiet",
+        "--offline", "--no-evidence", "--quiet",
         "--out", str(out),
     ])
 
@@ -142,7 +166,7 @@ def test_effective_cli_configuration_changes_the_fingerprint_id(tmp_path):
         result = runner.invoke(app, [
             "scan", str(data),
             "--seq-len", seq_len,
-            "--offline", "--no-atlas", "--no-html", "--quiet",
+            "--offline", "--no-html", "--quiet",
             "--out", str(out),
         ])
         assert result.exit_code == 0
@@ -158,7 +182,7 @@ def test_malformed_config_is_a_usage_error_without_a_traceback(tmp_path):
     (tmp_path / "dropoutt.toml").write_text("[scan\nprofile = 3", encoding="utf-8")
 
     result = runner.invoke(app, [
-        "scan", str(tmp_path), "--offline", "--no-atlas", "--no-html", "--quiet",
+        "scan", str(tmp_path), "--offline", "--no-html", "--quiet",
     ])
 
     assert result.exit_code == 2
@@ -173,7 +197,7 @@ def test_unknown_configured_eval_set_is_a_usage_error(tmp_path):
     )
 
     result = runner.invoke(app, [
-        "scan", str(tmp_path), "--offline", "--no-atlas", "--no-html", "--quiet",
+        "scan", str(tmp_path), "--offline", "--no-html", "--quiet",
     ])
 
     assert result.exit_code == 2
@@ -197,7 +221,7 @@ def test_scan_reports_active_phases_in_redirected_output(tmp_path):
     )
 
     result = runner.invoke(app, [
-        "scan", str(tmp_path), "--offline", "--no-atlas", "--no-html", "--limit", "1",
+        "scan", str(tmp_path), "--offline", "--no-html", "--limit", "1",
     ])
 
     assert result.exit_code == 0
@@ -280,3 +304,94 @@ def test_fetch_names_the_interpreter_and_the_machine_it_probed():
     assert Path(sys.executable).name in flat
     assert __version__ in flat
     assert "core" in flat and "machine" in flat
+
+
+def test_scan_no_longer_draws_the_map_and_says_which_command_does(tmp_path):
+    """The split is the point of 1.3, so both halves of it are asserted.
+
+    A scan that quietly stopped reporting coverage would look identical to a
+    scan whose atlas failed to load. The fingerprint keeps the facet either way
+    — two fingerprints must have the same shape to be comparable — and the
+    skipped-check line has to name the command that fills it rather than
+    suggesting a reinstall.
+    """
+    (tmp_path / "data.jsonl").write_text(
+        "\n".join(
+            json.dumps({"text": f"A record with enough prose in it to be worth "
+                                f"placing on a topical map, number {i}."})
+            for i in range(20)
+        ),
+        encoding="utf-8",
+    )
+    result = runner.invoke(app, ["scan", str(tmp_path), "--offline", "--no-html"])
+    assert result.exit_code == 0
+
+    fp = json.loads((tmp_path / ".dropoutt" / "fingerprint.json").read_text())
+    assert fp["facets"]["coverage"]["values"] == {
+        "status": "not computed by scan (run dropoutt atlas)"
+    }
+    assert "dropoutt atlas" in words(result.output)
+    assert not (tmp_path / ".dropoutt" / "atlas.html").exists()
+
+
+def test_scan_rejects_the_flag_that_used_to_turn_the_map_off(tmp_path):
+    """`--no-atlas` is gone rather than accepted and ignored.
+
+    A flag that still parses but no longer does anything is worse than one that
+    errors: a CI job passing it would go on believing it had switched something
+    off. There is nothing left to switch off.
+    """
+    (tmp_path / "data.jsonl").write_text('{"text": "hello there"}\n', encoding="utf-8")
+    result = runner.invoke(app, ["scan", str(tmp_path), "--no-atlas"])
+    assert result.exit_code == 2
+
+
+@needs_encoder
+def test_atlas_places_records_and_writes_the_map_in_every_shape(tmp_path):
+    """`dropoutt atlas` is a complete command, not a flag in disguise."""
+    (tmp_path / "data.jsonl").write_text(
+        "\n".join(
+            json.dumps({"text": f"The garden strawberry is a widely grown hybrid "
+                                f"plant cultivated worldwide for its fruit, {i}."})
+            for i in range(20)
+        ),
+        encoding="utf-8",
+    )
+    result = runner.invoke(app, ["atlas", str(tmp_path), "--no-open", "--offline"])
+    assert result.exit_code == 0, plain(result.output)
+
+    out = tmp_path / ".dropoutt"
+    assert {"atlas.html", "atlas.md", "atlas.json"} <= {p.name for p in out.iterdir()}
+    # A scan's artifacts are not overwritten by a map, and vice versa.
+    assert not (out / "report.html").exists()
+
+    data = json.loads((out / "atlas.json").read_text())
+    assert data["schema"] == "dropoutt.atlas/1"
+    assert data["atlas"]["available"] is True
+    assert data["atlas"]["placed_records"] > 0
+    # No findings table: the map answers where, and `scan` answers what is wrong.
+    assert all(f["check_id"].startswith("T1-ATLAS-") for f in data["findings"])
+    assert "Where this corpus sits" in words(result.output)
+
+
+@needs_encoder
+def test_atlas_omits_evidence_everywhere_at_once(tmp_path):
+    """`--no-evidence` is a promise about every file the command writes."""
+    secret = "SPECIMEN-TOKEN-9d4f1c"
+    (tmp_path / "data.jsonl").write_text(
+        "\n".join(
+            json.dumps({"text": f"{secret} appears in a record with enough other "
+                                f"prose around it to be placed, number {i}."})
+            for i in range(20)
+        ),
+        encoding="utf-8",
+    )
+    result = runner.invoke(
+        app, ["atlas", str(tmp_path), "--no-open", "--offline",
+              "--no-evidence", "--quiet"]
+    )
+    assert result.exit_code == 0, plain(result.output)
+    out = tmp_path / ".dropoutt"
+    for name in ("atlas.html", "atlas.md", "atlas.json"):
+        assert secret not in (out / name).read_text(), name
+    assert secret not in plain(result.output)

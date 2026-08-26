@@ -111,6 +111,58 @@ def render(
     return "\n".join(out).rstrip() + "\n"
 
 
+def render_atlas(
+    result: ScanResult,
+    *,
+    include_evidence: bool = True,
+    summary: ScanSummary | None = None,
+) -> str:
+    """The map as Markdown, for a pull request comment or a pipeline stage."""
+    from .payload import build_atlas
+
+    data = build_atlas(result, include_evidence=include_evidence, summary=summary)
+    out: list[str] = ["## Where this corpus sits on the map"]
+
+    identity = (data["atlas"] or {}).get("identity") or {}
+    if identity.get("version"):
+        out += ["", f"Measured against `{identity['version']}`."]
+
+    facts = [
+        f"**{data['records']:,}** records",
+        f"**{data['datasets']}** dataset{'' if data['datasets'] == 1 else 's'}",
+    ]
+    if data["language_line"]:
+        facts.append(data["language_line"])
+    out += ["", " · ".join(facts), "", f"`{data['root']}`", ""]
+
+    if data["atlas"] is None:
+        out += ["No records could be placed on the map.", ""]
+    else:
+        out += _atlas(data["atlas"], heading="")
+
+    if data["findings"]:
+        out += ["### What the shape means", ""]
+        for finding in data["findings"]:
+            out.append(f"**{finding['title']}** · `{finding['check_id']}`")
+            out += ["", finding["detail"]]
+            if finding["fix"]:
+                out += ["", f"→ {finding['fix']}"]
+            out.append("")
+
+    if data["degraded"]:
+        out += ["### What degraded", ""]
+        out += [f"- {note}" for note in data["degraded"]]
+        out.append("")
+
+    out += [
+        "---",
+        "",
+        f"Placed in {data['elapsed_seconds']:.1f}s. This is the map only — run "
+        "`dropoutt scan` for the checks.",
+    ]
+    return "\n".join(out).rstrip() + "\n"
+
+
 # --------------------------------------------------------------------------
 
 
@@ -284,11 +336,14 @@ def _budget(budget: dict) -> list[str]:
     return out
 
 
-def _atlas(atlas: dict | None) -> list[str]:
-    """Where the corpus sits, as numbers rather than as colour."""
+def _atlas(atlas: dict | None, *, heading: str = "### Where your data sits") -> list[str]:
+    """Where the corpus sits, as numbers rather than as colour.
+
+    ``heading`` is empty on the atlas page, whose title already says this.
+    """
     if atlas is None:
         return []
-    out = ["### Where your data sits", ""]
+    out = ([heading, ""] if heading else [])
     if not atlas["available"]:
         return [*out, atlas["reason"], ""]
 

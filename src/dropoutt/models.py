@@ -52,7 +52,17 @@ from typing import Any
 #: dataset actually spans, which made a parallel scan's token estimate differ
 #: from a serial one by 0.04%; they are identical now, and both differ slightly
 #: from what a parallel 0.2.0 scan reported.
-PIPELINE_VERSION = "0.3.0"
+#: 0.4.0 moves the coverage map to `dropoutt atlas`, which changes the
+#: fingerprint in two ways a reader would otherwise have to discover. The
+#: `coverage` facet a scan writes is now the single value
+#: `status: "not computed by scan (run dropoutt atlas)"` rather than a region
+#: histogram — the same shape a 1.2 scan produced under `--no-atlas`, now the
+#: only shape a scan produces. And `atlas_hash`, one of the six inputs to
+#: `fingerprint_id`, is empty for every scan rather than naming the artifact, so
+#: the id of an unchanged corpus moves. Two fingerprints of the same data across
+#: that boundary must not be read as describing the same measurement, and a
+#: version that did not move would let them be diffed as if they did.
+PIPELINE_VERSION = "0.4.0"
 FINGERPRINT_SCHEMA_VERSION = "fp-v0.1"
 
 

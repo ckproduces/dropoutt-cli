@@ -130,6 +130,8 @@ def scan(
     workers: int | None = None,
     contamination_dirs: Sequence[Path] | None = None,
     eval_sets: Sequence[str] | None = None,
+    only_checks: Sequence[str] | None = None,
+    atlas_sample: int | None = None,
 ) -> ScanResult:
     """Run a full scan and return findings plus context.
 
@@ -140,6 +142,12 @@ def scan(
 
     Pass ``discovery`` when the caller already walked the tree (the CLI does),
     so the filesystem is not scanned twice.
+
+    ``only_checks`` narrows the catalog to a named set, which is how `dropoutt
+    atlas` runs the same pass as a scan while resolving only the two checks that
+    read the map. It is a restriction on the *catalog*, not on the pass: the
+    records are still read once, and the atlas sample is still drawn the same
+    way, so an atlas run and a scan of the same corpus place the same records.
     """
     started = time.time()
     disc = discovery if discovery is not None else discover(root)
@@ -173,7 +181,7 @@ def scan(
     # Atlas sample is corpus-wide: min(total_records, 200_000). The token budget
     # stays stratified per dataset — it estimates a ratio that converges early,
     # and one huge dataset must not set the corpus-wide tokens-per-character.
-    atlas_sample_target = ATLAS_SAMPLE_TARGET
+    atlas_sample_target = ATLAS_SAMPLE_TARGET if atlas_sample is None else atlas_sample
 
     if tokenizer is not None and chat_template is not None:
         _probe_offsets(ctx, tokenizer, chat_template)
@@ -238,7 +246,9 @@ def scan(
         ctx.profile = _infer_profile(verdicts)
 
     # ---- resolve which checks can run ------------------------------------
-    active, skipped = REGISTRY.resolve(ctx, max_tier=max_tier, muted=muted)
+    active, skipped = REGISTRY.resolve(
+        ctx, max_tier=max_tier, muted=muted, only=only_checks
+    )
 
     # ---- phase 2: one streaming pass, on one core or on all of them -------
     if phase is not None:
@@ -292,7 +302,7 @@ def scan(
     # Streamed rather than collected. Each shard is folded the moment its
     # predecessors have been, and its samples are released — so the parent holds
     # one shard plus the bounded merged heaps instead of every shard at once.
-    merger = ShardMerger(ctx, active, disc)
+    merger = ShardMerger(ctx, active, disc, atlas_target=atlas_sample_target)
     try:
         run_shards(config, plan, ctx=ctx, progress=progress, phase=phase,
                    consume=merger.feed)
@@ -302,17 +312,19 @@ def scan(
         # the single serial result is folded into the fresh state.
         active = [type(check)() for check in active]
         config.check_ids = [c.check_id for c in active]
-        merger = ShardMerger(ctx, active, disc)
+        merger = ShardMerger(ctx, active, disc, atlas_target=atlas_sample_target)
         _reset_accumulated(ctx)
         merger.feed(restart.result)
     scanned = merger.finish()
 
     # ---- atlas coverage --------------------------------------------------
-    atlas_sample = ctx.stats.pop("_atlas_sample", [])
-    if atlas is not None and atlas_sample:
+    # Named for the rows rather than for the sample, because `atlas_sample` is
+    # the argument that sized it and the two are different things.
+    sampled_records = ctx.stats.pop("_atlas_sample", [])
+    if atlas is not None and sampled_records:
         if phase is not None:
             phase("Mapping atlas coverage")
-        _compute_coverage(ctx, atlas_sample, offline=offline)
+        _compute_coverage(ctx, sampled_records, offline=offline)
 
     # ---- phase 3: resolve ------------------------------------------------
     if phase is not None:
@@ -353,9 +365,17 @@ class ShardMerger:
     means the same thing as it does in a one-shard scan.
     """
 
-    def __init__(self, ctx: ScanContext, active: list, disc: Discovery) -> None:
+    def __init__(
+        self,
+        ctx: ScanContext,
+        active: list,
+        disc: Discovery,
+        *,
+        atlas_target: int = ATLAS_SAMPLE_TARGET,
+    ) -> None:
         self.ctx = ctx
         self.disc = disc
+        self.atlas_target = atlas_target
         self.by_id = {check.check_id: check for check in active}
         self.scanned = 0
         self.shards = 0
@@ -369,7 +389,7 @@ class ShardMerger:
         self.atlas_heap: list[tuple[int, str, str, int, str]] = []
         self.budget_heaps: dict[str, list[tuple[int, str, int]]] = {}
         self.budget_cap = _per_dataset(BUDGET_SAMPLE_TARGET, len(disc.datasets))
-        self.atlas_cap = ATLAS_SAMPLE_TARGET if ctx.atlas is not None else 0
+        self.atlas_cap = atlas_target if ctx.atlas is not None else 0
 
     def feed(self, result: ShardResult) -> None:
         ctx = self.ctx
@@ -454,7 +474,7 @@ class ShardMerger:
         atlas_sample: list[tuple[str, str, str, int, float]] = []
         too_short = 0
         atlas_rows = sorted(self.atlas_heap, reverse=True)
-        atlas_n = min(self.scanned, ATLAS_SAMPLE_TARGET, len(atlas_rows))
+        atlas_n = min(self.scanned, self.atlas_target, len(atlas_rows))
         selected = atlas_rows[:atlas_n]
         weight = (self.scanned / len(selected)) if selected else 1.0
         if ctx.atlas is not None:
@@ -504,8 +524,17 @@ def merge_shard_results(
     plan: ScanPlan,
     disc: Discovery,
 ) -> int:
-    """Fold a complete list of shard results. Kept for callers holding a list."""
-    merger = ShardMerger(ctx, active, disc)
+    """Fold a complete list of shard results. Kept for callers holding a list.
+
+    The plan carries the atlas target the shards were sized against, so a caller
+    that overrode it — `dropoutt atlas --sample` does — gets the same merged
+    sample here as `scan` would. Taking the default instead would silently trim
+    to 200,000 on a run that asked for fewer and keep more than asked on a run
+    that asked for more.
+    """
+    merger = ShardMerger(
+        ctx, active, disc, atlas_target=plan.sample_target or ATLAS_SAMPLE_TARGET
+    )
     for result in results:
         merger.feed(result)
     return merger.finish()
@@ -840,6 +869,18 @@ def _compute_coverage(
         lengths=lengths, datasets=datasets, texts=texts, weights=weights,
     )
     coverage["sampled_records"] = len(texts)
+    # What languages actually landed on the map. The scan's language check
+    # reports the composition of the whole corpus and does not run under
+    # `dropoutt atlas`; this is the composition of the sample the coverage
+    # numbers describe, which is the population a reader of those numbers needs.
+    lang_counts: dict[str, int] = {}
+    for code in langs:
+        if code:
+            lang_counts[code] = lang_counts.get(code, 0) + 1
+    if lang_counts:
+        coverage["languages"] = dict(
+            sorted(lang_counts.items(), key=lambda kv: (-kv[1], kv[0]))
+        )
     # What measured these numbers, not what the atlas was fitted with. Since
     # 1.2 the encoder is applied in its quantised form, so a report that named
     # the build-time weights would be describing a table this scan never read.

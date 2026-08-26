@@ -62,7 +62,7 @@ because it is the invocation that always works.
 | `tokenizers` | token counting, template rendering | token-dependent checks skip with a hint |
 | `orjson` | JSONL parsing | falls back to stdlib `json`; slower, identical results |
 | `py3langid` | language identification, 97 languages | falls back to a small character-profile detector; **less accurate**, and every finding it produces is marked low-trust |
-| `scipy` | the sparse multiply behind atlas embeddings | atlas coverage is reported as skipped |
+| `scipy` | the sparse multiply behind atlas embeddings | `dropoutt atlas` cannot draw a map |
 | `pyarrow` | Parquet, Arrow IPC, Feather, ORC | these columnar files are reported as unreadable |
 | `zstandard` | `.zst` input | the file is reported as unreadable; gzip, bzip2, and xz use the standard library |
 
@@ -165,12 +165,12 @@ token number shifts, and the loss-mask checks do not run at all, so the numbers
 must not be read as if the template had been applied.
 
 The same offline flag gates atlas model loading. If its three files are absent
-from `$DROPOUTT_CACHE/embedder`, coverage is reported as unavailable without a
+from `$DROPOUTT_CACHE/embedder`, `dropoutt atlas` exits 1 saying so, without a
 connection attempt. The cache directory is always used for
 `$DROPOUTT_CACHE/contamination`; it never writes into read-only site-packages.
 
 `DROPOUTT_OFFLINE=1` and `HF_HUB_OFFLINE=1` are also honored by `scan` and
-`init`. This prevents a missed command-line flag in a batch script from changing
+`atlas`. This prevents a missed command-line flag in a batch script from changing
 the network contract.
 
 ### Local model directories

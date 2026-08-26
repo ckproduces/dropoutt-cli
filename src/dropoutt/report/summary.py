@@ -285,6 +285,8 @@ def build(result, *, budget=None, include_evidence: bool = True) -> ScanSummary:
 
     summary.composition = _composition(result)
     summary.atlas = build_story(result)
+    if summary.atlas is not None and not include_evidence:
+        summary.atlas.redact()
     summary.verdict, summary.tone, summary.subtitle = _verdict(summary)
     return summary
 

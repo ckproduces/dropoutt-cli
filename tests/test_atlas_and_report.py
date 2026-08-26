@@ -1179,3 +1179,72 @@ def test_a_gap_becomes_relative_when_the_atlas_records_reference_mass(tiny_atlas
     # one with the most regions, so ordering follows the baseline when there is
     # one.
     assert cov["coverage_gaps"][0]["category"] == 1
+
+
+def test_no_evidence_clears_every_quoted_record_from_the_map():
+    """The page renders the story object, so the story is what has to be clean.
+
+    Until 1.3 `--no-evidence` was enforced in the payload the Markdown, JSON and
+    terminal renderings read, and the HTML page — which reads the story directly
+    — printed the record nearest each crowded region under a footer claiming
+    excerpts had been omitted. The redaction now happens once, above every
+    renderer.
+    """
+    from dropoutt.report.atlas_story import AtlasStory, Imbalance, Insight, Place
+
+    def place(text: str) -> Place:
+        return Place(region=1, share=0.5, records=10, yours=text, caption="a, b, c")
+
+    story = AtlasStory(available=True)
+    story.places = [place("a record of mine")]
+    story.thin_places = [place("another record of mine")]
+    story.dominant = place("the biggest region's record")
+    story.imbalances = [
+        Imbalance(region=1, ratio=8.0, records=10, share=0.5,
+                  yours="a third record", area="Law", action="cut")
+    ]
+    story.insights = [
+        Insight(kind="dense", headline="h", detail="d", magnitude=8.0,
+                evidence="a fourth record")
+    ]
+    story.off_examples = [{"excerpt": "a fifth record", "score": 0.1}]
+
+    story.redact()
+
+    assert [p.yours for p in (*story.places, *story.thin_places)] == ["", ""]
+    assert story.dominant.yours == ""
+    assert [i.yours for i in story.imbalances] == [""]
+    assert [i.evidence for i in story.insights] == [""]
+    assert story.off_examples == []
+    # Captions are the reference corpus's words, not yours, and stay.
+    assert story.places[0].caption == "a, b, c"
+
+
+def test_the_map_page_and_the_scan_report_render_the_same_markup():
+    """One section, two pages. A second copy is how they would drift apart."""
+    from dropoutt.report.html import _ATLAS_SECTION, _ATLAS_TEMPLATE, _TEMPLATE
+
+    assert _ATLAS_SECTION in _TEMPLATE
+    assert "{{ atlas_body|safe }}" in _ATLAS_TEMPLATE
+    assert "Where your data sits" not in _ATLAS_TEMPLATE
+
+
+def test_a_report_missing_a_section_does_not_leave_a_gap_in_the_numbering():
+    """Sections are numbered by what renders, not by where they sit in the file."""
+    from dropoutt.report.html import _section_numbers
+
+    report = _section_numbers(corpus=True, problems=True, budget=True,
+                              notes=True, small_print=True)
+    assert [report["corpus"], report["problems"], report["budget"],
+            report["notes"], report["small_print"]] == ["01", "02", "03", "04", "05"]
+    # A scan never has a map section now, so it never takes a number either.
+    assert report["atlas"] == report["findings"] == ""
+
+    # Offline, with no tokenizer panel and nothing worth a note.
+    thin = _section_numbers(corpus=True, problems=True, small_print=True)
+    assert [thin["corpus"], thin["problems"], thin["small_print"]] == ["01", "02", "03"]
+
+    # The atlas page numbers from the same list and starts at 01.
+    page = _section_numbers(atlas=True, findings=True)
+    assert [page["atlas"], page["findings"]] == ["01", "02"]
+    assert page["atlas"] == "01", "the map is the first thing on its own page"

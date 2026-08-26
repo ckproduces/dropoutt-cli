@@ -218,13 +218,24 @@ class Registry:
         *,
         max_tier: int = 1,
         muted: Iterable[str] = (),
+        only: Iterable[str] | None = None,
     ) -> tuple[list[Check], list[SkippedCheck]]:
-        """Split the catalog into what will run and what will not, with reasons."""
+        """Split the catalog into what will run and what will not, with reasons.
+
+        ``only`` restricts the catalog to a named set. A check left out that way
+        is absent from *both* lists rather than reported as skipped: `dropoutt
+        atlas` runs one pair of checks on purpose, and a report telling its
+        reader that thirty-four other checks "could not run" would be describing
+        a command they did not invoke.
+        """
         muted_set = set(muted)
+        only_set = None if only is None else set(only)
         active: list[Check] = []
         skipped: list[SkippedCheck] = []
 
         for cls in self.all():
+            if only_set is not None and cls.check_id not in only_set:
+                continue
             if cls.check_id in muted_set:
                 skipped.append(
                     SkippedCheck(
@@ -278,8 +289,8 @@ def _explain(req: Requirement) -> tuple[str, str]:
             "reinstall dropoutt",
         ),
         Requirement.ATLAS: (
-            "no atlas available",
-            "run dropoutt fetch, or reinstall dropoutt",
+            "the coverage map has its own command",
+            "dropoutt atlas <path>",
         ),
         Requirement.CONTAMINATION_INDEX: (
             "no benchmark indices found",

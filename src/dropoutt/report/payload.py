@@ -39,6 +39,7 @@ from typing import Any
 
 from .atlas_story import density_ratio, format_reach
 from .escaping import safe_snippet
+from .phrasing import share as _share
 from .summary import ScanSummary, budget_method, budget_rows
 
 
@@ -169,6 +170,69 @@ def build(
         "capabilities": dict(fp.capabilities),
     }
     return payload
+
+
+def build_atlas(
+    result,
+    *,
+    include_evidence: bool = True,
+    summary: ScanSummary | None = None,
+) -> dict[str, Any]:
+    """Everything `dropoutt atlas` can say, as plain data.
+
+    The same map section a scan report carries, with the corpus facts a map is
+    meaningless without — how many records were read, how many of them were
+    placed — and nothing else. There is no verdict here and no findings table:
+    `dropoutt atlas` answers "where does this sit", and the question of what is
+    wrong with it belongs to `dropoutt scan`.
+    """
+    from .summary import build as build_summary
+
+    s = summary or build_summary(result, include_evidence=include_evidence)
+    ctx = result.ctx
+    languages = s.languages or _sample_languages(ctx)
+    # Phrased the same way a scan phrases it, so "under 0.1%" does not become
+    # "0%" on the one page where a language's share is the only thing said
+    # about it.
+    language_line = s.language_line or ", ".join(
+        f"{code} {_share(share)}" for code, share in languages[:3]
+    )
+    return {
+        "schema": "dropoutt.atlas/1",
+        "root": ctx.root,
+        "elapsed_seconds": round(s.elapsed, 3),
+        "shards": int(ctx.stats.get("shards", 1) or 1),
+        "includes_evidence": include_evidence,
+        "records": s.records,
+        "datasets": s.datasets,
+        "files": s.files,
+        "languages": [
+            {"code": code, "share": round(share, 6)} for code, share in languages
+        ],
+        "language_line": language_line,
+        "atlas": _atlas(result, s, include_evidence=include_evidence),
+        "findings": [
+            _problem(p, include_evidence=include_evidence)
+            for p in (*s.problems, *s.notes)
+            if p.check_id.startswith("T1-ATLAS-")
+        ],
+        "degraded": list(ctx.degradations),
+    }
+
+
+def _sample_languages(ctx) -> list[tuple[str, float]]:
+    """The language mix of the records that were placed, largest share first.
+
+    `dropoutt atlas` does not run the language check, so there is no finding to
+    read the corpus-wide composition off. What the map can say for itself is the
+    mix of the sample it placed, which is the population its own numbers are
+    about.
+    """
+    counts = ((ctx.stats or {}).get("atlas_coverage") or {}).get("languages") or {}
+    total = sum(counts.values())
+    if not total:
+        return []
+    return [(code, n / total) for code, n in counts.items()]
 
 
 # --------------------------------------------------------------------------

@@ -134,6 +134,82 @@ def render(
     _render_outputs(console, s, out_dir, written, brief=False)
 
 
+def render_atlas(
+    console: Console,
+    result: ScanResult,
+    *,
+    show_evidence: bool = True,
+    summary: ScanSummary | None = None,
+    out_dir: Path | str | None = None,
+    written: list[str] | None = None,
+) -> None:
+    """The map, on a terminal, with nothing else on the page.
+
+    `dropoutt atlas` prints this instead of the scan report. It is the same
+    section a scan used to carry, given the whole screen: what the corpus is
+    made of comes first in one line, because a coverage number is a statement
+    about a corpus and the reader has to know which one.
+    """
+    from ..branding import mark, supports_unicode
+    from .payload import build_atlas
+
+    s = summary or build(result, include_evidence=show_evidence)
+    data = build_atlas(result, include_evidence=show_evidence, summary=s)
+    atlas = data["atlas"]
+
+    console.print()
+    console.print(f"  [bold cyan]{mark(unicode_ok=supports_unicode())}[/bold cyan] "
+                  "[bold]Where this corpus sits on the map[/bold]")
+    identity = (atlas or {}).get("identity") or {}
+    if identity.get("version"):
+        console.print(f"     [dim]{_m(identity['version'])}[/dim]")
+
+    console.print()
+    facts = [
+        f"[bold]{data['records']:,}[/bold] records",
+        f"[bold]{data['datasets']}[/bold] dataset{'' if data['datasets'] == 1 else 's'}",
+    ]
+    if data["language_line"]:
+        facts.append(_m(data["language_line"]))
+    console.print("  " + "   [dim]·[/dim]   ".join(facts))
+
+    console.print()
+    if atlas is None:
+        console.print("  [dim]No records could be placed on the map.[/dim]")
+    else:
+        _render_atlas(console, atlas)
+
+    if data["findings"]:
+        _section(console, "What the shape means")
+        for finding in data["findings"]:
+            mark_, colour = SEVERITY_MARK.get(
+                Severity(finding["severity"]), ("[cyan]●[/cyan]", "cyan")
+            )
+            console.print()
+            console.print(f"    {mark_} [bold {colour}]{_m(finding['title'])}[/bold {colour}]"
+                          f"  [dim]{finding['check_id']}[/dim]")
+            console.print(f"      [dim]{_m(finding['detail'])}[/dim]")
+            if finding["fix"]:
+                console.print(f"      [green]→[/green] {_m(finding['fix'])}")
+
+    if data["degraded"]:
+        console.print()
+        for note in data["degraded"]:
+            console.print(f"  [yellow]note[/yellow] {_m(note)}")
+
+    if out_dir and written:
+        console.print()
+        width = max(len(name) for name in written)
+        console.print(f"  [dim]Written to {_m(out_dir)}[/dim]")
+        for name in written:
+            purpose = ARTIFACTS.get(name, "")
+            console.print(f"    [bold]{_m(name):<{width}}[/bold]"
+                          + (f"  [dim]{purpose}[/dim]" if purpose else ""))
+    console.print(f"  [dim]{data['records']:,} records in {data['elapsed_seconds']:.1f}s. "
+                  f"Run `dropoutt scan` for the checks.[/dim]")
+    console.print()
+
+
 # --------------------------------------------------------------------------
 
 
@@ -541,11 +617,14 @@ def _render_unavailable(console: Console, result: ScanResult) -> None:
 #: What each artifact is for, in the fewest words that let someone pick one.
 #: Keyed by filename so a file that stops being written stops being advertised.
 ARTIFACTS = {
-    "report.html": "the map, the excerpts, every finding in full",
+    "report.html": "the excerpts and every finding in full",
     "report.md": "the same, as text — paste into a PR or a ticket",
     "report.json": "the same, as data — for a dashboard or a gate",
     "findings.jsonl": "one finding per line, for scripts",
     "fingerprint.json": "comparable measurements, for diffing runs",
+    "atlas.html": "the map, drawn",
+    "atlas.md": "the same, as text — paste into a PR or a ticket",
+    "atlas.json": "the same, as data — for a dashboard or a gate",
 }
 
 

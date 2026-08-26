@@ -132,8 +132,8 @@ run under the `corpus` profile only.
 | `T1-NDUP-001` | Near-duplicate records | — | — |
 | `T1-DUP-002` | The same prompt is answered two different ways | — | — |
 | `T1-OVERLAP-001` | Datasets overlap with each other | 2+ datasets | — |
-| `T1-ATLAS-001` | The corpus sits in very few topical regions | atlas | — |
-| `T1-ATLAS-002` | A crowded region holds near-identical records | atlas | — |
+| `T1-ATLAS-001` | The corpus sits in very few topical regions | `dropoutt atlas` | — |
+| `T1-ATLAS-002` | A crowded region holds near-identical records | `dropoutt atlas` | — |
 | `T1-CONTAM-001` | Training data overlaps evaluation benchmarks | benchmark index | sft, corpus, preference |
 | `T1-LANG-001` | Language composition and detection confidence | langid | — |
 | `T1-LANG-002` | Records deviate from their dataset's main language | langid | — |
@@ -174,9 +174,10 @@ normalisation only, so near-misses are not counted.
 in *column*". A small dataset contained in a large one shows 100% one way and 1%
 the other, and the asymmetry is the finding.
 
-**`T1-ATLAS-*` see shape that no per-record check can.** A record is never
-individually wrong for sitting in a crowded region, or for failing to sit in an
-empty one. `T1-ATLAS-001` fires only on genuine narrowness — an effective region
+**`T1-ATLAS-*` see shape that no per-record check can.** They run under
+`dropoutt atlas` and nowhere else — see [cli.md](cli.md#dropoutt-atlas-path). A
+record is never individually wrong for sitting in a crowded region, or for
+failing to sit in an empty one. `T1-ATLAS-001` fires only on genuine narrowness — an effective region
 count at or below 10, or a single region holding a quarter of the corpus — not on
 the gap between occupied and effective regions, which every long-tailed
 distribution has. `T1-ATLAS-002` is the case near-duplicate detection cannot
