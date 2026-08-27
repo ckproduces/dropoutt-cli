@@ -299,32 +299,39 @@ def _iter_rows(ds, *, deadline: float, stall_seconds: float):
     A hung shard used to take the whole build down with it. The worker thread
     keeps the iterator, and the reader gives up on it rather than joining.
     """
-    q: queue.Queue = queue.Queue(maxsize=64)
+    q: queue.Queue = queue.Queue(maxsize=8)
     sentinel = object()
+    stop = threading.Event()
 
     def worker() -> None:
         try:
             for row in ds:
-                q.put(row)
-                if time.time() > deadline:
+                if stop.is_set() or time.time() > deadline:
                     break
+                q.put(row)
             q.put(sentinel)
         except Exception as exc:
             q.put(exc)
 
     threading.Thread(target=worker, daemon=True).start()
-    while True:
-        if time.time() > deadline:
-            raise TimeoutError("source wall-clock budget exhausted")
-        try:
-            item = q.get(timeout=min(stall_seconds, max(1.0, deadline - time.time())))
-        except queue.Empty:
-            raise TimeoutError(f"no row within {stall_seconds:.0f}s") from None
-        if item is sentinel:
-            return
-        if isinstance(item, Exception):
-            raise item
-        yield item
+    try:
+        while True:
+            if time.time() > deadline:
+                raise TimeoutError("source wall-clock budget exhausted")
+            try:
+                item = q.get(timeout=min(stall_seconds, max(1.0, deadline - time.time())))
+            except queue.Empty:
+                raise TimeoutError(f"no row within {stall_seconds:.0f}s") from None
+            if item is sentinel:
+                return
+            if isinstance(item, Exception):
+                raise item
+            yield item
+    finally:
+        stop.set()
+        with suppress(queue.Empty):
+            while True:
+                q.get_nowait()
 
 
 def iter_local(src: Source, *, deadline: float):

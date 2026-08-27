@@ -12,6 +12,7 @@ Production builds keep ``TARGET_ROWS`` (5× atlas-v1-lite's 2,125,556 records).
 from __future__ import annotations
 
 import argparse
+import gc
 import hashlib
 import json
 import math
@@ -19,6 +20,7 @@ import os
 import sys
 import time
 from collections import Counter, defaultdict
+from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
 
@@ -43,7 +45,7 @@ from dropoutt.atlas.profiles import ATLAS_V2, ATLAS_V2_LITE, AtlasProfile
 
 
 SEED = 42
-BLOCK = 2_048
+BLOCK = 512
 MIN_COMMUNITY = 200
 HNSW_M = 32
 HNSW_EF_CONSTRUCTION = 200
@@ -55,12 +57,14 @@ FULL_PROTOTYPES, LITE_PROTOTYPES = 32, 12
 FULL_KNOTS, LITE_KNOTS = 50, 33
 FULL_COOCCURRENCE, LITE_COOCCURRENCE = 48, 24
 FULL_TERMS, LITE_TERMS = 64, 32
-RESERVOIR_FULL = 500_000
-RESERVOIR_LITE = 250_000
+RESERVOIR_FULL = 80_000
+RESERVOIR_LITE = 130_000
 IDF_WARMUP = 500_000
 GROW_ROWS = 250_000
+CHECKPOINT_EVERY = 25_000
 SOURCE_BUDGET_S = 1_800.0
 SOURCE_STALL_S = 600.0
+HASH_SLOTS = 1 << 24  # 16M × 8 bytes = 128 MiB; load factor ~0.65 at 10.6M rows
 
 
 def log(message: str) -> None:
@@ -123,6 +127,39 @@ def _intern(table: list[str], index: dict[str, int], value: str) -> int:
     return slot
 
 
+class Uint64Set:
+    """Open-addressing set of uint64 hashes in a memmap. No Python per-key objects."""
+
+    def __init__(self, path: Path, slots: int = HASH_SLOTS) -> None:
+        self.slots = slots
+        nbytes = slots * 8
+        if path.exists() and path.stat().st_size == nbytes:
+            self.table = np.memmap(path, dtype=np.uint64, mode="r+", shape=(slots,))
+        else:
+            self.table = np.memmap(path, dtype=np.uint64, mode="w+", shape=(slots,))
+            self.table[:] = 0
+            self.table.flush()
+
+    def add(self, key: int) -> bool:
+        if key == 0:
+            key = 1
+        mask = self.slots - 1
+        i = key & mask
+        table = self.table
+        for _ in range(64):
+            cur = int(table[i])
+            if cur == 0:
+                table[i] = key
+                return True
+            if cur == key:
+                return False
+            i = (i + 1) & mask
+        raise RuntimeError("hash set probe failed")
+
+    def flush(self) -> None:
+        self.table.flush()
+
+
 class Reservoir:
     """Algorithm R. Stores a bounded sample of (row, text, axis, language, source)."""
 
@@ -140,6 +177,25 @@ class Reservoir:
         j = int(self.rng.integers(0, self.seen))
         if j < self.size:
             self.items[j] = (row, text, axis, language, source)
+
+    def save(self, path: Path) -> None:
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        with tmp.open("w", encoding="utf-8") as handle:
+            handle.write(json.dumps({"size": self.size, "seen": self.seen}) + "\n")
+            for item in self.items:
+                handle.write(json.dumps(item, ensure_ascii=False) + "\n")
+        tmp.replace(path)
+
+    @classmethod
+    def load(cls, path: Path, size: int, seed: int) -> Reservoir:
+        reservoir = cls(size, seed)
+        if not path.is_file():
+            return reservoir
+        with path.open(encoding="utf-8") as handle:
+            header = json.loads(handle.readline())
+            reservoir.seen = int(header["seen"])
+            reservoir.items = [tuple(json.loads(line)) for line in handle if line.strip()]
+        return reservoir
 
 
 class DiskCorpus:
@@ -218,6 +274,40 @@ class DiskCorpus:
         for array in (self.emb, self.axis_ids, self.lang_ids, self.src_ids):
             if array is not None:
                 array.flush()
+
+    def save_checkpoint(self, consumed: set[str], logical: int, token_counts: np.ndarray) -> None:
+        self.flush()
+        np.save(self.work / "token_counts.npy", token_counts)
+        payload = {
+            "n": self.n, "cap": self.cap, "logical": logical,
+            "axis_table": self.axis_table, "lang_table": self.lang_table,
+            "src_table": self.src_table, "consumed": sorted(consumed),
+        }
+        path = self.work / "checkpoint.json"
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+        tmp.replace(path)
+
+    def load_checkpoint(self) -> tuple[set[str], int, np.ndarray | None]:
+        path = self.work / "checkpoint.json"
+        if not path.is_file() or not (self.work / "emb.f16").is_file():
+            return set(), 0, None
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        self.n = int(payload["n"])
+        self.cap = int(payload["cap"])
+        self.axis_table = list(payload["axis_table"])
+        self.lang_table = list(payload["lang_table"])
+        self.src_table = list(payload["src_table"])
+        self._axis_ix = {name: i for i, name in enumerate(self.axis_table)}
+        self._lang_ix = {name: i for i, name in enumerate(self.lang_table)}
+        self._src_ix = {name: i for i, name in enumerate(self.src_table)}
+        self.emb = np.memmap(self.work / "emb.f16", dtype=np.float16, mode="r+", shape=(self.cap, self.dim))
+        self.axis_ids = np.memmap(self.work / "axis.u8", dtype=np.uint8, mode="r+", shape=(self.cap,))
+        self.lang_ids = np.memmap(self.work / "lang.u8", dtype=np.uint8, mode="r+", shape=(self.cap,))
+        self.src_ids = np.memmap(self.work / "src.u16", dtype=np.uint16, mode="r+", shape=(self.cap,))
+        counts_path = self.work / "token_counts.npy"
+        counts = np.load(counts_path) if counts_path.is_file() else None
+        return set(payload["consumed"]), int(payload["logical"]), counts
 
 
 def fit_normalization(vectors: np.ndarray, languages: list[str],
@@ -481,7 +571,7 @@ def _encode(embedder, token_ids: np.ndarray, indptr: np.ndarray) -> np.ndarray:
     ))
 
 
-def _prepare_batch(raw_texts: list[str], axes: list[str], seen: set[bytes]) -> tuple[list[str], list[int]]:
+def _prepare_batch(raw_texts: list[str], axes: list[str], seen: Uint64Set) -> tuple[list[str], list[int]]:
     kept_texts: list[str] = []
     kept_index: list[int] = []
     for i, (raw, axis) in enumerate(zip(raw_texts, axes, strict=True)):
@@ -489,10 +579,9 @@ def _prepare_batch(raw_texts: list[str], axes: list[str], seen: set[bytes]) -> t
         text = text[:ATLAS_V2.max_chars]
         if len(text) < 80:
             continue
-        digest = hashlib.blake2b(text.lower().encode("utf-8"), digest_size=8).digest()
-        if digest in seen:
+        digest = int.from_bytes(hashlib.blake2b(text.lower().encode("utf-8"), digest_size=8).digest(), "little")
+        if not seen.add(digest):
             continue
-        seen.add(digest)
         kept_texts.append(text)
         kept_index.append(i)
     return kept_texts, kept_index
@@ -563,7 +652,7 @@ def _source_language(src: Source) -> str:
     return lang
 
 
-def _scan_cache_for_idf(cache: Path, embedder, counts: np.ndarray, seen: set[bytes]) -> int:
+def _scan_cache_for_idf(cache: Path, embedder, counts: np.ndarray, seen: Uint64Set) -> int:
     """Tokenize existing shards once so SIF has a frozen IDF before encoding."""
     scanned = 0
     for src in SOURCES:
@@ -594,7 +683,7 @@ def _consume_cache(
     cache: Path,
     corpus: DiskCorpus,
     embedder,
-    seen: set[bytes],
+    seen: Uint64Set,
     reservoir: Reservoir,
     lite_reservoir: Reservoir,
     token_counts: np.ndarray,
@@ -651,7 +740,7 @@ def _stream_source(
     src: Source,
     corpus: DiskCorpus,
     embedder,
-    seen: set[bytes],
+    seen: Uint64Set,
     reservoir: Reservoir,
     lite_reservoir: Reservoir,
     token_counts: np.ndarray,
@@ -659,6 +748,7 @@ def _stream_source(
     row_limit: int,
     byte_limit: int | None,
     hf_home: Path,
+    persist: Callable[[int], None] | None = None,
 ) -> tuple[int, int]:
     rows = 0
     logical = 0
@@ -669,6 +759,7 @@ def _stream_source(
     language = _source_language(src)
     remaining_rows = row_limit
     remaining_bytes = byte_limit
+    last_persist = corpus.n
     try:
         for text in fetch_corpus.iter_streamed_texts(
             src, budget=SOURCE_BUDGET_S, stall=SOURCE_STALL_S,
@@ -693,6 +784,9 @@ def _stream_source(
                     reservoir, lite_reservoir, token_counts,
                 )
             batch_text, batch_axis, batch_lang, batch_src = [], [], [], []
+            if persist is not None and corpus.n - last_persist >= CHECKPOINT_EVERY:
+                persist(logical)
+                last_persist = corpus.n
             if byte_limit is not None and logical >= byte_limit:
                 break
             if rows >= row_limit:
@@ -711,6 +805,7 @@ def _stream_source(
     finally:
         fetch_corpus.wipe_tree(hf_home)
         hf_home.mkdir(parents=True, exist_ok=True)
+        gc.collect()
     return rows, logical
 
 
@@ -917,38 +1012,64 @@ def main() -> int:
     ledger_path = args.source_ledger or args.work / "source-ledger.json"
     hf_home = args.work / "hf"
 
+    os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+    os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
+    os.environ.setdefault("HF_DATASETS_DISABLE_PROGRESS_BARS", "1")
+    os.environ.setdefault("HF_DATASETS_MULTIPROCESSING_MAX_WORKERS", "0")
     log(f"atlas-v2 stream build  target={target_rows:,} rows (5× v1)  scale={scale}  work={args.work}")
     embedder = load_embedder(DEFAULT_MODEL, out_dim=ATLAS_V2.dim)
     if embedder is None or embedder.dim < ATLAS_V2.dim:
         raise SystemExit("atlas-v2 requires the 256-column quantized encoder cache")
 
     corpus = DiskCorpus(args.work, ATLAS_V2.dim)
-    seen: set[bytes] = set()
-    reservoir = Reservoir(RESERVOIR_FULL, SEED)
-    lite_reservoir = Reservoir(RESERVOIR_LITE, SEED + 1)
+    seen = Uint64Set(args.work / "seen.u64")
+    reservoir = Reservoir.load(args.work / "reservoir.jsonl", RESERVOIR_FULL, SEED)
+    lite_reservoir = Reservoir.load(args.work / "lite-reservoir.jsonl", RESERVOIR_LITE, SEED + 1)
     token_counts = np.zeros(embedder.vocab_size, dtype=np.int64)
     t0 = time.time()
-
-    idf_seen: set[bytes] = set()
-    log("phase 1: IDF from any cached shards")
-    warmed = _scan_cache_for_idf(args.cache, embedder, token_counts, idf_seen)
+    consumed, logical, saved_counts = corpus.load_checkpoint()
+    if saved_counts is not None and saved_counts.shape == token_counts.shape:
+        token_counts = saved_counts
     mapping, idf_tables, mass = _idf_from_counts(token_counts)
-    if warmed < IDF_WARMUP:
-        log(f"  cache only supplied {warmed:,} unique texts; SIF will refine during ingest")
     sif = embedder.bind_idf(mapping) if mapping else embedder
-    log(f"  IDF types={len(mapping):,} token-mass={mass:.4f}  {time.time() - t0:.0f}s")
+    idf_frozen = bool(mapping)
 
-    log("phase 2: encode cached shards and delete them")
-    # Re-run exact-hash against a fresh set so phase 1's seen does not hide rows.
-    seen = set()
-    _, logical, consumed = _consume_cache(
-        args.cache, corpus, sif, seen, reservoir, lite_reservoir, token_counts,
-    )
-    mapping, idf_tables, mass = _idf_from_counts(token_counts)
-    sif = embedder.bind_idf(mapping) if mapping else sif
-    fetch_corpus.wipe_tree(args.cache)
-    args.cache.mkdir(parents=True, exist_ok=True)
-    log(f"  after cache: {corpus.n:,} rows, {logical / (1024 ** 3):.2f} GiB, IDF mass={mass:.4f}")
+    def persist(extra_logical: int = 0) -> None:
+        corpus.save_checkpoint(consumed, logical + extra_logical, token_counts)
+        seen.flush()
+
+    def persist_all(extra_logical: int = 0) -> None:
+        persist(extra_logical)
+        reservoir.save(args.work / "reservoir.jsonl")
+        lite_reservoir.save(args.work / "lite-reservoir.jsonl")
+
+    if corpus.n:
+        log(f"resume at {corpus.n:,} rows, {len(consumed)} sources already consumed")
+    else:
+        log("phase 1: IDF from any cached shards")
+        idf_seen_path = args.work / "seen-idf.u64"
+        idf_seen = Uint64Set(idf_seen_path)
+        warmed = _scan_cache_for_idf(args.cache, embedder, token_counts, idf_seen)
+        del idf_seen
+        idf_seen_path.unlink(missing_ok=True)
+        mapping, idf_tables, mass = _idf_from_counts(token_counts)
+        if warmed < IDF_WARMUP:
+            log(f"  cache only supplied {warmed:,} unique texts; SIF will refine during ingest")
+        sif = embedder.bind_idf(mapping) if mapping else embedder
+        idf_frozen = bool(mapping)
+        log(f"  IDF types={len(mapping):,} token-mass={mass:.4f}  {time.time() - t0:.0f}s")
+
+        log("phase 2: encode cached shards and delete them")
+        _, logical, consumed = _consume_cache(
+            args.cache, corpus, sif, seen, reservoir, lite_reservoir, token_counts,
+        )
+        mapping, idf_tables, mass = _idf_from_counts(token_counts)
+        sif = embedder.bind_idf(mapping) if mapping else sif
+        idf_frozen = bool(mapping)
+        fetch_corpus.wipe_tree(args.cache)
+        args.cache.mkdir(parents=True, exist_ok=True)
+        persist_all()
+        log(f"  after cache: {corpus.n:,} rows, {logical / (1024 ** 3):.2f} GiB, IDF mass={mass:.4f}")
 
     log("phase 3: stream remaining sources one at a time")
     with fetch_corpus.isolate_hf_home(hf_home):
@@ -960,15 +1081,18 @@ def main() -> int:
             row_limit = min(max(50, int(src.target * scale)), target_rows - corpus.n)
             added_rows, added_bytes = _stream_source(
                 src, corpus, sif, seen, reservoir, lite_reservoir, token_counts,
-                row_limit=row_limit, byte_limit=None, hf_home=hf_home,
+                row_limit=row_limit, byte_limit=None, hf_home=hf_home, persist=persist,
             )
             logical += added_bytes
+            consumed.add(src.slug)
             log(f"  stream {src.slug[:52]:<52} +{added_rows:,}  total {corpus.n:,}/{target_rows:,}")
-            corpus.flush()
-            if corpus.n and corpus.n % 50_000 < BLOCK:
+            persist_all()
+            if not idf_frozen and corpus.n >= IDF_WARMUP:
                 mapping, idf_tables, mass = _idf_from_counts(token_counts)
                 if mapping:
                     sif = embedder.bind_idf(mapping)
+                    idf_frozen = True
+                    log(f"  froze IDF at {corpus.n:,} rows, {len(mapping):,} types")
 
         if corpus.n < target_rows:
             log("phase 3b: FineWeb-2 supplemental to the row target")
@@ -980,13 +1104,17 @@ def main() -> int:
             for src in extras:
                 if corpus.n >= target_rows:
                     break
+                if src.slug in consumed:
+                    continue
                 added_rows, added_bytes = _stream_source(
                     src, corpus, sif, seen, reservoir, lite_reservoir, token_counts,
                     row_limit=target_rows - corpus.n, byte_limit=None, hf_home=hf_home,
+                    persist=persist,
                 )
                 logical += added_bytes
+                consumed.add(src.slug)
                 log(f"  supp  {src.slug[:52]:<52} +{added_rows:,}  total {corpus.n:,}/{target_rows:,}")
-                corpus.flush()
+                persist_all()
 
     fetch_corpus.wipe_tree(hf_home)
     mapping, idf_tables, mass = _idf_from_counts(token_counts)

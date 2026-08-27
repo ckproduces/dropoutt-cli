@@ -61,3 +61,39 @@ def test_sbatch_declares_the_approved_single_node_resources():
         "TARGET_ROWS=10627780", "--scale 3.0",
     ):
         assert expected in text
+
+
+def test_uint64_set_accepts_once(tmp_path):
+    seen = builder.Uint64Set(tmp_path / "seen.u64", slots=1024)
+    assert seen.add(7)
+    assert not seen.add(7)
+    assert seen.add(8)
+
+
+def test_disk_corpus_checkpoint_roundtrip(tmp_path):
+    corpus = builder.DiskCorpus(tmp_path, dim=4)
+    corpus.append(np.ones((3, 4), np.float32), ["web"] * 3, ["en"] * 3, ["src"] * 3)
+    counts = np.arange(6, dtype=np.int64)
+    corpus.save_checkpoint({"used"}, 99, counts)
+
+    restored = builder.DiskCorpus(tmp_path, dim=4)
+    consumed, logical, loaded = restored.load_checkpoint()
+
+    assert restored.n == 3
+    assert consumed == {"used"}
+    assert logical == 99
+    np.testing.assert_array_equal(loaded, counts)
+    np.testing.assert_allclose(restored.rows_f32(np.array([0])), np.ones((1, 4)))
+
+
+def test_reservoir_roundtrip(tmp_path):
+    path = tmp_path / "reservoir.jsonl"
+    reservoir = builder.Reservoir(4, 0)
+    reservoir.offer(1, "a", "web", "en", "s")
+    reservoir.offer(2, "b", "code", "tr", "t")
+    reservoir.save(path)
+
+    loaded = builder.Reservoir.load(path, 4, 0)
+
+    assert loaded.seen == 2
+    assert loaded.items == [(1, "a", "web", "en", "s"), (2, "b", "code", "tr", "t")]
