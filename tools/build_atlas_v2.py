@@ -64,7 +64,8 @@ GROW_ROWS = 250_000
 CHECKPOINT_EVERY = 25_000
 SOURCE_BUDGET_S = 1_800.0
 SOURCE_STALL_S = 600.0
-HASH_SLOTS = 1 << 24  # 16M × 8 bytes = 128 MiB; load factor ~0.65 at 10.6M rows
+HASH_SLOTS = 1 << 25  # 32M × 8 bytes = 256 MiB; load factor ~0.32 at 10.6M rows
+PROBE_LIMIT = 4096
 
 
 def log(message: str) -> None:
@@ -131,30 +132,56 @@ class Uint64Set:
     """Open-addressing set of uint64 hashes in a memmap. No Python per-key objects."""
 
     def __init__(self, path: Path, slots: int = HASH_SLOTS) -> None:
+        self.path = path
         self.slots = slots
         nbytes = slots * 8
         if path.exists() and path.stat().st_size == nbytes:
             self.table = np.memmap(path, dtype=np.uint64, mode="r+", shape=(slots,))
-        else:
-            self.table = np.memmap(path, dtype=np.uint64, mode="w+", shape=(slots,))
-            self.table[:] = 0
-            self.table.flush()
+            return
+        previous = None
+        if path.exists() and path.stat().st_size >= 8:
+            previous = np.memmap(path, dtype=np.uint64, mode="r")
+            log(f"  rehashing {path.name} {previous.size:,} -> {slots:,} slots")
+        tmp = path.with_suffix(path.suffix + ".new")
+        self.table = np.memmap(tmp, dtype=np.uint64, mode="w+", shape=(slots,))
+        self.table[:] = 0
+        if previous is not None:
+            occupied = np.asarray(previous)
+            for key in occupied[occupied != 0]:
+                self._insert(int(key), grow=False)
+            del previous
+        self.table.flush()
+        del self.table
+        tmp.replace(path)
+        self.table = np.memmap(path, dtype=np.uint64, mode="r+", shape=(slots,))
 
     def add(self, key: int) -> bool:
+        return self._insert(key, grow=True)
+
+    def _insert(self, key: int, *, grow: bool) -> bool:
         if key == 0:
             key = 1
         mask = self.slots - 1
-        i = key & mask
         table = self.table
-        for _ in range(64):
+        i = key & mask
+        step = ((key >> 33) | 1) & mask
+        for _ in range(min(PROBE_LIMIT, self.slots)):
             cur = int(table[i])
             if cur == 0:
                 table[i] = key
                 return True
             if cur == key:
                 return False
-            i = (i + 1) & mask
+            i = (i + step) & mask
+        if grow:
+            self._grow()
+            return self._insert(key, grow=False)
         raise RuntimeError("hash set probe failed")
+
+    def _grow(self) -> None:
+        bigger = Uint64Set(self.path, slots=self.slots * 2)
+        self.slots = bigger.slots
+        self.table = bigger.table
 
     def flush(self) -> None:
         self.table.flush()

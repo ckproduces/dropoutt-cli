@@ -70,6 +70,20 @@ def test_uint64_set_accepts_once(tmp_path):
     assert seen.add(8)
 
 
+def test_uint64_set_rehashes_smaller_file(tmp_path):
+    path = tmp_path / "seen.u64"
+    small = builder.Uint64Set(path, slots=1024)
+    assert small.add(7)
+    assert small.add(99)
+    small.flush()
+    del small
+
+    bigger = builder.Uint64Set(path, slots=2048)
+    assert not bigger.add(7)
+    assert not bigger.add(99)
+    assert bigger.add(8)
+
+
 def test_disk_corpus_checkpoint_roundtrip(tmp_path):
     corpus = builder.DiskCorpus(tmp_path, dim=4)
     corpus.append(np.ones((3, 4), np.float32), ["web"] * 3, ["en"] * 3, ["src"] * 3)
