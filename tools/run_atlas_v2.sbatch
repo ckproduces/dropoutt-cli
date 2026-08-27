@@ -28,7 +28,7 @@ LOCK="$RELEASE/atlas-v2-build.lock"
 LOG="$PERSISTENT_LOG_DIR/atlas-v2-$JOB_ID.log"
 REPO_HASH="${ATLAS_REPOSITORY_HASH:?set ATLAS_REPOSITORY_HASH to the staged source hash}"
 SOURCE_ARCHIVE="${ATLAS_SOURCE_ARCHIVE:?set ATLAS_SOURCE_ARCHIVE to the staged source archive}"
-TARGET_BYTES=42949672960
+TARGET_ROWS=10627780
 
 mkdir -p "$PERSISTENT_LOG_DIR"
 exec > >(tee -a "$LOG") 2>&1
@@ -94,8 +94,8 @@ python tools/build_atlas_v2.py \
     --work "$WORK" \
     --out-dir "$RELEASE" \
     --source-ledger "$LEDGER" \
-    --scale 1.0 \
-    --target-logical-bytes "$TARGET_BYTES"
+    --scale 3.0 \
+    --target-rows "$TARGET_ROWS"
 
 python -m pytest -q tests/test_atlas_v2_builder.py
 sha256sum "$RELEASE/atlas-v2.npz" "$RELEASE/atlas-v2-lite.npz" \

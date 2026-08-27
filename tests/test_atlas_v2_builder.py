@@ -58,6 +58,6 @@ def test_sbatch_declares_the_approved_single_node_resources():
         "#SBATCH --account=c00005", "#SBATCH --partition=a100q",
         "#SBATCH --nodes=1", "#SBATCH --ntasks=1", "#SBATCH --cpus-per-task=64",
         "#SBATCH --gres=gpu:1", "#SBATCH --mem=480G", "#SBATCH --time=10-00:00:00",
-        "TARGET_BYTES=42949672960", "--scale 1.0",
+        "TARGET_ROWS=10627780", "--scale 3.0",
     ):
         assert expected in text

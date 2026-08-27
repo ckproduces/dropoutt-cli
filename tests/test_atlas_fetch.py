@@ -15,8 +15,9 @@ import fetch_corpus
 
 def test_baseline_catalogue_is_pinned_and_scaled() -> None:
     assert atlas_sources.BASELINE_CATALOGUE_COMMIT == "dc12d8a"
-    assert atlas_sources.BASELINE_SCALE == 1.0
-    assert atlas_sources.LOGICAL_BYTE_TARGET == 40 * 1024 ** 3
+    assert atlas_sources.BASELINE_SCALE == 3.0
+    assert atlas_sources.V1_REFERENCE_RECORDS == 2_125_556
+    assert atlas_sources.TARGET_ROWS == 10_627_780
     assert len(atlas_sources.FINEWEB2_BASELINE) == 69
     assert len(atlas_sources.SOURCES) == 184
     assert sum(source.target for source in atlas_sources.SOURCES) == 3_521_110

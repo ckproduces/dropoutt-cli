@@ -882,7 +882,7 @@ def main() -> int:
                     help="Concurrent sources (default 10). These are independent "
                          "HTTP streams; the wall clock is the slowest source, not the sum.")
     ap.add_argument("--scale", type=float, default=BASELINE_SCALE,
-                    help="Multiply the dc12d8a baseline row targets (default 1.0).")
+                    help="Multiply the dc12d8a baseline row targets (default 3.0).")
     ap.add_argument("--target-logical-bytes", type=int, default=LOGICAL_BYTE_TARGET,
                     help="Retained UTF-8 text-byte target before JSON framing or compression.")
     ap.add_argument("--source-ledger", type=Path, default=None,

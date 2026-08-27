@@ -22,10 +22,12 @@ from dataclasses import dataclass, field
 
 # The specialised axes stay on the dc12d8a catalogue. Multilingual web mass
 # comes from FineWeb-2: each language below is a first-class baseline source,
-# and unused FineWeb-2 parquet shards of the same languages fill the byte
+# and unused FineWeb-2 parquet shards of the same languages fill the row
 # target. English web is FineWeb / FineWeb-edu; FineWeb-2 has no English.
 BASELINE_CATALOGUE_COMMIT = "dc12d8a"
-BASELINE_SCALE = 1.0
+V1_REFERENCE_RECORDS = 2_125_556
+TARGET_ROWS = 5 * V1_REFERENCE_RECORDS
+BASELINE_SCALE = 3.0
 LOGICAL_BYTE_TARGET = 40 * 1024 ** 3
 
 # (iso-639-1, FineWeb-2 language_script, row target). Paths stay

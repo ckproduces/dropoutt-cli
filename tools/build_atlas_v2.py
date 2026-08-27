@@ -5,7 +5,7 @@ Sources are streamed one at a time, embedded, then deleted. The only durable
 working set is a float16 embedding memmap plus compact row metadata. Cached
 JSONL shards from an earlier fetch are consumed first and removed immediately.
 
-Production builds target ``LOGICAL_BYTE_TARGET`` (40 GiB of retained UTF-8).
+Production builds keep ``TARGET_ROWS`` (5× atlas-v1-lite's 2,125,556 records).
 ``--allow-small-corpus`` is the synthetic-fixture escape hatch.
 """
 
@@ -31,9 +31,9 @@ sys.path.insert(0, str(ROOT / "tools"))
 import fetch_corpus
 from atlas_sources import (
     AXIS_FLOORS,
-    LOGICAL_BYTE_TARGET,
     NON_ENGLISH_FLOOR,
     SOURCES,
+    TARGET_ROWS,
     Source,
 )
 from dropoutt.atlas.embed import DEFAULT_MODEL, TokenizedCorpus, load as load_embedder
@@ -905,19 +905,19 @@ def main() -> int:
     parser.add_argument("--work", type=Path, default=ROOT / ".atlas-work")
     parser.add_argument("--out-dir", type=Path, default=ROOT / "src" / "dropoutt" / "data" / "atlas")
     parser.add_argument("--source-ledger", type=Path)
-    parser.add_argument("--target-logical-bytes", type=int, default=LOGICAL_BYTE_TARGET)
+    parser.add_argument("--target-rows", type=int, default=TARGET_ROWS)
     parser.add_argument("--scale", type=float, default=None)
     parser.add_argument("--allow-small-corpus", action="store_true")
     args = parser.parse_args()
     from atlas_sources import BASELINE_SCALE
     scale = BASELINE_SCALE if args.scale is None else args.scale
-    target_bytes = args.target_logical_bytes
+    target_rows = args.target_rows
     args.work.mkdir(parents=True, exist_ok=True)
     args.out_dir.mkdir(parents=True, exist_ok=True)
     ledger_path = args.source_ledger or args.work / "source-ledger.json"
     hf_home = args.work / "hf"
 
-    log(f"atlas-v2 stream build  target={target_bytes / (1024 ** 3):.1f} GiB  scale={scale}  work={args.work}")
+    log(f"atlas-v2 stream build  target={target_rows:,} rows (5× v1)  scale={scale}  work={args.work}")
     embedder = load_embedder(DEFAULT_MODEL, out_dim=ATLAS_V2.dim)
     if embedder is None or embedder.dim < ATLAS_V2.dim:
         raise SystemExit("atlas-v2 requires the 256-column quantized encoder cache")
@@ -953,49 +953,47 @@ def main() -> int:
     log("phase 3: stream remaining sources one at a time")
     with fetch_corpus.isolate_hf_home(hf_home):
         for src in SOURCES:
-            if logical >= target_bytes:
+            if corpus.n >= target_rows:
                 break
             if src.slug in consumed:
                 continue
-            row_limit = max(50, int(src.target * scale))
-            remaining = target_bytes - logical
+            row_limit = min(max(50, int(src.target * scale)), target_rows - corpus.n)
             added_rows, added_bytes = _stream_source(
                 src, corpus, sif, seen, reservoir, lite_reservoir, token_counts,
-                row_limit=row_limit, byte_limit=remaining, hf_home=hf_home,
+                row_limit=row_limit, byte_limit=None, hf_home=hf_home,
             )
             logical += added_bytes
-            log(f"  stream {src.slug[:52]:<52} +{added_rows:,}  total {corpus.n:,}  {logical / (1024 ** 3):.2f} GiB")
+            log(f"  stream {src.slug[:52]:<52} +{added_rows:,}  total {corpus.n:,}/{target_rows:,}")
             corpus.flush()
             if corpus.n and corpus.n % 50_000 < BLOCK:
                 mapping, idf_tables, mass = _idf_from_counts(token_counts)
                 if mapping:
                     sif = embedder.bind_idf(mapping)
 
-        if logical < target_bytes:
-            log("phase 3b: FineWeb-2 supplemental to the byte target")
+        if corpus.n < target_rows:
+            log("phase 3b: FineWeb-2 supplemental to the row target")
             try:
                 extras = list(fetch_corpus.iter_supplemental_sources())
             except Exception as exc:
                 log(f"  supplemental listing failed: {exc}")
                 extras = []
             for src in extras:
-                if logical >= target_bytes:
+                if corpus.n >= target_rows:
                     break
-                remaining = target_bytes - logical
                 added_rows, added_bytes = _stream_source(
                     src, corpus, sif, seen, reservoir, lite_reservoir, token_counts,
-                    row_limit=10**9, byte_limit=remaining, hf_home=hf_home,
+                    row_limit=target_rows - corpus.n, byte_limit=None, hf_home=hf_home,
                 )
                 logical += added_bytes
-                log(f"  supp  {src.slug[:52]:<52} +{added_rows:,}  total {corpus.n:,}  {logical / (1024 ** 3):.2f} GiB")
+                log(f"  supp  {src.slug[:52]:<52} +{added_rows:,}  total {corpus.n:,}/{target_rows:,}")
                 corpus.flush()
 
     fetch_corpus.wipe_tree(hf_home)
     mapping, idf_tables, mass = _idf_from_counts(token_counts)
     if corpus.n < max(ATLAS_V2.n_l1, 2 * MIN_COMMUNITY) and not args.allow_small_corpus:
         raise SystemExit(f"post-ingest corpus is too small: {corpus.n} rows")
-    if logical < target_bytes and not args.allow_small_corpus:
-        log(f"warning: only {logical:,} logical bytes of {target_bytes:,}; clustering what we have")
+    if corpus.n < target_rows and not args.allow_small_corpus:
+        log(f"warning: only {corpus.n:,} rows of {target_rows:,}; clustering what we have")
 
     languages = corpus.languages()
     axes = corpus.axes()
@@ -1059,7 +1057,7 @@ def main() -> int:
         [{"slug": slug, "rows": int((np.asarray(corpus.src_ids[:corpus.n]) == i).sum()),
           "logical_bytes": 0, "status": "streamed", "source_role": "baseline"}
          for i, slug in enumerate(corpus.src_table)],
-        {"scale": scale, "target_logical_bytes": target_bytes, "streamed": True},
+        {"scale": scale, "target_rows": target_rows, "streamed": True},
     )
     log(f"done in {time.time() - t0:.0f}s")
     log(f"  atlas-v2      {full['meta']['n_regions']} cells  {full['artifact'].stat().st_size / 1e6:.1f} MB")
