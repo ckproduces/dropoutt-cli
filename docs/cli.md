@@ -160,25 +160,30 @@ cannot be honoured in three formats and forgotten in the fourth.
 
 Place a corpus on the atlas and draw where it sits.
 
-The atlas is a frozen coordinate system, not a collection of good datasets: one
-map of 215 subregions across 48 subject areas, fitted once on public data, so
-two corpora placed on it can be compared and a gap can be named. A typical
+The atlas is a frozen coordinate system, not a collection of good datasets: two
+maps fitted once on public data (`atlas-v2` and `atlas-v2-lite`), so two corpora
+placed on the same product can be compared and a gap can be named. A typical
 coverage plot fits UMAP or k-means on the sample in front of it, which means the
 next folder gets a new projection and neighbourhoods stop meaning the same
 thing. This command only assigns your records to bins that already exist.
 
+Without `--model`, the command asks which product to use (arrow keys, then
+enter). `--model atlas-v2` and `--model atlas-v2-lite` start immediately. In a
+pipe or CI job there is no picker: pass `--model`.
+
 It reads the same files a scan reads, in the same way, and samples the same
 records — placement and a scan of the same corpus see the same sample. What it
-does with them is different: every sampled record goes through a 128-dimensional
-static encoder, which is the one part of the old scan whose cost had nothing to
-do with the checks, and which has to be downloaded on first use. `dropoutt fetch`
-gets it ahead of time; after that `--offline` works.
+does with them is different: every sampled record goes through a static encoder,
+which is the one part of the old scan whose cost had nothing to do with the
+checks, and which has to be downloaded on first use. `dropoutt fetch` gets it
+ahead of time; after that `--offline` works.
 
 | flag | default | meaning |
 | --- | --- | --- |
+| `--model`, `--atlas` | asked in the terminal | `atlas-v2` (256-d) or `atlas-v2-lite` (16-d) |
 | `--out`, `-o` | `<path>/.dropoutt` | output directory |
 | `--offline` | off | never touch the network; resolve the encoder from the cache |
-| `--sample` | 200,000 | records to place, or the corpus if it is smaller |
+| `--sampling`, `--sample` | the product's default (50,000 lite / 200,000 full) | records to place. `0` = all records. Larger than the corpus is the same as `0` |
 | `--limit` | none | max records per file, for a fast look |
 | `--no-html` | off | skip the HTML page |
 | `--no-open` | off | do not open the page when the run finishes |
@@ -188,15 +193,16 @@ gets it ahead of time; after that `--offline` works.
 
 ```bash
 dropoutt atlas ./data
-dropoutt atlas ./data --sample 20000       # a coarser map, sooner
-dropoutt atlas ./data --offline            # encoder from the cache
-dropoutt atlas ./data --no-evidence -q     # nothing quoted, nothing printed
+dropoutt atlas --model atlas-v2 ./data
+dropoutt atlas --model atlas-v2-lite ./data --sampling 500
+dropoutt atlas ./data --sampling 0          # every record
+dropoutt atlas ./data --offline             # encoder from the cache
+dropoutt atlas ./data --no-evidence -q      # nothing quoted, nothing printed
 ```
 
-`--sample` is the resolution knob. The default places up to 200,000 records,
-which on a large corpus is the difference between a subject area decided by a
-hundred records and one decided by thousands. Lower it for a first look; the
-shape of the answer arrives long before the last digit of it does.
+`--sampling` is the resolution knob. Omit it and the selected product's default
+applies. `0` places every record that is long enough. A count larger than the
+corpus is the same as `0`.
 
 ### What it reports
 

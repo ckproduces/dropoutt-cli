@@ -65,6 +65,12 @@ ATLAS_V1_LITE = AtlasProfile(
 PROFILES = {profile.version: profile for profile in (ATLAS_V2, ATLAS_V2_LITE, ATLAS_V1_LITE)}
 DEFAULT_ATLAS_VERSION = ATLAS_V2_LITE.version
 
+#: Products the interactive picker offers. v1 stays loadable when named.
+PRODUCT_CHOICES = (
+    (ATLAS_V2_LITE.version, f"{ATLAS_V2_LITE.version}  — fast ({ATLAS_V2_LITE.dim}-d)"),
+    (ATLAS_V2.version, f"{ATLAS_V2.version}  — full ({ATLAS_V2.dim}-d)"),
+)
+
 
 def get_profile(version: str | None = None) -> AtlasProfile:
     """Return a declared atlas profile or reject unknown coordinate systems."""

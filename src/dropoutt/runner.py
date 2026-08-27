@@ -67,6 +67,10 @@ ATLAS_MIN_CHARS = 80
 #: target the sample is a few hundred megabytes of truncated text.
 ATLAS_SAMPLE_TARGET = 200_000
 
+#: CLI ``--sampling 0``: place every record that is long enough. Stored internally
+#: as a negative cap so a heap size of 0 still means "do not sample".
+ATLAS_UNLIMITED = -1
+
 #: Records priced by the tokenizer panel, corpus-wide. Deliberately not raised
 #: with the atlas: this sample is tokenized once per family in the panel, which
 #: is five passes of real tokenizers, and the quantity it estimates — tokens per
@@ -178,10 +182,12 @@ def scan(
     ctx.stats["total_chars"] = 0
     ctx.stats["total_words"] = 0
     ctx.stats["chars_by_dataset"] = {}
-    # Atlas sample is corpus-wide: min(total_records, 200_000). The token budget
-    # stays stratified per dataset — it estimates a ratio that converges early,
-    # and one huge dataset must not set the corpus-wide tokens-per-character.
-    atlas_sample_target = ATLAS_SAMPLE_TARGET if atlas_sample is None else atlas_sample
+    # Atlas sample is corpus-wide: min(total_records, target), or every record
+    # when the caller passed 0.
+    if atlas_sample == 0:
+        atlas_sample_target = ATLAS_UNLIMITED
+    else:
+        atlas_sample_target = ATLAS_SAMPLE_TARGET if atlas_sample is None else atlas_sample
 
     if tokenizer is not None and chat_template is not None:
         _probe_offsets(ctx, tokenizer, chat_template)
@@ -268,6 +274,9 @@ def scan(
         workers=workers,
         limit_per_file=limit_per_file,
         atlas_target=atlas_sample_target if atlas is not None else 0,
+        atlas_text_chars=(
+            atlas.profile.max_chars if atlas is not None and atlas.profile else 2_000
+        ),
         budget_target=BUDGET_SAMPLE_TARGET,
         datasets=len(disc.datasets),
         mean_record_bytes=mean_record_bytes,
@@ -287,6 +296,7 @@ def scan(
         minhash_preset=minhash_preset,
         limit_per_file=limit_per_file,
         atlas_cap=plan.atlas_cap,
+        atlas_text_chars=plan.atlas_text_chars,
         budget_caps=dict(plan.budget_caps),
         budget_cap=plan.budget_cap,
         want_atlas_sample=atlas is not None,
@@ -441,7 +451,10 @@ class ShardMerger:
         result.checks = {}
 
     def _offer_atlas(self, entry: tuple[int, str, str, int, str]) -> None:
-        if not self.atlas_cap:
+        if self.atlas_cap == 0:
+            return
+        if self.atlas_cap < 0:
+            self.atlas_heap.append(entry)
             return
         if len(self.atlas_heap) < self.atlas_cap:
             heapq.heappush(self.atlas_heap, entry)
@@ -474,7 +487,10 @@ class ShardMerger:
         atlas_sample: list[tuple[str, str, str, int, float]] = []
         too_short = 0
         atlas_rows = sorted(self.atlas_heap, reverse=True)
-        atlas_n = min(self.scanned, self.atlas_target, len(atlas_rows))
+        if self.atlas_target < 0:
+            atlas_n = len(atlas_rows)
+        else:
+            atlas_n = min(self.scanned, self.atlas_target, len(atlas_rows))
         selected = atlas_rows[:atlas_n]
         weight = (self.scanned / len(selected)) if selected else 1.0
         if ctx.atlas is not None:
@@ -527,13 +543,13 @@ def merge_shard_results(
     """Fold a complete list of shard results. Kept for callers holding a list.
 
     The plan carries the atlas target the shards were sized against, so a caller
-    that overrode it — `dropoutt atlas --sample` does — gets the same merged
+    that overrode it — `dropoutt atlas --sampling` does — gets the same merged
     sample here as `scan` would. Taking the default instead would silently trim
     to 200,000 on a run that asked for fewer and keep more than asked on a run
     that asked for more.
     """
     merger = ShardMerger(
-        ctx, active, disc, atlas_target=plan.sample_target or ATLAS_SAMPLE_TARGET
+        ctx, active, disc, atlas_target=plan.sample_target
     )
     for result in results:
         merger.feed(result)
@@ -790,8 +806,10 @@ def _soft_membership(atlas, cells, weights) -> dict:
                 "cell_id": int(c),
                 "share": round(float(mass[c] / total), 4),
                 "terms": terms[int(c)] if int(c) < len(terms) else "",
-                "l1_id": int(atlas.region_category[int(c)]),
-                "nameable": atlas.can_name_children(int(atlas.region_category[int(c)])),
+                **({} if atlas.flat_cells else {
+                    "l1_id": int(atlas.region_category[int(c)]),
+                    "nameable": atlas.can_name_children(int(atlas.region_category[int(c)])),
+                }),
             }
             for c in order
             if mass[c] > 0
@@ -844,7 +862,13 @@ def _compute_coverage(
     lengths = [row[3] for row in sample]
     weights = [row[4] if len(row) > 4 else 1.0 for row in sample]
     try:
-        emb = embedder.encode(texts)
+        profile = atlas.profile
+        emb = embedder.encode(
+            texts,
+            weighted=(profile.pooling == "sif") if profile is not None else None,
+            max_chars=profile.max_chars if profile is not None else None,
+            max_tokens=profile.max_tokens if profile is not None else 512,
+        )
         # One pass over the similarity matrix for all of it. The detected
         # language is passed in because the atlas may centre each record on its
         # own language's mean; when the shipped atlas does not do that, the

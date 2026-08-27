@@ -71,6 +71,7 @@ class Config:
     target: str | None = None
     seq_len: int | None = None
     tier: int = 1
+    atlas: str = "atlas-v2-lite"
     minhash_preset: str = "fineweb"
     mute: list[str] = field(default_factory=list)
     eval_sets: list[str] = field(default_factory=list)
@@ -79,7 +80,7 @@ class Config:
     def hash(self) -> str:
         return hash_many([
             str(self.model), self.profile, str(self.target), str(self.seq_len),
-            str(self.tier), self.minhash_preset, ",".join(sorted(self.mute)),
+            str(self.tier), self.atlas, self.minhash_preset, ",".join(sorted(self.mute)),
             ",".join(sorted(self.eval_sets)),
         ])
 
@@ -112,12 +113,16 @@ class Config:
         offline = scan.get("offline", False)
         if not isinstance(offline, bool):
             raise ValueError(f"{path}: scan.offline must be true or false")
+        atlas = scan.get("atlas", "atlas-v2-lite")
+        if not isinstance(atlas, str):
+            raise ValueError(f"{path}: scan.atlas must be a string")
         return cls(
             model=scan.get("model"),
             profile=scan.get("profile", "auto"),
             target=scan.get("target"),
             seq_len=scan.get("seq_len"),
             tier=scan.get("tier", 1),
+            atlas=atlas,
             minhash_preset=scan.get("minhash_preset", "fineweb"),
             mute=list(mute_checks),
             eval_sets=list(eval_sets),

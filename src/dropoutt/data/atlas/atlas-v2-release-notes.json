@@ -1,0 +1,36 @@
+{
+  "seed": 42,
+  "source_ledger": ".atlas-work/source-ledger.json",
+  "gates": {
+    "logical_bytes": 23576138659,
+    "idf_observed_token_mass": 1.0,
+    "non_english_share": 0.6671020664710786,
+    "axis_floors": {
+      "web": true,
+      "encyclopedic": true,
+      "code": true,
+      "instruction": true,
+      "math": true,
+      "scientific": true,
+      "dialogue": true,
+      "legal_finance": true,
+      "structured": true,
+      "mixture": true
+    },
+    "lite_records": 130000,
+    "n_records": 10627780,
+    "elapsed_s": 405.8
+  },
+  "artifacts": {
+    "atlas-v2": {
+      "path": "src/dropoutt/data/atlas/atlas-v2.npz",
+      "size_mb": 33.727685,
+      "n_regions": 689
+    },
+    "atlas-v2-lite": {
+      "path": "src/dropoutt/data/atlas/atlas-v2-lite.npz",
+      "size_mb": 0.27522,
+      "n_regions": 34
+    }
+  }
+}

@@ -357,7 +357,10 @@ def test_atlas_places_records_and_writes_the_map_in_every_shape(tmp_path):
         ),
         encoding="utf-8",
     )
-    result = runner.invoke(app, ["atlas", str(tmp_path), "--no-open", "--offline"])
+    result = runner.invoke(
+        app, ["atlas", str(tmp_path), "--model", "atlas-v2-lite",
+              "--no-open", "--offline"]
+    )
     assert result.exit_code == 0, plain(result.output)
 
     out = tmp_path / ".dropoutt"
@@ -387,11 +390,88 @@ def test_atlas_omits_evidence_everywhere_at_once(tmp_path):
         encoding="utf-8",
     )
     result = runner.invoke(
-        app, ["atlas", str(tmp_path), "--no-open", "--offline",
-              "--no-evidence", "--quiet"]
+        app, ["atlas", str(tmp_path), "--model", "atlas-v2-lite",
+              "--no-open", "--offline", "--no-evidence", "--quiet"]
     )
     assert result.exit_code == 0, plain(result.output)
     out = tmp_path / ".dropoutt"
     for name in ("atlas.html", "atlas.md", "atlas.json"):
         assert secret not in (out / name).read_text(), name
     assert secret not in plain(result.output)
+
+
+def test_atlas_without_a_model_asks_instead_of_guessing(tmp_path):
+    """A pipe is not a terminal, so the picker refuses rather than picking lite."""
+    (tmp_path / "data.jsonl").write_text('{"text": "hello there"}\n', encoding="utf-8")
+    result = runner.invoke(app, ["atlas", str(tmp_path), "--offline"])
+    assert result.exit_code == 2
+    assert "--model atlas-v2" in words(result.output)
+    assert "atlas-v2-lite" in words(result.output)
+
+
+def test_atlas_rejects_an_unknown_model(tmp_path):
+    (tmp_path / "data.jsonl").write_text('{"text": "hello there"}\n', encoding="utf-8")
+    result = runner.invoke(app, ["atlas", str(tmp_path), "--model", "atlas-v9"])
+    assert result.exit_code == 2
+    assert "Invalid atlas" in plain(result.output)
+
+
+def test_atlas_help_names_model_and_sampling():
+    result = runner.invoke(app, ["atlas", "--help"])
+    assert result.exit_code == 0
+    text = words(result.output)
+    assert "--model" in text
+    assert "--sampling" in text
+    assert "atlas-v2-lite" in text
+
+
+def test_atlas_sampling_rejects_a_negative_count(tmp_path):
+    (tmp_path / "data.jsonl").write_text('{"text": "hello there"}\n', encoding="utf-8")
+    result = runner.invoke(
+        app, ["atlas", str(tmp_path), "--model", "atlas-v2-lite", "--sampling", "-1"]
+    )
+    assert result.exit_code == 2
+
+
+@needs_encoder
+def test_sampling_above_the_corpus_matches_sampling_zero(tmp_path):
+    """`--sampling 9999` on twenty rows is `--sampling 0`."""
+    data = tmp_path / "corpus"
+    data.mkdir()
+    (data / "data.jsonl").write_text(
+        "\n".join(
+            json.dumps({"text": f"The garden strawberry is a widely grown hybrid "
+                                f"plant cultivated worldwide for its fruit, {i}."})
+            for i in range(20)
+        ),
+        encoding="utf-8",
+    )
+    common = ["atlas", str(data), "--model", "atlas-v2-lite",
+              "--no-open", "--offline", "--quiet", "--no-html"]
+    zero = runner.invoke(app, [*common, "--sampling", "0", "--out", str(tmp_path / "zero")])
+    over = runner.invoke(app, [*common, "--sampling", "9999", "--out", str(tmp_path / "over")])
+    assert zero.exit_code == 0, plain(zero.output)
+    assert over.exit_code == 0, plain(over.output)
+    z = json.loads((tmp_path / "zero" / "atlas.json").read_text())
+    o = json.loads((tmp_path / "over" / "atlas.json").read_text())
+    assert z["atlas"]["sampled_records"] == o["atlas"]["sampled_records"]
+    assert z["atlas"]["placed_records"] == o["atlas"]["placed_records"]
+
+
+@needs_encoder
+def test_sampling_n_places_n_records(tmp_path):
+    (tmp_path / "data.jsonl").write_text(
+        "\n".join(
+            json.dumps({"text": f"The garden strawberry is a widely grown hybrid "
+                                f"plant cultivated worldwide for its fruit, {i}."})
+            for i in range(20)
+        ),
+        encoding="utf-8",
+    )
+    result = runner.invoke(
+        app, ["atlas", str(tmp_path), "--model", "atlas-v2-lite",
+              "--sampling", "5", "--no-open", "--offline", "--quiet", "--no-html"]
+    )
+    assert result.exit_code == 0, plain(result.output)
+    data = json.loads((tmp_path / ".dropoutt" / "atlas.json").read_text())
+    assert data["atlas"]["sampled_records"] == 5

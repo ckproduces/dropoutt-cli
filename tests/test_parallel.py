@@ -190,9 +190,9 @@ def test_shard_sample_caps_do_not_multiply_with_dataset_count(tmp_path):
     layouts = {ds.name: "text" for ds in disc.datasets}
 
     few = plan_scan(disc, layouts, workers=4, limit_per_file=None,
-                    atlas_target=200_000, budget_target=20_000, datasets=1)
+                    atlas_target=1, budget_target=20_000, datasets=1)
     many = plan_scan(disc, layouts, workers=4, limit_per_file=None,
-                     atlas_target=200_000, budget_target=20_000,
+                     atlas_target=1, budget_target=20_000,
                      datasets=len(disc.datasets))
 
     # The atlas cap is shard-wide, so it is the same either way.
@@ -200,3 +200,28 @@ def test_shard_sample_caps_do_not_multiply_with_dataset_count(tmp_path):
     # And the budget caps shrink as the target is split across more datasets,
     # rather than each dataset claiming the full target.
     assert max(many.budget_caps.values(), default=0) <= few.budget_cap
+
+
+def test_a_sample_larger_than_the_corpus_is_planned_as_all_records(tmp_path):
+    """`--sampling X` with X above the row count is `--sampling 0`."""
+    from dropoutt.discovery import discover
+    from dropoutt.parallel import plan_scan
+
+    (tmp_path / "data.jsonl").write_text(
+        json.dumps({"text": "a record long enough to sit on the map"}) + "\n"
+    )
+    disc = discover(str(tmp_path))
+    layouts = {ds.name: "text" for ds in disc.datasets}
+    over = plan_scan(
+        disc, layouts, workers=1, limit_per_file=None,
+        atlas_target=50_000, budget_target=20_000, datasets=1,
+    )
+    none = plan_scan(
+        disc, layouts, workers=1, limit_per_file=None,
+        atlas_target=-1, budget_target=20_000, datasets=1,
+    )
+    assert over.estimated_records < 50_000
+    assert over.atlas_cap == none.atlas_cap == -1
+    assert over.sample_bound_by == "all"
+    assert over.sample_target == 50_000
+    assert none.sample_target == -1

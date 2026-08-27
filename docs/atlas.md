@@ -96,7 +96,8 @@ than a section of the scan report. It writes `atlas.html`, `atlas.md` and
 
 ```bash
 dropoutt atlas ./my-corpus
-dropoutt atlas ./my-corpus --sample 20000   # a coarser map, sooner
+dropoutt atlas --model atlas-v2 ./my-corpus
+dropoutt atlas --model atlas-v2-lite ./my-corpus --sampling 500
 ```
 
 Splitting it out was not tidying. Placement runs every sampled record through a

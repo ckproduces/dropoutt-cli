@@ -116,12 +116,11 @@ dropoutt atlas ./data
 ```
 
 A separate command, because it answers a different question: not what is wrong
-with the data, but what it is about and what it is missing. It places a sample of
-your records on one frozen map — 215 subregions across 48 subject areas, fitted
-once on public data — and writes `atlas.html`, `atlas.md` and `atlas.json`. The
-first run downloads the encoder, about 81 MB once cached; `dropoutt fetch` gets
-it ahead of time. Nothing it reports can fail a build. See
-[atlas.md](atlas.md).
+with the data, but what it is about and what it is missing. Without `--model` it
+asks which frozen map to use (`atlas-v2` or `atlas-v2-lite`). It writes
+`atlas.html`, `atlas.md` and `atlas.json`. The first run downloads the encoder,
+about 81 MB once cached; `dropoutt fetch` gets it ahead of time. Nothing it
+reports can fail a build. See [atlas.md](atlas.md).
 
 ## Next
 

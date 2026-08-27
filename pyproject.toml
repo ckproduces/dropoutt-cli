@@ -144,7 +144,7 @@ include = [
 # hatchling refuses to build: "A second file is being added to the wheel
 # archive at the same path". Do not add one back.
 packages = ["src/dropoutt"]
-exclude = ["**/.DS_Store"]
+exclude = ["**/.DS_Store", "**/*.tmp.npz"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

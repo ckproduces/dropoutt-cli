@@ -235,12 +235,17 @@ Target compressed sizes: **25–40 MB** (v2), **2–4 MB** (lite).
 ## Runtime
 
 ```bash
-dropoutt atlas ./data                      # default: atlas-v2-lite
-dropoutt atlas ./data --atlas atlas-v2     # heavy map
-dropoutt atlas ./data --offline              # encoder from cache
+dropoutt atlas ./data                              # asks which product
+dropoutt atlas --model atlas-v2 ./data             # full map, starts immediately
+dropoutt atlas --model atlas-v2-lite ./data
+dropoutt atlas --model atlas-v2-lite ./data --sampling 500
+dropoutt atlas ./data --sampling 0                 # every record
+dropoutt atlas ./data --offline                    # encoder from cache
 ```
 
-Config: `atlas = "atlas-v2-lite"` in `dropoutt.toml`.
+`scan.atlas` in `dropoutt.toml` is the highlighted default in the picker.
+`--model` skips the picker. `--sampling` omitted uses the product default.
+`--sampling 0` places every record; a count larger than the corpus is the same.
 
 | | Default sample |
 | --- | --- |

@@ -48,7 +48,7 @@ import numpy as np
 
 from ..textutil import surface_shares
 from .normalize import NormConstants
-from .profiles import DEFAULT_ATLAS_VERSION, get_profile
+from .profiles import get_profile
 
 
 class AssignedRecords(NamedTuple):
@@ -202,7 +202,10 @@ class Atlas:
 
     @property
     def embed_model(self) -> str:
-        return str(self.meta.get("embed_model", "unknown"))
+        from .embed import DEFAULT_MODEL
+
+        value = str(self.meta.get("embed_model") or DEFAULT_MODEL)
+        return DEFAULT_MODEL if value == "unknown" else value
 
     @property
     def off_threshold(self) -> float:
@@ -816,7 +819,9 @@ class Atlas:
             # 20 drew enough reference data to be clustered, so a gap list
             # measured against 31 would count 11 areas the atlas cannot see
             # either.
-            "categories_total": 0 if self.flat_cells else len({int(c) for c in self.region_category}),
+            "categories_total": (
+                0 if self.flat_cells else len({int(c) for c in self.region_category})
+            ),
         })
         if datasets is not None and len(datasets) == total:
             result["by_dataset_regions"] = self._per_dataset(regions, datasets)
@@ -1306,9 +1311,8 @@ def atlas_path_for(version: str) -> Path | None:
 def bundled_atlas_path(version: str | None = None) -> Path | None:
     """Path to a named atlas, or to the pinned default.
 
-    One atlas ships, so there is nothing to fall back to. An absent file means
-    a broken install, and returning None says that plainly rather than quietly
-    reporting coordinates from a different map.
+    Two products ship (atlas-v2 and atlas-v2-lite). An unknown name or an
+    absent file returns None rather than quietly loading a different map.
     """
     try:
         selected = get_profile(version).version

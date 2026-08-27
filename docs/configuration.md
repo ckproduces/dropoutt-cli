@@ -30,6 +30,7 @@ profile = "sft"               # inferred from 83 dataset(s)
 # target = "sft"              # uncomment to let findings fail the run
 seq_len = 4096                # from the model config
 tier = 1
+# atlas = "atlas-v2-lite"   # highlighted default in `dropoutt atlas` picker
 minhash_preset = "fineweb"
 # offline = true
 # eval_sets = ["gsm8k", "internal-eval"]
@@ -48,6 +49,7 @@ checks = []
 | `target` | **declaring this enables blocking.** Absent means nothing can fail a run. |
 | `seq_len` | training sequence length, for the truncation forecast |
 | `tier` | highest check tier to run |
+| `atlas` | highlighted default in the `dropoutt atlas` picker (`atlas-v2` or `atlas-v2-lite`). `--model` skips the picker |
 | `minhash_preset` | `fineweb` or `hf-neardedup`; the report always states which |
 | `offline` | never access the network during `scan` or `atlas`; resolve models and the atlas encoder from local files and caches |
 | `eval_sets` | optional allowlist of bundled or locally indexed benchmark names; absent means use every available index |

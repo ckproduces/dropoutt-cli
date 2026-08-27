@@ -956,6 +956,7 @@ def _build_from_memmap(
     }
     meta = {
         "version": profile.version, "profile": asdict(profile),
+        "embed_model": DEFAULT_MODEL,
         "pipeline_hash": pipeline_hash(declaration),
         "encoder_weight_hash": encoder_hash, "corpus_hash": corpus_hash,
         "n_regions": n_cells, "n_reference_records": int(counts.sum()),

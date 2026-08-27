@@ -87,6 +87,17 @@ BYTES_PER_SAMPLE = int(SAMPLE_TEXT_CHARS * 2.5)
 _M64 = (1 << 64) - 1
 
 
+def atlas_text_window(text: str, limit: int) -> str:
+    """Keep the deterministic 40/20/40 source window before IPC truncation."""
+    if len(text) <= limit:
+        return text
+    head = limit * 40 // 100
+    middle = limit * 20 // 100
+    tail = limit - head - middle
+    middle_start = (len(text) - middle) // 2
+    return text[:head] + text[middle_start : middle_start + middle] + text[-tail:]
+
+
 def sample_key(salt: int, index: int) -> int:
     """A uniform 64-bit key for one record, from where it sits and nothing else.
 
@@ -194,6 +205,9 @@ class ScanPlan:
     budget_cap: int = 2_000
     #: Target atlas sample size once shards are merged.
     sample_target: int = 20_000
+    #: Characters retained for each atlas-sampled record. The product chooses
+    #: this before workers start; budget sampling still uses the fixed cap.
+    atlas_text_chars: int = SAMPLE_TEXT_CHARS
     #: Rough record count, for the progress bar. Never used in a measurement.
     estimated_records: int = 0
     #: Bytes the whole scan was allowed to spend on samples, and what the caps
@@ -265,6 +279,7 @@ def plan_scan(
     workers: int | None,
     limit_per_file: int | None,
     atlas_target: int,
+    atlas_text_chars: int = SAMPLE_TEXT_CHARS,
     budget_target: int,
     datasets: int = 1,
     mean_record_bytes: float | None = None,
@@ -290,7 +305,10 @@ def plan_scan(
                          file_salt(path), size)
             )
 
-    plan = ScanPlan(total_bytes=total, sample_target=atlas_target, workers=wanted)
+    plan = ScanPlan(
+        total_bytes=total, sample_target=atlas_target, workers=wanted,
+        atlas_text_chars=atlas_text_chars,
+    )
     plan.estimated_records = _estimate_records(total, mean_record_bytes)
 
     if wanted < 2 or total < MIN_BYTES_FOR_PARALLEL or not items:
@@ -347,14 +365,6 @@ def _size_samples(
     budget = memory_budget if memory_budget is not None else hardware_plan().memory_budget
     plan.memory_budget = budget
 
-    # What the statistics want, before memory has an opinion. A shard keeps
-    # SAMPLE_HEADROOM times its expected share of the global bottom-k, which is
-    # what makes the merged sample identical however the corpus was divided.
-    #
-    # The atlas heap is corpus-wide, so every shard sees an equal expected share
-    # of it and one number covers them all.
-    want_atlas = max(256, -(-atlas_target * SAMPLE_HEADROOM // shards))
-
     # The budget heaps are per dataset, and a dataset is *not* spread over every
     # shard. Dividing its target by the total shard count is what made a
     # parallel scan's token estimate differ from a serial one by 0.04%: eight
@@ -375,13 +385,36 @@ def _size_samples(
     }
     want_budget = max(plan.budget_caps.values(), default=per_dataset)
 
+    # ``--sampling 0`` (internal target < 0) and a target at or above the
+    # corpus both mean: keep every long-enough record. Planning a billion-row
+    # parent heap for a hundred-row folder is what used to squeeze the cap to
+    # 64 and then place 64 records of a corpus that fit in memory whole.
+    if atlas_target < 0 or (
+        atlas_target > 0
+        and plan.estimated_records > 0
+        and atlas_target >= plan.estimated_records
+    ):
+        plan.atlas_cap = -1
+        plan.budget_cap = want_budget
+        plan.sample_bound_by = "all"
+        return
+
+    # What the statistics want, before memory has an opinion. A shard keeps
+    # SAMPLE_HEADROOM times its expected share of the global bottom-k, which is
+    # what makes the merged sample identical however the corpus was divided.
+    #
+    # The atlas heap is corpus-wide, so every shard sees an equal expected share
+    # of it and one number covers them all.
+    want_atlas = max(256, -(-atlas_target * SAMPLE_HEADROOM // shards))
+
     # What memory allows. Live at once: every shard's atlas heap (workers run
     # concurrently and the parent holds one result at a time), the per-dataset
     # budget heaps inside them, and the parent's own merged heap of
     # `atlas_target`. Sized against the widest case rather than the average.
     live_shards = min(shards, max(1, plan.workers) + 1)
-    parent_cost = atlas_target * BYTES_PER_SAMPLE
-    per_shard_records = max(1, (budget - parent_cost) // (BYTES_PER_SAMPLE * live_shards))
+    bytes_per_atlas_sample = int(plan.atlas_text_chars * 2.5)
+    parent_cost = atlas_target * bytes_per_atlas_sample
+    per_shard_records = max(1, (budget - parent_cost) // (bytes_per_atlas_sample * live_shards))
 
     if per_shard_records >= want_atlas + want_budget * datasets:
         plan.atlas_cap, plan.budget_cap = want_atlas, want_budget
@@ -487,6 +520,7 @@ class ShardConfig:
     #: Shard-wide cap on the atlas sample, and per-dataset cap on the budget
     #: sample. See :func:`_size_samples` for why they differ in that.
     atlas_cap: int
+    atlas_text_chars: int
     budget_caps: dict[str, int]
     budget_cap: int
     want_atlas_sample: bool
@@ -673,6 +707,7 @@ def run_shard(
     budget_heaps: dict[str, list[tuple[int, str, int]]] = {}
     reported = 0
     atlas_cap = config.atlas_cap if config.want_atlas_sample else 0
+    atlas_all = atlas_cap < 0
     budget_caps = config.budget_caps
     default_budget_cap = config.budget_cap
 
@@ -729,15 +764,17 @@ def run_shard(
                     text = texts[position]
                     kept = text[:SAMPLE_TEXT_CHARS]
                     length = len(text)
-                    if atlas_cap:
+                    if atlas_all or atlas_cap > 0:
                         entry = (
                             key,
-                            kept,
+                            atlas_text_window(text, config.atlas_text_chars),
                             docs[position].meta.get(F_LANG) or "unknown",
                             length,
                             dataset,
                         )
-                        if len(atlas_heap) < atlas_cap:
+                        if atlas_all:
+                            atlas_heap.append(entry)
+                        elif len(atlas_heap) < atlas_cap:
                             heapq.heappush(atlas_heap, entry)
                         elif key > atlas_heap[0][0]:
                             heapq.heapreplace(atlas_heap, entry)

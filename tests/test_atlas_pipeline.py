@@ -115,23 +115,37 @@ def test_pipeline_hash_is_stable():
     assert len(pipeline_hash()) == 32
 
 
-def test_bundled_subject_areas_have_human_labels():
-    from dropoutt.atlas.apply import DEFAULT_ATLAS_VERSION, load_bundled
+def test_bundled_atlas_products_match_their_profiles():
+    from dropoutt.atlas.apply import load_bundled
+    from dropoutt.atlas.profiles import ATLAS_V2, ATLAS_V2_LITE, DEFAULT_ATLAS_VERSION
+
+    lite = load_bundled()
+    assert lite is not None, "atlas-v2-lite must be bundled"
+    assert lite.meta.get("version") == DEFAULT_ATLAS_VERSION == ATLAS_V2_LITE.version
+    assert lite.dim == ATLAS_V2_LITE.dim == 16
+    assert lite.n_l1 == ATLAS_V2_LITE.n_l1 == 16
+    assert lite.n_regions == 34
+    assert len(lite.region_terms) == 34
+    assert lite.embed_model == "minishlab/potion-multilingual-128M"
+
+    full = load_bundled("atlas-v2")
+    assert full is not None, "atlas-v2 must be bundled"
+    assert full.meta.get("version") == ATLAS_V2.version
+    assert full.dim == ATLAS_V2.dim == 256
+    assert full.n_l1 == ATLAS_V2.n_l1 == 256
+    assert full.n_regions == 689
+    assert len(full.region_terms) == 689
+
+
+def test_v1_lite_still_carries_curated_subject_labels():
+    from dropoutt.atlas.apply import load_bundled
     from dropoutt.atlas.compare import category_labels
 
-    # One atlas ships, so this tests the one the package actually reports
-    # against. It replaced the same assertions against atlas-lite-v2, which
-    # stopped being reachable through load_bundled when the superseded bundles
-    # moved to tools/atlas-data/ and the test silently skipped instead.
-    atlas = load_bundled()
-    assert atlas is not None, "the pinned atlas must be bundled"
-    assert atlas.meta.get("version") == DEFAULT_ATLAS_VERSION
+    atlas = load_bundled("atlas-v1-lite")
+    assert atlas is not None
     labels = category_labels(atlas)
     assert len(labels) == atlas.n_l1 == 48
     assert len(set(labels.values())) == 48, "every subject area needs its own name"
-    # Ids are k-means numbering and renumber on a refit, so pin id-to-name for
-    # the shipped clustering (1.2 refit) and membership for names that must
-    # exist under any numbering.
     assert labels[45] == "Database schemas and query construction"
     assert labels[21] == "Website boilerplate and page furniture"
     assert "C and C++ source code" in labels.values()
@@ -207,6 +221,46 @@ def test_quantised_rows_stay_within_a_step_of_the_weights_they_replace():
 
     assert restored.shape == (64, 128)
     assert np.all(np.abs(restored - table) <= step[:, None] / 2 + 1e-6)
+
+
+def test_atlas_v2_profile_windows_and_columns_are_declared():
+    from dropoutt.atlas.embed import select_token_windows
+    from dropoutt.atlas.profiles import get_profile
+
+    full = get_profile("atlas-v2")
+    lite = get_profile()
+    assert (full.dim, full.pooling, full.max_chars, full.max_tokens, full.default_sample) == (
+        256, "sif", 4_000, 1_024, 200_000,
+    )
+    assert (lite.version, lite.dim, lite.pooling, lite.max_chars, lite.max_tokens, lite.default_sample) == (
+        "atlas-v2-lite", 16, "mean", 1_024, 256, 50_000,
+    )
+    assert select_token_windows(list(range(100)), 10) == [0, 1, 2, 3, 49, 50, 96, 97, 98, 99]
+
+
+def test_v2_coverage_is_flat_l2_only(tmp_path):
+    rng = np.random.default_rng(7)
+    centroids = rng.normal(size=(3, 16)).astype(np.float32)
+    centroids /= np.linalg.norm(centroids, axis=1, keepdims=True)
+    path = tmp_path / "v2.npz"
+    np.savez_compressed(
+        path,
+        centroids=centroids,
+        region_category=np.array([0, 0, 1], dtype=np.int32),
+        coords=np.zeros((3, 2), dtype=np.float32),
+        probe_coef=np.zeros((0, 16), dtype=np.float32),
+        probe_intercept=np.zeros(0, dtype=np.float32),
+        probe_classes=np.zeros(0, dtype=np.int32),
+        meta=np.array([json.dumps({"version": "atlas-v2-lite", "region_terms": ["a", "b", "c"]})], dtype=object),
+        allow_pickle=True,
+    )
+    atlas = Atlas.load(path)
+    coverage = atlas.coverage(np.array([0, 1, 2]), np.array([0, 0, 1]))
+    assert atlas.flat_cells
+    assert coverage["by_category"] == {}
+    assert coverage["coverage_gaps"] == []
+    assert coverage["categories_total"] == 0
+    assert "category" not in coverage["top_regions"][0]
 
 
 def test_population_crosswalk_uses_shared_members_not_coordinates():

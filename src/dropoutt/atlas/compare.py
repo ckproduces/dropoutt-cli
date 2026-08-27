@@ -81,8 +81,9 @@ def region_terms(coverage: dict[str, Any]) -> dict[int, str]:
     terms: dict[int, str] = {}
     from .apply import load_bundled
 
-    atlas = load_bundled()
-    if atlas is not None and atlas.meta.get("version") == coverage.get("atlas_version"):
+    version = coverage.get("atlas_version")
+    atlas = load_bundled(version if isinstance(version, str) else None)
+    if atlas is not None and atlas.meta.get("version") == version:
         terms.update(dict(enumerate(atlas.region_terms)))
 
     for r in coverage.get("top_regions") or []:
@@ -220,6 +221,13 @@ def compare(a: dict[str, Any] | None, b: dict[str, Any] | None) -> Comparison:
     if not is_usable(b):
         return Comparison(False, f"right side: {unusable_reason(b)}")
     if a.get("atlas_version") != b.get("atlas_version"):
+        products = {str(a.get("atlas_version")), str(b.get("atlas_version"))}
+        if products == {"atlas-v2", "atlas-v2-lite"}:
+            return Comparison(
+                False,
+                "atlas-v2 and atlas-v2-lite are different coordinate systems; "
+                "full-versus-lite fingerprints cannot be compared",
+            )
         return Comparison(
             False,
             f"different atlas versions ({a.get('atlas_version')} against "

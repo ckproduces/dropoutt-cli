@@ -228,7 +228,7 @@ non-English corpora it is routinely this large.
 
 ### Atlas coverage
 
-Not here. Where your records land on `atlas-v1-lite`, a shared coordinate
+Not here. Where your records land on the atlas, a shared coordinate
 system, is `dropoutt atlas ./data` — a separate command since 1.3, because it
 answers a different question at a different cost. Covered in
 [section 7](#7-where-the-corpus-sits).
@@ -426,15 +426,16 @@ are deciding whether to buy, merge or build a dataset rather than fix one.
 
 ```bash
 dropoutt atlas ./my-corpus
+dropoutt atlas --model atlas-v2-lite ./my-corpus
 ```
 
-This places a sample of your records on `atlas-v1-lite`: one map of 215
-subregions across 48 subject areas, fitted once on public data and frozen. The
-freezing is the whole point. A coverage plot that fits UMAP or k-means on
-whatever sample it was handed gives the next folder a new projection, so its
-neighbourhoods mean something different and two runs cannot be compared. Here
-the bins already exist, and a run only decides which of them your records fall
-into.
+This places a sample of your records on a frozen map of public training data.
+Without `--model` the command asks which product to use (`atlas-v2` or
+`atlas-v2-lite`). The freezing is the whole point. A coverage plot that fits
+UMAP or k-means on whatever sample it was handed gives the next folder a new
+projection, so its neighbourhoods mean something different and two runs cannot
+be compared. Here the bins already exist, and a run only decides which of them
+your records fall into.
 
 What comes back:
 

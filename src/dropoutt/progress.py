@@ -137,7 +137,9 @@ class _NullWarmup:
         return
 
 
-def start_warmup(*, offline: bool, want_embedder: bool, want_panel: bool):
+def start_warmup(
+    *, offline: bool, want_embedder: bool, want_panel: bool, embed_dim: int = 256
+):
     """Begin loading the model files a scan will need, off the critical path.
 
     Returns something with ``shutdown(wait=True)``. Nothing here touches scan
@@ -147,10 +149,10 @@ def start_warmup(*, offline: bool, want_embedder: bool, want_panel: bool):
     jobs = []
     if want_embedder:
         def _embedder() -> None:
-            from .atlas import DEFAULT_MODEL, EMBED_DIM, load_embedder
+            from .atlas import DEFAULT_MODEL, load_embedder
 
             with contextlib.suppress(Exception):
-                load_embedder(DEFAULT_MODEL, offline=offline, out_dim=EMBED_DIM)
+                load_embedder(DEFAULT_MODEL, offline=offline, out_dim=embed_dim)
 
         jobs.append(_embedder)
     if want_panel:

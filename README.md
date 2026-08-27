@@ -121,12 +121,14 @@ near-identical writing that shingle dedup cannot see — comes from
 dropoutt atlas ./my-corpus
 ```
 
-The atlas is a **frozen topical map** compressed from public datasets: 215
-subregions across 48 subject areas, static multilingual embeddings, CPU-only.
-Frozen is the point — a coverage plot that fits UMAP or k-means on the sample in
-front of it gives the next folder a new projection, so its neighbourhoods mean
-something different and two runs cannot be compared. Here the bins already
-exist, and a run only decides which of them your records fall into.
+The atlas is a **frozen topical map** compressed from public datasets. Two
+products ship: `atlas-v2` (256-d) and `atlas-v2-lite` (16-d). Run without
+`--model` and the command asks which to use; pass `--model atlas-v2` or
+`--model atlas-v2-lite` to start immediately. Frozen is the point — a coverage
+plot that fits UMAP or k-means on the sample in front of it gives the next folder
+a new projection, so its neighbourhoods mean something different and two runs
+cannot be compared. Here the bins already exist, and a run only decides which of
+them your records fall into.
 
 It is a separate command from 1.3, and was a section of the scan report before
 that. Two reasons. It answers a different question — where the corpus sits, not
@@ -147,9 +149,9 @@ It writes `atlas.html`, `atlas.md` and `atlas.json`, and reports:
 | **Same ground** | Datasets that occupy the same regions even when they share no wording, i.e. merging them adds volume and not coverage |
 | **Off the map** | Records unlike the reference geography, with a diagnosis (often length or markup, not “bad data”) |
 
-`--sample` is the resolution knob: the default places up to 200,000 records,
-which on a large corpus is the difference between a subject area decided by a
-hundred records and one decided by thousands. Nothing here can fail a build.
+`--sampling` is the resolution knob: omit it for the product default, pass a
+count, or pass `0` for every record. A count larger than the corpus is the same
+as `0`. Nothing here can fail a build.
 
 The atlas's own five-word captions for a region are shown as captions and never
 as findings: they are frequency counts over reference records, roughly 40% of

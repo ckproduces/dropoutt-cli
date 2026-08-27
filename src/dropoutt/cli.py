@@ -67,6 +67,25 @@ EXIT_BLOCKED = 10
 ATLAS_CHECKS = ("T1-ATLAS-001", "T1-ATLAS-002")
 
 
+def _prompt_atlas_product(preferred: str) -> str:
+    """Arrow-key picker. Non-TTY callers must pass ``--model`` instead."""
+    from .atlas.profiles import PRODUCT_CHOICES
+    from .prompt import PromptError, can_prompt, select
+
+    if not can_prompt():
+        console.print(
+            "[red]Choose an atlas:[/red] pass --model atlas-v2 or --model atlas-v2-lite"
+        )
+        raise typer.Exit(EXIT_USAGE)
+    keys = [key for key, _ in PRODUCT_CHOICES]
+    default = keys.index(preferred) if preferred in keys else 0
+    try:
+        return select("Which atlas?", PRODUCT_CHOICES, default=default, console=console)
+    except PromptError:
+        console.print("[red]Cancelled.[/red]")
+        raise typer.Exit(EXIT_USAGE) from None
+
+
 @app.command(
     no_args_is_help=True,
     # Rich collapses single newlines in an epilog, so each example is its own
@@ -357,20 +376,32 @@ def scan(
     epilog=(
         "[b]Examples[/b]\n\n"
         "[dim]$[/dim] dropoutt atlas ./data\n\n"
-        "[dim]$[/dim] dropoutt atlas ./data --sample 20000  "
-        "[dim]# a coarser map, sooner[/dim]\n\n"
-        "[dim]$[/dim] dropoutt atlas ./data --offline       "
-        "[dim]# encoder from the cache[/dim]"
+        "[dim]$[/dim] dropoutt atlas --model atlas-v2 ./data\n\n"
+        "[dim]$[/dim] dropoutt atlas --model atlas-v2-lite ./data --sampling 500\n\n"
+        "[dim]$[/dim] dropoutt atlas ./data --sampling 0  "
+        "[dim]# every record[/dim]"
     ),
 )
 def atlas(
     path: Path = typer.Argument(..., help="File or directory to place on the map."),
+    atlas_model: str | None = typer.Option(
+        None,
+        "--model",
+        "--atlas",
+        help="Atlas product: atlas-v2 or atlas-v2-lite. Asked in the terminal if omitted.",
+    ),
     out: Path | None = typer.Option(None, "--out", "-o",
                                     help="Directory for the map artifacts."),
     offline: bool = typer.Option(False, "--offline", help="Never touch the network."),
-    sample: int | None = typer.Option(
-        None, "--sample", min=100,
-        help="Records to place. Defaults to 200,000, or the corpus if it is smaller.",
+    sampling: int | None = typer.Option(
+        None,
+        "--sampling",
+        "--sample",
+        min=0,
+        help=(
+            "Records to place. 0 = all records. Larger than the corpus is the "
+            "same as 0. Omitted uses the product default."
+        ),
     ),
     limit: int | None = typer.Option(
         None, "--limit", min=1, help="Max records per file."
@@ -394,10 +425,11 @@ def atlas(
     """Place a corpus on the atlas and draw where it sits.
 
     The atlas is a frozen coordinate system, not a collection of good datasets:
-    one map of 215 subregions fitted once on public data, so two corpora placed
-    on it can be compared and a gap can be named. This command samples records,
-    encodes them, and reports what the corpus is dense in, what it only touches,
-    what it never reaches, and what looks like nothing on the map at all.
+    two maps (atlas-v2 and atlas-v2-lite) fitted once on public data, so two
+    corpora placed on the same product can be compared and a gap can be named.
+    This command samples records, encodes them, and reports what the corpus is
+    dense in, what it only touches, what it never reaches, and what looks like
+    nothing on the map at all.
 
     It is separate from `dropoutt scan` because it is a different question and a
     different cost. A scan asks what is wrong with the data and reads it once;
@@ -409,13 +441,29 @@ def atlas(
         console.print(f"[red]No such path:[/red] {escape(str(path))}")
         raise typer.Exit(EXIT_USAGE)
 
-    from .atlas import load_bundled
+    from .atlas import get_profile, load_bundled
     from .discovery import discover
     from .langid import LanguageDetector
     from .parallel import MIN_BYTES_FOR_PARALLEL
     from .report import terminal as term_report
     from .runner import ATLAS_MIN_CHARS
     from .runner import scan as run_scan
+
+    try:
+        cfg = Config.load(path)
+    except ValueError as exc:
+        console.print(f"[red]Invalid dropoutt.toml:[/red] {escape(str(exc))}")
+        raise typer.Exit(EXIT_USAGE) from None
+    offline = offline or cfg.offline or _offline_from_environment()
+    if cfg.profile != "auto":
+        _validate_profile(cfg.profile, option="profile", allow_auto=False)
+
+    selected = atlas_model or _prompt_atlas_product(cfg.atlas)
+    try:
+        atlas_profile = get_profile(selected)
+    except ValueError as exc:
+        console.print(f"[red]Invalid atlas:[/red] {escape(str(exc))}")
+        raise typer.Exit(EXIT_USAGE) from None
 
     with ProgressDisplay(enabled=not quiet) as activity:
         activity.phase("Discovering supported data files")
@@ -425,29 +473,21 @@ def atlas(
             console.print(f"[red]No supported data files found in:[/red] {escape(str(path))}")
             raise typer.Exit(EXIT_USAGE)
 
-        activity.phase("Reading configuration")
-        try:
-            cfg = Config.load(path)
-        except ValueError as exc:
-            activity.finish()
-            console.print(f"[red]Invalid dropoutt.toml:[/red] {escape(str(exc))}")
-            raise typer.Exit(EXIT_USAGE) from None
-        offline = offline or cfg.offline or _offline_from_environment()
-        if cfg.profile != "auto":
-            _validate_profile(cfg.profile, option="profile", allow_auto=False)
-
         # The encoder is the long pole and depends on nothing in the data, so it
         # starts loading now. It is joined before the reading pass forks, for the
         # reason given in `scan`: forking a process whose threads are inside a
         # Rust library produces a child that hangs on its first allocation.
-        warmup = start_warmup(offline=offline, want_embedder=True, want_panel=False)
+        warmup = start_warmup(
+            offline=offline, want_embedder=True, want_panel=False,
+            embed_dim=atlas_profile.dim,
+        )
         will_fork = (
             (workers is None or workers > 1)
             and preflight.total_bytes >= MIN_BYTES_FOR_PARALLEL
         )
 
         activity.phase("Loading the atlas")
-        atlas_obj = load_bundled()
+        atlas_obj = load_bundled(atlas_profile.version)
         if atlas_obj is None:
             activity.finish()
             warmup.shutdown(wait=True)
@@ -470,7 +510,7 @@ def atlas(
             max_tier=1,
             muted=tuple(cfg.mute),
             limit_per_file=limit,
-            atlas_sample=sample,
+            atlas_sample=atlas_profile.default_sample if sampling is None else sampling,
             only_checks=ATLAS_CHECKS,
             progress=activity.records,
             phase=activity.phase,
