@@ -31,7 +31,7 @@ ATLAS_V2 = AtlasProfile(
     pca_k=2,
     n_l1=256,
     knn_k=40,
-    leiden_gamma=1.2,
+    leiden_gamma=0.12,
 )
 
 ATLAS_V2_LITE = AtlasProfile(
@@ -44,7 +44,7 @@ ATLAS_V2_LITE = AtlasProfile(
     pca_k=1,
     n_l1=16,
     knn_k=15,
-    leiden_gamma=0.8,
+    leiden_gamma=0.08,
 )
 
 # v1 has no profile metadata in its artifact. It remains loadable for existing

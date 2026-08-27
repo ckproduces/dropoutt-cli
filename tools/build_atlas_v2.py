@@ -47,6 +47,7 @@ from dropoutt.atlas.profiles import ATLAS_V2, ATLAS_V2_LITE, AtlasProfile
 SEED = 42
 BLOCK = 512
 MIN_COMMUNITY = 200
+RECURSIVE_SPLIT_MIN = 40_000
 HNSW_M = 32
 HNSW_EF_CONSTRUCTION = 200
 HNSW_EF_SEARCH = 128
@@ -466,7 +467,7 @@ def _leiden(vectors: np.ndarray, k: int, gamma: float, recursive: bool) -> np.nd
         next_label = int(labels.max()) + 1
         for cell in np.unique(labels):
             members = np.flatnonzero(labels == cell)
-            if len(members) < 4_000:
+            if len(members) < RECURSIVE_SPLIT_MIN:
                 continue
             child = _leiden(vectors[members], k, gamma, recursive=False)
             if child.max() > 0:
@@ -983,6 +984,7 @@ def _build_from_memmap(
             "gamma": profile.leiden_gamma, "k": profile.knn_k,
             "min_community_size": MIN_COMMUNITY,
             "recursive_split_large_communities": profile.version == ATLAS_V2.version,
+            "recursive_split_min": RECURSIVE_SPLIT_MIN if profile.version == ATLAS_V2.version else None,
         },
         "hnsw": declaration["hnsw"],
         "normalization": {
