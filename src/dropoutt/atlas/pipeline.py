@@ -15,27 +15,51 @@ import numpy as np
 
 from .chunk import CHUNKER_VERSION, DEFAULT_MAX_WORDS, DEFAULT_TARGET_WORDS
 from .embed import DEFAULT_MODEL
-from .normalize import EMBED_DIM, SIF_A
+from .normalize import SIF_A
+from .profiles import DEFAULT_ATLAS_VERSION, get_profile
 
-PIPELINE_VERSION = "atlas-pipeline-v2"
+PIPELINE_VERSION = "atlas-pipeline-v3"
 
 #: Declared steps. Changing any value changes the hash.
 PIPELINE_DECLARATION = {
     "pipeline_version": PIPELINE_VERSION,
     "embed_model": DEFAULT_MODEL,
-    "embed_dim": EMBED_DIM,
-    "pooling": "sif",
+    "profiles": {
+        name: {
+            "dim": profile.dim,
+            "pooling": profile.pooling,
+            "max_chars": profile.max_chars,
+            "max_tokens": profile.max_tokens,
+            "pca_k": profile.pca_k,
+        }
+        for name, profile in ((DEFAULT_ATLAS_VERSION, get_profile(DEFAULT_ATLAS_VERSION)), ("atlas-v2", get_profile("atlas-v2")))
+    },
     "pooling_implementation": "batch-tokenize-csr-matmul",
     "sif_a": SIF_A,
     "chunker": CHUNKER_VERSION,
     "chunk_target_words": DEFAULT_TARGET_WORDS,
     "chunk_max_words": DEFAULT_MAX_WORDS,
     "normalization": ["mean_removal", "all_but_the_top", "l2"],
-    "pca_k": 2,
     "assignment": "soft_topk",
     "soft_k": 5,
     "extraction": "format-aware-v1",
 }
+
+
+def profile_declaration(version: str | None = None) -> dict:
+    """Frozen parameters for the named product, included in build provenance."""
+    profile = get_profile(version)
+    return {
+        "version": profile.version,
+        "embed_dim": profile.dim,
+        "pooling": profile.pooling,
+        "max_chars": profile.max_chars,
+        "max_tokens": profile.max_tokens,
+        "pca_k": profile.pca_k,
+        "n_l1": profile.n_l1,
+        "knn_k": profile.knn_k,
+        "leiden_gamma": profile.leiden_gamma,
+    }
 
 
 def pipeline_hash(extra: dict | None = None) -> str:

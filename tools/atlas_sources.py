@@ -20,6 +20,59 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 
+# The specialised axes stay on the dc12d8a catalogue. Multilingual web mass
+# comes from FineWeb-2: each language below is a first-class baseline source,
+# and unused FineWeb-2 parquet shards of the same languages fill the byte
+# target. English web is FineWeb / FineWeb-edu; FineWeb-2 has no English.
+BASELINE_CATALOGUE_COMMIT = "dc12d8a"
+BASELINE_SCALE = 1.0
+LOGICAL_BYTE_TARGET = 40 * 1024 ** 3
+
+# (iso-639-1, FineWeb-2 language_script, row target). Paths stay
+# data/{script}/train/000_00000.parquet so cached slugs remain stable.
+FINEWEB2_BASELINE: tuple[tuple[str, str, int], ...] = (
+    ("tr", "tur_Latn", 45_000), ("de", "deu_Latn", 25_000),
+    ("es", "spa_Latn", 25_000), ("fr", "fra_Latn", 25_000),
+    ("ru", "rus_Cyrl", 25_000), ("ar", "arb_Arab", 25_000),
+    ("zh", "cmn_Hani", 25_000), ("ja", "jpn_Jpan", 20_000),
+    ("ko", "kor_Hang", 20_000), ("hi", "hin_Deva", 20_000),
+    ("pt", "por_Latn", 20_000), ("it", "ita_Latn", 20_000),
+    ("nl", "nld_Latn", 18_000), ("pl", "pol_Latn", 18_000),
+    ("vi", "vie_Latn", 18_000), ("uk", "ukr_Cyrl", 18_000),
+    ("sv", "swe_Latn", 15_000), ("id", "ind_Latn", 18_000),
+    ("bn", "ben_Beng", 15_000), ("th", "tha_Thai", 15_000),
+    ("he", "heb_Hebr", 12_000), ("fa", "fas_Arab", 15_000),
+    ("el", "ell_Grek", 12_000), ("ro", "ron_Latn", 12_000),
+    ("cs", "ces_Latn", 12_000), ("hu", "hun_Latn", 12_000),
+    ("fi", "fin_Latn", 12_000), ("da", "dan_Latn", 10_000),
+    ("no", "nob_Latn", 10_000), ("ms", "zsm_Latn", 12_000),
+    ("ca", "cat_Latn", 10_000), ("sk", "slk_Latn", 8_000),
+    ("bg", "bul_Cyrl", 10_000), ("hr", "hrv_Latn", 8_000),
+    ("lt", "lit_Latn", 6_000), ("lv", "lvs_Latn", 6_000),
+    ("et", "est_Latn", 6_000), ("ka", "kat_Geor", 8_000),
+    ("hy", "hye_Armn", 6_000), ("kk", "kaz_Cyrl", 8_000),
+    ("uz", "uzn_Latn", 8_000), ("az", "azj_Latn", 8_000),
+    ("be", "bel_Cyrl", 6_000), ("mk", "mkd_Cyrl", 6_000),
+    ("sq", "als_Latn", 6_000), ("gl", "glg_Latn", 6_000),
+    ("eu", "eus_Latn", 6_000), ("is", "isl_Latn", 5_000),
+    ("af", "afr_Latn", 5_000), ("ta", "tam_Taml", 10_000),
+    ("ur", "urd_Arab", 10_000), ("sw", "swh_Latn", 8_000),
+    ("my", "mya_Mymr", 6_000), ("km", "khm_Khmr", 6_000),
+    ("ne", "npi_Deva", 6_000), ("mr", "mar_Deva", 8_000),
+    ("te", "tel_Telu", 8_000), ("gu", "guj_Gujr", 6_000),
+    ("kn", "kan_Knda", 6_000), ("ml", "mal_Mlym", 6_000),
+    ("pa", "pan_Guru", 5_000), ("si", "sin_Sinh", 5_000),
+    ("lo", "lao_Laoo", 4_000), ("am", "amh_Ethi", 5_000),
+    ("yo", "yor_Latn", 5_000), ("ha", "hau_Latn", 5_000),
+    ("ig", "ibo_Latn", 4_000), ("tl", "fil_Latn", 8_000),
+    ("ceb", "ceb_Latn", 5_000),
+)
+
+SUPPLEMENTAL_LANGUAGES: tuple[tuple[str, str], ...] = tuple(
+    (lang, script) for lang, script, _ in FINEWEB2_BASELINE
+)
+
+
 @dataclass(frozen=True)
 class Source:
     """One reference-corpus source.
@@ -35,6 +88,8 @@ class Source:
                  conversion is faster than the shard the loader picks
     ``data_dir`` ``load_dataset(hf_id, data_dir=..., split=...)`` for repos that
                  partition by directory rather than by config
+    ``local``    a JSON file in the repo (probes, curated lists); ``path`` is
+                 relative to the repo root
     """
 
     hf_id: str
@@ -101,14 +156,15 @@ SOURCES: list[Source] = [
     # Spec calls this the backbone and v1/v2 both shipped without it.
     _fineweb("HuggingFaceFW/fineweb", "sample/10BT/000_00000.parquet", 200_000, "en"),
     _fineweb("HuggingFaceFW/fineweb-edu", "sample/10BT/000_00000.parquet", 120_000, "en"),
-    _fineweb("HuggingFaceFW/fineweb-2", "data/tur_Latn/train/000_00000.parquet", 45_000, "tr"),
-    _fineweb("HuggingFaceFW/fineweb-2", "data/deu_Latn/train/000_00000.parquet", 25_000, "de"),
-    _fineweb("HuggingFaceFW/fineweb-2", "data/spa_Latn/train/000_00000.parquet", 25_000, "es"),
-    _fineweb("HuggingFaceFW/fineweb-2", "data/fra_Latn/train/000_00000.parquet", 25_000, "fr"),
-    _fineweb("HuggingFaceFW/fineweb-2", "data/rus_Cyrl/train/000_00000.parquet", 25_000, "ru"),
-    _fineweb("HuggingFaceFW/fineweb-2", "data/arb_Arab/train/000_00000.parquet", 25_000, "ar"),
-    _fineweb("HuggingFaceFW/fineweb-2", "data/cmn_Hani/train/000_00000.parquet", 25_000, "zh"),
-    _fineweb("HuggingFaceFW/fineweb-2", "data/jpn_Jpan/train/000_00000.parquet", 20_000, "ja"),
+    *[
+        _fineweb(
+            "HuggingFaceFW/fineweb-2",
+            f"data/{script}/train/000_00000.parquet",
+            target,
+            lang,
+        )
+        for lang, script, target in FINEWEB2_BASELINE
+    ],
     # -- mixture with provenance (Dolma's role) ----------------------------
     # Dolma itself is gated behind an agreement, so it cannot be part of an
     # unattended build. C4 fills the same slot: a documented web mixture that
@@ -132,6 +188,24 @@ SOURCES: list[Source] = [
     Source("wikimedia/wikipedia", "20231101.fa", "train", ("text",), "encyclopedic", 15_000, "fa"),
     Source("wikimedia/wikipedia", "20231101.hi", "train", ("text",), "encyclopedic", 15_000, "hi"),
     Source("wikimedia/wikipedia", "20231101.az", "train", ("text",), "encyclopedic", 12_000, "az"),
+    Source("wikimedia/wikipedia", "20231101.pt", "train", ("text",), "encyclopedic", 20_000, "pt"),
+    Source("wikimedia/wikipedia", "20231101.it", "train", ("text",), "encyclopedic", 20_000, "it"),
+    Source("wikimedia/wikipedia", "20231101.nl", "train", ("text",), "encyclopedic", 15_000, "nl"),
+    Source("wikimedia/wikipedia", "20231101.pl", "train", ("text",), "encyclopedic", 15_000, "pl"),
+    Source("wikimedia/wikipedia", "20231101.vi", "train", ("text",), "encyclopedic", 15_000, "vi"),
+    Source("wikimedia/wikipedia", "20231101.uk", "train", ("text",), "encyclopedic", 15_000, "uk"),
+    Source("wikimedia/wikipedia", "20231101.id", "train", ("text",), "encyclopedic", 15_000, "id"),
+    Source("wikimedia/wikipedia", "20231101.sv", "train", ("text",), "encyclopedic", 12_000, "sv"),
+    Source("wikimedia/wikipedia", "20231101.he", "train", ("text",), "encyclopedic", 12_000, "he"),
+    Source("wikimedia/wikipedia", "20231101.th", "train", ("text",), "encyclopedic", 12_000, "th"),
+    Source("wikimedia/wikipedia", "20231101.el", "train", ("text",), "encyclopedic", 12_000, "el"),
+    Source("wikimedia/wikipedia", "20231101.ro", "train", ("text",), "encyclopedic", 12_000, "ro"),
+    Source("wikimedia/wikipedia", "20231101.cs", "train", ("text",), "encyclopedic", 12_000, "cs"),
+    Source("wikimedia/wikipedia", "20231101.hu", "train", ("text",), "encyclopedic", 12_000, "hu"),
+    Source("wikimedia/wikipedia", "20231101.fi", "train", ("text",), "encyclopedic", 10_000, "fi"),
+    Source("wikimedia/wikipedia", "20231101.da", "train", ("text",), "encyclopedic", 8_000, "da"),
+    Source("wikimedia/wikipedia", "20231101.no", "train", ("text",), "encyclopedic", 8_000, "no"),
+    Source("wikimedia/wikipedia", "20231101.ca", "train", ("text",), "encyclopedic", 8_000, "ca"),
     Source("mcemilg/news-cat", None, "train", ("text",), "encyclopedic", 5_000, "tr"),
     # -- code, spread across languages --------------------------------------
     # v2 asked the-stack-smol-XS for 6,000 rows per language. That repo holds
@@ -259,6 +333,7 @@ SOURCES: list[Source] = [
     # unattended build. The four text-to-SQL sources above clear the structured
     # floor without it; leaving a dead entry in the list is how v2 ended up
     # reporting a zero-row source as if it were a source.
+    #
 ]
 
 

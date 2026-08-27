@@ -1,0 +1,63 @@
+"""Focused, dependency-light checks for the dual Atlas v2 build entry point."""
+
+from __future__ import annotations
+
+import importlib.util
+from pathlib import Path
+
+import numpy as np
+
+
+BUILD = Path(__file__).resolve().parents[1] / "tools" / "build_atlas_v2.py"
+SPEC = importlib.util.spec_from_file_location("build_atlas_v2", BUILD)
+assert SPEC and SPEC.loader
+builder = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(builder)
+
+
+def test_three_window_selection_is_exact_and_deterministic():
+    ids = np.arange(20, dtype=np.int32)
+
+    selected = builder.selected_token_ids(ids, 10)
+
+    assert selected.tolist() == [0, 1, 2, 3, 9, 10, 16, 17, 18, 19]
+    assert builder.selected_token_ids(ids, 30).tolist() == ids.tolist()
+
+
+def test_lite_stratification_has_fixed_size_and_preserves_groups():
+    axes = ["web"] * 8 + ["code"] * 2
+    languages = ["en"] * 8 + ["tr"] * 2
+
+    first = builder.stratified_indices(axes, languages, 5)
+    second = builder.stratified_indices(axes, languages, 5)
+
+    assert np.array_equal(first, second)
+    assert len(first) == 5
+    assert sum(axes[i] == "web" for i in first) == 4
+    assert sum(axes[i] == "code" for i in first) == 1
+
+
+def test_merge_small_community_uses_largest_adjacent_edge_weight():
+    vectors = np.array([[1.0, 0.0]] * 200 + [[0.9, 0.1]] * 3 + [[0.0, 1.0]] * 200, np.float32)
+    labels = np.array([0] * 200 + [1] * 3 + [2] * 200, np.int32)
+    neighbors = np.zeros((len(labels), 1), np.int32)
+    weights = np.zeros((len(labels), 1), np.float32)
+    neighbors[200:203, 0] = 0
+    weights[200:203, 0] = 0.9
+
+    merged = builder.merge_small_communities(labels, vectors, neighbors, weights, minimum=200)
+
+    assert len(np.unique(merged)) == 2
+    assert merged[200] == merged[0]
+
+
+def test_sbatch_declares_the_approved_single_node_resources():
+    text = (Path(__file__).resolve().parents[1] / "tools" / "run_atlas_v2.sbatch").read_text()
+
+    for expected in (
+        "#SBATCH --account=c00005", "#SBATCH --partition=a100q",
+        "#SBATCH --nodes=1", "#SBATCH --ntasks=1", "#SBATCH --cpus-per-task=64",
+        "#SBATCH --gres=gpu:1", "#SBATCH --mem=480G", "#SBATCH --time=10-00:00:00",
+        "TARGET_BYTES=42949672960", "--scale 1.0",
+    ):
+        assert expected in text

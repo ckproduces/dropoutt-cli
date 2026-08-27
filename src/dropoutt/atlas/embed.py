@@ -1,4 +1,4 @@
-"""Embedding backend for the atlas: one encoder, quantised, 128 columns wide.
+"""Embedding backend for the atlas: one encoder, quantised to 256 columns.
 
 The atlas is a 128-dimensional space. The encoder it was built from —
 ``minishlab/potion-multilingual-128M`` — is a 500,353 x 256 float32 lookup
@@ -52,7 +52,7 @@ from pathlib import Path
 import numpy as np
 
 from ..compat import HAVE_TOKENIZERS
-from .normalize import EMBED_DIM, SIF_A, sif_weights_from_probs, truncate
+from .normalize import EMBED_DIM_FULL, SIF_A, sif_weights_from_probs, truncate
 
 DEFAULT_MODEL = "minishlab/potion-multilingual-128M"
 
@@ -67,7 +67,7 @@ MANIFEST = "manifest.json"
 
 #: Bumped when the conversion changes in a way that moves the vectors. An
 #: encoder cached by an older build is reconverted rather than reinterpreted.
-QUANT_FORMAT = 1
+QUANT_FORMAT = 2
 
 #: Documents encoded per pass in the weighted path. At 512 tokens each this is
 #: about eight million token ids, so the transient arrays that
@@ -94,6 +94,38 @@ class TokenizedCorpus:
     @property
     def n_tokens(self) -> int:
         return int(self.token_ids.size)
+
+
+def _window_counts(limit: int) -> tuple[int, int, int]:
+    """Split a fixed budget exactly as 40% head, 20% middle, 40% tail."""
+    if limit < 1:
+        return 0, 0, 0
+    head = (limit * 40) // 100
+    middle = (limit * 20) // 100
+    tail = limit - head - middle
+    return head, middle, tail
+
+
+def select_window(text: str, limit: int) -> str:
+    """Deterministically retain the head, middle, and tail of long text."""
+    if limit < 1:
+        return ""
+    if len(text) <= limit:
+        return text
+    head, middle, tail = _window_counts(limit)
+    middle_start = max(0, (len(text) - middle) // 2)
+    return text[:head] + text[middle_start : middle_start + middle] + text[-tail:]
+
+
+def select_token_windows(ids, limit: int) -> list[int]:
+    """Apply the same 40/20/40 selection to token ids after tokenization."""
+    if limit < 1:
+        return []
+    if len(ids) <= limit:
+        return list(ids)
+    head, middle, tail = _window_counts(limit)
+    middle_start = max(0, (len(ids) - middle) // 2)
+    return list(ids[:head]) + list(ids[middle_start : middle_start + middle]) + list(ids[-tail:])
 
 
 class QuantizedTable:
@@ -127,7 +159,7 @@ class QuantizedTable:
         return picked
 
     @classmethod
-    def from_float(cls, table: np.ndarray, width: int = EMBED_DIM) -> QuantizedTable:
+    def from_float(cls, table: np.ndarray, width: int = EMBED_DIM_FULL) -> QuantizedTable:
         """Quantise a float table to one byte per weight, scaled per row.
 
         Per row rather than per table because the rows of a static embedding
@@ -153,7 +185,7 @@ class Embedder:
         name: str,
         *,
         token_log_prob: dict[int, float] | None = None,
-        out_dim: int = EMBED_DIM,
+        out_dim: int = EMBED_DIM_FULL,
         weight_hash: str = "",
         normalize: bool = True,
     ) -> None:
@@ -188,6 +220,8 @@ class Embedder:
         batch_size: int = 1024,
         *,
         weighted: bool | None = None,
+        max_chars: int | None = None,
+        max_tokens: int = 512,
     ) -> np.ndarray:
         """Embed texts to ``out_dim`` (default 128). Not L2-normalised yet.
 
@@ -206,20 +240,24 @@ class Embedder:
         transient at :data:`ENCODE_CHUNK` documents' worth.
         """
         use_weighted = bool(self._token_log_prob) if weighted is None else weighted
+        if max_chars is not None:
+            texts = [select_window(text, max_chars) for text in texts]
         if len(texts) <= ENCODE_CHUNK:
-            return self._encode_chunk(texts, batch_size, use_weighted)
+            return self._encode_chunk(texts, batch_size, use_weighted, max_tokens)
         out = np.zeros((len(texts), self.out_dim), dtype=np.float32)
         for start in range(0, len(texts), ENCODE_CHUNK):
             part = texts[start : start + ENCODE_CHUNK]
             out[start : start + len(part)] = self._encode_chunk(
-                part, batch_size, use_weighted
+                part, batch_size, use_weighted, max_tokens
             )
         return out
 
     def _encode_chunk(
-        self, texts: list[str], batch_size: int, weighted: bool
+        self, texts: list[str], batch_size: int, weighted: bool, max_tokens: int
     ) -> np.ndarray:
-        tokens = self.tokenize(texts, batch_size=max(batch_size, 1024))
+        tokens = self.tokenize(
+            texts, batch_size=max(batch_size, 1024), max_length=max_tokens
+        )
         pooled = self.pool(tokens, weighted=weighted)
         if weighted:
             return pooled
@@ -237,6 +275,7 @@ class Embedder:
         *,
         batch_size: int = 8192,
         max_length: int = 512,
+        max_chars: int | None = None,
     ) -> TokenizedCorpus:
         """Batch-tokenize once into flat token IDs and document offsets.
 
@@ -247,6 +286,8 @@ class Embedder:
         """
         from itertools import chain
 
+        if max_chars is not None:
+            texts = [select_window(text, max_chars) for text in texts]
         tokenizer = self._tokenizer
         encode = getattr(tokenizer, "encode_batch_fast", None) or tokenizer.encode_batch
         chunks: list[np.ndarray] = []
@@ -256,10 +297,7 @@ class Embedder:
             encodings = encode(
                 texts[start : start + batch_size], add_special_tokens=False
             )
-            rows = [
-                ids[:max_length] if len(ids) > max_length else ids
-                for ids in (encoding.ids for encoding in encodings)
-            ]
+            rows = [select_token_windows(encoding.ids, max_length) for encoding in encodings]
             lengths[start : start + len(rows)] = [len(ids) for ids in rows]
             total = int(sum(len(ids) for ids in rows))
             if total:
@@ -479,7 +517,7 @@ def read_safetensors(path: Path, name: str) -> np.ndarray:
     return np.frombuffer(raw, dtype=dtype).reshape(entry["shape"])
 
 
-def convert(source: Path, target: Path, *, width: int = EMBED_DIM) -> None:
+def convert(source: Path, target: Path, *, width: int = EMBED_DIM_FULL) -> None:
     """Quantise the published weights into the form this package uses.
 
     Deterministic by construction, which is the property that matters: every
@@ -546,7 +584,7 @@ def load(
     *,
     cache_root: Path | None = None,
     offline: bool = False,
-    out_dim: int = EMBED_DIM,
+    out_dim: int = EMBED_DIM_FULL,
 ) -> Embedder | None:
     """Load the encoder, converting or downloading only if needed. None if unavailable."""
     if cache_root is not None:
@@ -567,7 +605,7 @@ def _load_uncached(
     *,
     cache_root: Path | None = None,
     offline: bool = False,
-    out_dim: int = EMBED_DIM,
+    out_dim: int = EMBED_DIM_FULL,
 ) -> Embedder | None:
     if not HAVE_TOKENIZERS:
         return None
@@ -579,12 +617,15 @@ def _load_uncached(
     local = local_model_dir(model_id, cache_root)
     quantized_dir = local / QUANTIZED_DIR
     stored = _load_quantized(quantized_dir)
+    if stored is not None and stored[0].width < EMBED_DIM_FULL:
+        # v1 cached the Matryoshka prefix. atlas-v2 needs the full 256 columns.
+        stored = None
 
     if stored is None or not (local / "tokenizer.json").exists():
         if not _fetch_source(model_id, local, offline=offline):
             return None
         try:
-            convert(local, quantized_dir)
+            convert(local, quantized_dir, width=EMBED_DIM_FULL)
         except Exception:
             # A weights file that cannot be converted is not going to convert
             # next time either — this is what a corrupt or truncated download
