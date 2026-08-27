@@ -57,8 +57,8 @@ def profile_declaration(version: str | None = None) -> dict:
         "max_tokens": profile.max_tokens,
         "pca_k": profile.pca_k,
         "n_l1": profile.n_l1,
-        "knn_k": profile.knn_k,
-        "leiden_gamma": profile.leiden_gamma,
+        "l2_k_min": profile.l2_k_min,
+        "l2_k_max": profile.l2_k_max,
     }
 
 

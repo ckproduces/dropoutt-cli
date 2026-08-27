@@ -23,8 +23,8 @@ scaffold at build time.
 | **Max tokens** | **1024** | **256** |
 | **Normalization** | Per-language mean + top-2 PCA + L2 | Global mean + top-1 PCA + L2 |
 | **L1 scaffold** | **256** (k-means, fixed) | **16** (k-means, fixed) |
-| **L2 discovery** | Leiden on kNN graph within each L1 | Same algorithm, coarser settings |
-| **L2 cell count** | **Unknown until build finishes** | **Unknown until build finishes** |
+| **L2 discovery** | k-means per L1, k=4..10 by cosine silhouette | Same |
+| **L2 cell count** | 4–10 per L1 (≤2560) | 4–10 per L1 (≤160) |
 | **Reference build data** | ~2.1M records post-dedup | ~130k stratified subsample |
 | **Artifact (compressed)** | **25–40 MB** | **2–4 MB** |
 | **Default runtime sample** | **200,000** | **50,000** |
@@ -150,31 +150,24 @@ from the lite artifact).
 L1 is not exposed as a user-facing tier. It groups the reference corpus before
 fine structure is discovered.
 
-### L2 — Leiden community detection (no fixed cell count)
+### L2 — k-means, brute-force k
 
-**Removed from v1:** `L2_BUDGET`, silhouette marginal-gain allocation, fixed
-child counts per L1.
-
-**New pipeline**, per L1 region:
+Per L1 region, fit MiniBatchKMeans for every k in **4..10** and keep the k with
+the best cosine silhouette. No Leiden, no kNN graph, no global cell budget.
 
 ```
 assign records to L1
-    → build kNN graph on embeddings within L1
-    → Leiden community detection (recursive splits on large L1s if configured)
-    → merge communities smaller than min_community_size
-    → one centroid per community = one L2 cell
-    → n_regions = total cells across all L1s (written to artifact at end)
+    → for k in 4..10: MiniBatchKMeans, cosine silhouette on a 4k sample
+    → keep the winning k
+    → one centroid per child = one L2 cell
+    → n_regions = total cells across all L1s (at most n_l1 × 10)
 ```
-
-The **final L2 count is unknown until training completes**. Release notes and
-artifact metadata record the outcome.
 
 | Parameter | atlas-v2 | atlas-v2-lite | Effect |
 | --- | --- | --- | --- |
-| kNN **k** | 30–50 | 10–20 | local neighbourhood density |
-| Leiden **γ** (resolution) | 0.12 | 0.08 | more vs fewer communities |
-| **Min community size** | 200 | 200 | calibration floor; smaller merges |
-| Recursive depth | split communities ≥ 40k | shallow / single pass | finer splits where mass supports it |
+| L2 **k** range | 4–10 | 4–10 | children per L1 |
+| Selection | cosine silhouette | same | picks k, not a budget |
+| **Min community size** | 200 | 200 | calibration floor |
 
 ### Build metadata (example)
 
@@ -182,12 +175,12 @@ artifact metadata record the outcome.
 {
   "version": "atlas-v2",
   "n_l1": 256,
-  "n_regions": 1847,
-  "l2_method": "leiden_knn_recursive",
-  "leiden_gamma": 0.12,
-  "leiden_k": 40,
+  "n_regions": 1408,
+  "l2_method": "kmeans_silhouette",
+  "l2_k_min": 4,
+  "l2_k_max": 10,
   "min_community_size": 200,
-  "l1_cell_counts": { "0": 12, "1": 3 }
+  "l1_cell_counts": { "0": 6, "1": 4 }
 }
 ```
 
@@ -212,7 +205,7 @@ One `fetch_corpus.py` run serves both products. Lite is a **stratified slice**
 | --- | --- | --- |
 | IDF saturation (≥99% token mass) | needs full ~2.1M fetch | N/A (mean pool) |
 | Axis floors (`AXIS_FLOORS`) | met at full fetch | met in subsample |
-| Min 200 records / community | Leiden + merge enforces | ~2k avg if ~130k / 64 cells |
+| Min 200 records / community | k-means k≥4 on large L1s | ~2k avg if ~130k / 64 cells |
 | Per-language norm (≥2k / language) | met at full scale | lite uses global norm |
 
 Below ~850k post-dedup, v2 would under-shoot IDF coverage and axis floors.
@@ -269,7 +262,7 @@ dedup + tokenize + embed at 256-d (once, memmap)
 ┌───────────────────────┬────────────────────────────┐
 │  build --profile full │  build --profile lite      │
 │  norm 256-d           │  truncate 16-d, norm       │
-│  L1=256, Leiden       │  L1=16, Leiden (coarse)    │
+│  L1=256, k-means k=4..10 │  L1=16, k-means k=4..10     │
 │  → atlas-v2.npz       │  subsample 130k            │
 │                       │  → atlas-v2-lite.npz       │
 └───────────────────────┴────────────────────────────┘
@@ -299,7 +292,7 @@ coordinates stay comparable for a given product + pipeline hash.
 | --- | --- | --- |
 | Products | one bundle | two (`atlas-v2`, `atlas-v2-lite`) |
 | Embed dims | 128 | 256 / 16 |
-| L2 allocation | k-means budget (800 cap → 215 cells) | Leiden (count emergent) |
+| L2 allocation | k-means budget (800 cap → 215 cells) | k-means k=4..10 per L1, silhouette |
 | User-facing tiers | L1 + L2 in one report | flat cells only |
 | Reference records | 2,125,556 | ~2.1M (full), ~130k (lite) |
 | IDF token mass | 98.91% at 120k types | target ≥99% |
@@ -314,8 +307,7 @@ release decision.
 - Quantise encoder to **256 columns** once; lite uses `load_embedder(out_dim=16)`,
   full uses `out_dim=256`. Same cache directory.
 - Warmup must pass `atlas.dim` instead of hardcoding `EMBED_DIM=128`.
-- `pipeline_hash` must include embed profile, Leiden parameters, and `l2_method`.
-- Record `n_regions` and Leiden settings in every artifact; do not publish a
-  fixed cell count in user-facing docs before a build completes.
+- `pipeline_hash` must include embed profile, L2 k range, and `l2_method`.
+- Record `n_regions` and chosen L2 method in every artifact.
 - Raise `fetch_corpus` `MAX_CHARS` to **4000** for v2 full build parity with the
   runtime char window (lite build may truncate earlier).

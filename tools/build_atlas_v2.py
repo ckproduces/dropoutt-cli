@@ -47,10 +47,6 @@ from dropoutt.atlas.profiles import ATLAS_V2, ATLAS_V2_LITE, AtlasProfile
 SEED = 42
 BLOCK = 512
 MIN_COMMUNITY = 200
-RECURSIVE_SPLIT_MIN = 40_000
-HNSW_M = 32
-HNSW_EF_CONSTRUCTION = 200
-HNSW_EF_SEARCH = 128
 LITE_RECORDS = 130_000
 FULL_EXEMPLARS, LITE_EXEMPLARS = 64, 24
 FULL_EXEMPLAR_CHARS, LITE_EXEMPLAR_CHARS = 800, 384
@@ -412,69 +408,48 @@ def merge_small_communities(labels: np.ndarray, vectors: np.ndarray,
     return np.asarray([unique.index(int(value)) for value in labels], dtype=np.int32)
 
 
-def _knn_graph(vectors: np.ndarray, k: int) -> tuple[np.ndarray, np.ndarray]:
-    """HNSW cosine graph. Optional dependencies are imported only at call time."""
-    try:
-        import faiss
-    except ImportError as exc:
-        raise RuntimeError("atlas-v2 build needs faiss-cpu") from exc
-    n, dim = vectors.shape
-    index = faiss.IndexHNSWFlat(dim, HNSW_M, faiss.METRIC_INNER_PRODUCT)
-    index.hnsw.efConstruction = HNSW_EF_CONSTRUCTION
-    index.hnsw.efSearch = HNSW_EF_SEARCH
-    data = np.ascontiguousarray(vectors, dtype=np.float32)
-    index.add(data)
-    take = min(k + 1, n)
-    scores, ids = index.search(data, take)
-    neighbors = np.empty((n, min(k, n - 1)), dtype=np.int32)
-    weights = np.empty_like(neighbors, dtype=np.float32)
-    for row in range(n):
-        kept = [(int(i), float(s)) for i, s in zip(ids[row], scores[row], strict=True) if int(i) != row]
-        kept = kept[: neighbors.shape[1]]
-        while len(kept) < neighbors.shape[1]:
-            kept.append((row, 0.0))
-        for col, (neighbor, score) in enumerate(kept):
-            neighbors[row, col] = neighbor
-            weights[row, col] = max(score, 0.0)
-    return neighbors, weights
+def _best_kmeans(vectors: np.ndarray, k_min: int, k_max: int, *, seed: int
+                 ) -> tuple[np.ndarray, int, float, np.ndarray]:
+    """Try every k in ``[k_min, k_max]`` and keep the best cosine silhouette."""
+    from sklearn.cluster import MiniBatchKMeans
+    from sklearn.metrics import silhouette_score
 
+    n = len(vectors)
+    fallback = _norm(np.asarray(vectors, dtype=np.float32).mean(axis=0, keepdims=True))
+    if n < 2 or k_max < 2:
+        return np.zeros(n, dtype=np.int32), 1, 0.0, fallback
+    hi = min(int(k_max), n - 1)
+    lo = min(max(int(k_min), 2), hi)
+    rng = np.random.default_rng(seed)
+    fit_n = min(n, 20_000)
+    fit_idx = np.arange(n) if n == fit_n else np.sort(rng.choice(n, fit_n, replace=False))
+    fit = np.asarray(vectors[fit_idx], dtype=np.float32)
+    score_n = min(len(fit), 4_000)
+    score_idx = np.arange(len(fit)) if len(fit) == score_n else rng.choice(len(fit), score_n, replace=False)
+    scoring = fit[score_idx]
 
-def _leiden(vectors: np.ndarray, k: int, gamma: float, recursive: bool) -> np.ndarray:
-    """Cluster one L1 partition and optionally split its largest communities once."""
-    try:
-        import igraph as ig
-        import leidenalg
-    except ImportError as exc:
-        raise RuntimeError("atlas-v2 build needs igraph and leidenalg") from exc
-    if len(vectors) < MIN_COMMUNITY * 2:
-        return np.zeros(len(vectors), dtype=np.int32)
-    neighbors, weights = _knn_graph(vectors, min(k, len(vectors) - 1))
-    edges: dict[tuple[int, int], float] = {}
-    for row in range(len(vectors)):
-        for neighbor, weight in zip(neighbors[row], weights[row], strict=True):
-            a, b = sorted((row, int(neighbor)))
-            if a == b:
-                continue
-            edges[(a, b)] = max(edges.get((a, b), 0.0), float(weight))
-    graph = ig.Graph(n=len(vectors), edges=list(edges), directed=False)
-    graph.es["weight"] = [edges[edge] for edge in edges]
-    labels = np.asarray(leidenalg.find_partition(
-        graph, leidenalg.RBConfigurationVertexPartition, weights="weight",
-        resolution_parameter=gamma, seed=SEED,
-    ).membership, dtype=np.int32)
-    labels = merge_small_communities(labels, vectors, neighbors, weights)
-    if recursive:
-        next_label = int(labels.max()) + 1
-        for cell in np.unique(labels):
-            members = np.flatnonzero(labels == cell)
-            if len(members) < RECURSIVE_SPLIT_MIN:
-                continue
-            child = _leiden(vectors[members], k, gamma, recursive=False)
-            if child.max() > 0:
-                labels[members] = child + next_label
-                next_label += int(child.max()) + 1
-        labels = merge_small_communities(labels, vectors, neighbors, weights)
-    return labels
+    best_score, best_model = -np.inf, None
+    for k in range(lo, hi + 1):
+        model = MiniBatchKMeans(
+            n_clusters=k, random_state=seed, batch_size=min(2048, max(256, k * 16)),
+            n_init=3, max_iter=150,
+        ).fit(fit)
+        guessed = model.predict(scoring)
+        if len(set(guessed.tolist())) < 2:
+            score = -1.0
+        else:
+            score = float(silhouette_score(scoring, guessed, metric="cosine"))
+        if score > best_score:
+            best_score, best_model = score, model
+    assert best_model is not None
+    labels = best_model.predict(np.asarray(vectors, dtype=np.float32)).astype(np.int32)
+    centres = _norm(best_model.cluster_centers_.astype(np.float32))
+    used = np.unique(labels)
+    if len(used) != len(centres):
+        remap = {int(old): new for new, old in enumerate(used.tolist())}
+        labels = np.asarray([remap[int(value)] for value in labels], dtype=np.int32)
+        centres = centres[used]
+    return labels, int(labels.max()) + 1, float(best_score), centres
 
 
 def discover_cells(vectors: np.ndarray, profile: AtlasProfile) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -497,12 +472,13 @@ def discover_cells(vectors: np.ndarray, profile: AtlasProfile) -> tuple[np.ndarr
         members = np.flatnonzero(l1_assign == parent)
         if not len(members):
             continue
-        local = _leiden(vectors[members], profile.knn_k, profile.leiden_gamma,
-                        profile.version == ATLAS_V2.version)
+        local, n_local, score, _ = _best_kmeans(
+            vectors[members], profile.l2_k_min, profile.l2_k_max, seed=SEED + parent,
+        )
         cell_assign[members] = local + next_cell
-        cell_parent.extend([parent] * (int(local.max()) + 1))
-        next_cell += int(local.max()) + 1
-        log(f"    L1 {parent:3d}: {len(members):,} rows → {int(local.max()) + 1} cells")
+        cell_parent.extend([parent] * n_local)
+        next_cell += n_local
+        log(f"    L1 {parent:3d}: {len(members):,} rows → {n_local} cells (k* silhouette {score:.3f})")
     return cell_assign, np.asarray(cell_parent, dtype=np.int32), l1_centroids
 
 
@@ -896,27 +872,26 @@ def _build_from_memmap(
             continue
         if len(members) <= l1_cap:
             local_vecs = np.asarray(mm[members], dtype=np.float32)
-            local = _leiden(local_vecs, profile.knn_k, profile.leiden_gamma,
-                            profile.version == ATLAS_V2.version)
+            local, n_local, score, _ = _best_kmeans(
+                local_vecs, profile.l2_k_min, profile.l2_k_max, seed=SEED + parent,
+            )
             assignment[members] = local + next_cell
-            n_local = int(local.max()) + 1
         else:
             pick = members[np.linspace(0, len(members) - 1, l1_cap, dtype=np.int64)]
             local_vecs = np.asarray(mm[pick], dtype=np.float32)
-            local = _leiden(local_vecs, profile.knn_k, profile.leiden_gamma,
-                            profile.version == ATLAS_V2.version)
-            n_local = int(local.max()) + 1
-            local_centroids = _norm(np.vstack([
-                local_vecs[local == cell].mean(axis=0) for cell in range(n_local)
-            ]).astype(np.float32))
+            local, n_local, score, local_centroids = _best_kmeans(
+                local_vecs, profile.l2_k_min, profile.l2_k_max, seed=SEED + parent,
+            )
             assignment[pick] = local + next_cell
             rest = np.setdiff1d(members, pick)
             for start in range(0, len(rest), 65_536):
                 part = rest[start:start + 65_536]
-                assignment[part] = (np.asarray(mm[part], dtype=np.float32) @ local_centroids.T).argmax(axis=1) + next_cell
+                assignment[part] = (
+                    np.asarray(mm[part], dtype=np.float32) @ local_centroids.T
+                ).argmax(axis=1) + next_cell
         cell_parent.extend([parent] * n_local)
         next_cell += n_local
-        log(f"    L1 {parent:3d}: {len(members):,} rows → {n_local} cells")
+        log(f"    L1 {parent:3d}: {len(members):,} rows → {n_local} cells (k* silhouette {score:.3f})")
     parents = np.asarray(cell_parent, dtype=np.int32)
     n_cells = len(parents)
     cluster_idx = kmeans_idx
@@ -970,9 +945,8 @@ def _build_from_memmap(
 
     declaration = {
         **asdict(profile), "seed": SEED,
-        "hnsw": {"M": HNSW_M, "efConstruction": HNSW_EF_CONSTRUCTION, "efSearch": HNSW_EF_SEARCH},
         "min_community_size": MIN_COMMUNITY, "encoder_weight_hash": encoder_hash,
-        "corpus_hash": corpus_hash, "l2_method": "leiden_knn_recursive",
+        "corpus_hash": corpus_hash, "l2_method": "kmeans_silhouette",
     }
     meta = {
         "version": profile.version, "profile": asdict(profile),
@@ -980,13 +954,11 @@ def _build_from_memmap(
         "encoder_weight_hash": encoder_hash, "corpus_hash": corpus_hash,
         "n_regions": n_cells, "n_reference_records": int(counts.sum()),
         "n_l1": profile.n_l1, "pooling": profile.pooling,
-        "leiden": {
-            "gamma": profile.leiden_gamma, "k": profile.knn_k,
-            "min_community_size": MIN_COMMUNITY,
-            "recursive_split_large_communities": profile.version == ATLAS_V2.version,
-            "recursive_split_min": RECURSIVE_SPLIT_MIN if profile.version == ATLAS_V2.version else None,
+        "l2": {
+            "method": "kmeans_silhouette",
+            "k_min": profile.l2_k_min, "k_max": profile.l2_k_max,
+            "metric": "cosine_silhouette",
         },
-        "hnsw": declaration["hnsw"],
         "normalization": {
             "per_language": profile.version == ATLAS_V2.version,
             "pca_k": profile.pca_k, "min_language_members": 2_000,

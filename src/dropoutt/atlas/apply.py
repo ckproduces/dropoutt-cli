@@ -48,6 +48,7 @@ import numpy as np
 
 from ..textutil import surface_shares
 from .normalize import NormConstants
+from .profiles import DEFAULT_ATLAS_VERSION, get_profile
 
 
 class AssignedRecords(NamedTuple):
@@ -178,6 +179,26 @@ class Atlas:
     @property
     def dim(self) -> int:
         return int(self.centroids.shape[1])
+
+    @property
+    def profile(self):
+        """Declared product parameters, including the user-visible L2 surface."""
+        version = str(self.meta.get("version", "atlas-v1-lite"))
+        try:
+            return get_profile(version)
+        except ValueError:
+            return None
+
+    @property
+    def user_resolution(self) -> str:
+        """Atlas v2 products expose fine cells only; L1 is build metadata."""
+        version = str(self.meta.get("version", ""))
+        default = "l2" if version.startswith("atlas-v2") else "l1_l2"
+        return str(self.meta.get("user_resolution", default))
+
+    @property
+    def flat_cells(self) -> bool:
+        return self.user_resolution == "l2"
 
     @property
     def embed_model(self) -> str:
@@ -640,6 +661,7 @@ class Atlas:
             "off_atlas_rate": round(off_rate, 4),
             "fit": _fit_band(off_rate),
             "atlas_version": self.meta.get("version"),
+            "atlas_profile": self.meta.get("profile", self.meta.get("version")),
             "pipeline_hash": self.pipeline_hash,
             "embed_model": self.embed_model,
             # A result that names its atlas and pipeline but not the encoder
@@ -657,6 +679,13 @@ class Atlas:
             "l0_holdout_accuracy": self.meta.get("l0_holdout_accuracy"),
             "region_purity_by_taxonomy": self.meta.get("region_purity_by_taxonomy"),
             "n_l1": self.n_l1,
+            "n_regions": self.n_regions,
+            "corpus_manifest_hash": self.meta.get("corpus_manifest_hash", ""),
+            "l2": self.meta.get("l2", self.meta.get("leiden", {
+                "gamma": self.meta.get("leiden_gamma"),
+                "k": self.meta.get("leiden_k"),
+            })),
+            "user_resolution": self.user_resolution,
         }
 
         if languages:
@@ -719,15 +748,14 @@ class Atlas:
             effective_n = float(placed)
         result["effective_sample"] = round(effective_n, 1)
 
-        # Categories are counted over placed records only. Counting them over
-        # every record while the region histogram covers only placed ones put
-        # two different denominators in the same panel, so a category share and
-        # a region share could not be read against each other.
         cat_counts: dict[str, int] = {}
-        cat_weights = w if w is not None else np.ones(int((~off_mask).sum()))
-        for c, weight in zip(np.asarray(categories)[~off_mask], cat_weights, strict=True):
-            key = str(int(c))
-            cat_counts[key] = cat_counts.get(key, 0) + int(max(round(weight), 1))
+        if not self.flat_cells:
+            # Categories are legacy L1 report fields. Atlas v2 exposes only
+            # L2 cells, while preserving L1 parents in artifact metadata.
+            cat_weights = w if w is not None else np.ones(int((~off_mask).sum()))
+            for c, weight in zip(np.asarray(categories)[~off_mask], cat_weights, strict=True):
+                key = str(int(c))
+                cat_counts[key] = cat_counts.get(key, 0) + int(max(round(weight), 1))
 
         nonzero = int((region_counts > 0).sum())
         mass = region_counts / max(int(region_counts.sum()), 1)
@@ -762,10 +790,13 @@ class Atlas:
                 for r in np.nonzero(region_counts)[0]
             },
             "top_regions": [
-                {"region": int(r), "records": int(region_counts[r]),
-                 "share": round(float(mass[r]), 4),
-                 "category": int(self.region_category[r]),
-                 "terms": self.region_terms[r] if r < len(self.region_terms) else ""}
+                {
+                    "region": int(r),
+                    "records": int(region_counts[r]),
+                    "share": round(float(mass[r]), 4),
+                    "terms": self.region_terms[r] if r < len(self.region_terms) else "",
+                    **({} if self.flat_cells else {"category": int(self.region_category[r])}),
+                }
                 for r in np.argsort(-region_counts)[:12]
                 if region_counts[r] > 0
             ],
@@ -779,13 +810,13 @@ class Atlas:
             # by construction.
             "region_density": density,
             "density_model": density_model,
-            "coverage_gaps": self._gaps(region_counts),
+            "coverage_gaps": [] if self.flat_cells else self._gaps(region_counts),
             # How many subject areas the atlas actually carries regions for.
             # Not the size of the taxonomy: 31 categories are defined and only
             # 20 drew enough reference data to be clustered, so a gap list
             # measured against 31 would count 11 areas the atlas cannot see
             # either.
-            "categories_total": len({int(c) for c in self.region_category}),
+            "categories_total": 0 if self.flat_cells else len({int(c) for c in self.region_category}),
         })
         if datasets is not None and len(datasets) == total:
             result["by_dataset_regions"] = self._per_dataset(regions, datasets)
@@ -1261,9 +1292,6 @@ def _diagnose(detail: dict[str, Any]) -> str:
 #: coverage number is only comparable to another coverage number from the same
 #: coordinate system. Two users on the same dropoutt version must get the same
 #: map; upgrading the map is a release decision, made by editing this line.
-DEFAULT_ATLAS_VERSION = "atlas-v1-lite"
-
-
 def atlas_path_for(version: str) -> Path | None:
     from importlib import resources
 
@@ -1282,7 +1310,11 @@ def bundled_atlas_path(version: str | None = None) -> Path | None:
     a broken install, and returning None says that plainly rather than quietly
     reporting coordinates from a different map.
     """
-    return atlas_path_for(version if version is not None else DEFAULT_ATLAS_VERSION)
+    try:
+        selected = get_profile(version).version
+    except ValueError:
+        return None
+    return atlas_path_for(selected)
 
 
 def load_bundled(version: str | None = None) -> Atlas | None:

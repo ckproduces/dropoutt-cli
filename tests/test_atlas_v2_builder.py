@@ -63,6 +63,21 @@ def test_sbatch_declares_the_approved_single_node_resources():
         assert expected in text
 
 
+def test_best_kmeans_picks_k_in_range_on_separated_blobs():
+    rng = np.random.default_rng(0)
+    blobs = [rng.normal(loc=(i * 8, 0, 0, 0), scale=0.15, size=(50, 4)) for i in range(5)]
+    vectors = np.vstack(blobs).astype(np.float32)
+    vectors /= np.linalg.norm(vectors, axis=1, keepdims=True) + 1e-9
+
+    labels, k, score, centres = builder._best_kmeans(vectors, 4, 10, seed=0)
+
+    assert 4 <= k <= 10
+    assert labels.min() == 0
+    assert int(labels.max()) + 1 == k
+    assert centres.shape == (k, 4)
+    assert np.isfinite(score)
+
+
 def test_uint64_set_accepts_once(tmp_path):
     seen = builder.Uint64Set(tmp_path / "seen.u64", slots=1024)
     assert seen.add(7)

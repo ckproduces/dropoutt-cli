@@ -17,8 +17,8 @@ class AtlasProfile:
     default_sample: int
     pca_k: int
     n_l1: int
-    knn_k: int
-    leiden_gamma: float
+    l2_k_min: int
+    l2_k_max: int
 
 
 ATLAS_V2 = AtlasProfile(
@@ -30,8 +30,8 @@ ATLAS_V2 = AtlasProfile(
     default_sample=200_000,
     pca_k=2,
     n_l1=256,
-    knn_k=40,
-    leiden_gamma=0.12,
+    l2_k_min=4,
+    l2_k_max=10,
 )
 
 ATLAS_V2_LITE = AtlasProfile(
@@ -43,8 +43,8 @@ ATLAS_V2_LITE = AtlasProfile(
     default_sample=50_000,
     pca_k=1,
     n_l1=16,
-    knn_k=15,
-    leiden_gamma=0.08,
+    l2_k_min=4,
+    l2_k_max=10,
 )
 
 # v1 has no profile metadata in its artifact. It remains loadable for existing
@@ -58,8 +58,8 @@ ATLAS_V1_LITE = AtlasProfile(
     default_sample=200_000,
     pca_k=2,
     n_l1=48,
-    knn_k=0,
-    leiden_gamma=0.0,
+    l2_k_min=0,
+    l2_k_max=0,
 )
 
 PROFILES = {profile.version: profile for profile in (ATLAS_V2, ATLAS_V2_LITE, ATLAS_V1_LITE)}
