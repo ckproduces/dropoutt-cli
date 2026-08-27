@@ -410,7 +410,10 @@ def merge_small_communities(labels: np.ndarray, vectors: np.ndarray,
 
 def _best_kmeans(vectors: np.ndarray, k_min: int, k_max: int, *, seed: int
                  ) -> tuple[np.ndarray, int, float, np.ndarray]:
-    """Try every k in ``[k_min, k_max]`` and keep the best cosine silhouette."""
+    """Try every k in ``[k_min, k_max]`` and keep the best cosine silhouette.
+
+    k=1 has no silhouette; it scores 0 so a negative split loses to a single cell.
+    """
     from sklearn.cluster import MiniBatchKMeans
     from sklearn.metrics import silhouette_score
 
@@ -419,7 +422,7 @@ def _best_kmeans(vectors: np.ndarray, k_min: int, k_max: int, *, seed: int
     if n < 2 or k_max < 2:
         return np.zeros(n, dtype=np.int32), 1, 0.0, fallback
     hi = min(int(k_max), n - 1)
-    lo = min(max(int(k_min), 2), hi)
+    lo = max(int(k_min), 1)
     rng = np.random.default_rng(seed)
     fit_n = min(n, 20_000)
     fit_idx = np.arange(n) if n == fit_n else np.sort(rng.choice(n, fit_n, replace=False))
@@ -428,8 +431,10 @@ def _best_kmeans(vectors: np.ndarray, k_min: int, k_max: int, *, seed: int
     score_idx = np.arange(len(fit)) if len(fit) == score_n else rng.choice(len(fit), score_n, replace=False)
     scoring = fit[score_idx]
 
-    best_score, best_model = -np.inf, None
-    for k in range(lo, hi + 1):
+    best_score, best_model = (-np.inf, None)
+    if lo <= 1:
+        best_score, best_model = 0.0, None
+    for k in range(max(lo, 2), hi + 1):
         model = MiniBatchKMeans(
             n_clusters=k, random_state=seed, batch_size=min(2048, max(256, k * 16)),
             n_init=3, max_iter=150,
@@ -441,7 +446,8 @@ def _best_kmeans(vectors: np.ndarray, k_min: int, k_max: int, *, seed: int
             score = float(silhouette_score(scoring, guessed, metric="cosine"))
         if score > best_score:
             best_score, best_model = score, model
-    assert best_model is not None
+    if best_model is None:
+        return np.zeros(n, dtype=np.int32), 1, 0.0, fallback
     labels = best_model.predict(np.asarray(vectors, dtype=np.float32)).astype(np.int32)
     centres = _norm(best_model.cluster_centers_.astype(np.float32))
     used = np.unique(labels)

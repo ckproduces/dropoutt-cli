@@ -23,8 +23,8 @@ scaffold at build time.
 | **Max tokens** | **1024** | **256** |
 | **Normalization** | Per-language mean + top-2 PCA + L2 | Global mean + top-1 PCA + L2 |
 | **L1 scaffold** | **256** (k-means, fixed) | **16** (k-means, fixed) |
-| **L2 discovery** | k-means per L1, k=4..10 by cosine silhouette | Same |
-| **L2 cell count** | 4–10 per L1 (≤2560) | 4–10 per L1 (≤160) |
+| **L2 discovery** | k-means per L1, k=1..10 by cosine silhouette | Same |
+| **L2 cell count** | 1–10 per L1 (≤2560) | 1–10 per L1 (≤160) |
 | **Reference build data** | ~2.1M records post-dedup | ~130k stratified subsample |
 | **Artifact (compressed)** | **25–40 MB** | **2–4 MB** |
 | **Default runtime sample** | **200,000** | **50,000** |
@@ -152,12 +152,12 @@ fine structure is discovered.
 
 ### L2 — k-means, brute-force k
 
-Per L1 region, fit MiniBatchKMeans for every k in **4..10** and keep the k with
+Per L1 region, fit MiniBatchKMeans for every k in **1..10** and keep the k with
 the best cosine silhouette. No Leiden, no kNN graph, no global cell budget.
 
 ```
 assign records to L1
-    → for k in 4..10: MiniBatchKMeans, cosine silhouette on a 4k sample
+    → for k in 1..10: MiniBatchKMeans, cosine silhouette on a 4k sample
     → keep the winning k
     → one centroid per child = one L2 cell
     → n_regions = total cells across all L1s (at most n_l1 × 10)
@@ -165,7 +165,7 @@ assign records to L1
 
 | Parameter | atlas-v2 | atlas-v2-lite | Effect |
 | --- | --- | --- | --- |
-| L2 **k** range | 4–10 | 4–10 | children per L1 |
+| L2 **k** range | 1–10 | 1–10 | children per L1 |
 | Selection | cosine silhouette | same | picks k, not a budget |
 | **Min community size** | 200 | 200 | calibration floor |
 
@@ -177,7 +177,7 @@ assign records to L1
   "n_l1": 256,
   "n_regions": 1408,
   "l2_method": "kmeans_silhouette",
-  "l2_k_min": 4,
+  "l2_k_min": 1,
   "l2_k_max": 10,
   "min_community_size": 200,
   "l1_cell_counts": { "0": 6, "1": 4 }
@@ -205,7 +205,7 @@ One `fetch_corpus.py` run serves both products. Lite is a **stratified slice**
 | --- | --- | --- |
 | IDF saturation (≥99% token mass) | needs full ~2.1M fetch | N/A (mean pool) |
 | Axis floors (`AXIS_FLOORS`) | met at full fetch | met in subsample |
-| Min 200 records / community | k-means k≥4 on large L1s | ~2k avg if ~130k / 64 cells |
+| Min 200 records / community | k-means k=1..10 on large L1s | ~2k avg if ~130k / 64 cells |
 | Per-language norm (≥2k / language) | met at full scale | lite uses global norm |
 
 Below ~850k post-dedup, v2 would under-shoot IDF coverage and axis floors.
@@ -262,7 +262,7 @@ dedup + tokenize + embed at 256-d (once, memmap)
 ┌───────────────────────┬────────────────────────────┐
 │  build --profile full │  build --profile lite      │
 │  norm 256-d           │  truncate 16-d, norm       │
-│  L1=256, k-means k=4..10 │  L1=16, k-means k=4..10     │
+│  L1=256, k-means k=1..10 │  L1=16, k-means k=1..10     │
 │  → atlas-v2.npz       │  subsample 130k            │
 │                       │  → atlas-v2-lite.npz       │
 └───────────────────────┴────────────────────────────┘
@@ -292,7 +292,7 @@ coordinates stay comparable for a given product + pipeline hash.
 | --- | --- | --- |
 | Products | one bundle | two (`atlas-v2`, `atlas-v2-lite`) |
 | Embed dims | 128 | 256 / 16 |
-| L2 allocation | k-means budget (800 cap → 215 cells) | k-means k=4..10 per L1, silhouette |
+| L2 allocation | k-means budget (800 cap → 215 cells) | k-means k=1..10 per L1, silhouette |
 | User-facing tiers | L1 + L2 in one report | flat cells only |
 | Reference records | 2,125,556 | ~2.1M (full), ~130k (lite) |
 | IDF token mass | 98.91% at 120k types | target ≥99% |

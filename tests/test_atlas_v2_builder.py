@@ -69,9 +69,9 @@ def test_best_kmeans_picks_k_in_range_on_separated_blobs():
     vectors = np.vstack(blobs).astype(np.float32)
     vectors /= np.linalg.norm(vectors, axis=1, keepdims=True) + 1e-9
 
-    labels, k, score, centres = builder._best_kmeans(vectors, 4, 10, seed=0)
+    labels, k, score, centres = builder._best_kmeans(vectors, 1, 10, seed=0)
 
-    assert 4 <= k <= 10
+    assert 1 <= k <= 10
     assert labels.min() == 0
     assert int(labels.max()) + 1 == k
     assert centres.shape == (k, 4)

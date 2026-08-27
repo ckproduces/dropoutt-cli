@@ -30,7 +30,7 @@ ATLAS_V2 = AtlasProfile(
     default_sample=200_000,
     pca_k=2,
     n_l1=256,
-    l2_k_min=4,
+    l2_k_min=1,
     l2_k_max=10,
 )
 
@@ -43,7 +43,7 @@ ATLAS_V2_LITE = AtlasProfile(
     default_sample=50_000,
     pca_k=1,
     n_l1=16,
-    l2_k_min=4,
+    l2_k_min=1,
     l2_k_max=10,
 )
 
