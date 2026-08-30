@@ -19,7 +19,9 @@ def test_baseline_catalogue_is_pinned_and_scaled() -> None:
     assert atlas_sources.V1_REFERENCE_RECORDS == 2_125_556
     assert atlas_sources.LOGICAL_BYTE_TARGET == 200 * 1024 ** 3
     assert abs(sum(atlas_sources.AXIS_TARGET_SHARES.values()) - 1.0) < 1e-9
-    assert atlas_sources.AXIS_TARGET_SHARES["web"] == 0.84
+    assert atlas_sources.AXIS_TARGET_SHARES["web"] == 0.815
+    assert atlas_sources.AXIS_TARGET_SHARES["training"] == 0.025
+    assert atlas_sources.AXIS_TARGET_BYTES["training"] == 5 * 1024 ** 3
     assert sum(atlas_sources.AXIS_TARGET_BYTES.values()) == atlas_sources.LOGICAL_BYTE_TARGET
     assert sum(atlas_sources.LANGUAGE_TARGET_BYTES.values()) == atlas_sources.LOGICAL_BYTE_TARGET
     assert len(atlas_sources.FINEWEB2_BASELINE) == 45

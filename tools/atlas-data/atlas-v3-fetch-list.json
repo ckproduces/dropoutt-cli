@@ -1,96 +1,83 @@
 {
   "plan": "atlas-v3-200gib",
-  "written_at": "2026-08-30T05:24:47Z",
+  "written_at": "2026-08-30T05:35:04Z",
   "logical_target_bytes": 214748364800,
   "logical_target_gib": 200.0,
   "axis_targets_gib": {
-    "web": 168.0,
+    "web": 163.0,
     "encyclopedic": 6.0,
     "scientific": 10.0,
     "code": 4.0,
     "forum": 2.0,
     "legal_government": 2.0,
     "books": 4.0,
-    "educational": 4.0
+    "educational": 4.0,
+    "training": 5.0
   },
-  "current_pct": 74.3535,
+  "current_pct": 73.4182,
   "pending": [
     {
       "slug": "HuggingFaceFW__fineweb__CC-MAIN-2024-51",
       "axis": "web",
-      "have_bytes": 0,
-      "target_bytes": 8321499136,
-      "shortfall_bytes": 8321499136
+      "have_bytes": 1401860508,
+      "target_bytes": 2952790016,
+      "shortfall_bytes": 1550929508
     },
     {
       "slug": "wikimedia__wikipedia__20231101.simple",
       "axis": "encyclopedic",
-      "have_bytes": 0,
+      "have_bytes": 205085213,
       "target_bytes": 1610612736,
-      "shortfall_bytes": 1610612736
+      "shortfall_bytes": 1405527523
     },
     {
       "slug": "common-pile__arxiv_papers_filtered",
       "axis": "scientific",
-      "have_bytes": 1183286609,
+      "have_bytes": 159797776,
       "target_bytes": 2147483648,
-      "shortfall_bytes": 964197039
+      "shortfall_bytes": 1987685872
     },
     {
       "slug": "common-pile__peS2o_filtered",
       "axis": "scientific",
-      "have_bytes": 1610612550,
+      "have_bytes": 270135557,
       "target_bytes": 2147483648,
-      "shortfall_bytes": 536871098
+      "shortfall_bytes": 1877348091
     },
     {
       "slug": "common-pile__pubmed_filtered",
       "axis": "scientific",
-      "have_bytes": 0,
+      "have_bytes": 285154287,
       "target_bytes": 4294967296,
-      "shortfall_bytes": 4294967296
-    },
-    {
-      "slug": "common-pile__arxiv_abstracts_filtered",
-      "axis": "scientific",
-      "have_bytes": 0,
-      "target_bytes": 1073741824,
-      "shortfall_bytes": 1073741824
-    },
-    {
-      "slug": "common-pile__biodiversity_heritage_library_filtered",
-      "axis": "scientific",
-      "have_bytes": 0,
-      "target_bytes": 1073741824,
-      "shortfall_bytes": 1073741824
+      "shortfall_bytes": 4009813009
     },
     {
       "slug": "common-pile__stackv2_edu_filtered",
       "axis": "code",
-      "have_bytes": 3221222843,
+      "have_bytes": 887413653,
       "target_bytes": 4294967296,
-      "shortfall_bytes": 1073744453
+      "shortfall_bytes": 3407553643
     },
     {
       "slug": "common-pile__stackexchange_filtered",
       "axis": "forum",
-      "have_bytes": 1610612158,
+      "have_bytes": 908327532,
       "target_bytes": 2147483648,
-      "shortfall_bytes": 536871490
+      "shortfall_bytes": 1239156116
     },
     {
       "slug": "common-pile__regulations_filtered",
       "axis": "legal_government",
-      "have_bytes": 699663979,
+      "have_bytes": 29795903,
       "target_bytes": 805306368,
-      "shortfall_bytes": 105642389
+      "shortfall_bytes": 775510465
     },
     {
       "slug": "common-pile__usgpo_filtered",
       "axis": "legal_government",
-      "have_bytes": 0,
+      "have_bytes": 21761959,
       "target_bytes": 536870912,
-      "shortfall_bytes": 536870912
+      "shortfall_bytes": 515108953
     },
     {
       "slug": "common-pile__project_gutenberg_filtered",
@@ -140,6 +127,76 @@
       "have_bytes": 0,
       "target_bytes": 3350074491,
       "shortfall_bytes": 3350074491
+    },
+    {
+      "slug": "CohereLabs__aya_dataset",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 268435456,
+      "shortfall_bytes": 268435456
+    },
+    {
+      "slug": "OpenAssistant__oasst2",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 214748365,
+      "shortfall_bytes": 214748365
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__english",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 751619277,
+      "shortfall_bytes": 751619277
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__spanish",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 429496730,
+      "shortfall_bytes": 429496730
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__german",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 375809638,
+      "shortfall_bytes": 375809638
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__french",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 375809638,
+      "shortfall_bytes": 375809638
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__simplified_chinese",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 322122547,
+      "shortfall_bytes": 322122547
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__japanese",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 322122547,
+      "shortfall_bytes": 322122547
+    },
+    {
+      "slug": "HuggingFaceTB__smollm-corpus__cosmopedia-v2",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 1073741824,
+      "shortfall_bytes": 1073741824
+    },
+    {
+      "slug": "HuggingFaceFW__fineweb-edu__CC-MAIN-2024-46",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 1234803098,
+      "shortfall_bytes": 1234803098
     }
   ],
   "sources": [
@@ -160,8 +217,8 @@
       "config": "CC-MAIN-2024-51",
       "axis": "web",
       "lang": "en",
-      "target_bytes": 8321499136,
-      "target_gib": 7.75,
+      "target_bytes": 2952790016,
+      "target_gib": 2.75,
       "revision": "9bb295ddab0e05d785b879661af7260fed5140fc",
       "role": "web"
     },
@@ -373,6 +430,116 @@
       "target_gib": 3.12,
       "revision": "defb24ca72ef6aba6ce0228b669eec06dcfbffbc",
       "role": "probe"
+    },
+    {
+      "slug": "CohereLabs__aya_dataset",
+      "hf_id": "CohereLabs/aya_dataset",
+      "config": null,
+      "axis": "training",
+      "lang": "en",
+      "target_bytes": 268435456,
+      "target_gib": 0.25,
+      "revision": "f9ea04583f02a8f86404ff6c58bf75fe637df8a2",
+      "role": "training"
+    },
+    {
+      "slug": "OpenAssistant__oasst2",
+      "hf_id": "OpenAssistant/oasst2",
+      "config": null,
+      "axis": "training",
+      "lang": "en",
+      "target_bytes": 214748365,
+      "target_gib": 0.2,
+      "revision": "179dd21fc55192153d94adb0e0ce8f69e222bf75",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__english",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "english",
+      "axis": "training",
+      "lang": "en",
+      "target_bytes": 751619277,
+      "target_gib": 0.7,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__spanish",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "spanish",
+      "axis": "training",
+      "lang": "en",
+      "target_bytes": 429496730,
+      "target_gib": 0.4,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__german",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "german",
+      "axis": "training",
+      "lang": "en",
+      "target_bytes": 375809638,
+      "target_gib": 0.35,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__french",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "french",
+      "axis": "training",
+      "lang": "en",
+      "target_bytes": 375809638,
+      "target_gib": 0.35,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__simplified_chinese",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "simplified_chinese",
+      "axis": "training",
+      "lang": "en",
+      "target_bytes": 322122547,
+      "target_gib": 0.3,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__japanese",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "japanese",
+      "axis": "training",
+      "lang": "en",
+      "target_bytes": 322122547,
+      "target_gib": 0.3,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "HuggingFaceTB__smollm-corpus__cosmopedia-v2",
+      "hf_id": "HuggingFaceTB/smollm-corpus",
+      "config": "cosmopedia-v2",
+      "axis": "training",
+      "lang": "en",
+      "target_bytes": 1073741824,
+      "target_gib": 1.0,
+      "revision": "3ba9d605774198c5868892d7a8deda78031a781f",
+      "role": "training"
+    },
+    {
+      "slug": "HuggingFaceFW__fineweb-edu__CC-MAIN-2024-46",
+      "hf_id": "HuggingFaceFW/fineweb-edu",
+      "config": "CC-MAIN-2024-46",
+      "axis": "training",
+      "lang": "en",
+      "target_bytes": 1234803098,
+      "target_gib": 1.15,
+      "revision": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9",
+      "role": "training"
     }
   ],
   "fineweb2": "remaining non-English web quota; extra parquet files, not a rewrite"

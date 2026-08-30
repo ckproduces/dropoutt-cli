@@ -162,7 +162,7 @@ FINEWEB2_SCRIPTS: dict[str, str] = {
 SUPPLEMENTAL_LANGUAGES: tuple[tuple[str, str], ...] = tuple(FINEWEB2_SCRIPTS.items())
 
 AXIS_TARGET_SHARES: dict[str, float] = {
-    "web": 0.84,
+    "web": 0.815,
     "encyclopedic": 0.03,
     "scientific": 0.05,
     "code": 0.02,
@@ -170,6 +170,7 @@ AXIS_TARGET_SHARES: dict[str, float] = {
     "legal_government": 0.01,
     "books": 0.02,
     "educational": 0.02,
+    "training": 0.025,
 }
 if abs(sum(AXIS_TARGET_SHARES.values()) - 1.0) > 1e-9:
     raise RuntimeError("axis shares must sum to 1.0")
@@ -202,9 +203,14 @@ PROBE_SELECTION_POLICY = {
         "public and ungated",
         "declared public-domain or open redistribution basis",
         "natural-text pretraining utility",
-        "no benchmark, SFT, preference, or synthetic-answer corpus",
-        "no duplicate allocation already represented by the 90% web tier",
+        "no benchmark, preference, or gated corpus",
+        "no duplicate allocation already represented by the web tier",
     ],
+    "training_axis": (
+        "Up to 5 GiB of public multilingual LLM training data (instruction, "
+        "human chat, synthetic textbooks, edu-filtered pretrain) so coverage "
+        "can place typical training mixes. Evaluation benchmarks stay out."
+    ),
 }
 
 SOURCE_REVISIONS = {
@@ -228,6 +234,11 @@ SOURCE_REVISIONS = {
     "common-pile/pressbooks_filtered": "1a1d3b50d77f834370f8eb4c0d174668dd1676bb",
     "common-pile/oercommons_filtered": "506b6159dadcbc0dc67611cea024eedb04232fb2",
     "common-pile/usgpo_filtered": "b150cc22211de4d57f1b7f570097a00e65042424",
+    "CohereLabs/aya_dataset": "f9ea04583f02a8f86404ff6c58bf75fe637df8a2",
+    "CohereLabs/aya_collection_language_split": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+    "OpenAssistant/oasst2": "179dd21fc55192153d94adb0e0ce8f69e222bf75",
+    "HuggingFaceTB/smollm-corpus": "3ba9d605774198c5868892d7a8deda78031a781f",
+    "HuggingFaceFW/fineweb-edu": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9",
 }
 
 
@@ -274,6 +285,29 @@ def _probe(hf_id: str, axis: str, target_bytes: int) -> Source:
         "en",
         target_bytes=int(target_bytes),
         source_role="probe",
+        revision=SOURCE_REVISIONS[hf_id],
+    )
+
+
+def _training(
+    hf_id: str,
+    target_bytes: int,
+    *,
+    fields: tuple[str, ...] = ("text",),
+    config: str | None = None,
+    license_policy: str = "apache-2.0",
+) -> Source:
+    return Source(
+        hf_id,
+        config,
+        "train",
+        fields,
+        "training",
+        1_000_000_000,
+        "en",
+        target_bytes=int(target_bytes),
+        source_role="training",
+        license_policy=license_policy,
         revision=SOURCE_REVISIONS[hf_id],
     )
 
@@ -326,11 +360,24 @@ LEGAL_BYTES = _split_axis(
         "common-pile/usgpo_filtered": 0.25,
     },
 )
+TRAINING_BYTES = _split_axis(
+    "training",
+    {
+        "aya_dataset": 0.05,
+        "oasst2": 0.04,
+        "aya_en": 0.14,
+        "aya_es": 0.08,
+        "aya_de": 0.07,
+        "aya_fr": 0.07,
+        "aya_zh": 0.06,
+        "aya_ja": 0.06,
+        "cosmopedia": 0.20,
+        "fineweb_edu": 0.23,
+    },
+)
 
-# FineWeb/FineWeb2 are ODC-By releases derived from public Common Crawl data.
-# Probe datasets come only from Common Pile's filtered, public-domain/open-
-# license collection. Synthetic SFT, preference, benchmark, private, and gated
-# sources are intentionally absent.
+# FineWeb/FineWeb2 are ODC-By. Common Pile probes stay public-domain/open-license.
+# The training axis is a 5 GiB slice of public multilingual LLM training data.
 SOURCES: list[Source] = [
     Source(
         "HuggingFaceFW/fineweb",
@@ -413,6 +460,62 @@ SOURCES: list[Source] = [
     _probe("common-pile/pressbooks_filtered", "educational", EDUCATIONAL_BYTES["common-pile/pressbooks_filtered"]),
     _probe("common-pile/oercommons_filtered", "educational", EDUCATIONAL_BYTES["common-pile/oercommons_filtered"]),
     _probe("common-pile/doab_filtered", "educational", EDUCATIONAL_BYTES["common-pile/doab_filtered"]),
+    _training(
+        "CohereLabs/aya_dataset",
+        TRAINING_BYTES["aya_dataset"],
+        fields=("inputs", "targets"),
+    ),
+    _training("OpenAssistant/oasst2", TRAINING_BYTES["oasst2"], fields=("text",)),
+    _training(
+        "CohereLabs/aya_collection_language_split",
+        TRAINING_BYTES["aya_en"],
+        fields=("inputs", "targets"),
+        config="english",
+    ),
+    _training(
+        "CohereLabs/aya_collection_language_split",
+        TRAINING_BYTES["aya_es"],
+        fields=("inputs", "targets"),
+        config="spanish",
+    ),
+    _training(
+        "CohereLabs/aya_collection_language_split",
+        TRAINING_BYTES["aya_de"],
+        fields=("inputs", "targets"),
+        config="german",
+    ),
+    _training(
+        "CohereLabs/aya_collection_language_split",
+        TRAINING_BYTES["aya_fr"],
+        fields=("inputs", "targets"),
+        config="french",
+    ),
+    _training(
+        "CohereLabs/aya_collection_language_split",
+        TRAINING_BYTES["aya_zh"],
+        fields=("inputs", "targets"),
+        config="simplified_chinese",
+    ),
+    _training(
+        "CohereLabs/aya_collection_language_split",
+        TRAINING_BYTES["aya_ja"],
+        fields=("inputs", "targets"),
+        config="japanese",
+    ),
+    _training(
+        "HuggingFaceTB/smollm-corpus",
+        TRAINING_BYTES["cosmopedia"],
+        fields=("text",),
+        config="cosmopedia-v2",
+        license_policy="odc-by-1.0",
+    ),
+    _training(
+        "HuggingFaceFW/fineweb-edu",
+        TRAINING_BYTES["fineweb_edu"],
+        fields=("text",),
+        config="CC-MAIN-2024-46",
+        license_policy="odc-by-1.0-plus-common-crawl-terms",
+    ),
 ]
 
 SOURCES = [source for source in SOURCES if source.target_bytes > 0]
