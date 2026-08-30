@@ -18,7 +18,7 @@ The manifest is where a missing axis becomes visible, and the builder prints it
 against ``AXIS_FLOORS`` rather than discovering it in the map afterwards.
 
 Usage:
-    python tools/fetch_corpus.py --cache .atlas-cache --workers 10
+    uv run python tools/fetch_corpus.py
 """
 
 from __future__ import annotations
@@ -41,21 +41,29 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from atlas_sources import (
+    AXIS_TARGET_BYTES,
     BASELINE_CATALOGUE_COMMIT,
     BASELINE_SCALE,
+    DEFAULT_CACHE,
+    LANGUAGE_TARGET_BYTES,
     LOGICAL_BYTE_TARGET,
+    SOURCE_REVISIONS,
     SOURCES,
     SUPPLEMENTAL_LANGUAGES,
+    WEB_LANGUAGE_TARGET_BYTES,
     Source,
+    corpus_plan,
 )
 
 #: Bump when the on-disk record format changes. Shards written by an older
 #: fetcher are re-fetched rather than silently mixed with new ones.
-CACHE_FORMAT = "atlas-cache-v3"
+CACHE_FORMAT = "atlas-cache-v4"
+#: Skip a rewrite when the shard is within 1 MiB of its byte quota.
+BYTE_COMPLETE_SLACK = 1_048_576
 
-#: Characters below which a row is not worth storing. Matches the client's
-#: ATLAS_MIN_CHARS so the reference corpus and a user scan agree on what counts
-#: as a record at all.
+#: Characters below which a row is not worth storing. The frozen reference
+#: corpus retains rows of 80 characters or more; Atlas coverage may accept
+#: shorter user records when their text is still sufficient to embed.
 MIN_CHARS = 80
 
 #: Default stored per record; override with ``--max-chars`` (4000 for atlas-v2).
@@ -70,6 +78,13 @@ _PRINT_LOCK = threading.Lock()
 def log(message: str) -> None:
     with _PRINT_LOCK:
         print(message, flush=True)
+
+
+def _write_json_atomic(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(path)
 
 
 # ---------------------------------------------------------------------------
@@ -92,7 +107,13 @@ def list_fineweb2_paths() -> list[str]:
     """List public FineWeb-2 parquet paths in stable Hub order."""
     from huggingface_hub import list_repo_files
 
-    return sorted(list_repo_files(FINEWEB2_ID, repo_type="dataset"))
+    return sorted(
+        list_repo_files(
+            FINEWEB2_ID,
+            repo_type="dataset",
+            revision=SOURCE_REVISIONS[FINEWEB2_ID],
+        )
+    )
 
 
 def supplemental_sources(paths: list[str]) -> dict[str, list[Source]]:
@@ -101,13 +122,28 @@ def supplemental_sources(paths: list[str]) -> dict[str, list[Source]]:
     result: dict[str, list[Source]] = {lang: [] for lang, _ in SUPPLEMENTAL_LANGUAGES}
     for lang, script in SUPPLEMENTAL_LANGUAGES:
         prefix = FINEWEB2_PREFIX.format(language=script)
-        for path in sorted(path for path in paths if path.startswith(prefix) and path.endswith(".parquet")):
+        for path in sorted(
+            path for path in paths if path.startswith(prefix) and path.endswith(".parquet")
+        ):
             if path in excluded:
                 continue
-            result[lang].append(Source(
-                FINEWEB2_ID, None, "train", ("text",), "web", 1_000_000_000,
-                lang, loader="parquet", path=path,
-            ))
+            result[lang].append(
+                Source(
+                    FINEWEB2_ID,
+                    None,
+                    "train",
+                    ("text",),
+                    "web",
+                    1_000_000_000,
+                    lang,
+                    loader="parquet",
+                    path=path,
+                    target_bytes=WEB_LANGUAGE_TARGET_BYTES[lang],
+                    source_role="web",
+                    license_policy="odc-by-1.0-plus-common-crawl-terms",
+                    revision=SOURCE_REVISIONS[FINEWEB2_ID],
+                )
+            )
     return result
 
 
@@ -116,17 +152,16 @@ def byte_quotas(total: int, languages: list[str]) -> dict[str, int]:
     if not languages:
         return {}
     quotient, remainder = divmod(total, len(languages))
-    return {language: quotient + int(index < remainder)
-            for index, language in enumerate(languages)}
+    return {language: quotient + int(index < remainder) for index, language in enumerate(languages)}
 
 
 def _supplemental_unavailable(language: str, error: str) -> dict:
     return {
         "cache_format": CACHE_FORMAT,
         "slug": f"supplemental__fineweb2__{language}",
-        "requested": {"hf_id": FINEWEB2_ID, "language": language},
+        "requested": {"hf_id": FINEWEB2_ID, "axis": "web", "lang": language},
         "used": {"hf_id": FINEWEB2_ID},
-        "source_role": "supplemental",
+        "source_role": "web",
         "target": 0,
         "rows": 0,
         "chars": 0,
@@ -144,72 +179,72 @@ def _supplemental_unavailable(language: str, error: str) -> dict:
     }
 
 
-def fetch_supplemental(cache: Path, *, current_bytes: int, budget: float,
-                       stall: float, refresh: bool, max_chars: int,
-                       paths: list[str] | None = None,
-                       existing: list[dict] | None = None,
-                       target_logical_bytes: int = LOGICAL_BYTE_TARGET) -> list[dict]:
-    """Fill the logical-byte deficit with public FineWeb-2 shards.
-
-    The initial quota is equal across the 22 requested languages. Exhausted
-    languages are removed after each deterministic wave and their shortfall is
-    split equally among the remaining languages. Fetching is serial here: that
-    makes the global final-record overshoot bounded to one record.
-    """
-    if current_bytes >= target_logical_bytes:
-        return []
+def fetch_supplemental(
+    cache: Path,
+    *,
+    current_bytes: int,
+    budget: float,
+    stall: float,
+    refresh: bool,
+    max_chars: int,
+    paths: list[str] | None = None,
+    existing: list[dict] | None = None,
+    target_logical_bytes: int = LOGICAL_BYTE_TARGET,
+) -> list[dict]:
+    """Fill every non-English web-language byte quota from FineWeb-2."""
     try:
         discovered = list_fineweb2_paths() if paths is None else paths
     except Exception as exc:
-        return [_supplemental_unavailable(lang, f"path listing {type(exc).__name__}: {exc}")
-                for lang, _ in SUPPLEMENTAL_LANGUAGES]
-    used_slugs = {str(meta.get("slug")) for meta in existing or []
-                  if meta.get("source_role") == "supplemental" and meta.get("rows")}
+        return [
+            _supplemental_unavailable(lang, f"path listing {type(exc).__name__}: {exc}")
+            for lang, _ in SUPPLEMENTAL_LANGUAGES
+        ]
+    used_slugs = {
+        str(meta.get("slug"))
+        for meta in existing or []
+        if meta.get("source_role") in {"supplemental", "web"} and meta.get("rows")
+    }
     queues = supplemental_sources(discovered)
     for language, items in queues.items():
         queues[language] = [source for source in items if source.slug not in used_slugs]
     languages = [lang for lang, _ in SUPPLEMENTAL_LANGUAGES]
     metas: list[dict] = []
-    positions = {lang: 0 for lang in languages}
-    exhausted: set[str] = set()
-    total = current_bytes
-
-    while total < target_logical_bytes:
-        active = [lang for lang in languages if lang not in exhausted]
-        if not active:
-            break
-        quotas = byte_quotas(target_logical_bytes - total, active)
-        progress = False
-        for lang in active:
-            needed = quotas[lang]
-            if needed <= 0 or total >= target_logical_bytes:
-                continue
-            queue_for_language = queues[lang]
-            if positions[lang] >= len(queue_for_language):
-                exhausted.add(lang)
-                continue
-            src = queue_for_language[positions[lang]]
-            positions[lang] += 1
-            # Only the final global allocation may retain a record over target.
-            final_allocation = len(active) == 1 and needed == target_logical_bytes - total
-            meta = fetch_source(
-                src, cache, budget=budget, stall=stall, scale=1.0,
-                refresh=refresh, max_chars=max_chars, byte_limit=needed,
-                allow_overshoot=final_allocation, source_role="supplemental",
-            )
-            metas.append(meta)
-            got = int(meta.get("logical_bytes", 0))
-            total += got
-            progress = progress or bool(got)
-            if positions[lang] >= len(queue_for_language) and got < needed:
-                exhausted.add(lang)
-            if total >= target_logical_bytes:
-                break
-        if not progress:
-            break
+    existing_by_language = dict.fromkeys(languages, 0)
+    for meta in existing or []:
+        requested = meta.get("requested", {})
+        lang = requested.get("lang", requested.get("language"))
+        if lang in existing_by_language and meta.get("rows"):
+            existing_by_language[lang] += int(meta.get("logical_bytes", 0))
 
     for lang in languages:
-        if not queues[lang]:
+        target = WEB_LANGUAGE_TARGET_BYTES[lang]
+        total = existing_by_language[lang]
+        for src in queues[lang]:
+            if total >= target:
+                break
+            needed = target - total
+            meta = fetch_source(
+                src,
+                cache,
+                budget=budget,
+                stall=stall,
+                scale=1.0,
+                refresh=refresh,
+                max_chars=max_chars,
+                byte_limit=needed,
+                allow_overshoot=True,
+                source_role="web",
+            )
+            metas.append(meta)
+            total += int(meta.get("logical_bytes", 0))
+
+    for lang in languages:
+        available = existing_by_language[lang] + sum(
+            int(meta.get("logical_bytes", 0))
+            for meta in metas
+            if meta.get("requested", {}).get("lang") == lang
+        )
+        if available < WEB_LANGUAGE_TARGET_BYTES[lang] and not queues[lang]:
             metas.append(_supplemental_unavailable(lang, "no public unused FineWeb-2 parquet path"))
     return metas
 
@@ -289,8 +324,8 @@ def open_dataset(src: Source, spec: dict | None = None):
         ]
         return load_dataset(loader, data_files={split: urls}, split=split, streaming=True)
     if loader == "data_dir":
-        return load_dataset(hf_id, data_dir=path, split=split, streaming=True)
-    return load_dataset(hf_id, config, split=split, streaming=True)
+        return load_dataset(hf_id, data_dir=path, split=split, streaming=True, revision=revision)
+    return load_dataset(hf_id, config, split=split, streaming=True, revision=revision)
 
 
 def _iter_rows(ds, *, deadline: float, stall_seconds: float):
@@ -351,16 +386,14 @@ def iter_local(src: Source, *, deadline: float):
             yield row
 
 
-def dataset_card(hf_id: str) -> dict:
+def dataset_card(hf_id: str, revision: str = "main") -> dict:
     """Best-effort licence and revision, so the cache records provenance."""
     try:
         from huggingface_hub import dataset_info
 
-        info = dataset_info(hf_id, timeout=20)
+        info = dataset_info(hf_id, revision=revision, timeout=20)
         tags = list(getattr(info, "tags", []) or [])
-        licence = next(
-            (t.split(":", 1)[1] for t in tags if t.startswith("license:")), None
-        )
+        licence = next((t.split(":", 1)[1] for t in tags if t.startswith("license:")), None)
         return {
             "revision": getattr(info, "sha", None),
             "license": licence,
@@ -380,17 +413,18 @@ def preflight_source(src: Source, spec: dict | None = None) -> dict:
     if src.loader == "local":
         return {"public": True, "card": {}}
     hf_id = (spec or {}).get("hf_id", src.hf_id)
+    revision = (spec or {}).get("revision", src.revision)
     try:
         from huggingface_hub import dataset_info
 
-        info = dataset_info(hf_id, timeout=20)
+        info = dataset_info(hf_id, revision=revision, timeout=20)
         if getattr(info, "gated", False) or getattr(info, "private", False):
             return {
                 "public": False,
-                "card": dataset_card(hf_id),
+                "card": dataset_card(hf_id, revision),
                 "error": "source is gated or private; public-only build excludes it",
             }
-        return {"public": True, "card": dataset_card(hf_id)}
+        return {"public": True, "card": dataset_card(hf_id, revision)}
     except Exception as exc:
         return {
             "public": False,
@@ -403,14 +437,24 @@ def preflight_source(src: Source, spec: dict | None = None) -> dict:
 # one source
 
 
-def fetch_source(src: Source, cache: Path, *, budget: float, stall: float,
-                 scale: float, refresh: bool, max_chars: int,
-                 byte_limit: int | None = None, allow_overshoot: bool = False,
-                 source_role: str = "baseline") -> dict:
+def fetch_source(
+    src: Source,
+    cache: Path,
+    *,
+    budget: float,
+    stall: float,
+    scale: float,
+    refresh: bool,
+    max_chars: int,
+    byte_limit: int | None = None,
+    allow_overshoot: bool = False,
+    source_role: str = "baseline",
+) -> dict:
     """Fetch one source into ``cache/<slug>/``. Never raises."""
     target = max(50, int(src.target * scale))
     out_dir = cache / src.slug
     meta_path = out_dir / "meta.json"
+    progress_path = out_dir / "progress.json"
     shard = out_dir / "records.jsonl.gz"
 
     if not refresh and meta_path.exists() and shard.exists():
@@ -421,15 +465,14 @@ def fetch_source(src: Source, cache: Path, *, budget: float, stall: float,
         fresh_enough = (
             previous.get("cache_format") == CACHE_FORMAT
             and previous.get("max_chars") == max_chars
-            and previous.get("complete")
             and (
-                previous.get("rows", 0) >= target
+                int(previous.get("rows", 0)) >= target
                 if byte_limit is None
-                else previous.get("logical_bytes", 0) >= byte_limit
+                else int(previous.get("logical_bytes", 0)) + BYTE_COMPLETE_SLACK >= byte_limit
             )
-            and previous.get("byte_limit") == byte_limit
         )
         if fresh_enough:
+            progress_path.unlink(missing_ok=True)
             log(f"  cached {src.slug[:52]:<52} {previous.get('rows', 0):>8,} rows")
             return previous
 
@@ -444,6 +487,30 @@ def fetch_source(src: Source, cache: Path, *, budget: float, stall: float,
     note: str | None = None
     preflight_card: dict = {}
     used: dict = {"hf_id": src.hf_id, "config": src.config, "split": src.split}
+    last_progress = 0.0
+
+    def record_progress(status: str) -> None:
+        nonlocal last_progress
+        now = time.time()
+        _write_json_atomic(
+            progress_path,
+            {
+                "cache_format": CACHE_FORMAT,
+                "slug": src.slug,
+                "requested": {k: v for k, v in asdict(src).items() if k != "fallbacks"},
+                "source_role": source_role,
+                "status": status,
+                "rows": rows,
+                "chars": chars,
+                "logical_bytes": logical_bytes,
+                "byte_limit": byte_limit,
+                "started_at": started,
+                "updated_at": now,
+            },
+        )
+        last_progress = now
+
+    record_progress("opening")
 
     attempts: list[dict | None] = [None, *[dict(fb) for fb in src.fallbacks]]
     ds = None
@@ -451,8 +518,13 @@ def fetch_source(src: Source, cache: Path, *, budget: float, stall: float,
     if local:
         try:
             ds = iter_local(src, deadline=deadline)
-            used = {"hf_id": src.hf_id, "config": src.config, "split": src.split,
-                    "path": src.path, "via": "local"}
+            used = {
+                "hf_id": src.hf_id,
+                "config": src.config,
+                "split": src.split,
+                "path": src.path,
+                "via": "local",
+            }
         except Exception as exc:
             error = f"{type(exc).__name__}: {str(exc)[:200]}"
             ds = None
@@ -496,14 +568,19 @@ def fetch_source(src: Source, cache: Path, *, budget: float, stall: float,
                     rid = hashlib.blake2b(
                         f"{src.slug}:{rows}:{text[:200]}".encode(), digest_size=8
                     ).hexdigest()
-                    fh.write(json.dumps(
-                        {"id": rid, "text": text},
-                        ensure_ascii=False,
-                        separators=(",", ":"),
-                    ) + "\n")
+                    fh.write(
+                        json.dumps(
+                            {"id": rid, "text": text},
+                            ensure_ascii=False,
+                            separators=(",", ":"),
+                        )
+                        + "\n"
+                    )
                     rows += 1
                     chars += len(text)
                     logical_bytes += text_bytes
+                    if time.time() - last_progress >= 2.0:
+                        record_progress("fetching")
                     if byte_limit is not None and logical_bytes >= byte_limit:
                         break
                     if rows >= target:
@@ -516,7 +593,22 @@ def fetch_source(src: Source, cache: Path, *, budget: float, stall: float,
             else:
                 error = f"{type(exc).__name__}: {str(exc)[:200]}"
 
+    previous_kept: dict | None = None
+    if shard.exists() and meta_path.exists() and not refresh:
+        try:
+            previous_kept = json.loads(meta_path.read_text(encoding="utf-8"))
+        except Exception:
+            previous_kept = None
+
     if rows:
+        previous_bytes = int((previous_kept or {}).get("logical_bytes", 0))
+        if previous_bytes > logical_bytes:
+            part.unlink(missing_ok=True)
+            log(
+                f"  kept  {src.slug[:52]:<52} {previous_kept.get('rows', 0):>8,} rows "
+                f"(new fetch smaller: {logical_bytes:,} < {previous_bytes:,})"
+            )
+            return previous_kept
         part.replace(shard)
         digest = hashlib.blake2b(digest_size=16)
         with shard.open("rb") as fh:
@@ -525,16 +617,12 @@ def fetch_source(src: Source, cache: Path, *, budget: float, stall: float,
         shard_hash = digest.hexdigest()
     else:
         part.unlink(missing_ok=True)
-        if shard.exists() and meta_path.exists() and not refresh:
-            # A failed re-fetch must not wipe a good shard from an earlier run.
-            try:
-                previous = json.loads(meta_path.read_text(encoding="utf-8"))
-            except Exception:
-                previous = None
-            if previous and previous.get("rows"):
-                log(f"  kept  {src.slug[:52]:<52} {previous.get('rows', 0):>8,} rows "
-                    f"(fetch failed: {(error or note or 'unknown')[:40]})")
-                return previous
+        if previous_kept and previous_kept.get("rows"):
+            log(
+                f"  kept  {src.slug[:52]:<52} {previous_kept.get('rows', 0):>8,} rows "
+                f"(fetch failed: {(error or note or 'unknown')[:40]})"
+            )
+            return previous_kept
         shard.unlink(missing_ok=True)
         shard_hash = ""
 
@@ -551,24 +639,31 @@ def fetch_source(src: Source, cache: Path, *, budget: float, stall: float,
         "logical_bytes": logical_bytes,
         "byte_limit": byte_limit,
         "mean_chars": round(chars / rows, 1) if rows else 0,
-        "complete": bool(rows and (rows >= target if byte_limit is None else logical_bytes >= byte_limit)),
-        "shortfall": max(0, target - rows) if byte_limit is None else max(0, byte_limit - logical_bytes),
+        "complete": bool(
+            rows and (rows >= target if byte_limit is None else logical_bytes >= byte_limit)
+        ),
+        "shortfall": max(0, target - rows)
+        if byte_limit is None
+        else max(0, byte_limit - logical_bytes),
         "seconds": round(time.time() - started, 1),
         "shard_hash": shard_hash,
         "checksum": {"algorithm": "blake2b-128", "value": shard_hash},
-        "status": "complete" if rows and (byte_limit is None or logical_bytes >= byte_limit)
+        "status": "complete"
+        if rows and (byte_limit is None or logical_bytes >= byte_limit)
         else ("partial" if rows else "unavailable"),
         "note": note,
         "error": error,
         "card": preflight_card if not local else {},
     }
-    meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n",
-                         encoding="utf-8")
+    _write_json_atomic(meta_path, meta)
+    progress_path.unlink(missing_ok=True)
 
     status = "ok  " if meta["complete"] else ("part" if rows else "MISS")
     detail = note or error or ""
-    log(f"  {status} {src.slug[:52]:<52} {rows:>8,}/{target:<8,} "
-        f"{meta['seconds']:>6.1f}s {detail[:60]}")
+    log(
+        f"  {status} {src.slug[:52]:<52} {rows:>8,}/{target:<8,} "
+        f"{meta['seconds']:>6.1f}s {detail[:60]}"
+    )
     return meta
 
 
@@ -666,8 +761,8 @@ def iter_streamed_texts(
     rows = 0
     logical = 0
     try:
-        row_iter = ds if src.loader == "local" else _iter_rows(
-            ds, deadline=deadline, stall_seconds=stall
+        row_iter = (
+            ds if src.loader == "local" else _iter_rows(ds, deadline=deadline, stall_seconds=stall)
         )
         for row in row_iter:
             text = row_text(row, src.fields)
@@ -693,8 +788,7 @@ def iter_supplemental_sources(paths: list[str] | None = None):
     discovered = list_fineweb2_paths() if paths is None else paths
     queues = supplemental_sources(discovered)
     for lang, _ in SUPPLEMENTAL_LANGUAGES:
-        for src in queues.get(lang, []):
-            yield src
+        yield from queues.get(lang, [])
 
 
 # ---------------------------------------------------------------------------
@@ -768,17 +862,26 @@ def salvage_part(cache: Path, src: Source) -> dict | None:
         for block in iter(lambda: fh.read(1 << 20), b""):
             digest.update(block)
     meta = {
-        "cache_format": CACHE_FORMAT, "slug": src.slug,
+        "cache_format": CACHE_FORMAT,
+        "slug": src.slug,
         "requested": {k: v for k, v in asdict(src).items() if k != "fallbacks"},
         "used": {"hf_id": src.hf_id, "config": src.config, "split": src.split},
-        "target": src.target, "source_role": "baseline", "rows": len(rows), "chars": chars,
-        "logical_bytes": recovered_bytes, "byte_limit": None,
+        "target": src.target,
+        "source_role": "baseline",
+        "rows": len(rows),
+        "chars": chars,
+        "logical_bytes": recovered_bytes,
+        "byte_limit": None,
         "mean_chars": round(chars / len(rows), 1) if rows else 0,
         "complete": len(rows) >= src.target,
         "shortfall": max(0, src.target - len(rows)),
-        "seconds": 0.0, "shard_hash": digest.hexdigest(),
+        "seconds": 0.0,
+        "shard_hash": digest.hexdigest(),
         "checksum": {"algorithm": "blake2b-128", "value": digest.hexdigest()},
-        "status": "partial", "note": "recovered from an interrupted fetch", "error": None, "card": {},
+        "status": "partial",
+        "note": "recovered from an interrupted fetch",
+        "error": None,
+        "card": {},
     }
     (d / "meta.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -786,8 +889,12 @@ def salvage_part(cache: Path, src: Source) -> dict | None:
     return meta
 
 
-def reindex(cache: Path, *, source_ledger: Path | None = None,
-            target_logical_bytes: int = LOGICAL_BYTE_TARGET) -> Path:
+def reindex(
+    cache: Path,
+    *,
+    source_ledger: Path | None = None,
+    target_logical_bytes: int = LOGICAL_BYTE_TARGET,
+) -> Path:
     """Rebuild the manifest from what is on disk, without fetching.
 
     The manifest is written once, at the end of a run, so a fetch that is
@@ -820,10 +927,14 @@ def reindex(cache: Path, *, source_ledger: Path | None = None,
     if salvaged:
         log(f"  salvaged {salvaged} interrupted shards")
     return write_manifest(
-        cache, list(metas_by_slug.values()),
-        {"reindexed": True, "fetched": False,
-         "target_logical_bytes": target_logical_bytes,
-         "baseline_catalogue_commit": BASELINE_CATALOGUE_COMMIT},
+        cache,
+        list(metas_by_slug.values()),
+        {
+            "reindexed": True,
+            "fetched": False,
+            "target_logical_bytes": target_logical_bytes,
+            "baseline_catalogue_commit": BASELINE_CATALOGUE_COMMIT,
+        },
         source_ledger,
     )
 
@@ -838,19 +949,30 @@ def write_source_ledger(path: Path, metas: list[dict], settings: dict) -> Path:
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(ledger, ensure_ascii=False, indent=2) + "\n",
-                         encoding="utf-8")
+    temporary.write_text(json.dumps(ledger, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     temporary.replace(path)
     return path
 
 
-def write_manifest(cache: Path, metas: list[dict], settings: dict,
-                   source_ledger: Path | None = None) -> Path:
+def write_manifest(
+    cache: Path, metas: list[dict], settings: dict, source_ledger: Path | None = None
+) -> Path:
     """Rewrite the manifest atomically; it is the builder's only index."""
-    from atlas_sources import AXIS_FLOORS, axis_totals
+    from atlas_sources import AXIS_FLOORS
 
-    rows_by_slug = {m["slug"]: m.get("rows", 0) for m in metas}
-    axes = axis_totals(rows_by_slug)
+    axis_bytes = dict.fromkeys(AXIS_TARGET_BYTES, 0)
+    language_bytes = dict.fromkeys(LANGUAGE_TARGET_BYTES, 0)
+    axis_rows = dict.fromkeys(AXIS_TARGET_BYTES, 0)
+    for meta in metas:
+        requested = meta.get("requested", {})
+        axis = requested.get("axis")
+        lang = requested.get("lang", requested.get("language"))
+        retained = int(meta.get("logical_bytes", 0))
+        if axis in axis_bytes:
+            axis_bytes[axis] += retained
+            axis_rows[axis] += int(meta.get("rows", 0))
+        if lang in language_bytes:
+            language_bytes[lang] += retained
     manifest = {
         "cache_format": CACHE_FORMAT,
         "settings": settings,
@@ -864,18 +986,28 @@ def write_manifest(cache: Path, metas: list[dict], settings: dict,
         },
         "axes": {
             axis: {
-                "rows": count,
+                "rows": axis_rows[axis],
+                "logical_bytes": count,
+                "target_bytes": AXIS_TARGET_BYTES[axis],
+                "completion_pct": round(100 * count / AXIS_TARGET_BYTES[axis], 4),
                 "floor": AXIS_FLOORS.get(axis, 0),
-                "meets_floor": count >= AXIS_FLOORS.get(axis, 0),
+                "meets_floor": axis_rows[axis] >= AXIS_FLOORS.get(axis, 0),
             }
-            for axis, count in sorted(axes.items())
+            for axis, count in sorted(axis_bytes.items())
+        },
+        "languages": {
+            lang: {
+                "logical_bytes": count,
+                "target_bytes": LANGUAGE_TARGET_BYTES[lang],
+                "completion_pct": round(100 * count / LANGUAGE_TARGET_BYTES[lang], 4),
+            }
+            for lang, count in sorted(language_bytes.items())
         },
         "sources": sorted(metas, key=lambda m: m["slug"]),
     }
     path = cache / "manifest.json"
     tmp = path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
-                   encoding="utf-8")
+    tmp.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     tmp.replace(path)
     if source_ledger is not None:
         write_source_ledger(source_ledger, metas, settings)
@@ -884,58 +1016,116 @@ def write_manifest(cache: Path, metas: list[dict], settings: dict,
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--cache", type=Path, default=Path(".atlas-cache"))
-    ap.add_argument("--workers", type=int, default=10,
-                    help="Concurrent sources (default 10). These are independent "
-                         "HTTP streams; the wall clock is the slowest source, not the sum.")
-    ap.add_argument("--scale", type=float, default=BASELINE_SCALE,
-                    help="Multiply the dc12d8a baseline row targets (default 3.0).")
-    ap.add_argument("--target-logical-bytes", type=int, default=LOGICAL_BYTE_TARGET,
-                    help="Retained UTF-8 text-byte target before JSON framing or compression.")
-    ap.add_argument("--source-ledger", type=Path, default=None,
-                    help="Persistent text-free source ledger path (default CACHE/source-ledger.json).")
-    ap.add_argument("--budget", type=float, default=900.0,
-                    help="Wall-clock seconds per source (default 900).")
-    ap.add_argument("--stall", type=float, default=600.0,
-                    help="Give up on a source after this long with no row "
-                         "(default 600). This is not idle time — ten workers "
-                         "saturating the link means a source waiting on its "
-                         "first row group can legitimately go minutes without "
-                         "yielding a row. At 120s it cost a full run 410,372 "
-                         "rows across nine sources, including the largest "
-                         "scientific and instruction sets, all of which "
-                         "downloaded fine on a retry.")
-    ap.add_argument("--refresh", action="store_true",
-                    help="Re-fetch sources that already have a complete shard.")
-    ap.add_argument("--only", nargs="*", default=None,
-                    help="Fetch only sources whose slug contains one of these.")
-    ap.add_argument("--pending", action="store_true",
-                    help="Fetch only sources whose cache shard is missing or "
-                         "does not meet the scaled row target.")
-    ap.add_argument("--reindex", action="store_true",
-                    help="Rebuild manifest.json from the shards already on disk "
-                         "and recover any interrupted ones. No network. Run this "
-                         "after stopping a fetch early, or the builder will "
-                         "ignore everything the interrupted run had added.")
-    ap.add_argument("--max-chars", type=int, default=MAX_CHARS_DEFAULT,
-                    help=f"Truncate each record to this many characters "
-                         f"(default {MAX_CHARS_DEFAULT}; atlas-v1 used 2000).")
+    ap.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
+    ap.add_argument(
+        "--plan",
+        action="store_true",
+        help="Print the frozen corpus plan and exit without network access.",
+    )
+    ap.add_argument(
+        "--workers",
+        type=int,
+        default=10,
+        help="Concurrent sources (default 10). These are independent "
+        "HTTP streams; the wall clock is the slowest source, not the sum.",
+    )
+    ap.add_argument(
+        "--scale",
+        type=float,
+        default=BASELINE_SCALE,
+        help="Safety-cap multiplier for rows; byte quotas remain authoritative.",
+    )
+    ap.add_argument(
+        "--target-logical-bytes",
+        type=int,
+        default=LOGICAL_BYTE_TARGET,
+        help="Retained UTF-8 text-byte target before JSON framing or compression.",
+    )
+    ap.add_argument(
+        "--source-ledger",
+        type=Path,
+        default=None,
+        help="Persistent text-free source ledger path (default CACHE/source-ledger.json).",
+    )
+    ap.add_argument(
+        "--budget",
+        type=float,
+        default=21_600.0,
+        help="Wall-clock seconds per source (default 21600, six hours).",
+    )
+    ap.add_argument(
+        "--stall",
+        type=float,
+        default=600.0,
+        help="Give up on a source after this long with no row "
+        "(default 600). This is not idle time — ten workers "
+        "saturating the link means a source waiting on its "
+        "first row group can legitimately go minutes without "
+        "yielding a row. At 120s it cost a full run 410,372 "
+        "rows across nine sources, including the largest "
+        "scientific and instruction sets, all of which "
+        "downloaded fine on a retry.",
+    )
+    ap.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Re-fetch sources that already have a complete shard.",
+    )
+    ap.add_argument(
+        "--only",
+        nargs="*",
+        default=None,
+        help="Fetch only sources whose slug contains one of these.",
+    )
+    ap.add_argument(
+        "--pending",
+        action="store_true",
+        help="Fetch only sources whose cache shard is missing or "
+        "does not meet the scaled row target.",
+    )
+    ap.add_argument(
+        "--reindex",
+        action="store_true",
+        help="Rebuild manifest.json from the shards already on disk "
+        "and recover any interrupted ones. No network. Run this "
+        "after stopping a fetch early, or the builder will "
+        "ignore everything the interrupted run had added.",
+    )
+    ap.add_argument(
+        "--max-chars",
+        type=int,
+        default=MAX_CHARS_DEFAULT,
+        help=f"Truncate each record to this many characters "
+        f"(default {MAX_CHARS_DEFAULT}; atlas-v1 used 2000).",
+    )
     args = ap.parse_args()
+    if args.plan:
+        print(json.dumps(corpus_plan(), ensure_ascii=False, indent=2))
+        return 0
     max_chars = max(MIN_CHARS + 1, args.max_chars)
     if args.scale <= 0 or args.target_logical_bytes <= 0:
         ap.error("--scale and --target-logical-bytes must be positive")
+    if args.target_logical_bytes != LOGICAL_BYTE_TARGET:
+        ap.error(
+            f"this frozen corpus plan requires exactly {LOGICAL_BYTE_TARGET / (1024 ** 3):.0f} GiB"
+        )
     source_ledger = args.source_ledger or args.cache / "source-ledger.json"
 
     if args.reindex:
         log(f"Reindexing {args.cache} …")
-        path = reindex(args.cache, source_ledger=source_ledger,
-                       target_logical_bytes=args.target_logical_bytes)
+        path = reindex(
+            args.cache, source_ledger=source_ledger, target_logical_bytes=args.target_logical_bytes
+        )
         manifest = json.loads(path.read_text(encoding="utf-8"))
-        log(f"\n{manifest['totals']['rows']:,} rows from "
-            f"{manifest['totals']['sources_with_rows']} sources → {path}")
+        log(
+            f"\n{manifest['totals']['rows']:,} rows from "
+            f"{manifest['totals']['sources_with_rows']} sources → {path}"
+        )
         for axis, info in manifest["axes"].items():
-            log(f"  {'ok ' if info['meets_floor'] else 'LOW'} {axis:<14} "
-                f"{info['rows']:>9,} / floor {info['floor']:,}")
+            log(
+                f"  {'ok ' if info['meets_floor'] else 'LOW'} {axis:<14} "
+                f"{info['rows']:>9,} / floor {info['floor']:,}"
+            )
         return 0
 
     os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "60")
@@ -945,13 +1135,11 @@ def main() -> int:
     selected = SOURCES
     if args.only:
         needles = [n.lower() for n in args.only]
-        selected = [s for s in SOURCES
-                    if any(n in s.slug.lower() or n in s.axis for n in needles)]
+        selected = [s for s in SOURCES if any(n in s.slug.lower() or n in s.axis for n in needles)]
 
     if args.pending:
         pending: list[Source] = []
         for src in selected:
-            target = max(50, int(src.target * args.scale))
             meta_path = args.cache / src.slug / "meta.json"
             shard = args.cache / src.slug / "records.jsonl.gz"
             if not meta_path.exists() or not shard.exists():
@@ -965,31 +1153,47 @@ def main() -> int:
             if (
                 previous.get("cache_format") != CACHE_FORMAT
                 or previous.get("max_chars") != max_chars
-                or previous.get("rows", 0) < target
+                or int(previous.get("logical_bytes", 0)) + BYTE_COMPLETE_SLACK < src.target_bytes
             ):
                 pending.append(src)
         selected = pending
 
     args.cache.mkdir(parents=True, exist_ok=True)
     settings = {
-        "workers": args.workers, "scale": args.scale, "budget_s": args.budget,
-        "stall_s": args.stall, "min_chars": MIN_CHARS, "max_chars": max_chars,
+        "workers": args.workers,
+        "scale": args.scale,
+        "budget_s": args.budget,
+        "stall_s": args.stall,
+        "min_chars": MIN_CHARS,
+        "max_chars": max_chars,
         "sources_selected": len(selected),
         "baseline_catalogue_commit": BASELINE_CATALOGUE_COMMIT,
         "target_logical_bytes": args.target_logical_bytes,
         "supplemental_reservoir": FINEWEB2_ID,
         "supplemental_languages": [lang for lang, _ in SUPPLEMENTAL_LANGUAGES],
+        "corpus_plan": corpus_plan(),
     }
 
-    log(f"Fetching {len(selected)} sources into {args.cache} "
-        f"with {args.workers} workers (scale={args.scale}, max_chars={max_chars})")
+    log(
+        f"Fetching {len(selected)} sources into {args.cache} "
+        f"with {args.workers} workers (scale={args.scale}, max_chars={max_chars})"
+    )
     t0 = time.time()
     metas: list[dict] = []
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {
-            pool.submit(fetch_source, src, args.cache, budget=args.budget,
-                        stall=args.stall, scale=args.scale, refresh=args.refresh,
-                        max_chars=max_chars, source_role="baseline"): src
+            pool.submit(
+                fetch_source,
+                src,
+                args.cache,
+                budget=args.budget,
+                stall=args.stall,
+                scale=args.scale,
+                refresh=args.refresh,
+                max_chars=max_chars,
+                byte_limit=src.target_bytes,
+                source_role=src.source_role,
+            ): src
             for src in selected
         }
         for future in as_completed(futures):
@@ -997,13 +1201,22 @@ def main() -> int:
             try:
                 metas.append(future.result())
             except Exception as exc:
-                metas.append({
-                    "cache_format": CACHE_FORMAT, "slug": src.slug, "rows": 0,
-                    "chars": 0, "logical_bytes": 0, "complete": False,
-                    "source_role": "baseline", "target": int(src.target * args.scale),
-                    "status": "unavailable",
-                    "error": f"{type(exc).__name__}: {str(exc)[:200]}",
-                })
+                metas.append(
+                    {
+                        "cache_format": CACHE_FORMAT,
+                        "slug": src.slug,
+                        "rows": 0,
+                        "chars": 0,
+                        "logical_bytes": 0,
+                        "complete": False,
+                        "requested": {k: v for k, v in asdict(src).items() if k != "fallbacks"},
+                        "source_role": src.source_role,
+                        "target": int(src.target * args.scale),
+                        "byte_limit": src.target_bytes,
+                        "status": "unavailable",
+                        "error": f"{type(exc).__name__}: {str(exc)[:200]}",
+                    }
+                )
 
     # Preserve all previous ledger entries during a resume, including failed
     # attempts and supplemental shards. The baseline phase always remains first.
@@ -1015,18 +1228,14 @@ def main() -> int:
     metas = list(metas_by_slug.values())
 
     if not args.only:
-        baseline_bytes = logical_bytes(
-            [meta for meta in metas if meta.get("source_role", "baseline") == "baseline"]
-        )
-        existing_supplemental = [meta for meta in metas if meta.get("source_role") == "supplemental"]
         supplemental = fetch_supplemental(
             args.cache,
-            current_bytes=baseline_bytes + logical_bytes(existing_supplemental),
+            current_bytes=logical_bytes(metas),
             budget=args.budget,
             stall=args.stall,
             refresh=args.refresh,
             max_chars=max_chars,
-            existing=existing_supplemental,
+            existing=metas,
             target_logical_bytes=args.target_logical_bytes,
         )
         for meta in supplemental:
@@ -1037,9 +1246,11 @@ def main() -> int:
     manifest = json.loads(path.read_text(encoding="utf-8"))
 
     total = manifest["totals"]["rows"]
-    log(f"\nCached {total:,} rows / {manifest['totals']['logical_bytes']:,} logical UTF-8 bytes "
+    log(
+        f"\nCached {total:,} rows / {manifest['totals']['logical_bytes']:,} logical UTF-8 bytes "
         f"from {manifest['totals']['sources_with_rows']} "
-        f"sources in {time.time() - t0:.0f}s → {path}")
+        f"sources in {time.time() - t0:.0f}s → {path}"
+    )
     log(f"Source ledger → {source_ledger}")
     log("\nAxis coverage (floors are advisory; nothing here failed the run):")
     for axis, info in manifest["axes"].items():

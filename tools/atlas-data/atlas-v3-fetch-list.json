@@ -1,0 +1,379 @@
+{
+  "plan": "atlas-v3-200gib",
+  "written_at": "2026-08-30T05:24:47Z",
+  "logical_target_bytes": 214748364800,
+  "logical_target_gib": 200.0,
+  "axis_targets_gib": {
+    "web": 168.0,
+    "encyclopedic": 6.0,
+    "scientific": 10.0,
+    "code": 4.0,
+    "forum": 2.0,
+    "legal_government": 2.0,
+    "books": 4.0,
+    "educational": 4.0
+  },
+  "current_pct": 74.3535,
+  "pending": [
+    {
+      "slug": "HuggingFaceFW__fineweb__CC-MAIN-2024-51",
+      "axis": "web",
+      "have_bytes": 0,
+      "target_bytes": 8321499136,
+      "shortfall_bytes": 8321499136
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.simple",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 1610612736,
+      "shortfall_bytes": 1610612736
+    },
+    {
+      "slug": "common-pile__arxiv_papers_filtered",
+      "axis": "scientific",
+      "have_bytes": 1183286609,
+      "target_bytes": 2147483648,
+      "shortfall_bytes": 964197039
+    },
+    {
+      "slug": "common-pile__peS2o_filtered",
+      "axis": "scientific",
+      "have_bytes": 1610612550,
+      "target_bytes": 2147483648,
+      "shortfall_bytes": 536871098
+    },
+    {
+      "slug": "common-pile__pubmed_filtered",
+      "axis": "scientific",
+      "have_bytes": 0,
+      "target_bytes": 4294967296,
+      "shortfall_bytes": 4294967296
+    },
+    {
+      "slug": "common-pile__arxiv_abstracts_filtered",
+      "axis": "scientific",
+      "have_bytes": 0,
+      "target_bytes": 1073741824,
+      "shortfall_bytes": 1073741824
+    },
+    {
+      "slug": "common-pile__biodiversity_heritage_library_filtered",
+      "axis": "scientific",
+      "have_bytes": 0,
+      "target_bytes": 1073741824,
+      "shortfall_bytes": 1073741824
+    },
+    {
+      "slug": "common-pile__stackv2_edu_filtered",
+      "axis": "code",
+      "have_bytes": 3221222843,
+      "target_bytes": 4294967296,
+      "shortfall_bytes": 1073744453
+    },
+    {
+      "slug": "common-pile__stackexchange_filtered",
+      "axis": "forum",
+      "have_bytes": 1610612158,
+      "target_bytes": 2147483648,
+      "shortfall_bytes": 536871490
+    },
+    {
+      "slug": "common-pile__regulations_filtered",
+      "axis": "legal_government",
+      "have_bytes": 699663979,
+      "target_bytes": 805306368,
+      "shortfall_bytes": 105642389
+    },
+    {
+      "slug": "common-pile__usgpo_filtered",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 536870912,
+      "shortfall_bytes": 536870912
+    },
+    {
+      "slug": "common-pile__project_gutenberg_filtered",
+      "axis": "books",
+      "have_bytes": 222115999,
+      "target_bytes": 536870912,
+      "shortfall_bytes": 314754913
+    },
+    {
+      "slug": "common-pile__pre_1929_books_filtered",
+      "axis": "books",
+      "have_bytes": 402652027,
+      "target_bytes": 536870912,
+      "shortfall_bytes": 134218885
+    },
+    {
+      "slug": "common-pile__library_of_congress_filtered",
+      "axis": "books",
+      "have_bytes": 0,
+      "target_bytes": 3221225472,
+      "shortfall_bytes": 3221225472
+    },
+    {
+      "slug": "common-pile__libretexts_filtered",
+      "axis": "educational",
+      "have_bytes": 130421840,
+      "target_bytes": 214748365,
+      "shortfall_bytes": 84326525
+    },
+    {
+      "slug": "common-pile__pressbooks_filtered",
+      "axis": "educational",
+      "have_bytes": 0,
+      "target_bytes": 644245094,
+      "shortfall_bytes": 644245094
+    },
+    {
+      "slug": "common-pile__oercommons_filtered",
+      "axis": "educational",
+      "have_bytes": 0,
+      "target_bytes": 85899346,
+      "shortfall_bytes": 85899346
+    },
+    {
+      "slug": "common-pile__doab_filtered",
+      "axis": "educational",
+      "have_bytes": 0,
+      "target_bytes": 3350074491,
+      "shortfall_bytes": 3350074491
+    }
+  ],
+  "sources": [
+    {
+      "slug": "HuggingFaceFW__fineweb__sample-100BT",
+      "hf_id": "HuggingFaceFW/fineweb",
+      "config": "sample-100BT",
+      "axis": "web",
+      "lang": "en",
+      "target_bytes": 63619203072,
+      "target_gib": 59.25,
+      "revision": "9bb295ddab0e05d785b879661af7260fed5140fc",
+      "role": "web"
+    },
+    {
+      "slug": "HuggingFaceFW__fineweb__CC-MAIN-2024-51",
+      "hf_id": "HuggingFaceFW/fineweb",
+      "config": "CC-MAIN-2024-51",
+      "axis": "web",
+      "lang": "en",
+      "target_bytes": 8321499136,
+      "target_gib": 7.75,
+      "revision": "9bb295ddab0e05d785b879661af7260fed5140fc",
+      "role": "web"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.en",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.en",
+      "axis": "encyclopedic",
+      "lang": "en",
+      "target_bytes": 4831838208,
+      "target_gib": 4.5,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.simple",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.simple",
+      "axis": "encyclopedic",
+      "lang": "en",
+      "target_bytes": 1610612736,
+      "target_gib": 1.5,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__arxiv_papers_filtered",
+      "hf_id": "common-pile/arxiv_papers_filtered",
+      "config": null,
+      "axis": "scientific",
+      "lang": "en",
+      "target_bytes": 2147483648,
+      "target_gib": 2.0,
+      "revision": "033cf7f53f9b348deec868c1a5a48484f3ee9e52",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__peS2o_filtered",
+      "hf_id": "common-pile/peS2o_filtered",
+      "config": null,
+      "axis": "scientific",
+      "lang": "en",
+      "target_bytes": 2147483648,
+      "target_gib": 2.0,
+      "revision": "297747513bfb0ff1fbf61ddad3b03319d0f04597",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__pubmed_filtered",
+      "hf_id": "common-pile/pubmed_filtered",
+      "config": null,
+      "axis": "scientific",
+      "lang": "en",
+      "target_bytes": 4294967296,
+      "target_gib": 4.0,
+      "revision": "c156f0569a92d8f2edc33cebe1f72f7d3e1cae84",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__arxiv_abstracts_filtered",
+      "hf_id": "common-pile/arxiv_abstracts_filtered",
+      "config": null,
+      "axis": "scientific",
+      "lang": "en",
+      "target_bytes": 1073741824,
+      "target_gib": 1.0,
+      "revision": "dc1ceab4755eb037ec61e49cf1350dab7ceee6e7",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__biodiversity_heritage_library_filtered",
+      "hf_id": "common-pile/biodiversity_heritage_library_filtered",
+      "config": null,
+      "axis": "scientific",
+      "lang": "en",
+      "target_bytes": 1073741824,
+      "target_gib": 1.0,
+      "revision": "0486ed637d0d7aaff264bc77fe21a7444e0215cd",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__stackv2_edu_filtered",
+      "hf_id": "common-pile/stackv2_edu_filtered",
+      "config": null,
+      "axis": "code",
+      "lang": "en",
+      "target_bytes": 4294967296,
+      "target_gib": 4.0,
+      "revision": "c354dbe88469a1153e97c6a63ac50591849654de",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__stackexchange_filtered",
+      "hf_id": "common-pile/stackexchange_filtered",
+      "config": null,
+      "axis": "forum",
+      "lang": "en",
+      "target_bytes": 2147483648,
+      "target_gib": 2.0,
+      "revision": "c0ac7373830c688a43fc12d1988c4b19ccd884ab",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__regulations_filtered",
+      "hf_id": "common-pile/regulations_filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "en",
+      "target_bytes": 805306368,
+      "target_gib": 0.75,
+      "revision": "3327364490dfc7929009226ad667eceb2441d93a",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__caselaw_access_project_filtered",
+      "hf_id": "common-pile/caselaw_access_project_filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "en",
+      "target_bytes": 805306368,
+      "target_gib": 0.75,
+      "revision": "50e1961a5ed8fdddcee64c9e66e1338de8953b63",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__usgpo_filtered",
+      "hf_id": "common-pile/usgpo_filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "en",
+      "target_bytes": 536870912,
+      "target_gib": 0.5,
+      "revision": "b150cc22211de4d57f1b7f570097a00e65042424",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__project_gutenberg_filtered",
+      "hf_id": "common-pile/project_gutenberg_filtered",
+      "config": null,
+      "axis": "books",
+      "lang": "en",
+      "target_bytes": 536870912,
+      "target_gib": 0.5,
+      "revision": "3cdf6879c807f4e4e063f2ceb23bc268d8c29ab7",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__pre_1929_books_filtered",
+      "hf_id": "common-pile/pre_1929_books_filtered",
+      "config": null,
+      "axis": "books",
+      "lang": "en",
+      "target_bytes": 536870912,
+      "target_gib": 0.5,
+      "revision": "23f9d96dbb1db3324bbc9fbfe1f8299cc799c4d1",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__library_of_congress_filtered",
+      "hf_id": "common-pile/library_of_congress_filtered",
+      "config": null,
+      "axis": "books",
+      "lang": "en",
+      "target_bytes": 3221225472,
+      "target_gib": 3.0,
+      "revision": "56725c7aa1bb320703e22eb5f42903173d5bac3d",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__libretexts_filtered",
+      "hf_id": "common-pile/libretexts_filtered",
+      "config": null,
+      "axis": "educational",
+      "lang": "en",
+      "target_bytes": 214748365,
+      "target_gib": 0.2,
+      "revision": "70388bca52b4a93515e14b1d56618fd7944988fd",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__pressbooks_filtered",
+      "hf_id": "common-pile/pressbooks_filtered",
+      "config": null,
+      "axis": "educational",
+      "lang": "en",
+      "target_bytes": 644245094,
+      "target_gib": 0.6,
+      "revision": "1a1d3b50d77f834370f8eb4c0d174668dd1676bb",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__oercommons_filtered",
+      "hf_id": "common-pile/oercommons_filtered",
+      "config": null,
+      "axis": "educational",
+      "lang": "en",
+      "target_bytes": 85899346,
+      "target_gib": 0.08,
+      "revision": "506b6159dadcbc0dc67611cea024eedb04232fb2",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__doab_filtered",
+      "hf_id": "common-pile/doab_filtered",
+      "config": null,
+      "axis": "educational",
+      "lang": "en",
+      "target_bytes": 3350074491,
+      "target_gib": 3.12,
+      "revision": "defb24ca72ef6aba6ce0228b669eec06dcfbffbc",
+      "role": "probe"
+    }
+  ],
+  "fineweb2": "remaining non-English web quota; extra parquet files, not a rewrite"
+}

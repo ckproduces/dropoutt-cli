@@ -14,20 +14,26 @@ import fetch_corpus
 
 
 def test_baseline_catalogue_is_pinned_and_scaled() -> None:
-    assert atlas_sources.BASELINE_CATALOGUE_COMMIT == "dc12d8a"
-    assert atlas_sources.BASELINE_SCALE == 3.0
+    assert atlas_sources.BASELINE_CATALOGUE_COMMIT == "public-web-2026-08-30"
+    assert atlas_sources.BASELINE_SCALE == 1.0
     assert atlas_sources.V1_REFERENCE_RECORDS == 2_125_556
-    assert atlas_sources.TARGET_ROWS == 10_627_780
-    assert len(atlas_sources.FINEWEB2_BASELINE) == 69
-    assert len(atlas_sources.SOURCES) == 184
-    assert sum(source.target for source in atlas_sources.SOURCES) == 3_521_110
-    assert len({source.slug for source in atlas_sources.SOURCES}) == 184
+    assert atlas_sources.LOGICAL_BYTE_TARGET == 200 * 1024 ** 3
+    assert abs(sum(atlas_sources.AXIS_TARGET_SHARES.values()) - 1.0) < 1e-9
+    assert atlas_sources.AXIS_TARGET_SHARES["web"] == 0.84
+    assert sum(atlas_sources.AXIS_TARGET_BYTES.values()) == atlas_sources.LOGICAL_BYTE_TARGET
+    assert sum(atlas_sources.LANGUAGE_TARGET_BYTES.values()) == atlas_sources.LOGICAL_BYTE_TARGET
+    assert len(atlas_sources.FINEWEB2_BASELINE) == 45
+    assert len({source.slug for source in atlas_sources.SOURCES}) == len(atlas_sources.SOURCES)
+    assert sum(source.target_bytes for source in atlas_sources.SOURCES) == atlas_sources.LANGUAGE_TARGET_BYTES["en"]
+    assert atlas_sources.AXIS_TARGET_BYTES["scientific"] > atlas_sources.AXIS_TARGET_BYTES["books"]
+    web = [source for source in atlas_sources.SOURCES if source.axis == "web"]
+    assert sum(source.target for source in web) >= atlas_sources.AXIS_FLOORS["web"]
 
 
-def test_supplemental_paths_are_public_reservoir_only_and_exclude_baseline() -> None:
-    baseline_path = "data/tur_Latn/train/000_00000.parquet"
+def test_supplemental_paths_are_public_reservoir_only() -> None:
+    first_path = "data/tur_Latn/train/000_00000.parquet"
     paths = [
-        baseline_path,
+        first_path,
         "data/tur_Latn/train/000_00001.parquet",
         "data/deu_Latn/train/000_00000.parquet",
         "data/deu_Latn/train/000_00001.parquet",
@@ -36,11 +42,11 @@ def test_supplemental_paths_are_public_reservoir_only_and_exclude_baseline() -> 
     ]
     sources = fetch_corpus.supplemental_sources(paths)
 
-    assert sources["tr"][0].path == "data/tur_Latn/train/000_00001.parquet"
-    assert sources["de"][0].path == "data/deu_Latn/train/000_00001.parquet"
+    assert sources["tr"][0].path == first_path
+    assert sources["de"][0].path == "data/deu_Latn/train/000_00000.parquet"
     assert sources["de"][0].hf_id == "HuggingFaceFW/fineweb-2"
     assert sources["es"] == []
-    assert all(source.path != baseline_path for items in sources.values() for source in items)
+    assert all(source.source_role == "web" for items in sources.values() for source in items)
 
 
 def test_byte_quotas_are_exact_and_stable() -> None:
@@ -105,6 +111,27 @@ def test_cached_shard_is_read_then_deleted(tmp_path: Path) -> None:
     assert rows == [text]
     fetch_corpus.delete_cached_source(tmp_path, slug)
     assert not (tmp_path / slug).exists()
+
+
+def test_fetch_source_keeps_larger_existing_shard(tmp_path: Path, monkeypatch) -> None:
+    source = atlas_sources.Source(
+        "public/example", None, "train", ("text",), "web", 1_000_000_000, "en"
+    )
+    text = "ğ" * 80
+    monkeypatch.setattr(fetch_corpus, "preflight_source", lambda *_: {"public": True, "card": {}})
+    monkeypatch.setattr(fetch_corpus, "open_dataset", lambda *_: [{"text": text}] * 3)
+    first = fetch_corpus.fetch_source(
+        source, tmp_path, budget=5, stall=1, scale=1,
+        refresh=False, max_chars=4000, byte_limit=10_000, allow_overshoot=True,
+    )
+    assert first["rows"] == 3
+    monkeypatch.setattr(fetch_corpus, "open_dataset", lambda *_: [{"text": text}])
+    second = fetch_corpus.fetch_source(
+        source, tmp_path, budget=5, stall=1, scale=1,
+        refresh=False, max_chars=4000, byte_limit=10_000, allow_overshoot=True,
+    )
+    assert second["rows"] == 3
+    assert second["logical_bytes"] == first["logical_bytes"]
 
 
 def test_fineweb2_baseline_paths_are_unique() -> None:
