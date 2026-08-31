@@ -1,5 +1,13 @@
 # dropoutt
 
+<p align="left">
+  <a href="https://dropoutt.com"><img src="https://img.shields.io/badge/Website-dropoutt.com-000000?style=flat-square&logo=googlechrome&logoColor=white" alt="Website" /></a>
+  <a href="https://pypi.org/project/dropoutt/"><img src="https://img.shields.io/pypi/v/dropoutt?style=flat-square&color=blue" alt="PyPI Version" /></a>
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+  <a href="https://www.producthunt.com/products/dropoutt"><img src="https://img.shields.io/badge/Product%20Hunt-%2370%20Ranked-EA532C?style=flat-square&logo=product-hunt&logoColor=white" alt="Product Hunt" /></a>
+  <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License" />
+</p>
+
 **Pre-flight checks for LLM training data.** Point it at a folder. It tells you
 what is wrong before you burn a training run finding out.
 
