@@ -408,6 +408,15 @@ def _atlas(result, s: ScanSummary, *, include_evidence: bool) -> dict[str, Any] 
             }
             for item in atlas.imbalances
         ],
+        "shape_path": [
+            {
+                "region": cell.region,
+                "records": cell.records,
+                "density": round(cell.ratio, 4),
+                "caption": cell.caption,
+            }
+            for cell in atlas.shape_path
+        ],
     }
 
 

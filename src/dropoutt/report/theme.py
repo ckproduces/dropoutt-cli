@@ -171,7 +171,7 @@ font-weight:var(--w-medium)}
 
 /* -- cards -- */
 .card{background:var(--bg-surface);border:1px solid var(--border-subtle);
-border-radius:var(--r-2xl);padding:var(--s-20);box-shadow:var(--shadow-sm)}
+border-radius:var(--r-xl);padding:var(--s-20)}
 /* A heading owns the space under it wherever it appears. Tables and grids
    carry no top margin of their own, so without this the first header row sits
    on the baseline of the title above it. */
@@ -216,7 +216,7 @@ text-align:right}
 /* -- findings -- */
 .finding{background:var(--bg-surface);border:1px solid var(--border-subtle);
 border-left:3px solid var(--border);border-radius:var(--r-xl);padding:var(--s-16) var(--s-20);
-margin-bottom:var(--s-12);box-shadow:var(--shadow-sm)}
+margin-bottom:var(--s-12)}
 .finding.bad{border-left-color:var(--bad)}
 .finding.warn{border-left-color:var(--warn)}
 .finding.info{border-left-color:var(--info)}
@@ -274,33 +274,71 @@ text-align:right;font-size:var(--t-14)}
 margin-top:var(--s-4)}
 .places .flag{display:block;color:var(--warn);font-size:var(--t-12);margin-top:var(--s-4)}
 
-/* -- density grid --
-   The map itself, drawn once: a row per subject area, a chip per fine cell,
-   coloured *and labelled* by how densely this corpus sits in that cell against
-   how densely the reference corpus does. Everything else in the section is a
-   share of the corpus, which cannot answer "where is my data, against
-   everything else".
+/* The map: one block per subject area, and inside it every subregion of that
+   area named, with its own density on the line beside it.
 
-   It is a real table, and that is the point. The header repeats across printed
-   pages for free, which no flex column does; the ratio is in the cell rather
-   than in a tooltip, so it survives paper, a screenshot pasted into a ticket,
-   and reading by keyboard. Both of those were paid for by dropping the sort
-   control, which could only ever have been CSS `order` on flex children. */
-.agrid{width:100%;border-collapse:collapse;table-layout:auto;
-font-size:var(--t-13)}
-.agrid thead th{text-align:left;color:var(--text-faint);
-font-weight:var(--w-semibold);font-size:var(--t-11);
-letter-spacing:var(--ls-wide);text-transform:uppercase;white-space:nowrap;
-padding:var(--s-8) 0;border-bottom:1px solid var(--border)}
-.agrid td{padding:var(--s-4) 0;border-bottom:1px solid var(--border-subtle);
-vertical-align:middle}
-.agrid th.r,.agrid td.r{text-align:right;font-variant-numeric:tabular-nums;
-padding-left:var(--s-16);white-space:nowrap}
-.agrid td.r{font-weight:var(--w-medium)}
-.agrid td.reach{color:var(--text-muted);font-weight:var(--w-regular)}
-.agrid .reach-ok{color:var(--ok);font-size:var(--t-12)}
-.agrid .reach-miss{color:var(--text-faint);font-size:var(--t-12)}
-.agrid tr.empty td{color:var(--text-faint);font-weight:var(--w-regular)}
+   It used to be two lists, one after the other — a grid of coloured chips
+   carrying multipliers and nothing else, then a separate table of names — and
+   joining them meant holding four thousand squares in your head. One nested
+   list instead, so a subregion's name and its density are the same line and
+   the area's own numbers sit directly above them.
+
+   Two columns above 44rem, one below. A grid rather than CSS `columns`
+   because the areas are ranked: a grid reads left-to-right in rank order,
+   where a multi-column flow puts the first half of the ranking down the left
+   column and makes the reader scroll back up for the second half. */
+.amap{display:grid;grid-template-columns:1fr;gap:var(--s-20) var(--s-32);
+margin-top:var(--s-16)}
+@media (min-width:44rem){.amap{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.amap-area{min-width:0;break-inside:avoid;page-break-inside:avoid}
+.amap-area .aname{display:block;font-size:var(--t-14);
+font-weight:var(--w-semibold);overflow-wrap:anywhere}
+.amap-area.empty .aname{color:var(--text-faint);font-weight:var(--w-medium)}
+
+/* The area's own numbers: reach, share, records. */
+.ameta{display:flex;flex-wrap:wrap;gap:0 var(--s-10);
+margin:2px 0 var(--s-6);color:var(--text-faint);font-size:var(--t-11);
+font-variant-numeric:tabular-nums}
+.ameta .reach-ok{color:var(--ok)}
+.ameta .reach-miss{color:var(--text-faint)}
+
+/* One subregion. Density sits in the chip; the name sits beside it. No side
+   rail — the multiplier already carries the heat. */
+.acell-list{list-style:none;margin:0;padding:0}
+.acell{display:grid;grid-template-columns:3.2rem minmax(0,1fr);gap:var(--s-8);
+align-items:center;padding:2px 0;font-size:var(--t-12)}
+.acell .cn{color:var(--text);overflow-wrap:anywhere}
+.acell:not(.on) .cn{color:var(--text-faint)}
+
+/* One fine cell's density, carrying its own ratio. Bold, because the label
+   sits on a saturated fill at 11px and regular weight is the difference
+   between a number and a smudge. The fill and its ink are inherited from the
+   row's ramp class, where the ink was chosen by measured contrast — see _ink.
+   Every cell carries an inset border so white and near-white fills still read
+   as boxes rather than as empty gaps. */
+.cell{display:inline-flex;align-items:center;justify-content:center;
+min-width:2.7rem;height:20px;padding:0 var(--s-4);flex:none;
+border-radius:var(--r-md);background:var(--cell,var(--bg-inset));
+box-shadow:inset 0 0 0 1px var(--neutral-500);
+color:var(--ink,var(--text));font-size:var(--t-11);
+font-weight:var(--w-bold);font-variant-numeric:tabular-nums;
+letter-spacing:0;text-transform:none}
+/* Never reached: white fill, same border, a zero instead of a blank. */
+.acell:not(.on) .cell{background:var(--white);color:var(--text-faint);
+font-weight:var(--w-medium)}
+
+/* Contribution-style shape strip: every L2 cell along the map diameter. */
+.shape-strip{display:grid;grid-template-columns:repeat(64,minmax(0,1fr));
+gap:2px;margin-top:var(--s-12);max-width:100%}
+.shape-sq{aspect-ratio:1;border-radius:var(--r-sm);
+background:var(--cell,var(--bg-inset));
+box-shadow:inset 0 0 0 1px var(--neutral-400);min-width:0}
+.shape-sq:not(.on){background:var(--neutral-200);
+box-shadow:inset 0 0 0 1px var(--neutral-400)}
+@media (max-width:640px){
+  .shape-strip{grid-template-columns:repeat(32,minmax(0,1fr));gap:1px}
+}
+
 .imbalances{list-style:none}
 .imbalances li{display:grid;grid-template-columns:4.2rem 1fr;gap:var(--s-12);
 padding:var(--s-12) 0;border-top:1px solid var(--border-subtle);align-items:start}
@@ -316,29 +354,6 @@ margin-top:var(--s-4)}
 font-weight:var(--w-medium)}
 .imbalances .act.cut{color:var(--bad)}
 .imbalances .act.grow{color:var(--ok)}
-
-/* Name and cells are one column: the name is what the row of chips is about,
-   and a gutter between them only invited the eye to read them as two tables. */
-.area{display:grid;grid-template-columns:minmax(0,20rem) 1fr;
-gap:var(--s-16);align-items:center}
-.area .aname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.acells{display:flex;gap:var(--s-4);align-items:center;flex-wrap:wrap}
-
-/* One fine cell, carrying its own ratio. Bold, because the label sits on a
-   saturated fill at 11px and regular weight is the difference between a number
-   and a smudge. The ink is chosen per step by measured contrast — see _ink.
-   Every cell carries an inset border so white and near-white fills still read
-   as boxes rather than empty gaps in the row. */
-.cell{display:inline-flex;align-items:center;justify-content:center;
-min-width:2.7rem;height:20px;padding:0 var(--s-4);flex:none;
-border-radius:var(--r-md);background:var(--cell,var(--bg-inset));
-box-shadow:inset 0 0 0 1px var(--neutral-500);
-color:var(--ink,var(--text));font-size:var(--t-11);
-font-weight:var(--w-bold);font-variant-numeric:tabular-nums;
-letter-spacing:0;text-transform:none}
-/* Never reached: white fill, same border, a zero instead of a blank. */
-.cell:not(.on){background:var(--white);color:var(--text-faint);
-font-weight:var(--w-medium)}
 
 /* The scale is continuous, so the legend is a gradient rather than four
    swatches the reader has to interpolate between by eye. */
@@ -395,11 +410,9 @@ footer p{margin:var(--s-6) 0}
   .bar .v{min-width:2.8rem}
   .places li{grid-template-columns:2.8rem 1fr;gap:var(--s-8)}
   .insight{gap:var(--s-10);padding:var(--s-12)}
-  /* The area name takes the full width and its cells wrap underneath. A
-     twenty-rem name column beside a row of chips leaves three words of a
-     subject label, and the label is what the row is about. */
-  .area{grid-template-columns:1fr;gap:var(--s-6)}
-  .agrid td{padding:var(--s-8) 0}
+  /* One subregion per line already; on a narrow screen the density column
+     shrinks so the name keeps the width it needs. */
+  .acell{grid-template-columns:2.9rem minmax(0,1fr);gap:var(--s-6)}
   /* A dataset name or an install hint is one long token; on a 320px screen it
      has to be allowed to break rather than push the page sideways. */
   code,.mono{overflow-wrap:anywhere}
@@ -422,12 +435,15 @@ footer p{margin:var(--s-6) 0}
   .insight,.places li,tr{break-inside:avoid}
   a{color:#000;text-decoration:none}
   .masthead .where{font-size:8pt}
-  /* The grid is 48 rows and will cross a page boundary. A table header repeats
-     itself across pages when it is told to; without this the second page is an
-     unlabelled block of colour. Every square carries its own ratio, so nothing
-     on this page depends on a pointer. */
-  .agrid thead{display:table-header-group}
-  .cell{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  /* Any table here can cross a page boundary. A header repeats itself across
+     pages when it is told to; without this the second page is an unlabelled
+     block. The map is not a table any more, so an area block is kept whole
+     instead, and every cell carries its own ratio — nothing on the page
+     depends on a pointer or on a colour surviving the printer. */
+  thead{display:table-header-group}
+  .amap{columns:2;column-gap:18pt;display:block}
+  .amap-area,.acell{break-inside:avoid}
+  .cell,.shape-sq{print-color-adjust:exact;-webkit-print-color-adjust:exact}
 }
 """
 

@@ -121,10 +121,11 @@ near-identical writing that shingle dedup cannot see — comes from
 dropoutt atlas ./my-corpus
 ```
 
-The atlas is a **frozen topical map** compressed from public datasets. Two
-products ship: `atlas-v2` (256-d) and `atlas-v2-lite` (16-d). Run without
-`--model` and the command asks which to use; pass `--model atlas-v2` or
-`--model atlas-v2-lite` to start immediately. Frozen is the point — a coverage
+The atlas is a **frozen topical map** compressed from public datasets. Products
+ship as `atlas-v3` (default; 4,096 cells), `atlas-v2` (256-d), and
+`atlas-v2-lite` (16-d). Run without `--model` and the command asks which to use;
+pass `--model atlas-v3` (or another product) to start immediately. Frozen is the
+point — a coverage
 plot that fits UMAP or k-means on the sample in front of it gives the next folder
 a new projection, so its neighbourhoods mean something different and two runs
 cannot be compared. Here the bins already exist, and a run only decides which of
@@ -143,7 +144,7 @@ It writes `atlas.html`, `atlas.md` and `atlas.json`, and reports:
 | --- | --- |
 | **What the map says** | A handful of sentences that clear both a size gate and a significance gate — a subject 8x denser here than the map is built for, an area the map spends a fifth of itself on that you barely reach. Nothing is shown for being true; it is shown for being large *and* true |
 | **Where your data piles up** | The five crowded places, named by *your own record* nearest the centre of each, because that is the only description of a neighbourhood that is true by construction |
-| **Where you have only a toehold** | The sparsest places you reach. Reaching a place is not covering it, and an occupancy count cannot tell the difference |
+| **Where you have only a toehold** | The sparsest places you reach. Reach is density-weighted; a single record in a cell is not the same as covering it |
 | **Shape** | Specialised or broad — right for a single-task set, wrong for a pretraining mixture, and the tool does not know which you are building |
 | **Crowding** | One area holding half the corpus whose records are 0.98 alike is one template, not one topic — and shingle dedup cannot see it |
 | **Same ground** | Datasets that occupy the same regions even when they share no wording, i.e. merging them adds volume and not coverage |

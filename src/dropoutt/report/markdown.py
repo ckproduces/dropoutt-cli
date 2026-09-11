@@ -55,6 +55,33 @@ def _pipe(value: object) -> str:
     return str(value).replace("|", "\\|").replace("\n", " ")
 
 
+#: Named subregions listed inside each subject area before the rest are counted.
+#: The map is one list now — every subregion sits under the area it belongs to
+#: rather than in a second table underneath — and a Markdown report is read in a
+#: pull request, so the nesting is capped rather than complete. The HTML page
+#: carries all of them.
+CELLS_PER_AREA = 6
+
+
+def _subregions(area: dict) -> str:
+    """An area's named subregions, densest first, as one cell of the table.
+
+    Inline rather than nested, because Markdown has no nested table and a
+    second table keyed by area id is the two-lists shape this replaced.
+    """
+    cells = [cell for cell in area.get("cells", ()) if cell.get("records")]
+    cells.sort(key=lambda cell: (-cell.get("density", 0.0), -cell["records"]))
+    shown = [
+        f"{(cell.get('density') or 0.0):.1f}× "
+        f"{cell.get('caption') or 'subregion ' + str(cell['region'])}"
+        for cell in cells[:CELLS_PER_AREA]
+    ]
+    if not shown:
+        return "—"
+    hidden = len(cells) - len(shown)
+    return " · ".join(shown) + (f" · +{hidden} more" if hidden > 0 else "")
+
+
 def _table(header: list[str], rows: list[list[str]], align: str = "") -> list[str]:
     if not rows:
         return []
@@ -373,24 +400,26 @@ def _atlas(atlas: dict | None, *, heading: str = "### Where your data sits") -> 
     if areas:
         reached = [area for area in areas if area["records"]]
         out.append(
-            "Density is your share of a subject area against the reference "
-            "corpus's share of the same one: 1.0× is as common in your data as "
-            "it is on the map. Reach sums min(1, density) over subregions: "
-            "parity is a full score, and over-representation does not add more."
+            "One row per subject area, with the subregions inside it named and "
+            "ranked. Density is your share of a subregion against the reference "
+            "corpus's share of the same one: 1.0× matches the map. Reach sums "
+            "min(1, density) over an area's subregions, so parity is a full "
+            "score and over-representation does not add more."
         )
         out.append("")
         out += _table(
-            ["subject area", "share", "density", "reach"],
+            ["subject area", "share", "reach",
+             "subregions, densest first"],
             [
                 [
                     area["name"],
                     _pct(area["share"]),
-                    area["density_label"],
                     f"{area['reach_label']}/{area['subregions']}",
+                    _subregions(area),
                 ]
                 for area in reached[:GRID_ROWS]
             ],
-            align="lrrr",
+            align="lrrl",
         )
         out.append("")
         hidden = len(reached) - GRID_ROWS
@@ -417,8 +446,9 @@ def _atlas(atlas: dict | None, *, heading: str = "### Where your data sits") -> 
 
     if atlas["imbalances"]:
         out.append(
-            "**Where you are farthest from the map.** Denser than the map means "
-            "cut volume there; thinner means add more of that kind of record."
+            "**Where you are farthest from the map.** Denser than the map: cut "
+            "volume there. Empty or thinner: add that kind of record. Grow "
+            "starts at 0× (never reached)."
         )
         out.append("")
         out += _table(
@@ -428,8 +458,11 @@ def _atlas(atlas: dict | None, *, heading: str = "### Where your data sits") -> 
                     item["density_label"],
                     item["action"],
                     item["area"] or "—",
-                    _pct(item["share"]),
-                    item["yours"] or f"{item['records']:,} records",
+                    _pct(item["share"]) if item["records"] else "—",
+                    item["yours"] or (
+                        f"{item['records']:,} records" if item["records"]
+                        else "never reached"
+                    ),
                 ]
                 for item in atlas["imbalances"][:LIST_ROWS]
             ],

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from itertools import zip_longest
 from typing import Any
 
 from .phrasing import share as _share
@@ -252,6 +253,10 @@ class AtlasStory:
     #: The densest cell on the map relative to the reference corpus, which is
     #: what the top of the colour scale was normalised against.
     grid_peak: float = 0.0
+    #: L2 cells ordered along the map's longest axis, for the contribution-style
+    #: shape strip under the summary cards. Endpoints are the two furthest cells
+    #: by cosine distance; everything else is projected onto that diameter.
+    shape_path: list[Cell] = field(default_factory=list)
     #: Independent observations behind the histogram, after weighting. Not
     #: `placed`: a record standing for five thousand others is still one
     #: record's worth of evidence, and every significance gate takes this.
@@ -350,6 +355,7 @@ def build_story(result) -> AtlasStory | None:
         story.effective = sum(area.effective_reach for area in story.grid)
     else:
         story.effective = float(coverage.get("effective_regions", 0.0))
+    story.shape_path = _shape_path(result, coverage, story.grid_peak)
     story.shape, story.shape_line, story.headline = _shape(story)
     story.insights = _insights(result, coverage, story)
     story.off_line = _off_line(story)
@@ -402,8 +408,8 @@ def _place(result, region: int, records: int, share: float,
     area = ""
     if atlas is not None and region < len(atlas.region_category):
         area = category_labels(atlas).get(int(atlas.region_category[region]), "")
-    if not caption and atlas is not None and region < len(atlas.region_terms):
-        caption = atlas.region_terms[region]
+    if not caption and atlas is not None and region < len(atlas.region_labels):
+        caption = atlas.region_labels[region]
     return Place(
         region=region,
         share=share,
@@ -472,16 +478,23 @@ def _ranked_places(result, coverage: dict) -> tuple[list[Place], list[Place]]:
     return dense, thin
 
 
-#: How many cut/grow cells to show in the rebalance section.
+#: How many cut/grow cells to show in the rebalance section. Split evenly so a
+#: corpus with hundreds of empty cells cannot crowd out every cut cue.
 IMBALANCE_SHOWN = 8
+IMBALANCE_EACH = IMBALANCE_SHOWN // 2
 
 
 def _imbalances(result, coverage: dict) -> list[Imbalance]:
     """Cells farthest from map density, so a reader knows what to cut or grow.
 
-    Ranked by distance from parity on a log scale: 6× and 0.17× are the same
-    distance from 1×, and both are more useful than a 1.1× cell.
+    Cut and grow are ranked separately, then interleaved. Grow starts with
+    cells the corpus never reached (0×): those are farther from the map than
+    any thin toehold, and used to be invisible because only occupied cells
+    entered the list. Among empty cells, larger map mass ranks first — grow
+    into a big gap before a tiny one. Occupied cells still use log-distance
+    from parity: 6× and 0.17× are the same distance from 1×.
     """
+    atlas = _atlas_of(result)
     counts = {
         int(region): int(count)
         for region, count in (coverage.get("region_counts") or {}).items()
@@ -491,30 +504,139 @@ def _imbalances(result, coverage: dict) -> list[Imbalance]:
         for region, value in (coverage.get("region_density") or {}).items()
     }
     placed = sum(counts.values())
-    if not placed or not ratios:
+    if not placed:
         return []
 
-    ranked = sorted(
-        (
-            (region, counts[region], counts[region] / placed, ratios[region])
-            for region in counts
-            if ratios.get(region, 0.0) > 0
-        ),
-        key=lambda row: (-abs(math.log(row[3])), row[0]),
+    n_regions = (
+        int(atlas.n_regions) if atlas is not None
+        else (max(counts) + 1 if counts else 0)
     )
-    out: list[Imbalance] = []
-    for region, records, share, ratio in ranked[:IMBALANCE_SHOWN]:
+    if n_regions <= 0:
+        return []
+    sizes = (
+        [float(x) for x in atlas.region_size]
+        if atlas is not None and atlas.region_size is not None
+        else None
+    )
+
+    cuts: list[tuple] = []
+    grows: list[tuple] = []
+    for region in range(n_regions):
+        records = counts.get(region, 0)
+        ratio = ratios.get(region, 0.0) if records else 0.0
+        share = records / placed
+        if ratio > 1.0:
+            cuts.append((abs(math.log(ratio)), region, records, share, ratio))
+        elif records == 0 or ratio < 1.0:
+            # Tier 0 = never reached; tier 1 = thin but present. Map mass only
+            # breaks ties inside the empty tier.
+            mass = sizes[region] if sizes is not None and region < len(sizes) else 0.0
+            if records == 0:
+                key = (0, -mass, region)
+            else:
+                key = (1, -abs(math.log(max(ratio, 1e-12))), region)
+            grows.append((key, region, records, share, ratio))
+
+    cuts.sort(key=lambda row: (-row[0], row[1]))
+    grows.sort(key=lambda row: (row[0], row[1]))
+
+    def _item(region: int, records: int, share: float, ratio: float,
+              action: str) -> Imbalance:
         place = _place(result, region, records, share, ratio)
-        out.append(Imbalance(
+        return Imbalance(
             region=region,
             ratio=ratio,
             records=records,
             share=share,
             yours=place.yours,
             area=place.area,
-            action="cut" if ratio > 1.0 else "grow",
-        ))
+            action=action,
+        )
+
+    out: list[Imbalance] = []
+    for cut, grow in zip_longest(
+        cuts[:IMBALANCE_EACH], grows[:IMBALANCE_EACH],
+    ):
+        if cut is not None:
+            _, region, records, share, ratio = cut
+            out.append(_item(region, records, share, ratio, "cut"))
+        if grow is not None:
+            _, region, records, share, ratio = grow
+            out.append(_item(region, records, share, ratio, "grow"))
     return out
+
+
+#: Columns in the contribution-style shape strip. Cells wrap left-to-right,
+#: top-to-bottom, ordered along the map diameter — same reading order as a
+#: GitHub contribution calendar.
+SHAPE_STRIP_COLUMNS = 64
+
+
+def _shape_path(result, coverage: dict, peak: float) -> list[Cell]:
+    """L2 cells ordered along the longest axis of the map.
+
+    Find two far fine cells by a farthest-first walk on the centroids (a
+    linear-time diameter approximation — a full pairwise matrix is too dear
+    at four thousand cells), project every cell onto that diameter, and keep
+    the density each one holds so the strip can light or dim like a
+    contribution graph. Coords on some artifacts are zeroed; centroids are
+    the geometry that always exists.
+    """
+    atlas = _atlas_of(result)
+    if atlas is None or not len(getattr(atlas, "centroids", ())):
+        return []
+    try:
+        import numpy as np
+    except ImportError:  # pragma: no cover - numpy is a hard dep
+        return []
+
+    centroids = np.asarray(atlas.centroids, dtype=np.float32)
+    n = int(centroids.shape[0])
+    if n < 2:
+        return []
+
+    # Farthest-first diameter: pick a seed, then the farthest from it, then the
+    # farthest from that. Two matrix-vector products, not an n×n Gram matrix.
+    seed = 0
+    left = int(np.argmin(centroids @ centroids[seed]))
+    right = int(np.argmin(centroids @ centroids[left]))
+    axis = centroids[right] - centroids[left]
+    norm = float(np.linalg.norm(axis))
+    if norm <= 0:
+        order = np.arange(n)
+    else:
+        projections = (centroids - centroids[left]) @ (axis / norm)
+        order = np.argsort(projections, kind="mergesort")
+
+    counts = {
+        int(region): int(count)
+        for region, count in (coverage.get("region_counts") or {}).items()
+    }
+    ratios = {
+        int(region): float(value)
+        for region, value in (coverage.get("region_density") or {}).items()
+    }
+    terms = getattr(atlas, "region_labels", ()) or ()
+
+    path: list[Cell] = []
+    for region in order:
+        region = int(region)
+        records = counts.get(region, 0)
+        ratio = ratios.get(region, 0.0) if records else 0.0
+        caption = ""
+        if region < len(terms):
+            caption = ", ".join(
+                term.strip()
+                for term in str(terms[region]).split(",")[:CAPTION_TERMS]
+            )
+        path.append(Cell(
+            region=region,
+            records=records,
+            ratio=ratio,
+            level=_level(ratio, peak),
+            caption=caption,
+        ))
+    return path
 
 
 #: A region holding less than this share of the corpus is a toehold rather than
@@ -765,7 +887,7 @@ def _grid(result, coverage: dict,
         return [], 0.0
     peak = max(ratios.values(), default=0.0)
 
-    terms = atlas.region_terms
+    terms = atlas.region_labels
     sizes = (
         [float(x) for x in atlas.region_size]
         if atlas.region_size is not None else []

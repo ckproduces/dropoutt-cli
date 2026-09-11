@@ -22,9 +22,11 @@ still prints nothing at all.
 
 from __future__ import annotations
 
+from itertools import zip_longest
 from pathlib import Path
 from typing import Literal
 
+from rich.cells import cell_len, set_cell_size
 from rich.console import Console
 from rich.markup import escape
 from rich.table import Table
@@ -223,9 +225,91 @@ def _section(console: Console, title: str) -> None:
 Justify = Literal["left", "right"]
 
 
-def _table(*columns: tuple[str, Justify]) -> Table:
-    """A borderless table in the house style. ``(header, justify)`` per column."""
-    table = Table(show_header=True, header_style="dim", box=None, padding=(0, 2))
+#: Subject areas whose subregions are named, before the tail is counted. The
+#: map is one list now — each area's subregions sit under it rather than in a
+#: second table — and a terminal cannot take four thousand lines, so the
+#: nesting is capped here. The HTML page carries all of them.
+AREAS_NAMED = 8
+
+
+def _print_area_cells(console: Console, reached: list[dict]) -> None:
+    """Each subject area, then the subregions inside it, two to a row.
+
+    This used to be two lists printed one after another: a table of areas, then
+    a flat table of the densest cells anywhere on the map. Joining them was left
+    to the reader, who had no column to join on. The cells are printed under the
+    area they belong to instead, so "what does *Video games* mean for my corpus"
+    is answered where the question is asked.
+
+    Two columns because a cell name is short and a single column of sixteen is a
+    wall where two of eight is a block. Density leads each entry: it is what the
+    cells are ranked on and what the colour used to say on the page.
+    """
+    named = [area for area in reached if any(c["records"] for c in area["cells"])]
+    if not named:
+        return
+    # Two columns share the console, minus the indent and the density prefix
+    # each entry carries. Clipping to a constant instead would either wrap on an
+    # eighty-column terminal or waste half a wide one.
+    width = max(18, (console.width - 12) // 2 - 8)
+    for area in named[:AREAS_NAMED]:
+        cells = sorted(
+            (c for c in area["cells"] if c["records"]),
+            key=lambda c: (-c.get("density", 0.0), -c["records"]),
+        )
+        console.print()
+        console.print(
+            f"    [bold]{_m(area['name'])}[/bold]  "
+            f"[dim]{area['reach_label']}/{area['subregions']} reach · "
+            f"{_pct(area['share'])} share · "
+            f"{area['records']:,} record{'' if area['records'] == 1 else 's'}[/dim]"
+        )
+        table = _table(("", "left"), (" ", "left"), headers=False)
+        half = (len(cells) + 1) // 2
+        for left, right in zip_longest(cells[:half], cells[half:]):
+            table.add_row(_cell_entry(left, width), _cell_entry(right, width))
+        console.print(table)
+    if len(named) > AREAS_NAMED:
+        rest = len(named) - AREAS_NAMED
+        console.print()
+        console.print(
+            f"    [dim]{rest:,} further area{'' if rest == 1 else 's'} reached; "
+            f"their subregions are named in the report files[/dim]"
+        )
+
+
+def _cell_entry(cell: dict | None, width: int) -> str:
+    """``1.5x  flowers, plant, perennial`` — density inline, name clipped to fit.
+
+    Density shares the column rather than taking its own: two name columns and
+    two number columns leaves each name about twenty-four characters on an
+    eighty-column terminal, which wraps every one of them.
+
+    The clip is by display width rather than by character count. The captions
+    are multilingual and a CJK glyph occupies two terminal cells, so clipping
+    ``自己中心的で心づかいができない`` to forty characters produced an eighty-cell
+    string that wrapped out of its column and back to the left margin.
+    """
+    if cell is None:
+        return ""
+    caption = cell.get("caption") or f"cell {cell['region']}"
+    ratio = cell.get("density") or 0.0
+    density = f"{ratio:.0f}x" if ratio >= 10 else f"{ratio:.1f}x"
+    caption = " ".join(str(caption).split())
+    if cell_len(caption) > width:
+        caption = set_cell_size(caption, max(1, width - 1)).rstrip() + "…"
+    return f"[dim]{density:>5}[/dim]  {_m(caption)}"
+
+
+def _table(*columns: tuple[str, Justify], headers: bool = True) -> Table:
+    """A borderless table in the house style. ``(header, justify)`` per column.
+
+    ``headers=False`` is for a table whose columns were already named by the line
+    printed above it — the map prints one block per subject area, and a
+    ``subregion | subregion`` header repeated over every block is noise.
+    """
+    table = Table(show_header=headers, header_style="dim", box=None,
+                  padding=(0, 2))
     for header, justify in columns:
         table.add_column(header, justify=justify, overflow="fold")
     return table
@@ -415,24 +499,17 @@ def _render_atlas(console: Console, atlas: dict) -> None:
     reached = [area for area in atlas["subject_areas"] if area["records"]]
     if reached:
         console.print()
-        console.print("    [dim]Density is your share of a subject area against the "
+        console.print("    [dim]Each subject area you reached, then the subregions "
+                      "inside it. Density is your share of a subregion against the "
                       "map's own. 1.0× is parity.[/dim]")
-        table = _table(("subject area", "left"), ("share", "right"),
-                       ("density", "right"), ("reach", "right"))
-        for area in reached[:LIST_ROWS]:
-            table.add_row(_m(area["name"]), _pct(area["share"]),
-                          _m(area["density_label"]),
-                          f"{area['reach_label']}/{area['subregions']}")
-        console.print(table)
+        _print_area_cells(console, reached)
         empty = len(atlas["subject_areas"]) - len(reached)
-        tail = []
-        if len(reached) > LIST_ROWS:
-            tail.append(f"{len(reached) - LIST_ROWS} further areas reached")
         if empty:
-            tail.append(f"{empty} of the map's {len(atlas['subject_areas'])} "
-                        f"subject areas never reached")
-        if tail:
-            console.print(f"    [dim]{'; '.join(tail)}[/dim]")
+            console.print()
+            console.print(
+                f"    [dim]{empty} of the map's {len(atlas['subject_areas'])} "
+                f"subject areas never reached[/dim]"
+            )
 
     for insight in atlas["insights"][:5]:
         console.print()
@@ -446,15 +523,21 @@ def _render_atlas(console: Console, atlas: dict) -> None:
 
     if atlas["imbalances"]:
         console.print()
-        console.print("    [dim]Farthest from the map. Denser means cut volume "
-                      "there; thinner means add more of that kind of record.[/dim]")
+        console.print("    [dim]Farthest from the map. Denser: cut volume. "
+                      "Empty or thinner: grow. Grow starts at 0×.[/dim]")
         table = _table(("density", "right"), ("do", "left"), ("subject area", "left"),
                        ("share", "right"), ("one of your records", "left"))
         for item in atlas["imbalances"][:LIST_ROWS]:
+            sample = _clip(item["yours"]) if item.get("yours") else ""
+            if not sample:
+                sample = (
+                    f"{item['records']:,} records" if item["records"]
+                    else "never reached"
+                )
             table.add_row(
                 _m(item["density_label"]), item["action"], _m(item["area"] or "—"),
-                _pct(item["share"]),
-                _m(_clip(item["yours"]) or f"{item['records']:,} records"),
+                _pct(item["share"]) if item["records"] else "—",
+                _m(sample),
             )
         console.print(table)
 
