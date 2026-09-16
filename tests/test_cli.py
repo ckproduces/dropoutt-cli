@@ -359,7 +359,7 @@ def test_atlas_places_records_and_writes_the_map_in_every_shape(tmp_path):
         encoding="utf-8",
     )
     result = runner.invoke(
-        app, ["atlas", str(tmp_path), "--model", "atlas-v2-lite",
+        app, ["atlas", str(tmp_path), "--model", "atlas-v3",
               "--no-open", "--offline"]
     )
     assert result.exit_code == 0, plain(result.output)
@@ -392,7 +392,7 @@ def test_atlas_omits_evidence_everywhere_at_once(tmp_path):
         encoding="utf-8",
     )
     result = runner.invoke(
-        app, ["atlas", str(tmp_path), "--model", "atlas-v2-lite",
+        app, ["atlas", str(tmp_path), "--model", "atlas-v3",
               "--no-open", "--offline", "--no-evidence", "--quiet"]
     )
     assert result.exit_code == 0, plain(result.output)
@@ -402,48 +402,14 @@ def test_atlas_omits_evidence_everywhere_at_once(tmp_path):
     assert secret not in plain(result.output)
 
 
-def test_atlas_without_a_model_asks_instead_of_guessing(tmp_path):
-    """A pipe is not a terminal, so the picker refuses rather than picking one.
-
-    The refusal names every way out: each product by flag, and the config key
-    a CI job is expected to set.
-    """
-    (tmp_path / "data.jsonl").write_text('{"text": "hello there"}\n', encoding="utf-8")
-    result = runner.invoke(app, ["atlas", str(tmp_path), "--offline"])
-    assert result.exit_code == 2
-    text = words(result.output)
-    assert "--model atlas-v3" in text
-    assert "--model atlas-v2" in text
-    assert "atlas-v2-lite" in text
-    assert 'atlas = "atlas-v3"' in text
-    assert "dropoutt.toml" in text
-
-
-def test_config_records_whether_the_atlas_was_declared(tmp_path):
-    from dropoutt.config import Config
-
-    assert Config.load(tmp_path).atlas_declared is False
-    (tmp_path / "dropoutt.toml").write_text("[scan]\ntier = 1\n", encoding="utf-8")
-    assert Config.load(tmp_path).atlas_declared is False
-    (tmp_path / "dropoutt.toml").write_text(
-        '[scan]\natlas = "atlas-v2-lite"\n', encoding="utf-8"
-    )
-    cfg = Config.load(tmp_path)
-    assert cfg.atlas == "atlas-v2-lite"
-    assert cfg.atlas_declared is True
-
-
 @needs_encoder
-def test_atlas_in_a_pipe_uses_the_product_dropoutt_toml_declares(tmp_path):
-    """`[scan] atlas = ...` is how a CI job runs `dropoutt atlas` without `--model`.
+def test_atlas_without_a_model_places_on_atlas_v3(tmp_path):
+    """There is one map, so nothing is asked and nothing is guessed.
 
-    A declared product is a reviewed decision, not a guess, so the picker's
-    refusal does not apply to it. The map is then placed on that product and
-    says so.
+    The command used to open an arrow-key picker in a terminal and refuse in a
+    pipe. Both existed only because three products shipped; with one, the
+    default is the product, in a terminal and in CI alike.
     """
-    (tmp_path / "dropoutt.toml").write_text(
-        '[scan]\natlas = "atlas-v2-lite"\n', encoding="utf-8"
-    )
     (tmp_path / "data.jsonl").write_text(
         "\n".join(
             json.dumps({"text": " ".join([
@@ -458,7 +424,37 @@ def test_atlas_in_a_pipe_uses_the_product_dropoutt_toml_declares(tmp_path):
     )
     assert result.exit_code == 0, plain(result.output)
     data = json.loads((tmp_path / ".dropoutt" / "atlas.json").read_text())
-    assert data["atlas"]["identity"]["version"] == "atlas-v2-lite"
+    assert data["atlas"]["identity"]["version"] == "atlas-v3"
+
+
+def test_config_reads_the_atlas_key(tmp_path):
+    from dropoutt.config import Config
+
+    assert Config.load(tmp_path).atlas == "atlas-v3"
+    (tmp_path / "dropoutt.toml").write_text("[scan]\ntier = 1\n", encoding="utf-8")
+    assert Config.load(tmp_path).atlas == "atlas-v3"
+    (tmp_path / "dropoutt.toml").write_text(
+        '[scan]\natlas = "atlas-v3"\n', encoding="utf-8"
+    )
+    assert Config.load(tmp_path).atlas == "atlas-v3"
+
+
+def test_dropoutt_toml_cannot_name_a_map_that_does_not_ship(tmp_path):
+    """A retired product named in the config is a usage error, not a fallback.
+
+    Silently placing on atlas-v3 would make the run incomparable with the
+    fingerprints the file was written for, and say nothing about it.
+    """
+    (tmp_path / "dropoutt.toml").write_text(
+        '[scan]\natlas = "atlas-v2-lite"\n', encoding="utf-8"
+    )
+    (tmp_path / "data.jsonl").write_text('{"text": "hello there"}\n', encoding="utf-8")
+    result = runner.invoke(app, ["atlas", str(tmp_path), "--offline"])
+    assert result.exit_code == 2
+    text = plain(result.output)
+    assert "Invalid atlas" in text
+    assert "atlas-v2-lite" in text
+    assert "atlas-v3" in text
 
 
 def test_atlas_rejects_an_unknown_model(tmp_path):
@@ -474,13 +470,13 @@ def test_atlas_help_names_model_and_sampling():
     text = words(result.output)
     assert "--model" in text
     assert "--sampling" in text
-    assert "atlas-v2-lite" in text
+    assert "atlas-v3" in text
 
 
 def test_atlas_sampling_rejects_a_negative_count(tmp_path):
     (tmp_path / "data.jsonl").write_text('{"text": "hello there"}\n', encoding="utf-8")
     result = runner.invoke(
-        app, ["atlas", str(tmp_path), "--model", "atlas-v2-lite", "--sampling", "-1"]
+        app, ["atlas", str(tmp_path), "--model", "atlas-v3", "--sampling", "-1"]
     )
     assert result.exit_code == 2
 
@@ -499,7 +495,7 @@ def test_sampling_above_the_corpus_matches_sampling_zero(tmp_path):
         ),
         encoding="utf-8",
     )
-    common = ["atlas", str(data), "--model", "atlas-v2-lite",
+    common = ["atlas", str(data), "--model", "atlas-v3",
               "--no-open", "--offline", "--quiet", "--no-html"]
     zero = runner.invoke(app, [*common, "--sampling", "0", "--out", str(tmp_path / "zero")])
     over = runner.invoke(app, [*common, "--sampling", "9999", "--out", str(tmp_path / "over")])
@@ -527,7 +523,7 @@ def test_a_corpus_placed_whole_is_not_reported_as_an_estimate(tmp_path):
     ] + [json.dumps({"text": "short"})] * 5
     (tmp_path / "data.jsonl").write_text("\n".join(rows), encoding="utf-8")
     result = runner.invoke(
-        app, ["atlas", str(tmp_path), "--model", "atlas-v2-lite",
+        app, ["atlas", str(tmp_path), "--model", "atlas-v3",
               "--no-open", "--offline", "--quiet", "--no-html"]
     )
     assert result.exit_code == 0, plain(result.output)
@@ -549,7 +545,7 @@ def test_sampling_n_places_n_records(tmp_path):
         encoding="utf-8",
     )
     result = runner.invoke(
-        app, ["atlas", str(tmp_path), "--model", "atlas-v2-lite",
+        app, ["atlas", str(tmp_path), "--model", "atlas-v3",
               "--sampling", "5", "--no-open", "--offline", "--quiet", "--no-html"]
     )
     assert result.exit_code == 0, plain(result.output)

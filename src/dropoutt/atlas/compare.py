@@ -221,13 +221,6 @@ def compare(a: dict[str, Any] | None, b: dict[str, Any] | None) -> Comparison:
     if not is_usable(b):
         return Comparison(False, f"right side: {unusable_reason(b)}")
     if a.get("atlas_version") != b.get("atlas_version"):
-        products = {str(a.get("atlas_version")), str(b.get("atlas_version"))}
-        if products == {"atlas-v2", "atlas-v2-lite"}:
-            return Comparison(
-                False,
-                "atlas-v2 and atlas-v2-lite are different coordinate systems; "
-                "full-versus-lite fingerprints cannot be compared",
-            )
         return Comparison(
             False,
             f"different atlas versions ({a.get('atlas_version')} against "

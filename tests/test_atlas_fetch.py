@@ -1,4 +1,4 @@
-"""Network-free contracts for the atlas-v2 corpus collector."""
+"""Network-free contracts for the atlas corpus collector."""
 
 from __future__ import annotations
 

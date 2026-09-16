@@ -18,8 +18,8 @@ The cost is low: once embeddings exist, assignment is one matrix multiply.
 
 ## How it is built
 
-`tools/build_atlas_v2.py` builds every v2 and v3 product from one read-only
-corpus cache. `tools/run_atlas_v3_build.sh` holds the exact invocation for
+`tools/build_atlas_v2.py` builds the map from one read-only corpus cache (the
+file is named for the generation it was written for and builds atlas-v3). `tools/run_atlas_v3_build.sh` holds the exact invocation for
 atlas-v3 and copies the finished artifact into the package with its checksum;
 the build's gates are recorded in
 `src/dropoutt/data/atlas/atlas-v3-release-notes.json`. Client and build share
@@ -161,15 +161,15 @@ normalised language probe 0.30 → 0.20). It costs some separation of *sources*
 formatting that used to tell sources apart no longer places records. That is the
 trade the map is for.
 
-### Measured v2 build time
+### A build timed stage by stage
 
 The stage-by-stage timing below was measured on the 786,180-record build of
 the v2 pipeline — 48 working source/configuration pairs, 736,966 records after
-both dedup passes — that preceded the shipped atlas-v2. It was taken with the
-earlier `tools/build_atlas.py`, whose MinHash, semantic-dedup and crosswalk
-stages the v3 build does not run, and it is kept as the one stage-by-stage
-timing this document has. The shipped atlas-v2 was refitted on 69,071,324
-records from 59 sources, and atlas-v3 on 163,452,464 from 244.
+both dedup passes — that preceded atlas-v2. It was taken with the earlier
+`tools/build_atlas.py`, whose MinHash, semantic-dedup and crosswalk stages the
+v3 build does not run, and it is kept as the one stage-by-stage timing this
+document has. atlas-v2 was later refitted on 69,071,324 records from 59
+sources, and atlas-v3 on 163,452,464 from 244.
 
 | stage | wall time |
 | --- | ---: |
@@ -197,20 +197,18 @@ than a section of the scan report. It writes `atlas.html`, `atlas.md` and
 `atlas.json` beside the scan's artifacts.
 
 ```bash
-dropoutt atlas ./my-corpus                                 # picker, in a terminal
-dropoutt atlas --model atlas-v3 ./my-corpus
-dropoutt atlas --model atlas-v2-lite ./my-corpus --sampling 500
+dropoutt atlas ./my-corpus
+dropoutt atlas ./my-corpus --sampling 500      # a quick look
+dropoutt atlas ./my-corpus --sampling 0        # every record
 ```
 
-Without `--model`, a terminal gets an arrow-key picker over `atlas-v3`,
-`atlas-v2` and `atlas-v2-lite`, with the `atlas` value from `dropoutt.toml`
-highlighted (atlas-v3 when the file names none). A pipe or a CI job gets no
-picker: it uses the `atlas` key if `dropoutt.toml` sets one, and otherwise
-exits 2 telling you to pass `--model` or set the key. Coverage is comparable
-only across runs on one product, and a default that a later release moved
-would make two CI runs silently incomparable; naming the product in a reviewed
-file is what prevents that. `--sampling` defaults to the product's own:
-500,000 records on atlas-v3, 200,000 on atlas-v2, 50,000 on atlas-v2-lite.
+One map ships, so there is nothing to choose: the command places on atlas-v3
+in a terminal and in a CI job alike. `--model atlas-v3` and `atlas = "atlas-v3"`
+under `[scan]` in `dropoutt.toml` both still parse, so a run can say which map
+it meant; any other name is a usage error rather than a silent fallback. A map
+that moves cell ids ships under a new product name, so two runs that name the
+same map are on the same coordinate system. `--sampling` defaults to 500,000
+records.
 
 Splitting it out was not tidying. Placement runs every sampled record through a
 neural encoder — the one part of a scan whose cost had nothing to do with which
@@ -323,9 +321,9 @@ cannot see it.
 
 ### What the atlas still cannot tell you
 
-Every offered product stores `region_size` and `l1_size` for the reference
-mass, so a gap is reported as under-representation against the reference
-corpus, not only as absence. Read that baseline as a property of *this*
+The map stores `region_size` and `l1_size` for the reference mass, so a gap is
+reported as under-representation against the reference corpus, not only as
+absence. Read that baseline as a property of *this*
 reference corpus — nine axes with byte targets, a non-English floor, per-source
 caps, 60.6% non-English by bytes on atlas-v3 — not as a natural population.
 And nothing here says whether a gap matters: the map has not been told what you
@@ -404,10 +402,8 @@ depends on what you are training, which the tool does not know.
 Every one of atlas-v3's 4,096 cells and 256 subject areas carries a
 hand-written name (`region_labels` and `l1_labels` in the artifact; sources
 `curated:region_labels_atlas-v3.json` and `curated:l1_labels_atlas-v3.json`).
-atlas-v2 and atlas-v2-lite carry hand-written subject-area names, and their
-cells are captioned at load time from the artifact's own term lists, re-scored
-against how many cells hold each word. atlas-v1-lite carried five-word frequency
-captions.
+The maps before it captioned cells from word frequencies; what was wrong with
+that is measured under [Where the names come from](#where-the-names-come-from).
 
 ```
   Personal feelings, grief and confessional writing
@@ -427,16 +423,16 @@ assignment.
    through the map's own encoder input policy (see [What the encoder
    reads](#what-the-encoder-reads)). The
    encoder is stored quantised, one byte per weight with a per-row scale
-   (142 MB on disk with its tokenizer), and each product uses the first 128 of
-   its 256 columns — 64 for atlas-v2-lite. The map was fitted in that same
+   (142 MB on disk with its tokenizer), and the map uses the first 128 of its
+   256 columns. The map was fitted in that same
    quantised coordinate system, so the encoder a run applies is the encoder the
    map was built with. The report names it in
    `atlas.identity.encoder_weight_hash`; if a run ever applies an atlas through
    weights it was not fitted on, the fitted hash is kept alongside as
    `encoder_built_with` so the report says so.
 3. The frozen constants are applied: the mean of the record's detected language
-   is subtracted (59 languages on atlas-v3, 20 on the v2 products; the global
-   mean for any other or unknown language), the two stripped principal
+   is subtracted (59 languages; the global mean for any other or unknown
+   language), the two stripped principal
    directions are removed, and the vector is L2-normalised. See
    [Language is a nuisance parameter](#language-is-a-nuisance-parameter-not-a-clustering-axis).
 4. Cosine similarity is computed against all fine-cell centroids, and the
@@ -549,10 +545,10 @@ by bytes — not from a classifier trained on dataset provenance.
 
 Multilingual embeddings separate partly by language, so a flat k-means over a
 multilingual corpus spends much of its region budget distinguishing Turkish
-from Arabic from Chinese rather than distinguishing topics. atlas-v2's coarse
-regions included "Turkish television and
-radio" and "Spanish-language server documentation" — registers of a language,
-not subjects — and the scan already reports language separately.
+from Arabic from Chinese rather than distinguishing topics. The map before
+this one had coarse regions named "Turkish television and radio" and
+"Spanish-language server documentation" — registers of a language, not
+subjects — and the scan already reports language separately.
 
 So atlas-v3 applies **per-language mean centering** as a nuisance-parameter
 correction, and this page says so plainly because
@@ -562,10 +558,8 @@ detected language is subtracted — 59 languages on atlas-v3, each mean
 accumulated over every row of that language in the reference corpus — then the
 two principal directions and the L2 step as before. A record whose language is
 unknown, or which the build had fewer than 6,000 rows of, gets the global mean
-instead. The v2 products ship 20 language means and are centered the same way
-at run time. Nothing is projected
-out that predicts language identity; only the mean moves, and the means ship in
-the artifact as `norm_lang_means`.
+instead. Nothing is projected out that predicts language identity; only the
+mean moves, and the means ship in the artifact as `norm_lang_means`.
 
 The three objections in rule 7 are still real. Where each one lands:
 
@@ -710,9 +704,9 @@ enough of them would drag the percentile there.
 artifact records the draw, the percentiles and the per-axis breakdown under
 `off_atlas_calibration`, and `tests/test_atlas_pipeline.py` fails if a bundled
 v3 ever ships without the key. A map that leaves the key out gets the loader's
-0.35 fallback, and that is not a calibrated number: atlas-v2's own 2nd
-percentile is 0.309, so on v2 the fallback puts 12–18% of ordinary held-out
-prose off-atlas. The v2 products still run on the fallback.
+0.35 fallback, and that is not a calibrated number: on the map before this
+one, whose own 2nd percentile was 0.309, it put 12–18% of ordinary held-out
+prose off-atlas.
 
 ### Read the off-atlas rate as length first
 
@@ -816,9 +810,9 @@ good the clustering is, and a global average would hide that.
 
 ## Reading the quality numbers
 
-The v2 and v3 artifacts carry no supervised taxonomy probe, so the two figures
-that used to travel in the `coverage` facet — level-0 held-out accuracy and
-region purity by taxonomy — do not exist for them. They were v0 and v1
+The artifact carries no supervised taxonomy probe, so the two figures that
+used to travel in the `coverage` facet — level-0 held-out accuracy and region
+purity by taxonomy — do not exist for it. They were v0 and v1
 concepts: a probe trained to reproduce the provenance label of each reference
 record, and a purity score against those labels. What was wrong with them is
 kept here because it is why v3 has no taxonomy at all.
@@ -849,44 +843,36 @@ What travels with an atlas-v3 map instead:
 | reference mass | `region_size`, `l1_size` | how many of the 163,452,464 reference records sit in each cell and subject area — the denominator of every density the report prints. |
 | identity | `encoder_weight_hash`, `corpus_hash`, `pipeline_hash` | whether two maps, or a map and a run, are in the same coordinate system. |
 
-## Products
+## The product
 
-The package bundles four artifacts and offers three. Every figure below is
-read from the artifact's own metadata.
+The package bundles one artifact. Every figure below is read from its own
+metadata.
 
-| property | atlas-v3 (default) | atlas-v2 | atlas-v2-lite | atlas-v1-lite |
-| --- | --- | --- | --- | --- |
-| fine cells (L2) | 4,096 | 296 | 65 | 215 |
-| subject areas (L1) | 256 | 128 | 32 | 48 |
-| dimensions | 128 | 128 | 64 | 128 |
-| reference records | 163,452,464 | 69,071,324 | 69,071,324 | 2,125,556 |
-| sources | 244 | 59 | 59 | 102 |
-| non-English share | 60.6% by bytes | 48.3% | 48.3% | 31.1% |
-| language means | 59 | 20 | 20 | 13 |
-| L2 allocation | population budget of 4,096, k 1–64 per L1 | best-k cosine silhouette, k 1–10 per L1 | best-k cosine silhouette, k 1–10 per L1 | budget 800, k 4–24 |
-| default sample | 500,000 | 200,000 | 50,000 | 200,000 |
-| off-atlas cutoff | 0.3538, stamped | 0.35 loader fallback (own 2nd percentile 0.309) | 0.35 loader fallback | 0.277, stamped |
-| size in the wheel | 13.8 MB | 3.5 MB | 1.5 MB | 1.1 MB |
-| corpus hash | `4203fc3a…` | `74ad6030…` | `74ad6030…` | — |
+| property | atlas-v3 |
+| --- | --- |
+| fine cells (L2) | 4,096 |
+| subject areas (L1) | 256 |
+| dimensions | 128 |
+| reference records | 163,452,464 |
+| sources | 244 |
+| non-English share | 60.6% by bytes |
+| language means | 59 |
+| L2 allocation | population budget of 4,096, k 1–64 per L1 |
+| default sample | 500,000 |
+| off-atlas cutoff | 0.3538, stamped |
+| size in the wheel | 13.8 MB |
+| corpus hash | `99687a41…` |
 
-All three offered products report at the fine-cell level (`user_resolution`
-is `l2`); the subject area is the cell's parent and only groups and names rows.
-They are not resolution levels of one hierarchy. atlas-v2-lite is a separate
-64-dimensional fit on the same corpus as atlas-v2 with its own cells — both
-artifacts record a population-overlap crosswalk between them
-(`crosswalk.full_to_lite`), which is a lookup, not an exact prefix — and
-atlas-v3 is a different corpus. Fingerprints are comparable only on the same
-product, and `diff` refuses across products.
+The map reports at the fine-cell level (`user_resolution` is `l2`); the
+subject area is the cell's parent and only groups and names rows.
 
-`atlas-v1-lite` is still bundled and loads with `--model atlas-v1-lite`, so
-fingerprints placed on it can be re-read; the picker does not offer it and
-nothing new should be placed on it. For the record, its own metadata reports
-topic purity 0.540 / 0.544 (macro / micro), source purity 0.298 / 0.295 (lower
-is better), source cluster AMI 0.252, soft assignment top-5 at T=0.08 with
-2.57 regions above weight 0.15, and all 215 cells clearing the 200-member
-calibration floor. The v2 and v3 artifacts record none of those figures.
-Measurements in this document that were taken on `atlas-v1-lite`, or on the
-258-region build before it, say so where they appear.
+The maps before it — `atlas-v2` (296 cells over 128 areas, 128-d),
+`atlas-v2-lite` (65 cells over 32 areas, 64-d) and `atlas-v1-lite` (215 cells
+over 48 areas) — were fitted on smaller corpora with cells of their own, and
+none of them is bundled or loadable by name. A fingerprint placed on one of
+them is not comparable with one placed on atlas-v3, and `diff` refuses the
+pair. Measurements in this document that were taken on one of those maps, or
+on the 258-region build before them, say so where they appear.
 
 ## Hand intervention
 
@@ -907,8 +893,8 @@ build on a different corpus cannot pick them up by accident.
 
 Cell ids are never renumbered inside a product, because they are part of the
 fingerprint schema. A rebuild that moves them ships under a new product name,
-which is why atlas-v2 and atlas-v3 sit beside each other rather than one
-replacing the other.
+which is why the map that replaces atlas-v3 will be called atlas-v4 rather
+than shipped as a new atlas-v3.
 
 ## Rebuilding
 

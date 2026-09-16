@@ -73,12 +73,6 @@ class Config:
     seq_len: int | None = None
     tier: int = 1
     atlas: str = DEFAULT_ATLAS_VERSION
-    #: Whether ``dropoutt.toml`` named the atlas itself. The picker highlights
-    #: ``atlas`` either way; where there is no terminal to ask, only a declared
-    #: product is used. Coverage is comparable only across runs on one
-    #: coordinate system, and a default a later release moves would make two
-    #: CI runs silently incomparable, so the file has to say which map.
-    atlas_declared: bool = False
     minhash_preset: str = "fineweb"
     mute: list[str] = field(default_factory=list)
     eval_sets: list[str] = field(default_factory=list)
@@ -130,7 +124,6 @@ class Config:
             seq_len=scan.get("seq_len"),
             tier=scan.get("tier", 1),
             atlas=atlas,
-            atlas_declared="atlas" in scan,
             minhash_preset=scan.get("minhash_preset", "fineweb"),
             mute=list(mute_checks),
             eval_sets=list(eval_sets),

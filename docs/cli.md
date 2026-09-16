@@ -161,21 +161,18 @@ cannot be honoured in three formats and forgotten in the fourth.
 Place a corpus on the atlas and draw where it sits.
 
 The atlas is a frozen coordinate system, not a collection of good datasets:
-three maps fitted once on public data (`atlas-v3`, `atlas-v2` and
-`atlas-v2-lite`), so two corpora placed on the same product can be compared
-and a gap can be named. A typical
+one map, `atlas-v3`, fitted once on public data, so two corpora placed on it
+can be compared and a gap can be named. A typical
 coverage plot fits UMAP or k-means on the sample in front of it, which means the
 next folder gets a new projection and neighbourhoods stop meaning the same
 thing. This command only assigns your records to bins that already exist.
 
-Without `--model`, a terminal gets an arrow-key picker over `atlas-v3`,
-`atlas-v2` and `atlas-v2-lite`, highlighting the `atlas` value from
-`dropoutt.toml` (atlas-v3 when the file names none). A pipe or a CI job gets no
-picker: it uses the `atlas` key if `dropoutt.toml` sets one, and otherwise
-exits 2 telling you to pass `--model` or set the key. Coverage is comparable
-only across runs on one product, and a default that a later release moved
-would make two CI runs silently incomparable; `[scan] atlas = "atlas-v3"` in
-a reviewed file is how a CI job runs `dropoutt atlas` without `--model`.
+There is nothing to choose. The command places on `atlas-v3` in a terminal
+and in a CI job alike; `--model atlas-v3`, or `atlas = "atlas-v3"` under
+`[scan]` in `dropoutt.toml`, only lets a run say which map it meant. Any other
+name is a usage error rather than a silent fallback, because a run placed on a
+different map than the fingerprint it is compared with would be wrong without
+saying so.
 
 It reads the same files a scan reads, in the same way, and samples the same
 records — placement and a scan of the same corpus see the same sample. What it
@@ -186,10 +183,10 @@ ahead of time; after that `--offline` works.
 
 | flag | default | meaning |
 | --- | --- | --- |
-| `--model`, `--atlas` | picker in a terminal; `atlas` from `dropoutt.toml` otherwise | `atlas-v3` (4,096 cells over 256 subject areas, 128-d), `atlas-v2` (296 cells, 128-d) or `atlas-v2-lite` (65 cells, 64-d) |
+| `--model`, `--atlas` | `atlas-v3`, or `atlas` from `dropoutt.toml` | the map to place on. `atlas-v3` (4,096 cells over 256 subject areas, 128-d) is the only one that ships |
 | `--out`, `-o` | `<path>/.dropoutt` | output directory |
 | `--offline` | off | never touch the network; resolve the encoder from the cache |
-| `--sampling`, `--sample` | the product's default (500,000 atlas-v3 / 200,000 atlas-v2 / 50,000 atlas-v2-lite) | records to place. `0` = all records. Larger than the corpus is the same as `0` |
+| `--sampling`, `--sample` | 500,000 | records to place. `0` = all records. Larger than the corpus is the same as `0` |
 | `--limit` | none | max records per file, for a fast look |
 | `--no-html` | off | skip the HTML page |
 | `--no-open` | off | do not open the page when the run finishes |
@@ -198,17 +195,15 @@ ahead of time; after that `--offline` works.
 | `--quiet`, `-q` | off | suppress the map; only the output path is printed |
 
 ```bash
-dropoutt atlas ./data                       # picker in a terminal
-dropoutt atlas --model atlas-v3 ./data
-dropoutt atlas --model atlas-v2 ./data
-dropoutt atlas --model atlas-v2-lite ./data --sampling 500
+dropoutt atlas ./data
+dropoutt atlas ./data --sampling 500        # a quick look
 dropoutt atlas ./data --sampling 0          # every record
 dropoutt atlas ./data --offline             # encoder from the cache
 dropoutt atlas ./data --no-evidence -q      # nothing quoted, nothing printed
 ```
 
-`--sampling` is the resolution knob. Omit it and the selected product's default
-applies. `0` places every record that is long enough. A count larger than the
+`--sampling` is the resolution knob. Omit it and the default of 500,000
+records applies. `0` places every record that is long enough. A count larger than the
 corpus is the same as `0`.
 
 ### What it reports

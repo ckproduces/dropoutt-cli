@@ -34,7 +34,6 @@ PIPELINE_DECLARATION = {
         }
         for name, profile in (
             (DEFAULT_ATLAS_VERSION, get_profile(DEFAULT_ATLAS_VERSION)),
-            ("atlas-v2", get_profile("atlas-v2")),
         )
     },
     "pooling_implementation": "batch-tokenize-csr-matmul",

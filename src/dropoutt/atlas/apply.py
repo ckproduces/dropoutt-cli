@@ -240,7 +240,7 @@ class Atlas:
     @property
     def profile(self):
         """Declared product parameters, including the user-visible L2 surface."""
-        version = str(self.meta.get("version", "atlas-v1-lite"))
+        version = str(self.meta.get("version", ""))
         try:
             return get_profile(version)
         except ValueError:
@@ -248,9 +248,17 @@ class Atlas:
 
     @property
     def user_resolution(self) -> str:
-        """Atlas v2 products expose fine cells only; L1 is build metadata."""
+        """Maps from atlas-v2 on expose fine cells only; L1 is build metadata.
+
+        The shipped map stamps the key. The default covers artifacts that do
+        not: the first-generation maps and unversioned test fixtures carried a
+        category level above their cells.
+        """
+        import re
+
         version = str(self.meta.get("version", ""))
-        default = "l2" if version.startswith("atlas-v2") else "l1_l2"
+        generation = re.match(r"atlas-v(\d+)", version)
+        default = "l2" if generation and int(generation.group(1)) >= 2 else "l1_l2"
         return str(self.meta.get("user_resolution", default))
 
     @property
@@ -273,8 +281,8 @@ class Atlas:
         calibration draw (``tools/calibrate_off_atlas_v3.py`` for v3, with the
         draw and percentiles recorded under ``off_atlas_calibration``). The 0.35
         is a fallback for artifacts that predate stamping, and it is not a
-        calibrated number: atlas-v2's own 2nd percentile is 0.309, so on v2 the
-        fallback puts 12-18% of ordinary held-out prose off-atlas.
+        calibrated number: on the earlier maps it put 12-18% of ordinary
+        held-out prose off-atlas.
         """
         return float(self.meta.get("off_atlas_threshold", 0.35))
 
@@ -353,14 +361,14 @@ class Atlas:
         """Apply frozen normalization (or plain L2 for legacy fixtures).
 
         When the build shipped per-language mean vectors, ``languages`` selects
-        one per row. Language is a nuisance parameter here: v2's coarse regions
-        included "Turkish television and radio" and "Spanish-language server
-        documentation", which are registers of a language rather than subjects,
-        and the scan already reports language separately. A row whose language
-        is unknown, or which the build had too few examples of, falls back to the
-        global mean, which is the only correction a map without language means
-        applies to any row. The v2 products carry twenty language means and
-        atlas-v3 fifty-nine; atlas-v1-lite carries thirteen.
+        one per row. Language is a nuisance parameter here: an earlier map's
+        coarse regions included "Turkish television and radio" and
+        "Spanish-language server documentation", which are registers of a
+        language rather than subjects, and the scan already reports language
+        separately. A row whose language is unknown, or which the build had too
+        few examples of, falls back to the global mean, which is the only
+        correction a map without language means applies to any row. atlas-v3
+        carries fifty-nine language means.
         """
         emb = np.asarray(embeddings, dtype=np.float32)
         if emb.ndim == 1:
@@ -1452,9 +1460,8 @@ def atlas_path_for(version: str) -> Path | None:
 def bundled_atlas_path(version: str | None = None) -> Path | None:
     """Path to a named atlas, or to the pinned default.
 
-    Three products ship (atlas-v3, atlas-v2 and atlas-v2-lite). An unknown
-    name or an absent file returns None rather than quietly loading a
-    different map.
+    One product ships, atlas-v3. An unknown name or an absent file returns
+    None rather than quietly loading a different map.
     """
     try:
         selected = get_profile(version).version
@@ -1477,7 +1484,7 @@ def load_bundled(version: str | None = None) -> Atlas | None:
         return None
     stored = atlas.meta.get("profile")
     if not isinstance(stored, dict):
-        return atlas if profile.version == "atlas-v1-lite" else None
+        return None
     expected = {
         "version": profile.version,
         "dim": profile.dim,

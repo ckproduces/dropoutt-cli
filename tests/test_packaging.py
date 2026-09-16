@@ -106,7 +106,9 @@ def test_the_atlas_data_directory_holds_only_what_ships():
     names = sorted(p.name for p in ATLAS_DATA.iterdir() if p.name != ".DS_Store")
     stray = [name for name in names if not allowed.match(name)]
     assert not stray, f"not a product and would ship in the wheel: {stray}"
-    assert {"atlas-v3.npz", "atlas-v2.npz", "atlas-v2-lite.npz", "atlas-v1-lite.npz"} <= set(names)
+    # One product. A second .npz here is a map nobody can select, riding in
+    # every install for nothing.
+    assert [name for name in names if name.endswith(".npz")] == ["atlas-v3.npz"]
 
 
 def test_shipped_maps_match_their_stamped_checksums():

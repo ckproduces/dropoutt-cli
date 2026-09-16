@@ -85,10 +85,9 @@ probe — balanced accuracy for language 0.528 on raw vectors and 0.365 after
 normalization, on 300,000 held-out rows — and the calibration behind its
 off-atlas cutoff of 0.3538; read both before trusting a coverage number. The
 names describe the reference corpus, not yours, and the reference distribution
-is the corpus plan's, not the world's. `atlas-v2` and `atlas-v2-lite` run on
-the loader's 0.35 fallback cutoff rather than a stamped one, which puts 12–18%
-of ordinary held-out prose off-atlas on them. `atlas-v1-lite` is bundled only
-so fingerprints placed on it can be re-read.
+is the corpus plan's, not the world's. The maps before it are not bundled: a
+fingerprint placed on `atlas-v2`, `atlas-v2-lite` or `atlas-v1-lite` cannot be
+compared with one placed on atlas-v3, and this release cannot re-read it.
 
 ## Things deliberately out of scope
 

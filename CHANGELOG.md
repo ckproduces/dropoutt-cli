@@ -14,30 +14,29 @@ cell and every subject area carries a hand-written name. The five-word
 frequency captions of the earlier maps, which spent a slot in seven on a word
 that separated nothing, are gone with the map that had them.
 
-Three products ship, and the command asks which one to use:
+It is the only map that ships. `atlas-v2`, `atlas-v2-lite` and `atlas-v1-lite`
+are gone from the package, along with the picker that chose between them:
+there is nothing to ask, so `dropoutt atlas ./data` places on atlas-v3 in a
+terminal and in CI alike.
 
 ```bash
-dropoutt atlas ./data                      # picker in a terminal
-dropoutt atlas --model atlas-v3 ./data     # start immediately
+dropoutt atlas ./data
 ```
 
-`atlas-v2` (296 cells over 128 areas) and `atlas-v2-lite` (65 over 32) are kept
-for fingerprints placed on them; `atlas-v1-lite` stays loadable by name and is
-offered by nothing. A pipe or a CI job has no picker. It uses the product named
-under `[scan] atlas` in `dropoutt.toml` and otherwise stops with a usage error
-rather than guessing, because coverage is comparable only across runs on one
-coordinate system and a default that a later release moves would make two CI
-runs silently incomparable. Naming the map in a reviewed file is what stops
-that.
+`--model atlas-v3` still parses, so a run can say which map it meant, and
+`atlas` under `[scan]` in `dropoutt.toml` still names it. A retired name in
+either place is a usage error rather than a silent fallback, because a run
+placed on a different map than the fingerprint it is compared with would be
+wrong without saying so.
 
 **The off-atlas cutoff is calibrated and stamped.** atlas-v3 carries
 `off_atlas_threshold = 0.3538`, the 2nd percentile of nearest-cell cosine over
 the build's own language-and-axis-balanced draw of two million rows, with the
 draw, the percentiles and the per-axis breakdown recorded in the artifact and
 a test that fails if a v3 ever ships without them. The loader's 0.35 was never
-a calibrated number, and on atlas-v2 — whose own 2nd percentile is 0.309 — it
-puts 12–18% of ordinary held-out prose off the map. The v2 products still run
-on it; the rule that replaces it is in `docs/atlas.md`.
+a calibrated number: on the map before this one, whose own 2nd percentile was
+0.309, it put 12–18% of ordinary held-out prose off the map. The rule that
+replaces it is in `docs/atlas.md`.
 
 **The default sample is 500,000 records on atlas-v3**, up from 200,000, because
 the map is fourteen times finer and the same sample would be spread that much
@@ -63,14 +62,13 @@ order it would have cost you.
   `atlas-v3.npz.patching.npz` rode inside it, because the package exclude named
   `*.tmp.npz` and nothing else. The pattern is `*.npz.*` now, and a test asserts
   that the atlas data directory holds only products.
-- **The maps shipped 26,000 verbatim excerpts of reference records.** The builder
+- **The map shipped 16,384 verbatim excerpts of reference records.** The builder
   writes `exemplar_texts` — the few hundred characters nearest each cell's
   centre — as a labelling aid, and the artifact carried them into every
-  install: 16,384 on atlas-v3, 9,472 on atlas-v2, with no licence manifest and
-  no reader, since nothing at runtime opens the array. `tools/strip_atlas_exemplars.py`
-  removes it before release, the checksums are restamped, and a test keeps
-  every bundled map free of text arrays. atlas-v3 is 13.8 MB in the wheel
-  instead of 17.5; atlas-v2 is 3.5 instead of 7.5.
+  install, with no licence manifest and no reader, since nothing at runtime
+  opens the array. `tools/strip_atlas_exemplars.py` removes it before release,
+  the checksum is restamped, and a test keeps the bundled map free of text
+  arrays. atlas-v3 is 13.8 MB in the wheel instead of 17.5.
 - **A blank record was placed, confidently, in one particular cell.** Forty
   spaces pass the length gate and pool to a zero vector; mean removal then
   turns every such record into the fixed direction `-mean`, which scores 0.76
@@ -139,24 +137,20 @@ order it would have cost you.
   `experiments/` carried fifty-five more that `ruff check .` would have swept up
   the moment it was committed. All fixed; `experiments/` is excluded from lint
   as research, not product.
-- **The docs described a map that no longer ships.** `atlas-v2` was "256-d" and
-  `atlas-v2-lite` "16-d" in two places; they are 128-d and 64-d. The placement
-  floor was 80 characters on five pages. The atlas guide's transcript, tiers
-  table and rebuild instructions were atlas-v1-lite's. All rewritten against
-  the shipped artifacts.
+- **The docs described maps that no longer ship.** Two pages gave dimensions
+  for maps that have since been retired, the placement floor was 80 characters
+  on five pages, and the atlas guide's transcript, tiers table and rebuild
+  instructions were an earlier map's. All rewritten against the shipped
+  artifact.
 
 ### Also
 
-- `dropoutt.toml` gains nothing new to write, but `atlas` under `[scan]` now
-  does two things: it highlights the picker's default in a terminal and it is
-  the product used where there is no terminal to ask.
-- `Config` records whether the file named an atlas at all (`atlas_declared`),
-  which is what the pipe case reads.
-- `pipeline_hash` is unchanged and remains display-only: comparability between
-  two maps is `atlas_version` equality, and nothing at runtime compares hashes.
-  The declaration it seals lists the default product by name, so flipping the
-  default re-keyed future builds without a pipeline change; left as is for this
-  release and noted here so it is not mistaken for drift.
+- `atlas` under `[scan]` in `dropoutt.toml` names the map, and `atlas-v3` is
+  the only name it accepts.
+- `pipeline_hash` remains display-only: comparability between two maps is
+  `atlas_version` equality, and nothing at runtime compares hashes. The
+  declaration it seals now lists only the product that ships, so the runtime
+  hash moved; noted here so it is not mistaken for drift.
 
 ## 1.3.0
 

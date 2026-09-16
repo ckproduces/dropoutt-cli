@@ -18,8 +18,6 @@ from .embed import load as load_embedder
 from .normalize import EMBED_DIM, NormConstants
 from .pipeline import pipeline_hash, profile_declaration
 from .profiles import (
-    ATLAS_V2,
-    ATLAS_V2_LITE,
     ATLAS_V3,
     DEFAULT_ATLAS_VERSION,
     AtlasProfile,
@@ -27,8 +25,6 @@ from .profiles import (
 )
 
 __all__ = [
-    "ATLAS_V2",
-    "ATLAS_V2_LITE",
     "ATLAS_V3",
     "DEFAULT_ATLAS_VERSION",
     "DEFAULT_MODEL",

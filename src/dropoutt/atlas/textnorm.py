@@ -330,7 +330,9 @@ def phrase_hashes(token_ids: np.ndarray) -> np.ndarray:
         return ((ids[:-3] * _M0 + ids[1:-2]) * _M1 + ids[2:-1]) * _M2 + ids[3:]
 
 
-def phrase_mask(token_ids: np.ndarray, indptr: np.ndarray, table: np.ndarray) -> np.ndarray:
+def phrase_mask(
+    token_ids: np.ndarray, indptr: np.ndarray, table: np.ndarray | None
+) -> np.ndarray:
     """True for every token that sits inside a phrase listed in ``table``."""
     n = len(token_ids)
     covered = np.zeros(n, dtype=bool)

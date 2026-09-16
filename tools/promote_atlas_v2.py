@@ -23,9 +23,10 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
 from atlas_sources import DEFAULT_RELEASE, DEFAULT_WORK  # noqa: E402
+from build_atlas_v2 import ATLAS_V2, ATLAS_V2_LITE  # noqa: E402
 
 from dropoutt.atlas.apply import Atlas  # noqa: E402
-from dropoutt.atlas.profiles import ATLAS_V2, ATLAS_V2_LITE, AtlasProfile  # noqa: E402
+from dropoutt.atlas.profiles import AtlasProfile  # noqa: E402
 
 ARTIFACTS = {
     "atlas-v2.npz": ATLAS_V2,

@@ -47,18 +47,42 @@ from dropoutt.atlas.embed import DEFAULT_MODEL, TokenizedCorpus  # noqa: E402
 from dropoutt.atlas.embed import load as load_embedder  # noqa: E402
 from dropoutt.atlas.extract import extract_text  # noqa: E402
 from dropoutt.atlas.pipeline import pipeline_hash  # noqa: E402
-from dropoutt.atlas.profiles import (  # noqa: E402
-    ATLAS_V2,
-    ATLAS_V2_LITE,
-    ATLAS_V3,
-    AtlasProfile,
-)
+from dropoutt.atlas.profiles import ATLAS_V3, AtlasProfile  # noqa: E402
 from dropoutt.atlas.textnorm import (  # noqa: E402
     ENCODER_INPUT_V1,
     PHRASE_DOCS_PER_SOURCE,
     RAW_INPUT,
     EncoderInput,
     source_phrases,
+)
+
+# The two atlas-v2 products. The package ships atlas-v3 alone, so these live
+# with the builder that can still fit them rather than in the runtime
+# profiles, where a name that resolves is a name `--model` accepts.
+ATLAS_V2 = AtlasProfile(
+    version="atlas-v2",
+    dim=128,
+    pooling="sif",
+    max_chars=2_000,
+    max_tokens=512,
+    default_sample=200_000,
+    pca_k=2,
+    n_l1=128,
+    l2_k_min=1,
+    l2_k_max=10,
+)
+
+ATLAS_V2_LITE = AtlasProfile(
+    version="atlas-v2-lite",
+    dim=64,
+    pooling="sif",
+    max_chars=2_000,
+    max_tokens=512,
+    default_sample=50_000,
+    pca_k=2,
+    n_l1=32,
+    l2_k_min=1,
+    l2_k_max=10,
 )
 
 L1_LABELS = {

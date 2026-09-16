@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from atlas_sources import DEFAULT_WORK  # noqa: E402
 from build_atlas_v2 import (  # noqa: E402
+    ATLAS_V2,
     RESERVOIR_FULL,
     RESERVOIR_LITE,
     Reservoir,
@@ -25,7 +26,6 @@ from build_atlas_v2 import (  # noqa: E402
 )
 
 from dropoutt.atlas import load_bundled  # noqa: E402
-from dropoutt.atlas.profiles import ATLAS_V2  # noqa: E402
 
 MIN_SAMPLES = 50
 SAMPLE_CAP = 80

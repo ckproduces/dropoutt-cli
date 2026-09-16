@@ -665,7 +665,8 @@ def _load_uncached(
     quantized_dir = local / QUANTIZED_DIR
     stored = _load_quantized(quantized_dir)
     if stored is not None and stored[0].width < EMBED_DIM_FULL:
-        # v1 cached the Matryoshka prefix. atlas-v2 needs the full 256 columns.
+        # An older cache held only the Matryoshka prefix; the encoder needs
+        # the full 256 columns.
         stored = None
 
     if stored is None or not (local / "tokenizer.json").exists():

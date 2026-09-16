@@ -166,12 +166,7 @@ def test_a_cells_density_is_shrunk_by_how_much_evidence_is_behind_it():
     """
     from dropoutt.atlas import load_bundled
 
-    # The thresholds below were calibrated on the 65-cell lite map. On the
-    # 4,096-cell default a 95-record scan leaves a single-record cell at
-    # about 1.5x after shrinkage -- still pulled from a raw ~40x, but not
-    # inside this test's 0.45 band. The mechanism is the same on both; the
-    # numbers are a property of the map they were tuned against.
-    atlas = load_bundled("atlas-v2-lite")
+    atlas = load_bundled()
     if atlas is None or atlas.region_size is None:
         pytest.skip("bundled atlas carries no reference sizes")
     share = np.asarray(atlas.region_size, dtype=float)
@@ -205,13 +200,20 @@ def test_a_cells_density_is_shrunk_by_how_much_evidence_is_behind_it():
     assert raw < big["region_density"][str(thin)], "shrinkage only ever pulls inward"
 
     # The same corpus at a hundredth of the sample: now a single record is not
-    # evidence of anything, and the cell reads as parity instead of as a claim.
+    # evidence of anything, and the cell reads near parity instead of as a
+    # claim. On the 4,096-cell map one record in 95 is a raw density of 12x
+    # to 58x, and the posterior leaves it at about 1.5x: within a half of
+    # parity, and under a fifth of what the quotient said.
     small = scan(95, lopsided)
     counts = {int(k): int(v) for k, v in small["region_counts"].items()}
     singles = [r for r, c in counts.items() if c == 1]
     assert singles, "fixture must produce at least one single-record cell"
     for cell in singles:
-        assert abs(small["region_density"][str(cell)] - 1.0) < 0.45
+        raw = (1 / 95) / share[cell]
+        shrunk = small["region_density"][str(cell)]
+        assert raw > 10, "fixture must start from a runaway raw density"
+        assert abs(shrunk - 1.0) < 0.5
+        assert shrunk < raw / 5
 
 
 def test_the_effective_sample_is_what_the_weights_leave_behind():

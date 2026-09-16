@@ -426,15 +426,12 @@ are deciding whether to buy, merge or build a dataset rather than fix one.
 
 ```bash
 dropoutt atlas ./my-corpus
-dropoutt atlas --model atlas-v3 ./my-corpus
-dropoutt atlas --model atlas-v2-lite ./my-corpus
+dropoutt atlas ./my-corpus --sampling 500     # a quick look
 ```
 
-This places a sample of your records on a frozen map of public training data.
-Without `--model`, a terminal asks which product to use — `atlas-v3` (the
-default: 4,096 cells over 256 subject areas), `atlas-v2` or `atlas-v2-lite` —
-and a pipe or CI job takes the `atlas` key from `dropoutt.toml`, or exits 2
-if there is none. The freezing is the whole point. A coverage plot that fits
+This places a sample of your records on `atlas-v3`, a frozen map of public
+training data with 4,096 cells over 256 subject areas. It is the only map
+that ships, so there is nothing to choose. The freezing is the whole point. A coverage plot that fits
 UMAP or k-means on whatever sample it was handed gives the next folder a new
 projection, so its neighbourhoods mean something different and two runs cannot
 be compared. Here the bins already exist, and a run only decides which of them

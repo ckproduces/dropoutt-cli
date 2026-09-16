@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import numpy as np
+import pytest
 
 from dropoutt.atlas.apply import Atlas
 from dropoutt.atlas.chunk import chunk_text
@@ -117,12 +118,7 @@ def test_pipeline_hash_is_stable():
 
 def test_bundled_atlas_products_match_their_profiles():
     from dropoutt.atlas.apply import load_bundled
-    from dropoutt.atlas.profiles import (
-        ATLAS_V2,
-        ATLAS_V2_LITE,
-        ATLAS_V3,
-        DEFAULT_ATLAS_VERSION,
-    )
+    from dropoutt.atlas.profiles import ATLAS_V3, DEFAULT_ATLAS_VERSION
 
     default = load_bundled()
     assert default is not None, "the default product must be bundled"
@@ -138,23 +134,25 @@ def test_bundled_atlas_products_match_their_profiles():
     assert probe.get("language_normalized", 1.0) < probe.get("language_raw", 0.0)
     assert default.meta.get("language_labels_source", "").startswith("detected-per-record")
     assert len(default.meta["normalization"]["lang_labels"]) >= 45
+    assert default.embed_model == "minishlab/potion-multilingual-128M"
 
-    lite = load_bundled("atlas-v2-lite")
-    assert lite is not None, "atlas-v2-lite must be bundled"
-    assert lite.meta.get("version") == ATLAS_V2_LITE.version
-    assert lite.dim == ATLAS_V2_LITE.dim == 64
-    assert lite.n_l1 == ATLAS_V2_LITE.n_l1 == 32
-    assert 32 <= lite.n_regions <= 320
-    assert len(lite.region_terms) == lite.n_regions
-    assert lite.embed_model == "minishlab/potion-multilingual-128M"
 
-    full = load_bundled("atlas-v2")
-    assert full is not None, "atlas-v2 must be bundled"
-    assert full.meta.get("version") == ATLAS_V2.version
-    assert full.dim == ATLAS_V2.dim == 128
-    assert full.n_l1 == ATLAS_V2.n_l1 == 128
-    assert 128 <= full.n_regions <= 1_280
-    assert len(full.region_terms) == full.n_regions
+def test_only_atlas_v3_is_a_product():
+    """The retired maps are neither bundled nor loadable by name.
+
+    atlas-v2, atlas-v2-lite and atlas-v1-lite shipped beside atlas-v3 for one
+    release cycle and were never published. A name that resolves to nothing is
+    the honest answer for a fingerprint placed on one of them.
+    """
+    from dropoutt.atlas.apply import atlas_path_for, load_bundled
+    from dropoutt.atlas.profiles import PROFILES, get_profile
+
+    assert set(PROFILES) == {"atlas-v3"}
+    for version in ("atlas-v2", "atlas-v2-lite", "atlas-v1-lite"):
+        assert atlas_path_for(version) is None, f"{version} is still bundled"
+        assert load_bundled(version) is None
+        with pytest.raises(ValueError, match="unknown atlas"):
+            get_profile(version)
 
 
 def test_bundled_v3_carries_an_explicit_off_atlas_cutoff():
@@ -197,7 +195,7 @@ def test_bundled_maps_carry_no_reference_text():
 
     from dropoutt.atlas.apply import atlas_path_for
 
-    for version in ("atlas-v3", "atlas-v2", "atlas-v2-lite", "atlas-v1-lite"):
+    for version in ("atlas-v3",):
         path = atlas_path_for(version)
         assert path is not None, f"{version} must be bundled"
         data = np.load(path, allow_pickle=True)
@@ -210,33 +208,21 @@ def test_bundled_maps_carry_no_reference_text():
             )
 
 
-def test_v2_products_carry_distinct_l1_subject_labels():
+def test_atlas_v3_carries_a_distinct_hand_written_name_for_every_area_and_cell():
     from dropoutt.atlas.apply import load_bundled
     from dropoutt.atlas.compare import category_labels
-    from dropoutt.atlas.profiles import ATLAS_V2, ATLAS_V2_LITE
+    from dropoutt.atlas.profiles import ATLAS_V3
 
-    for version, profile in (("atlas-v2-lite", ATLAS_V2_LITE), ("atlas-v2", ATLAS_V2)):
-        atlas = load_bundled(version)
-        assert atlas is not None
-        labels = category_labels(atlas)
-        assert len(labels) == profile.n_l1
-        assert len(set(labels.values())) == profile.n_l1
-        assert atlas.meta.get("l1_labels_source") == f"curated:l1_labels_{version}.json"
-
-
-def test_v1_lite_still_carries_curated_subject_labels():
-    from dropoutt.atlas.apply import load_bundled
-    from dropoutt.atlas.compare import category_labels
-
-    atlas = load_bundled("atlas-v1-lite")
+    atlas = load_bundled("atlas-v3")
     assert atlas is not None
     labels = category_labels(atlas)
-    assert len(labels) == atlas.n_l1 == 48
-    assert len(set(labels.values())) == 48, "every subject area needs its own name"
-    assert labels[45] == "Database schemas and query construction"
-    assert labels[21] == "Website boilerplate and page furniture"
-    assert "C and C++ source code" in labels.values()
-    assert atlas.meta.get("l1_labels_source", "").startswith("curated:")
+    assert len(labels) == ATLAS_V3.n_l1
+    assert len(set(labels.values())) == ATLAS_V3.n_l1, "every subject area needs its own name"
+    assert atlas.meta.get("l1_labels_source") == "curated:l1_labels_atlas-v3.json"
+    cells = atlas.meta.get("region_labels")
+    assert isinstance(cells, list) and len(cells) == ATLAS_V3.l2_budget
+    assert all(isinstance(name, str) and name.strip() for name in cells)
+    assert atlas.meta.get("region_labels_source") == "curated:region_labels_atlas-v3.json"
 
 
 class _Encoding:
@@ -310,22 +296,19 @@ def test_quantised_rows_stay_within_a_step_of_the_weights_they_replace():
     assert np.all(np.abs(restored - table) <= step[:, None] / 2 + 1e-6)
 
 
-def test_atlas_v2_profile_windows_and_columns_are_declared():
+def test_atlas_v3_profile_windows_and_columns_are_declared():
     from dropoutt.atlas.embed import select_token_windows
     from dropoutt.atlas.profiles import get_profile
 
-    full = get_profile("atlas-v2")
-    lite = get_profile("atlas-v2-lite")  # the default product is atlas-v3 now
-    assert (full.dim, full.pooling, full.max_chars, full.max_tokens, full.default_sample) == (
-        128, "sif", 2_000, 512, 200_000,
-    )
-    assert (lite.version, lite.dim, lite.pooling, lite.max_chars, lite.max_tokens, lite.default_sample) == (
-        "atlas-v2-lite", 64, "sif", 2_000, 512, 50_000,
-    )
+    profile = get_profile()
+    assert (
+        profile.version, profile.dim, profile.pooling, profile.max_chars,
+        profile.max_tokens, profile.default_sample, profile.n_l1, profile.l2_budget,
+    ) == ("atlas-v3", 128, "sif", 2_000, 512, 500_000, 256, 4_096)
     assert select_token_windows(list(range(100)), 10) == [0, 1, 2, 3, 49, 50, 96, 97, 98, 99]
 
 
-def test_v2_coverage_is_flat_l2_only(tmp_path):
+def test_a_versioned_map_without_the_key_is_flat_l2_only(tmp_path):
     rng = np.random.default_rng(7)
     centroids = rng.normal(size=(3, 16)).astype(np.float32)
     centroids /= np.linalg.norm(centroids, axis=1, keepdims=True)
@@ -338,7 +321,7 @@ def test_v2_coverage_is_flat_l2_only(tmp_path):
         probe_coef=np.zeros((0, 16), dtype=np.float32),
         probe_intercept=np.zeros(0, dtype=np.float32),
         probe_classes=np.zeros(0, dtype=np.int32),
-        meta=np.array([json.dumps({"version": "atlas-v2-lite", "region_terms": ["a", "b", "c"]})], dtype=object),
+        meta=np.array([json.dumps({"version": "atlas-v3", "region_terms": ["a", "b", "c"]})], dtype=object),
         allow_pickle=True,
     )
     atlas = Atlas.load(path)

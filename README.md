@@ -121,15 +121,15 @@ near-identical writing that shingle dedup cannot see — comes from
 dropoutt atlas ./my-corpus
 ```
 
-The atlas is a **frozen topical map** compressed from public datasets. Products
-ship as `atlas-v3` (default; 4,096 cells over 256 subject areas, 128-d),
-`atlas-v2` (296 cells, 128-d) and `atlas-v2-lite` (65 cells, 64-d). Run without
-`--model` in a terminal and the command asks which to use; in a pipe or CI job
-it takes `atlas` from `dropoutt.toml`, or exits 2. Pass `--model atlas-v3` to
-start immediately. Frozen is the point — a coverage plot that fits UMAP or k-means on the sample in front of it gives the next folder
-a new projection, so its neighbourhoods mean something different and two runs
-cannot be compared. Here the bins already exist, and a run only decides which of
-them your records fall into.
+The atlas is a **frozen topical map** compressed from public datasets: one
+product, `atlas-v3`, with 4,096 cells over 256 subject areas in 128
+dimensions, fitted once on 163 million records from 244 public sources. There
+is nothing to choose and nothing to configure; the command places on it in a
+terminal and in CI alike. Frozen is the point — a coverage plot that fits UMAP
+or k-means on the sample in front of it gives the next folder a new
+projection, so its neighbourhoods mean something different and two runs cannot
+be compared. Here the bins already exist, and a run only decides which of them
+your records fall into.
 
 It is a separate command from 1.3, and was a section of the scan report before
 that. Two reasons. It answers a different question — where the corpus sits, not
@@ -150,14 +150,14 @@ It writes `atlas.html`, `atlas.md` and `atlas.json`, and reports:
 | **Same ground** | Datasets that occupy the same regions even when they share no wording, i.e. merging them adds volume and not coverage |
 | **Off the map** | Records unlike the reference geography, with a diagnosis (often length or markup, not “bad data”) |
 
-`--sampling` is the resolution knob: omit it for the product default, pass a
-count, or pass `0` for every record. A count larger than the corpus is the same
+`--sampling` is the resolution knob: omit it for the default of 500,000
+records, pass a count, or pass `0` for every record. A count larger than the corpus is the same
 as `0`. Nothing here can fail a build.
 
 Every cell and subject area on `atlas-v3` carries a hand-written name, shown
 as a caption and never as a finding: no record is tested against a name, and
 renaming a cell changes no assignment. What the map is trusted for is
-geometry. Details, and what each product is built from:
+geometry. Details, and what the map is built from:
 [docs/atlas.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/atlas.md).
 
 ## Exit codes

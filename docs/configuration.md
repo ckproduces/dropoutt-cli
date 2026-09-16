@@ -30,7 +30,7 @@ profile = "sft"               # inferred from 83 dataset(s)
 # target = "sft"              # uncomment to let findings fail the run
 seq_len = 4096                # from the model config
 tier = 1
-# atlas = "atlas-v3"        # the map `dropoutt atlas` uses without --model
+# atlas = "atlas-v3"        # the map `dropoutt atlas` places on; the only one that ships
 minhash_preset = "fineweb"
 # offline = true
 # eval_sets = ["gsm8k", "internal-eval"]
@@ -49,7 +49,7 @@ checks = []
 | `target` | **declaring this enables blocking.** Absent means nothing can fail a run. |
 | `seq_len` | training sequence length, for the truncation forecast |
 | `tier` | highest check tier to run |
-| `atlas` | the map `dropoutt atlas` uses when `--model` is not passed: `atlas-v3` (the default), `atlas-v2` or `atlas-v2-lite`. In a terminal it is the picker's highlighted entry; in a pipe or CI job it is used outright, and a run with neither this key nor `--model` exits 2. `--model` overrides it |
+| `atlas` | the map `dropoutt atlas` places on. `atlas-v3` is the default and the only map that ships; any other name is a usage error. `--model` overrides it |
 | `minhash_preset` | `fineweb` or `hf-neardedup`; the report always states which |
 | `offline` | never access the network during `scan` or `atlas`; resolve models and the atlas encoder from local files and caches |
 | `eval_sets` | optional allowlist of bundled or locally indexed benchmark names; absent means use every available index |
