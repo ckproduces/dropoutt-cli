@@ -123,7 +123,9 @@ dropoutt atlas ./my-corpus
 
 The atlas is a **frozen topical map** compressed from public datasets: one
 product, `atlas-v3`, with 4,096 cells over 256 subject areas in 128
-dimensions, fitted once on 163 million records from 244 public sources. There
+dimensions, fitted once on 163 million records from 244 public sources — 213
+GB of text, roughly 85 to 100 billion tokens depending on the tokenizer, in 95
+languages. There
 is nothing to choose and nothing to configure; the command places on it in a
 terminal and in CI alike. Frozen is the point — a coverage plot that fits UMAP
 or k-means on the sample in front of it gives the next folder a new

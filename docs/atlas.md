@@ -855,7 +855,10 @@ metadata.
 | dimensions | 128 |
 | reference records | 163,452,464 |
 | sources | 244 |
+| text after filtering | 212.8 GB |
+| tokens, approximately | 84 billion under the Qwen3 tokenizer, 101 billion under Mistral's: 300 records sampled from each source, each source's rate weighted by its retained bytes |
 | non-English share | 60.6% by bytes |
+| languages | 95 detected per record; 59 with at least 6,000 records carry a mean of their own |
 | language means | 59 |
 | L2 allocation | population budget of 4,096, k 1–64 per L1 |
 | default sample | 500,000 |
