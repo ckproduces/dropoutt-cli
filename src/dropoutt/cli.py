@@ -386,7 +386,7 @@ def atlas(
         min=0,
         help=(
             "Records to place. 0 = all records. Larger than the corpus is the "
-            "same as 0. Omitted uses the product default."
+            "same as 0. Default 500,000."
         ),
     ),
     limit: int | None = typer.Option(
@@ -413,9 +413,8 @@ def atlas(
     The atlas is a frozen coordinate system, not a collection of good datasets:
     one map, atlas-v3, fitted once on public data, so two corpora placed on it
     can be compared and a gap can be named. This command samples records,
-    encodes them, and reports what the corpus is
-    dense in, what it only touches, what it never reaches, and what looks like
-    nothing on the map at all.
+    encodes them, and reports what the corpus is dense in, what it only
+    touches, what it never reaches, and what looks like nothing on the map.
 
     It is separate from `dropoutt scan` because it is a different question and a
     different cost. A scan asks what is wrong with the data and reads it once;
