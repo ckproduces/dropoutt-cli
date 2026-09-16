@@ -385,8 +385,9 @@ def test_the_page_uses_the_markdown_files_vocabulary(scanned):
     from dropoutt.report.atlas_story import DENSITY_DEFINITION, REACH_DEFINITION
 
     result, _fp = scanned
-    if result.ctx.atlas is None:
-        pytest.skip("no atlas in this environment")
+    atlas = _payload(scanned)["atlas"]
+    if result.ctx.atlas is None or atlas is None or not atlas["available"]:
+        pytest.skip("no atlas coverage in this environment")
     page = html_report.render_atlas(result)
     markdown = md_report.render_atlas(result)
 

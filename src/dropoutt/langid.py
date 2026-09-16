@@ -198,6 +198,28 @@ _IDENTIFIER: Any = None
 _IDENTIFIER_LOCK = threading.Lock()
 
 
+def load_library_identifier() -> Any:
+    """py3langid's own classifier, on either generation of the library.
+
+    0.4 replaced the pickled model with an npz and `from_pickled_model` with
+    `from_model_file`, which resolves the bundled name against the package's
+    data directory. 1.4.0 called the old name only; on 0.4 that raised inside
+    the lazy loader, was swallowed, and every record read as "unknown".
+    """
+    from py3langid.langid import MODEL_FILE, LanguageIdentifier
+
+    load = getattr(LanguageIdentifier, "from_model_file", None)
+    if load is None:
+        load = LanguageIdentifier.from_pickled_model
+    return load(MODEL_FILE, norm_probs=True)
+
+
+def feature_count(identifier: Any) -> int:
+    """How many n-gram features the model has. 0.4 dropped the attribute."""
+    count = getattr(identifier, "nb_numfeats", None)
+    return int(count) if count is not None else int(np.asarray(identifier.nb_ptc).shape[0])
+
+
 def _identifier() -> Any:
     """The classifier, loaded once. Raises when the backend is unavailable.
 
@@ -212,16 +234,13 @@ def _identifier() -> Any:
     if _IDENTIFIER is None:
         with _IDENTIFIER_LOCK:
             if _IDENTIFIER is None:
-                from py3langid.langid import MODEL_FILE, LanguageIdentifier
 
                 # norm_probs=True turns the raw log-likelihoods into posteriors
                 # that sum to one. Without it the "confidence" is an unbounded
                 # negative number, and every threshold in this module — the
                 # floor, the confusable gate, the short-text discount — is
                 # written against a probability.
-                identifier = LanguageIdentifier.from_pickled_model(
-                    MODEL_FILE, norm_probs=True
-                )
+                identifier = load_library_identifier()
                 try:
                     from .ngram_langid import NgramModel
 

@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.4.1
+
+Language identification on a fresh install. `pip install dropoutt` resolved
+py3langid to 0.4.0, released between the 1.4.0 checks and its upload, and
+1.4.0 called that library's old model loader by name. The call raised inside
+the lazy loader, the exception was swallowed, and every record in every scan
+read as language "unknown" with no message saying why.
+
+py3langid 0.4 is a different model rather than an update — 142 languages
+instead of 97, a new automaton layout, a new loader — and every threshold in
+the detector and the vectorised fast path are calibrated and verified against
+the 0.3 model. The dependency is pinned below 0.4; moving to it is a
+calibration job for a later release. The loader now tolerates either
+generation's API, and the test suite loads the library through the same
+function the runtime does, so a change like this fails a test instead of a
+user.
+
+Also: the builder's hash-set rehash copies its keys out before renaming the
+file, which Windows refused while the old mapping was open; and the report
+parity test skips, as its neighbours do, where no map could be placed.
+
 ## 1.4.0
 
 A new map, and what a release review found while shipping it.

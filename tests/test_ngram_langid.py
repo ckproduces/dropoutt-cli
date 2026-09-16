@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 
 from dropoutt.compat import HAVE_PY3LANGID
-from dropoutt.langid import LanguageDetector, dominant_script, dominant_scripts
+from dropoutt.langid import LanguageDetector, dominant_script, dominant_scripts, feature_count
 from dropoutt.ngram_langid import (
     NgramModel,
     patterns_from_automaton,
@@ -44,9 +44,9 @@ SAMPLES = [
 
 @pytest.fixture(scope="module")
 def library():
-    from py3langid.langid import MODEL_FILE, LanguageIdentifier
+    from dropoutt.langid import load_library_identifier
 
-    return LanguageIdentifier.from_pickled_model(MODEL_FILE, norm_probs=True)
+    return load_library_identifier()
 
 
 @pytest.fixture(scope="module")
@@ -63,11 +63,11 @@ def test_every_state_output_is_reproduced_by_the_recovered_patterns(library):
     build when it fails.
     """
     moves = np.asarray(library.tk_nextmove).reshape(-1, 256)
-    patterns = patterns_from_automaton(moves, library.tk_output, library.nb_numfeats)
+    patterns = patterns_from_automaton(moves, library.tk_output, feature_count(library))
 
     verify_reconstruction(moves, library.tk_output, patterns)
 
-    assert len(patterns) == library.nb_numfeats
+    assert len(patterns) == feature_count(library)
     assert len(set(patterns)) == len(patterns), "two features share a byte string"
     assert min(len(p) for p in patterns) >= 1
 

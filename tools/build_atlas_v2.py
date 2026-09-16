@@ -499,10 +499,13 @@ class Uint64Set:
         self.table = np.memmap(tmp, dtype=np.uint64, mode="w+", shape=(slots,))
         self.table[:] = 0
         if previous is not None:
-            occupied = np.asarray(previous)
-            for key in occupied[occupied != 0]:
-                self._insert(int(key), grow=False)
+            # Copy the keys out and drop the mapping before the rename below:
+            # a view would keep the old file mapped, and Windows refuses to
+            # replace a file that is still open.
+            keys = np.array(previous[previous != 0])
             del previous
+            for key in keys:
+                self._insert(int(key), grow=False)
         self.table.flush()
         del self.table
         tmp.replace(path)

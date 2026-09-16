@@ -64,7 +64,7 @@ may be gzip / bzip2 / xz / zstd compressed.
 
 Works on macOS, Linux, and Windows. Cache defaults to `~/.cache/dropoutt`, or
 `%LOCALAPPDATA%\dropoutt` on Windows. Override with `DROPOUTT_CACHE`. See
-[docs/portability.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/portability.md) for offline / HPC use.
+[docs/portability.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/portability.md) for offline / HPC use.
 
 ## Quick start
 
@@ -104,7 +104,7 @@ result does not depend on how many cores you have: same findings, same examples,
 same fingerprint id on one core or on sixteen. Cap it with `-j` or
 `DROPOUTT_WORKERS` if you are sharing a node.
 
-**New here?** [docs/getting-started.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/getting-started.md).
+**New here?** [docs/getting-started.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/getting-started.md).
 
 ## What it catches
 
@@ -168,7 +168,7 @@ Every cell and subject area on `atlas-v3` carries a hand-written name, shown
 as a caption and never as a finding: no record is tested against a name, and
 renaming a cell changes no assignment. What the map is trusted for is
 geometry. Details, and what the map is built from:
-[docs/atlas.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/atlas.md).
+[docs/atlas.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/atlas.md).
 
 ## Exit codes
 
@@ -182,7 +182,7 @@ geometry. Details, and what the map is built from:
 ## Check catalog
 
 Identifiers are `T{tier}-{GROUP}-{nnn}` and are **never renumbered**. Mute by id
-in `dropoutt.toml`. Full narrative: [docs/checks.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/checks.md). Live list:
+in `dropoutt.toml`. Full narrative: [docs/checks.md](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/checks.md). Live list:
 `dropoutt checks`.
 
 ### Tier 0 — structural (CPU)
@@ -245,15 +245,15 @@ yet links acting on a finding to a measured change in model quality.
 
 ## Documentation
 
-- [Getting started](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/getting-started.md)
-- [CLI reference](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/cli.md)
-- [Check catalog](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/checks.md)
-- [Fingerprint](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/fingerprint.md)
-- [Atlas](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/atlas.md)
-- [Configuration](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/configuration.md)
-- [Portability / offline](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/portability.md)
-- [Limitations](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/limitations.md)
-- [Design rules](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.0/docs/design.md)
+- [Getting started](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/getting-started.md)
+- [CLI reference](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/cli.md)
+- [Check catalog](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/checks.md)
+- [Fingerprint](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/fingerprint.md)
+- [Atlas](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/atlas.md)
+- [Configuration](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/configuration.md)
+- [Portability / offline](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/portability.md)
+- [Limitations](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/limitations.md)
+- [Design rules](https://github.com/ckproduces/dropoutt-cli/blob/v1.4.1/docs/design.md)
 
 ## What it will not do
 

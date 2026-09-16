@@ -94,7 +94,14 @@ dependencies = [
     # Language identification over 97 languages. Pure Python plus numpy, 768 KB
     # of model data in the wheel, and nothing to compile. Replaced
     # fasttext-langdetect, which is the dependency that broke Windows installs.
-    "py3langid>=0.3",
+    # Pinned below 0.4. That release is a different model, not an update:
+    # 142 languages instead of 97, a new automaton layout, and a new loader.
+    # Every threshold in langid.py and the fast path in ngram_langid.py are
+    # calibrated and verified against the 0.3 model; on 0.4 the fast path
+    # cannot be built and 1.4.0, which called the old loader by name, read
+    # every record as "unknown". Moving to 0.4 is a calibration job, not a
+    # version bump.
+    "py3langid>=0.3,<0.4",
     # Atlas coverage. The encoder is a quantised lookup table this package
     # stores and reads itself; scipy supplies the one sparse multiply that
     # pools it. No torch, no ONNX runtime, and since 1.2 no model2vec — it
@@ -119,7 +126,7 @@ Homepage = "https://dropoutt.com"
 # dropoutt.com/docs is not published yet and returned 404, which is what the
 # PyPI sidebar would have linked to. Point at the docs that exist; switch back
 # when the site has that page.
-Documentation = "https://github.com/ckproduces/dropoutt-cli/tree/v1.4.0/docs"
+Documentation = "https://github.com/ckproduces/dropoutt-cli/tree/v1.4.1/docs"
 Source = "https://github.com/ckproduces/dropoutt-cli"
 Issues = "https://github.com/ckproduces/dropoutt-cli/issues"
 Changelog = "https://github.com/ckproduces/dropoutt-cli/blob/main/CHANGELOG.md"

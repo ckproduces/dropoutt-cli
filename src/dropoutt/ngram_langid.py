@@ -263,9 +263,10 @@ class NgramModel:
         from scipy.sparse import coo_matrix  # noqa: F401
 
         moves = _transition_table(identifier.tk_nextmove)
-        patterns = patterns_from_automaton(
-            moves, identifier.tk_output, identifier.nb_numfeats
-        )
+        from .langid import feature_count
+
+        n_features = feature_count(identifier)
+        patterns = patterns_from_automaton(moves, identifier.tk_output, n_features)
         if max(len(p) for p in patterns) > MAX_NGRAM:
             raise ValueError("model uses n-grams longer than this module packs")
         verify_reconstruction(moves, identifier.tk_output, patterns)
@@ -275,7 +276,7 @@ class NgramModel:
         self._ptc = np.ascontiguousarray(identifier.nb_ptc)
         self._pc = np.asarray(identifier.nb_pc)
         self.classes: list[str] = list(identifier.nb_classes)
-        self.n_features = int(identifier.nb_numfeats)
+        self.n_features = n_features
 
     # -- feature counting --------------------------------------------------
 
