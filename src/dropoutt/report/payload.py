@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .atlas_story import density_ratio, format_reach
+from .atlas_story import IMBALANCE_CAPTION, density_ratio, format_reach
 from .escaping import safe_snippet
 from .phrasing import share as _share
 from .summary import ScanSummary, budget_method, budget_rows
@@ -92,7 +92,11 @@ def atlas_identity(result) -> dict[str, Any] | None:
 
 
 def off_map_examples(result, summary: ScanSummary, *, include_evidence: bool) -> list[dict]:
-    """The records furthest from anything on the map, safe to print."""
+    """The records furthest from anything on the map.
+
+    The excerpts were made safe when the story was built, so this only picks
+    the fields a report prints.
+    """
     if not include_evidence or summary.atlas is None:
         return []
     return [
@@ -101,7 +105,7 @@ def off_map_examples(result, summary: ScanSummary, *, include_evidence: bool) ->
             "chars": ex.get("chars"),
             "dataset": ex.get("dataset", ""),
             "language": ex.get("language", ""),
-            "excerpt": safe_snippet(str(ex.get("excerpt", "")).replace("\n", " "), 160),
+            "excerpt": str(ex.get("excerpt", "")),
         }
         for ex in summary.atlas.off_examples[:4]
     ]
@@ -341,7 +345,15 @@ def _atlas(result, s: ScanSummary, *, include_evidence: bool) -> dict[str, Any] 
         "available": True,
         "identity": atlas_identity(result),
         "sampled_records": atlas.sampled,
+        # `placed_records` is the total every share below is a share of. On a
+        # weighted scan that is the weighted estimate; the raw count of
+        # sampled records that were placed is beside it, and `placed_note`
+        # is the sentence every rendering prints under the number.
         "placed_records": atlas.placed,
+        "placed_sampled_records": atlas.placed_sampled,
+        "placed_estimated": atlas.weighted,
+        "placed_label": atlas.placed_label,
+        "placed_note": atlas.placed_note,
         "too_short_to_place": atlas.too_short,
         "subregions_total": atlas.regions_total,
         "subregions_touched": atlas.regions_touched,
@@ -387,7 +399,7 @@ def _atlas(result, s: ScanSummary, *, include_evidence: bool) -> dict[str, Any] 
                 "headline": insight.headline,
                 "detail": insight.detail,
                 "tone": insight.tone,
-                "evidence": safe_snippet(insight.evidence, 240) if include_evidence else "",
+                "evidence": insight.evidence if include_evidence else "",
             }
             for insight in atlas.insights
         ],
@@ -395,6 +407,7 @@ def _atlas(result, s: ScanSummary, *, include_evidence: bool) -> dict[str, Any] 
         "least_of": [
             _place(p, include_evidence=include_evidence) for p in atlas.thin_places
         ],
+        "imbalances_note": IMBALANCE_CAPTION,
         "imbalances": [
             {
                 "region": item.region,
@@ -403,8 +416,10 @@ def _atlas(result, s: ScanSummary, *, include_evidence: bool) -> dict[str, Any] 
                 "density_label": density_ratio(item.ratio),
                 "records": item.records,
                 "share": round(item.share, 6),
-                "action": item.action,
-                "yours": safe_snippet(item.yours, 240) if include_evidence else "",
+                # `denser`, `thinner` or `unreached`: where the cell sits
+                # against the map, not what to do about it.
+                "direction": item.direction,
+                "yours": item.yours if include_evidence else "",
             }
             for item in atlas.imbalances
         ],
@@ -431,5 +446,5 @@ def _place(place, *, include_evidence: bool) -> dict[str, Any]:
         "cohesion": place.cohesion,
         "repetitive": place.repetitive,
         "caption": place.caption,
-        "yours": safe_snippet(place.yours, 240) if include_evidence else "",
+        "yours": place.yours if include_evidence else "",
     }

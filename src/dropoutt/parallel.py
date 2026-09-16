@@ -385,14 +385,43 @@ def _size_samples(
     }
     want_budget = max(plan.budget_caps.values(), default=per_dataset)
 
+    # What memory allows. Live at once: every shard's atlas heap (workers run
+    # concurrently and the parent holds one result at a time), the per-dataset
+    # budget heaps inside them, and the parent's own merged heap of
+    # `atlas_target`. Sized against the widest case rather than the average.
+    live_shards = min(shards, max(1, plan.workers) + 1)
+    bytes_per_atlas_sample = int(plan.atlas_text_chars * 2.5)
+
+    # The largest target the budget can hold at all: the parent's merged heap
+    # plus every live shard keeping exactly its share, with no headroom left to
+    # trim. A target above this is cut to it *before* anything else is sized.
+    # Until 1.4 the parent heap was costed at the full target first, so on a
+    # machine whose budget was under that cost alone (an 8 GB laptop against
+    # atlas-v3's 500,000) the shards were left with one record each and the
+    # floors below took over: 1,024 records placed of a 500,000 target, and 64
+    # on a single worker. A corpus one record under the target took the
+    # keep-everything path and placed all of it, one record over placed 1,024.
+    fits_outright = max(
+        256, int(budget // (bytes_per_atlas_sample * (1 + live_shards / shards)))
+    )
+    reduced = False
+    if atlas_target > fits_outright:
+        atlas_target = fits_outright
+        plan.sample_target = atlas_target
+        reduced = True
+
     # ``--sampling 0`` (internal target < 0) and a target at or above the
     # corpus both mean: keep every long-enough record. Planning a billion-row
     # parent heap for a hundred-row folder is what used to squeeze the cap to
-    # 64 and then place 64 records of a corpus that fit in memory whole.
+    # 64 and then place 64 records of a corpus that fit in memory whole. An
+    # explicit 0 is obeyed whatever the budget says; the implicit case is only
+    # taken when the whole corpus fits, since "the same as 0" was a promise
+    # about the sample, not about memory.
     if atlas_target < 0 or (
         atlas_target > 0
         and plan.estimated_records > 0
         and atlas_target >= plan.estimated_records
+        and not reduced
     ):
         plan.atlas_cap = -1
         plan.budget_cap = want_budget
@@ -407,18 +436,12 @@ def _size_samples(
     # of it and one number covers them all.
     want_atlas = max(256, -(-atlas_target * SAMPLE_HEADROOM // shards))
 
-    # What memory allows. Live at once: every shard's atlas heap (workers run
-    # concurrently and the parent holds one result at a time), the per-dataset
-    # budget heaps inside them, and the parent's own merged heap of
-    # `atlas_target`. Sized against the widest case rather than the average.
-    live_shards = min(shards, max(1, plan.workers) + 1)
-    bytes_per_atlas_sample = int(plan.atlas_text_chars * 2.5)
     parent_cost = atlas_target * bytes_per_atlas_sample
     per_shard_records = max(1, (budget - parent_cost) // (bytes_per_atlas_sample * live_shards))
 
     if per_shard_records >= want_atlas + want_budget * datasets:
         plan.atlas_cap, plan.budget_cap = want_atlas, want_budget
-        plan.sample_bound_by = "target"
+        plan.sample_bound_by = "memory" if reduced else "target"
         return
 
     # Squeezed. The budget sample is protected first: it is the smaller of the
@@ -430,7 +453,17 @@ def _size_samples(
     plan.budget_caps = {
         name: min(cap, budget_cap) for name, cap in plan.budget_caps.items()
     }
-    plan.sample_bound_by = "memory"
+    # Two different things get called "squeezed" here and only one of them costs
+    # the reader anything. Losing headroom narrows the guarantee that a shard's
+    # local bottom-k contains the global one — the merged sample still reaches
+    # the target, it is just marginally less uniform. Losing the target means
+    # fewer records were kept, which is what the degraded notice is for. On a
+    # 7 GiB budget the 500,000-record v3 target keeps 2x headroom at four
+    # shards and still delivers every record it asked for; reporting that as
+    # "drawn from fewer records than usual" would have been false.
+    plan.sample_bound_by = (
+        "headroom" if atlas_cap * shards >= atlas_target and not reduced else "memory"
+    )
 
 
 #: Bytes per record when nothing better is known. Only ever moves a progress

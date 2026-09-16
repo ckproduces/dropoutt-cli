@@ -1,36 +1,61 @@
 {
   "seed": 42,
-  "source_ledger": ".atlas-work/source-ledger.json",
+  "source_ledger": "/Volumes/ck512/dropoutt-atlas-v2/corpus-cache/source-ledger.json",
+  "manifest": "/Volumes/ck512/dropoutt-atlas-v2/corpus-cache/manifest.json",
+  "manifest_hash": "335141977e977a7a6acedea2d4cec74f",
   "gates": {
-    "logical_bytes": 23576138659,
+    "input_logical_bytes": 159672967759,
+    "post_filter_logical_bytes": 106382523133,
     "idf_observed_token_mass": 1.0,
-    "non_english_share": 0.6671020664710786,
+    "non_english_share": 0.48283772582671214,
     "axis_floors": {
       "web": true,
       "encyclopedic": true,
+      "scientific": false,
       "code": true,
-      "instruction": true,
-      "math": true,
-      "scientific": true,
-      "dialogue": true,
-      "legal_finance": true,
-      "structured": true,
-      "mixture": true
+      "forum": true,
+      "legal_government": true,
+      "books": false,
+      "educational": false
     },
-    "lite_records": 130000,
-    "n_records": 10627780,
-    "elapsed_s": 405.8
+    "atlas_v2_records": 69071324,
+    "atlas_v2_lite_records": 69071324,
+    "input_records": 69952129,
+    "manifest_sources": 59,
+    "elapsed_s": 3147.2
   },
   "artifacts": {
     "atlas-v2": {
-      "path": "src/dropoutt/data/atlas/atlas-v2.npz",
-      "size_mb": 33.727685,
-      "n_regions": 689
+      "path": "/Volumes/ck512/dropoutt-atlas-v2/release/atlas-v2.npz",
+      "size_mb": 7.512633,
+      "n_regions": 296
     },
     "atlas-v2-lite": {
-      "path": "src/dropoutt/data/atlas/atlas-v2-lite.npz",
-      "size_mb": 0.27522,
-      "n_regions": 34
+      "path": "/Volumes/ck512/dropoutt-atlas-v2/release/atlas-v2-lite.npz",
+      "size_mb": 1.689014,
+      "n_regions": 65
+    }
+  },
+  "repairs": [
+    {
+      "kind": "merge_undersized_l2_cells",
+      "merged_cells": [
+        67
+      ],
+      "remaining_l2_cells": 296
+    }
+  ],
+  "packaged": {
+    "note": "The wheel carries the build artifact with `exemplar_texts` removed by tools/strip_atlas_exemplars.py: the excerpts were a labelling aid nothing at runtime reads, and verbatim reference text does not ship. Every other array is byte-identical to the build output above.",
+    "artifacts": {
+      "atlas-v2": {
+        "size_mb": 3.515185,
+        "sha256": "f482294e1eff3df8f19d7b4ab36152af268b4863aa04c00babefb7bd43823c45"
+      },
+      "atlas-v2-lite": {
+        "size_mb": 1.480524,
+        "sha256": "46ca0f7a52e29fff3f3227a684685c7ca723e60ff7ffc92024860bdb08dc92f5"
+      }
     }
   }
 }

@@ -1,5 +1,163 @@
 # Changelog
 
+## 1.4.0
+
+A new map, and what a release review found while shipping it.
+
+### atlas-v3
+
+`dropoutt atlas` places records on **atlas-v3** by default: 4,096 cells over
+256 subject areas, fitted once on 163 million public records from 244 sources —
+213 GB after filtering, 61% of it not English — with each record's language
+detected on its own rather than inherited from the shard it arrived in. Every
+cell and every subject area carries a hand-written name. The five-word
+frequency captions of the earlier maps, which spent a slot in seven on a word
+that separated nothing, are gone with the map that had them.
+
+Three products ship, and the command asks which one to use:
+
+```bash
+dropoutt atlas ./data                      # picker in a terminal
+dropoutt atlas --model atlas-v3 ./data     # start immediately
+```
+
+`atlas-v2` (296 cells over 128 areas) and `atlas-v2-lite` (65 over 32) are kept
+for fingerprints placed on them; `atlas-v1-lite` stays loadable by name and is
+offered by nothing. A pipe or a CI job has no picker. It uses the product named
+under `[scan] atlas` in `dropoutt.toml` and otherwise stops with a usage error
+rather than guessing, because coverage is comparable only across runs on one
+coordinate system and a default that a later release moves would make two CI
+runs silently incomparable. Naming the map in a reviewed file is what stops
+that.
+
+**The off-atlas cutoff is calibrated and stamped.** atlas-v3 carries
+`off_atlas_threshold = 0.3538`, the 2nd percentile of nearest-cell cosine over
+the build's own language-and-axis-balanced draw of two million rows, with the
+draw, the percentiles and the per-axis breakdown recorded in the artifact and
+a test that fails if a v3 ever ships without them. The loader's 0.35 was never
+a calibrated number, and on atlas-v2 — whose own 2nd percentile is 0.309 — it
+puts 12–18% of ordinary held-out prose off the map. The v2 products still run
+on it; the rule that replaces it is in `docs/atlas.md`.
+
+**The default sample is 500,000 records on atlas-v3**, up from 200,000, because
+the map is fourteen times finer and the same sample would be spread that much
+thinner: a density ratio's relative error is one over the square root of the
+records in the cell, and 200,000 leaves a ±14% ratio in an average cell where
+500,000 leaves ±9%. The memory ceiling on the sample moves with it, from 4 GiB
+to 10 GiB; a laptop is still bounded by its own memory first and gets the
+"reduced to fit" notice.
+
+**Placement needs 40 characters of text, down from 80.** More of a short-form
+corpus reaches the map. Records between 40 and 80 characters also place less
+reliably — similarity rises steeply with length, and the off-atlas rate was
+measured at 33% under 80 characters against 0% above 150 — so a corpus of
+short records reads as more off-atlas than it did, and the diagnosis line says
+length before it says anything else.
+
+### What the review found
+
+A pass over the atlas, the command and the report before this release, in the
+order it would have cost you.
+
+- **The wheel was 45.9 MB.** The builder's scratch copy
+  `atlas-v3.npz.patching.npz` rode inside it, because the package exclude named
+  `*.tmp.npz` and nothing else. The pattern is `*.npz.*` now, and a test asserts
+  that the atlas data directory holds only products.
+- **The maps shipped 26,000 verbatim excerpts of reference records.** The builder
+  writes `exemplar_texts` — the few hundred characters nearest each cell's
+  centre — as a labelling aid, and the artifact carried them into every
+  install: 16,384 on atlas-v3, 9,472 on atlas-v2, with no licence manifest and
+  no reader, since nothing at runtime opens the array. `tools/strip_atlas_exemplars.py`
+  removes it before release, the checksums are restamped, and a test keeps
+  every bundled map free of text arrays. atlas-v3 is 13.8 MB in the wheel
+  instead of 17.5; atlas-v2 is 3.5 instead of 7.5.
+- **A blank record was placed, confidently, in one particular cell.** Forty
+  spaces pass the length gate and pool to a zero vector; mean removal then
+  turns every such record into the fixed direction `-mean`, which scores 0.76
+  against one atlas-v3 cell — well above the cutoff. The build's own
+  calibration dropped these rows; the runtime did not. Zero rows now stay zero
+  through normalization, score 0 against every centroid, and are counted with
+  the records too short to place rather than as off-atlas, since a blank is not
+  *unlike* the map.
+- **An 8 GB laptop placed 1,024 records of a 500,000 target.** The sample sizer
+  costed the parent's merged heap at the full target before it sized the
+  shards, so once the memory budget was below that one cost the shards were
+  left a record each and the floors took over: 1,024 across four workers, 64 on
+  one. A corpus one record under the target kept everything; one record over
+  fell off the cliff. The target is now cut to what the budget holds before
+  anything else is sized, the parent heap is sized to the cut, and the run says
+  the sample was reduced.
+- **Assignment peaked at 2.1 GB of memory.** The similarity pass was chunked at
+  32,768 rows, a number chosen for a 212-cell map where a chunk was 28 MB. On
+  4,096 cells the same rows are a 512 MB matrix, with a negated copy and an
+  int64 partition beside it. Chunks are sized by bytes now — 32 MB whatever
+  the map — and the partition runs on the matrix itself.
+- **`T1-ATLAS-002` could not fire on the product it ships with.** A crowded
+  cell was one holding 20% of placed records, a bar written against 215 cells
+  where it was forty times even mass; on 4,096 cells it was eight hundred
+  times, which no template cluster reaches. The bound is forty times even mass
+  with a 2% floor now, `T1-ATLAS-001`'s "very little of the map" is 5% of the
+  map's cells rather than ten cells, and the minimum placed count grows with the
+  map so the density prior has something to fit.
+- **The HTML page rendered excerpts the other three renderers sanitised.**
+  Markdown, JSON and the terminal read record excerpts through `safe_snippet`,
+  which neutralises bidirectional overrides and maps control characters into
+  the Control Pictures block. The page read the story object directly and
+  wrote a raw `\x07` where `atlas.md` wrote `␇`. Sanitisation happens once
+  now, on the story, above every renderer, and a parity test plants a control
+  character and a bidi override and checks all four outputs.
+- **The rebalance section told you what to cut and what to grow.** "Denser
+  than the map: cut volume there. Empty or thinner: add that kind of record."
+  That is a prescription against a goal the tool has not been told, which the
+  design rules forbid. The section now says where your mix differs most from
+  the map's, in each direction, and that whether to move it depends on what
+  you are building. JSON carries `direction` in place of `action`.
+- **Two denominators on one page.** Shares were computed over the weighted
+  histogram while the placed count on the same page was the raw one, so "40%
+  of your data" and "250 placed" did not reconcile; and the over-representation
+  sentence measured a subject area's expected share by counting its cells while
+  the table beside it used the map's own mass, so one area read 48× in the
+  table and 149× in the sentence. One denominator, one expectation, one
+  formatter for every ratio, and the HTML's definition of reach — which said
+  "subtopics at atlas density or above" for a number that is a sum of fractions
+  — now matches the Markdown's.
+- **A 2,100-record sample on atlas-v3 was told 893 of its 922 places were
+  toeholds.** The toehold rule was a fixed half-percent share per place,
+  which on 215 cells is even mass and on 4,096 cells is twenty times it. It
+  is now the map's even mass or three records, whichever is larger.
+- **The finish line counted the wrong thing.** `Placed 332 records` was the
+  number scanned; it reads `Placed 250 of 332 records`.
+- **A corpus placed whole was reported as an estimate.** Each sampled record
+  was weighted by scanned over sampled whatever the target, so the nine
+  records too short to enter the sample at all inflated the rest into
+  "≈256 placed, estimated" on a corpus that had been placed in full. The
+  weight applies only when the target actually cut the sample; `atlas.json`
+  carries both `placed_records` (the total every share is over) and
+  `placed_sampled_records` (how many were placed).
+- **CI would have failed on lint and types.** Ten ruff findings and six mypy
+  errors had accumulated in the working tree, and the benchmark harness under
+  `experiments/` carried fifty-five more that `ruff check .` would have swept up
+  the moment it was committed. All fixed; `experiments/` is excluded from lint
+  as research, not product.
+- **The docs described a map that no longer ships.** `atlas-v2` was "256-d" and
+  `atlas-v2-lite` "16-d" in two places; they are 128-d and 64-d. The placement
+  floor was 80 characters on five pages. The atlas guide's transcript, tiers
+  table and rebuild instructions were atlas-v1-lite's. All rewritten against
+  the shipped artifacts.
+
+### Also
+
+- `dropoutt.toml` gains nothing new to write, but `atlas` under `[scan]` now
+  does two things: it highlights the picker's default in a terminal and it is
+  the product used where there is no terminal to ask.
+- `Config` records whether the file named an atlas at all (`atlas_declared`),
+  which is what the pipe case reads.
+- `pipeline_hash` is unchanged and remains display-only: comparability between
+  two maps is `atlas_version` equality, and nothing at runtime compares hashes.
+  The declaration it seals lists the default product by name, so flipping the
+  default re-keyed future builds without a pipeline change; left as is for this
+  release and noted here so it is not mistaken for drift.
+
 ## 1.3.0
 
 One change, and what a code review found while making it.

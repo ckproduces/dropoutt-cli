@@ -67,18 +67,31 @@ EXIT_BLOCKED = 10
 ATLAS_CHECKS = ("T1-ATLAS-001", "T1-ATLAS-002")
 
 
-def _prompt_atlas_product(preferred: str) -> str:
-    """Arrow-key picker. Non-TTY callers must pass ``--model`` instead."""
+def _choose_atlas_product(cfg: Config) -> str:
+    """The product to place on when ``--model`` was not passed.
+
+    A terminal gets the arrow-key picker, highlighting the product
+    ``dropoutt.toml`` names (atlas-v3 when it names none). A pipe or a CI job
+    gets no picker: it uses the product the config declares, and otherwise stops
+    with a usage error rather than guessing. Coverage is comparable only across
+    runs on one coordinate system, and a default that a later release moves
+    would make two CI runs silently incomparable; naming the product in a
+    reviewed file is what keeps that from happening.
+    """
     from .atlas.profiles import PRODUCT_CHOICES
     from .prompt import PromptError, can_prompt, select
 
     if not can_prompt():
+        if cfg.atlas_declared:
+            return cfg.atlas
         console.print(
-            "[red]Choose an atlas:[/red] pass --model atlas-v2 or --model atlas-v2-lite"
+            "[red]Choose an atlas:[/red] pass --model atlas-v3, --model atlas-v2 or "
+            "--model atlas-v2-lite, or set "
+            + escape('atlas = "atlas-v3" under [scan] in dropoutt.toml')
         )
         raise typer.Exit(EXIT_USAGE)
     keys = [key for key, _ in PRODUCT_CHOICES]
-    default = keys.index(preferred) if preferred in keys else 0
+    default = keys.index(cfg.atlas) if cfg.atlas in keys else 0
     try:
         return select("Which atlas?", PRODUCT_CHOICES, default=default, console=console)
     except PromptError:
@@ -388,7 +401,10 @@ def atlas(
         None,
         "--model",
         "--atlas",
-        help="Atlas product: atlas-v2 or atlas-v2-lite. Asked in the terminal if omitted.",
+        help=(
+            "Atlas product: atlas-v3, atlas-v2 or atlas-v2-lite. Asked in the "
+            "terminal if omitted; a pipe uses the atlas named in dropoutt.toml."
+        ),
     ),
     out: Path | None = typer.Option(None, "--out", "-o",
                                     help="Directory for the map artifacts."),
@@ -425,8 +441,9 @@ def atlas(
     """Place a corpus on the atlas and draw where it sits.
 
     The atlas is a frozen coordinate system, not a collection of good datasets:
-    two maps (atlas-v2 and atlas-v2-lite) fitted once on public data, so two
-    corpora placed on the same product can be compared and a gap can be named.
+    three maps (atlas-v3, atlas-v2 and atlas-v2-lite) fitted once on public
+    data, so two corpora placed on the same product can be compared and a gap
+    can be named.
     This command samples records, encodes them, and reports what the corpus is
     dense in, what it only touches, what it never reaches, and what looks like
     nothing on the map at all.
@@ -458,7 +475,7 @@ def atlas(
     if cfg.profile != "auto":
         _validate_profile(cfg.profile, option="profile", allow_auto=False)
 
-    selected = atlas_model or _prompt_atlas_product(cfg.atlas)
+    selected = atlas_model or _choose_atlas_product(cfg)
     try:
         atlas_profile = get_profile(selected)
     except ValueError as exc:
@@ -557,7 +574,10 @@ def atlas(
             out_dir, result, write_html=not no_html,
             include_evidence=not no_evidence, summary=story,
         )
-        activity.finish(f"Placed {result.records_scanned:,} records")
+        activity.finish(
+            f"Placed {int(coverage.get('placed', 0)):,} of "
+            f"{result.records_scanned:,} records"
+        )
 
     if not quiet:
         term_report.render_atlas(

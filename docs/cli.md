@@ -160,16 +160,22 @@ cannot be honoured in three formats and forgotten in the fourth.
 
 Place a corpus on the atlas and draw where it sits.
 
-The atlas is a frozen coordinate system, not a collection of good datasets: two
-maps fitted once on public data (`atlas-v2` and `atlas-v2-lite`), so two corpora
-placed on the same product can be compared and a gap can be named. A typical
+The atlas is a frozen coordinate system, not a collection of good datasets:
+three maps fitted once on public data (`atlas-v3`, `atlas-v2` and
+`atlas-v2-lite`), so two corpora placed on the same product can be compared
+and a gap can be named. A typical
 coverage plot fits UMAP or k-means on the sample in front of it, which means the
 next folder gets a new projection and neighbourhoods stop meaning the same
 thing. This command only assigns your records to bins that already exist.
 
-Without `--model`, the command asks which product to use (arrow keys, then
-enter). `--model atlas-v2` and `--model atlas-v2-lite` start immediately. In a
-pipe or CI job there is no picker: pass `--model`.
+Without `--model`, a terminal gets an arrow-key picker over `atlas-v3`,
+`atlas-v2` and `atlas-v2-lite`, highlighting the `atlas` value from
+`dropoutt.toml` (atlas-v3 when the file names none). A pipe or a CI job gets no
+picker: it uses the `atlas` key if `dropoutt.toml` sets one, and otherwise
+exits 2 telling you to pass `--model` or set the key. Coverage is comparable
+only across runs on one product, and a default that a later release moved
+would make two CI runs silently incomparable; `[scan] atlas = "atlas-v3"` in
+a reviewed file is how a CI job runs `dropoutt atlas` without `--model`.
 
 It reads the same files a scan reads, in the same way, and samples the same
 records — placement and a scan of the same corpus see the same sample. What it
@@ -180,10 +186,10 @@ ahead of time; after that `--offline` works.
 
 | flag | default | meaning |
 | --- | --- | --- |
-| `--model`, `--atlas` | asked in the terminal | `atlas-v2` (256-d) or `atlas-v2-lite` (16-d) |
+| `--model`, `--atlas` | picker in a terminal; `atlas` from `dropoutt.toml` otherwise | `atlas-v3` (4,096 cells over 256 subject areas, 128-d), `atlas-v2` (296 cells, 128-d) or `atlas-v2-lite` (65 cells, 64-d) |
 | `--out`, `-o` | `<path>/.dropoutt` | output directory |
 | `--offline` | off | never touch the network; resolve the encoder from the cache |
-| `--sampling`, `--sample` | the product's default (50,000 lite / 200,000 full) | records to place. `0` = all records. Larger than the corpus is the same as `0` |
+| `--sampling`, `--sample` | the product's default (500,000 atlas-v3 / 200,000 atlas-v2 / 50,000 atlas-v2-lite) | records to place. `0` = all records. Larger than the corpus is the same as `0` |
 | `--limit` | none | max records per file, for a fast look |
 | `--no-html` | off | skip the HTML page |
 | `--no-open` | off | do not open the page when the run finishes |
@@ -192,7 +198,8 @@ ahead of time; after that `--offline` works.
 | `--quiet`, `-q` | off | suppress the map; only the output path is printed |
 
 ```bash
-dropoutt atlas ./data
+dropoutt atlas ./data                       # picker in a terminal
+dropoutt atlas --model atlas-v3 ./data
 dropoutt atlas --model atlas-v2 ./data
 dropoutt atlas --model atlas-v2-lite ./data --sampling 500
 dropoutt atlas ./data --sampling 0          # every record
@@ -212,7 +219,7 @@ corpus is the same as `0`.
 | what the map says | the handful of sentences that clear both a size gate and a significance gate. Nothing is shown for being true; it is shown for being large *and* true |
 | what you have most of | the crowded places, each named by *your own record* nearest its centre — the only description of a neighbourhood that is true by construction |
 | what you have least of | the sparsest places you reach. Reaching a place is not covering it, and an occupancy count cannot tell the difference |
-| farthest from the map | where you are most over- or under-represented against the reference, and which direction to move |
+| farthest from the map | where your mix differs most from the map's, in either direction. Whether to move it depends on what you are building, which the tool has not been told |
 | off the map | records unlike the reference geography, with a diagnosis. Similarity rises steeply with record length, so a high off-map rate is usually a statement about how short the records are before it is one about their subject |
 
 Two checks run here and nowhere else: `T1-ATLAS-001`, when the corpus covers
@@ -237,7 +244,7 @@ a map without either overwriting the other.
 
 Exit code 1, with the reason. Two causes account for almost all of it: the
 encoder could not be loaded — run `dropoutt fetch` — or no record was long
-enough to place, which needs at least 80 characters of text. A corpus of labels,
+enough to place, which needs at least 40 characters of text. A corpus of labels,
 ids or one-word rows has no position on a topical map, and an empty page
 presented as "no coverage" is the failure this stops.
 
@@ -300,7 +307,7 @@ dropoutt fetch --model qwen3 --all   # that model plus the panel
     ok      qwen3  Qwen/Qwen3-8B
 
   Atlas embedding model
-    ok  minishlab/potion-multilingual-128M (128 dims, stored int8, 81 MB)
+    ok  minishlab/potion-multilingual-128M (256 dims, stored int8, 142 MB)
 
   Bundled in the package, nothing to fetch: the atlas artifact and the
 contamination indices.

@@ -64,7 +64,7 @@ Two downloads still happen on first use, and both are cached:
 
 | what | size | when |
 | --- | --- | --- |
-| the atlas embedding model | ~81 MB cached | the first `dropoutt atlas` |
+| the atlas embedding model | 142 MB cached | the first `dropoutt atlas` |
 | tokenizers for the comparison panel | a few MB each | the first scan without `--model` |
 
 `dropoutt fetch` pulls both ahead of time, and prints the interpreter, the cache
@@ -426,12 +426,15 @@ are deciding whether to buy, merge or build a dataset rather than fix one.
 
 ```bash
 dropoutt atlas ./my-corpus
+dropoutt atlas --model atlas-v3 ./my-corpus
 dropoutt atlas --model atlas-v2-lite ./my-corpus
 ```
 
 This places a sample of your records on a frozen map of public training data.
-Without `--model` the command asks which product to use (`atlas-v2` or
-`atlas-v2-lite`). The freezing is the whole point. A coverage plot that fits
+Without `--model`, a terminal asks which product to use — `atlas-v3` (the
+default: 4,096 cells over 256 subject areas), `atlas-v2` or `atlas-v2-lite` —
+and a pipe or CI job takes the `atlas` key from `dropoutt.toml`, or exits 2
+if there is none. The freezing is the whole point. A coverage plot that fits
 UMAP or k-means on whatever sample it was handed gives the next folder a new
 projection, so its neighbourhoods mean something different and two runs cannot
 be compared. Here the bins already exist, and a run only decides which of them
@@ -443,7 +446,7 @@ What comes back:
   much of the reference lives there. 1.0× is parity.
 - **What you have most of** — the crowded places, each named by *your own record*
   nearest its centre. That is the only description of a neighbourhood that is
-  true by construction; the atlas's own five-word captions describe the
+  true by construction; the cell's own hand-written name describes the
   reference corpus, not yours.
 - **What you have least of** — the sparsest places you reach. Reaching a place is
   not covering it.
@@ -458,7 +461,7 @@ told it which you are building. And it will not call a region good or bad — th
 atlas is a coordinate system, like latitude and longitude, with no notion of
 quality in it at all.
 
-The first run downloads the encoder, about 81 MB once cached. `dropoutt fetch`
+The first run downloads the encoder, 142 MB once quantised and cached. `dropoutt fetch`
 gets it ahead of time; after that `--offline` works.
 
 ---
@@ -565,9 +568,9 @@ says so. Every dependency ships with dropoutt, so this means a damaged install:
 `pip install --force-reinstall dropoutt`.
 
 **`dropoutt atlas` exits 1 saying no map could be drawn** — usually the
-embedding model. It downloads once and is stored quantised at about 81 MB. Run
+embedding model. It downloads once and is stored quantised at 142 MB. Run
 `dropoutt fetch` where there is network, or check `DROPOUTT_CACHE`. The other
-cause is length: placement needs at least 80 characters of text per record, and
+cause is length: placement needs at least 40 characters of text per record, and
 a corpus of labels or one-word rows has no position on a topical map.
 
 **Token counts look wrong and say `character-ratio`** — `tokenizers` could not

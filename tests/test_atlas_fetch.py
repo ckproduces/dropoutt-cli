@@ -5,29 +5,89 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-
 TOOLS = Path(__file__).resolve().parents[1] / "tools"
 sys.path.insert(0, str(TOOLS))
 
-import atlas_sources
-import fetch_corpus
+import atlas_sources  # noqa: E402  (tools/ is on sys.path only from here)
+import fetch_corpus  # noqa: E402
 
 
 def test_baseline_catalogue_is_pinned_and_scaled() -> None:
     assert atlas_sources.BASELINE_CATALOGUE_COMMIT == "public-web-2026-08-30"
     assert atlas_sources.BASELINE_SCALE == 1.0
     assert atlas_sources.V1_REFERENCE_RECORDS == 2_125_556
-    assert atlas_sources.LOGICAL_BYTE_TARGET == 200 * 1024 ** 3
+    assert atlas_sources.LOGICAL_BYTE_TARGET == 300 * 1024 ** 3
     assert abs(sum(atlas_sources.AXIS_TARGET_SHARES.values()) - 1.0) < 1e-9
-    assert atlas_sources.AXIS_TARGET_SHARES["web"] == 0.815
-    assert atlas_sources.AXIS_TARGET_SHARES["training"] == 0.025
-    assert atlas_sources.AXIS_TARGET_BYTES["training"] == 5 * 1024 ** 3
+    assert atlas_sources.AXIS_TARGET_SHARES["web"] == 0.560
+    assert atlas_sources.AXIS_TARGET_SHARES["training"] == 0.100
+    assert atlas_sources.AXIS_TARGET_BYTES["training"] == 30 * 1024 ** 3
     assert sum(atlas_sources.AXIS_TARGET_BYTES.values()) == atlas_sources.LOGICAL_BYTE_TARGET
     assert sum(atlas_sources.LANGUAGE_TARGET_BYTES.values()) == atlas_sources.LOGICAL_BYTE_TARGET
     assert len(atlas_sources.FINEWEB2_BASELINE) == 45
     assert len({source.slug for source in atlas_sources.SOURCES}) == len(atlas_sources.SOURCES)
-    assert sum(source.target_bytes for source in atlas_sources.SOURCES) == atlas_sources.LANGUAGE_TARGET_BYTES["en"]
-    assert atlas_sources.AXIS_TARGET_BYTES["scientific"] > atlas_sources.AXIS_TARGET_BYTES["books"]
+    # SOURCES is English web plus the whole non-web allocation; the non-English
+    # web shards are generated per language at fetch time.
+    assert sum(source.target_bytes for source in atlas_sources.SOURCES) == (
+        atlas_sources.WEB_LANGUAGE_TARGET_BYTES["en"] + atlas_sources.SPECIALTY_BYTES
+    )
+    # Books now outweighs scientific: it is one of the few non-web axes with a
+    # multilingual supply, and scientific publishing is overwhelmingly English.
+    assert atlas_sources.AXIS_TARGET_BYTES["books"] > atlas_sources.AXIS_TARGET_BYTES["scientific"]
+
+
+def test_the_non_web_axes_are_not_an_english_monoculture() -> None:
+    """The reason the plan grew: diluting web must not concentrate English.
+
+    Before this plan the declared non-web sources were 91.1% English by bytes
+    and six of eight axes were English-only, so every GiB added to cut the web
+    share raised the English share instead.
+    """
+    non_web = [s for s in atlas_sources.SOURCES if s.axis != "web"]
+    total = sum(s.target_bytes for s in non_web)
+    english = sum(s.target_bytes for s in non_web if s.lang == "en")
+    assert english / total < 0.50, f"non-web is {english / total:.1%} English"
+    languages = {s.lang for s in non_web}
+    assert len(languages) >= 30
+    # Every declared language must be reachable somewhere, or it cannot get a
+    # mean of its own fitted and will cluster by language instead of subject.
+    planned = set(atlas_sources.WEB_LANGUAGE_SHARES)
+    assert planned <= ({s.lang for s in atlas_sources.SOURCES} | {
+        lang for lang, _, _ in atlas_sources.FINEWEB2_BASELINE
+    })
+
+
+def test_multilingual_legal_sources_carry_their_own_language() -> None:
+    legal = [s for s in atlas_sources.SOURCES if s.axis == "legal_government"]
+    multi = [s for s in legal if s.hf_id == atlas_sources.MULTI_LEGAL_ID]
+    assert len(multi) >= 20
+    assert all(s.lang != "en" for s in multi)
+    assert all(s.license_policy == "cc-by-4.0" for s in multi)
+    assert all(s.path and s.loader == "json" for s in multi)
+    english = sum(s.target_bytes for s in legal if s.lang == "en")
+    assert english / sum(s.target_bytes for s in legal) < 0.40
+
+
+def test_training_sources_declare_the_language_they_hold() -> None:
+    """aya's per-language splits were all declared English.
+
+    The builder subtracts a language's own mean from its rows, so a Spanish
+    split labelled English got centred on English and kept its Spanish.
+    """
+    aya = [s for s in atlas_sources.SOURCES if s.config and "aya" in s.hf_id.lower()]
+    by_config = {s.config: s.lang for s in aya}
+    assert by_config.get("spanish") == "es"
+    assert by_config.get("german") == "de"
+    assert by_config.get("french") == "fr"
+    assert by_config.get("japanese") == "ja"
+    assert by_config.get("simplified_chinese") == "zh"
+    assert by_config.get("english") == "en"
+    # The axis maps the training distribution directly, so it should not be a
+    # mostly-English block: aya publishes 132 language splits and the plan uses
+    # every one that matches a declared language.
+    training = [s for s in atlas_sources.SOURCES if s.axis == "training"]
+    assert len({s.lang for s in training}) >= 40
+    english = sum(s.target_bytes for s in training if s.lang == "en")
+    assert english / sum(s.target_bytes for s in training) < 0.50
     web = [source for source in atlas_sources.SOURCES if source.axis == "web"]
     assert sum(source.target for source in web) >= atlas_sources.AXIS_FLOORS["web"]
 

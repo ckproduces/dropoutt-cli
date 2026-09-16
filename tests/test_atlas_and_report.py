@@ -712,7 +712,7 @@ def test_html_report_describes_the_corpus_before_it_faults_it(tmp_path):
     # to do with the dots.
     assert "<circle" not in page
     assert "not distances" not in page
-    assert "What the map says" in page
+    assert "Notable differences from the reference" in page
 
     # The verdict is a caption for the findings list, so it stands at the head
     # of that list rather than at the head of the page.
@@ -791,7 +791,11 @@ def test_the_density_grid_reaches_the_page_with_its_scale_explained(tmp_path):
     assert "map" in page and "share" in page
     assert "no reach" in page
     assert "as common as on the map" in page
-    assert "shape-strip" in page
+    assert 'class="coverage-bars"' not in page
+    assert page.count('role="meter"') == page.count('class="topic-table"')
+    assert page.count('role="meter"') > 0
+    assert "Shape along the map" not in page
+    assert page.index('class="legend"') < page.index('class="amap"')
     assert " covered</span>" not in page
     assert "/ covered" not in page
     assert 'aria-label="' in page
@@ -1222,7 +1226,7 @@ def test_no_evidence_clears_every_quoted_record_from_the_map():
     story.dominant = place("the biggest region's record")
     story.imbalances = [
         Imbalance(region=1, ratio=8.0, records=10, share=0.5,
-                  yours="a third record", area="Law", action="cut")
+                  yours="a third record", area="Law", direction="denser")
     ]
     story.insights = [
         Insight(kind="dense", headline="h", detail="d", magnitude=8.0,
@@ -1281,6 +1285,10 @@ def _map_payload() -> dict:
         "subregions_touched": 3,
         "shape": "narrow",
         "placed_records": 90,
+        "placed_sampled_records": 90,
+        "placed_estimated": False,
+        "placed_label": "90",
+        "placed_note": "of 100 sampled records",
         "sampled_records": 100,
         "off_map_records": 10,
         "off_map_rate": 0.1,
@@ -1312,8 +1320,9 @@ def _map_payload() -> dict:
             },
         ],
         "insights": [], "most_of": [], "least_of": [], "imbalances": [],
-        "off_map_examples": [], "per_dataset": [], "overlap": None,
-        "off_map_line": "", "concentration": None, "identity": {},
+        "imbalances_note": "", "off_map_examples": [], "per_dataset": [],
+        "overlap": None, "off_map_line": "", "concentration": None,
+        "identity": {},
     }
 
 
@@ -1373,8 +1382,13 @@ def test_the_markdown_map_carries_subregion_names_in_the_area_row():
     )
 
 
-def test_grow_imbalances_start_at_unreached_cells():
-    """0× (never reached) ranks ahead of thin occupied cells for grow cues."""
+def test_thinner_imbalances_start_at_unreached_cells():
+    """0× (never reached) ranks ahead of thin occupied cells on the thinner end.
+
+    The list describes which way each cell differs — ``denser``, ``thinner``
+    or ``unreached`` — and never which way to move it: the tool has not been
+    told what the corpus is for.
+    """
     from types import SimpleNamespace
 
     from dropoutt.report import atlas_story as story_mod
@@ -1397,19 +1411,23 @@ def test_grow_imbalances_start_at_unreached_cells():
 
     items = story_mod._imbalances(result, coverage)
 
-    grows = [i for i in items if i.action == "grow"]
-    cuts = [i for i in items if i.action == "cut"]
-    assert cuts and cuts[0].region == 0 and cuts[0].ratio == 8.0
-    assert grows, "grow list must include empty cells"
-    assert grows[0].records == 0 and grows[0].ratio == 0.0
+    assert {i.direction for i in items} <= {"denser", "thinner", "unreached"}
+    denser = [i for i in items if i.direction == "denser"]
+    thinner = [i for i in items if i.direction in ("thinner", "unreached")]
+    assert denser and denser[0].region == 0 and denser[0].ratio == 8.0
+    assert thinner, "the thinner end must include empty cells"
+    assert thinner[0].direction == "unreached"
+    assert thinner[0].records == 0 and thinner[0].ratio == 0.0
     # Largest empty map mass first (region 3 size 20 before region 2 size 5).
-    assert grows[0].region == 3
+    assert thinner[0].region == 3
+    assert next(i for i in items if i.region == 1).direction == "thinner"
 
 
 def test_shape_path_orders_cells_along_the_map_diameter():
     """The strip walks the diameter; endpoints are far in embedding space."""
-    import numpy as np
     from types import SimpleNamespace
+
+    import numpy as np
 
     from dropoutt.report import atlas_story as story_mod
 
@@ -1441,3 +1459,245 @@ def test_shape_path_orders_cells_along_the_map_diameter():
     lit = [c for c in path if c.records]
     assert len(lit) == 1 and lit[0].region == 1 and lit[0].ratio == 2.0
 
+
+
+# -- the story's arithmetic, on maps small enough to check by hand ---------
+
+
+def _fake_atlas(**overrides):
+    """Six fine cells in three subject areas, with reference sizes to skew."""
+    from types import SimpleNamespace
+
+    base = {
+        "n_regions": 6,
+        "region_size": [100.0] * 6,
+        "region_category": [0, 0, 1, 1, 2, 2],
+        "region_labels": ["a", "b", "c", "d", "e", "f"],
+        "l1_labels": ["Area A", "Area B", "Area C"],
+        "meta": {"version": "fake"},
+    }
+    base.update(overrides)
+    return SimpleNamespace(**base)
+
+
+def _fake_coverage(counts: dict, densities: dict, **overrides) -> dict:
+    placed = sum(counts.values())
+    base = {
+        "status": "ok",
+        "atlas_version": "fake",
+        "records": placed,
+        "placed": placed,
+        "excluded_too_short": 0,
+        "off_atlas": 0,
+        "off_atlas_rate": 0.0,
+        "region_counts": {str(k): v for k, v in counts.items()},
+        "region_density": {str(k): v for k, v in densities.items()},
+        "density_model": {"effective_sample": float(placed), "prior_strength": 0.0,
+                          "unreached_density": 0.0},
+        "regions_occupied": len(counts),
+        "regions_total": 6,
+    }
+    base.update(overrides)
+    return base
+
+
+def _story(atlas, coverage):
+    from types import SimpleNamespace
+
+    from dropoutt.report.atlas_story import build_story
+
+    result = SimpleNamespace(ctx=SimpleNamespace(atlas=atlas, stats={
+        "atlas_coverage": coverage,
+        "atlas_region_examples": {},
+        "atlas_region_cohesion": {},
+    }))
+    return build_story(result)
+
+
+def test_shares_and_the_placed_card_use_one_denominator():
+    """On a weighted scan the histogram sums to more than the records placed.
+
+    The shares divide by the histogram; the card used to print the raw count,
+    so "40% of your data" was 103 of 256 under a card saying 250. The card
+    prints the histogram's total now and says where it came from.
+    """
+    counts = {0: 103, 1: 60, 2: 50, 3: 43}  # sums to 256
+    story = _story(_fake_atlas(), _fake_coverage(
+        counts, {0: 2.0, 1: 1.2, 2: 1.0, 3: 0.8},
+        records=300, placed=250, placed_estimated=256,
+    ))
+
+    assert story.placed == 256 and story.placed_sampled == 250 and story.weighted
+    assert story.placed_label == "≈256"
+    assert "250 of 300 sampled records" in story.placed_note
+    assert sum(area.records for area in story.grid) == story.placed
+    assert sum(area.share for area in story.grid) == pytest.approx(1.0)
+    assert story.dominant is not None and story.dominant.share == pytest.approx(103 / 256)
+    for place in (*story.places, *story.thin_places):
+        assert place.share == pytest.approx(place.records / 256)
+
+    plain = _story(_fake_atlas(), _fake_coverage(counts, {0: 2.0, 1: 1.2, 2: 1.0, 3: 0.8},
+                                                records=300, placed=256))
+    assert not plain.weighted and plain.placed_label == "256"
+    assert plain.placed_note == "of 300 sampled records"
+
+
+def test_the_over_representation_lift_matches_the_grid_row():
+    """One area, one number: the sentence and the table divide by the same thing.
+
+    The grid's row ratio is share against reference mass; the insight divided
+    by the area's share of the cell count instead, so the same area read 48×
+    in the table and 149× in the sentence beside it.
+    """
+    from dropoutt.report.atlas_story import density_ratio
+
+    # Area A holds almost all the reference mass; B and C are tiny. Half of
+    # the corpus lands in B, which is a third of the cells but 1% of the map.
+    atlas = _fake_atlas(region_size=[1000.0, 1000.0, 10.0, 10.0, 10.0, 10.0])
+    story = _story(atlas, _fake_coverage(
+        {0: 100, 1: 50, 2: 100, 3: 50},
+        {0: 0.1, 1: 0.05, 2: 10.0, 3: 5.0},
+    ))
+
+    row = next(area for area in story.grid if area.name == "Area B")
+    assert row.ratio == pytest.approx(0.5 / (20 / 2040))
+    over = [i for i in story.insights if i.kind == "over"]
+    assert over and "Area B" in over[0].headline
+    assert density_ratio(row.ratio) in over[0].headline
+    # The cell-count lift (0.5 / (2/6) = 1.5×) is not what the sentence says;
+    # it survives only as the "N of M places" aside.
+    assert "1.5×" not in over[0].headline
+    assert "2 of its 6 places" in over[0].detail
+
+
+def test_the_thin_insight_counts_the_places_its_share_sums_over():
+    """"N places hold X%" counts the same set X was summed over."""
+    from dropoutt.report.atlas_story import _thin_share
+
+    atlas = _fake_atlas(
+        n_regions=8, region_size=[10.0] * 8, region_category=[0] * 8,
+        region_labels=list("abcdefgh"), l1_labels=["Area A"],
+    )
+    counts = {0: 300, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1}
+    densities = {0: 5.0, 1: 0.2, 2: 0.2, 3: 0.2, 4: 0.2, 5: 0.2}
+    coverage = _fake_coverage(counts, densities, regions_total=8)
+
+    assert _thin_share(coverage) == (pytest.approx(5 / 305), 5)
+    story = _story(atlas, coverage)
+    assert story.thin_count == 5 and story.thin_share == pytest.approx(5 / 305)
+    thin = [i for i in story.insights if i.kind == "thin"]
+    assert thin and "Of the 6 places you reach, 5 hold" in thin[0].headline
+
+
+def test_a_density_ratio_reads_the_same_in_every_format():
+    """One formatter, one glyph: a cell is not 49.6× here, 50× there and 50x on
+    the terminal — and a cell under a tenth of map density says so rather than
+    printing .00×."""
+    from dropoutt.report.atlas_story import Cell, density_ratio
+    from dropoutt.report.markdown import _subregions
+    from dropoutt.report.terminal import _cell_entry
+
+    for ratio, label in ((0.004, "under 0.1×"), (0.5, "0.5×"), (3.14, "3.1×"),
+                         (49.6, "50×")):
+        assert density_ratio(ratio) == label
+        cell = Cell(region=0, records=1, ratio=ratio, level=0.0, caption="x")
+        assert cell.label == label
+        assert cell.described.startswith(label)
+        row = {"region": 0, "records": 1, "density": ratio, "caption": "x"}
+        prefix = _cell_entry(row, 20).split("[/dim]")[0]
+        assert prefix.endswith(label) and "x" not in prefix
+        assert _subregions({"cells": [row]}) == f"{label} x"
+    assert Cell(region=0, records=0, ratio=0.0, level=0.0, caption="").label == "0"
+
+
+def test_the_story_carries_no_sentence_nothing_renders():
+    """A false sentence nobody prints is still a false sentence in the object.
+
+    `coverage_gaps` is empty on every flat-cell map, so the gaps line said the
+    corpus reached every subject area on a corpus that missed most of them.
+    The line, and the other fields no renderer read, are gone.
+    """
+    from dropoutt.report.atlas_story import AtlasStory
+
+    story = AtlasStory()
+    for name in ("headline", "crowding", "twins_line", "gaps", "gaps_line", "categories"):
+        assert not hasattr(story, name), name
+
+
+def test_the_story_refuses_an_atlas_the_facet_was_not_measured_in():
+    """A v2 histogram captioned with v3 labels names cells it never counted."""
+    from types import SimpleNamespace
+
+    from dropoutt.report.atlas_story import _atlas_of, _labels_of
+
+    def result(atlas, version):
+        return SimpleNamespace(ctx=SimpleNamespace(
+            atlas=atlas, stats={"atlas_coverage": {"atlas_version": version}},
+        ))
+
+    atlas = _fake_atlas()
+    assert _atlas_of(result(atlas, "fake")) is atlas
+    assert _atlas_of(result(atlas, "other")) is None
+    assert _labels_of(result(atlas, "other")) == {}
+    assert _labels_of(result(atlas, "fake")) == {0: "Area A", 1: "Area B", 2: "Area C"}
+    # No atlas on the context and a version nothing bundled carries: nothing,
+    # rather than the default map wearing the wrong name.
+    assert _atlas_of(result(None, "atlas-v9-nonexistent")) is None
+
+
+def test_the_grid_survives_a_size_vector_shorter_than_the_cell_list():
+    """A malformed artifact weighs the missing cells as nothing, not as a crash."""
+    from types import SimpleNamespace
+
+    from dropoutt.report.atlas_story import _grid
+
+    atlas = _fake_atlas(n_regions=4, region_size=[10.0, 10.0],
+                        region_category=[0, 0, 1, 1], region_labels=list("abcd"),
+                        l1_labels=["Area A", "Area B"])
+    result = SimpleNamespace(ctx=SimpleNamespace(atlas=atlas, stats={}))
+    coverage = _fake_coverage({0: 5, 2: 5}, {0: 1.0, 2: 1.0}, regions_total=4)
+
+    grid, _peak = _grid(result, coverage, {0: "Area A", 1: "Area B"})
+
+    assert [area.name for area in grid] == ["Area A", "Area B"]
+    assert grid[0].ratio > 0
+
+
+def test_the_terminal_prints_every_insight_it_is_given():
+    """Markdown prints them all; the terminal printed five and said nothing."""
+    from rich.console import Console
+
+    from dropoutt.report.terminal import _render_atlas
+
+    payload = _map_payload()
+    payload["insights"] = [
+        {"kind": "over", "label": "over-represented", "tone": "neutral",
+         "headline": f"Distinctive headline number {n}", "detail": "d", "evidence": ""}
+        for n in range(7)
+    ]
+    console = Console(width=200, force_terminal=False, highlight=False, record=True)
+    _render_atlas(console, payload)
+    out = console.export_text()
+
+    for n in range(7):
+        assert f"Distinctive headline number {n}" in out
+
+
+def test_the_toehold_rule_scales_with_the_map():
+    """A fixed half-percent called every cell of a fine map a toehold."""
+    from dropoutt.report.atlas_story import _thin_share, thin_cutoff
+
+    # 215 cells: one record in two hundred is even mass, as the rule was written.
+    assert abs(thin_cutoff(10_000, 215) - 1 / 215) < 1e-9
+    # 4,096 cells and a 2,000-record sample: three records, not 0.5%.
+    assert thin_cutoff(2_000, 4_096) == 3 / 2_000
+
+    counts = {str(i): 1 for i in range(900)}
+    counts.update({"5000": 200, "5001": 150, "5002": 40, "5003": 10})
+    share, count = _thin_share({"region_counts": counts, "regions_total": 4_096})
+    assert count == 900
+    assert abs(share - 900 / 1_300) < 1e-9
+    # The same histogram read as a 215-cell map: a ten-record cell of 1,300
+    # (0.77%) clears even mass; the 900 singletons do not.
+    share_small, count_small = _thin_share({"region_counts": counts, "regions_total": 215})
+    assert count_small == 900 and share_small == share

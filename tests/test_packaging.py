@@ -19,6 +19,7 @@ else:  # pragma: no cover - exercised on 3.10
     import tomli as tomllib
 
 PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
+ATLAS_DATA = Path(__file__).resolve().parents[1] / "src" / "dropoutt" / "data" / "atlas"
 
 
 def _project() -> dict:
@@ -86,3 +87,36 @@ def _requirement_name(spec: str) -> str:
     for separator in ("[", ">", "<", "=", "!", "~", " "):
         head = head.split(separator)[0]
     return head.strip().lower().replace("_", "-")
+
+
+def test_the_atlas_data_directory_holds_only_what_ships():
+    """Every file here rides in the wheel, so a stray one is a shipped one.
+
+    The builder and the calibration tool write their scratch beside the product
+    (`atlas-v3.npz.tmp.npz`, `atlas-v3.npz.patching.npz`). One of those rode
+    inside a wheel and made it 45.9 MB, because the exclude pattern named only
+    `*.tmp.npz`. The pattern is broader now, and this asserts the directory
+    itself rather than trusting a glob.
+    """
+    import re
+
+    allowed = re.compile(
+        r"^atlas-v\d+(-lite)?\.npz$|^atlas-v\d+-SHA256SUMS$|^atlas-v\d+-release-notes\.json$"
+    )
+    names = sorted(p.name for p in ATLAS_DATA.iterdir() if p.name != ".DS_Store")
+    stray = [name for name in names if not allowed.match(name)]
+    assert not stray, f"not a product and would ship in the wheel: {stray}"
+    assert {"atlas-v3.npz", "atlas-v2.npz", "atlas-v2-lite.npz", "atlas-v1-lite.npz"} <= set(names)
+
+
+def test_shipped_maps_match_their_stamped_checksums():
+    """The SHA256SUMS files are the release record; the bytes must agree."""
+    import hashlib
+
+    for sums in sorted(ATLAS_DATA.glob("atlas-v*-SHA256SUMS")):
+        for line in sums.read_text(encoding="utf-8").splitlines():
+            digest, _, name = line.strip().partition("  ")
+            target = ATLAS_DATA / name
+            assert target.exists(), f"{sums.name} names {name}, which is not bundled"
+            actual = hashlib.sha256(target.read_bytes()).hexdigest()
+            assert actual == digest, f"{name} does not match {sums.name}"

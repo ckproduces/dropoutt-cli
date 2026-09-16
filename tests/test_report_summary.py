@@ -159,19 +159,20 @@ def test_atlas_findings_do_not_quote_region_captions(scanned):
         assert not quoted, f"{finding.check_id} quotes atlas captions: {quoted}"
 
 
-def test_every_subject_bar_is_weighed_against_the_maps_own_share(scanned):
+def test_every_subject_area_is_weighed_against_the_maps_own_share(scanned):
     """A share of your corpus means nothing without the map's share beside it.
 
     "27% code generation" is a fact the reader cannot act on. "27%, where the
-    map spends 4% of itself" is the finding.
+    map holds 4% of its reference text" is the finding. The map's share comes
+    from reference mass, the same denominator the grid's rows divide by.
     """
-    from dropoutt.report.summary import build
+    from dropoutt.report.atlas_story import _area_expected
 
-    story = build(scanned).atlas
-    if story is None or not story.categories:
+    expected = _area_expected(scanned)
+    if not expected:
         pytest.skip("atlas coverage unavailable in this environment")
-    assert all("map_share" in row for row in story.categories)
-    assert sum(row["map_share"] for row in story.categories) > 0
+    assert all(share >= 0 for share in expected.values())
+    assert sum(expected.values()) == pytest.approx(1.0)
 
 
 def test_insights_are_gated_on_size_as_well_as_certainty(scanned):
@@ -186,19 +187,34 @@ def test_insights_are_gated_on_size_as_well_as_certainty(scanned):
         OVER_SHARE,
         UNDER_LIFT,
         UNDER_MAP_SHARE,
+        _area_expected,
+        _labels_of,
+        _region_categories,
+        _shrunk_ratio,
     )
     from dropoutt.report.summary import build
 
     story = build(scanned).atlas
     if story is None or not story.available:
         pytest.skip("atlas coverage unavailable in this environment")
-    by_area = {row["name"]: row for row in story.categories}
+    coverage = scanned.ctx.stats["atlas_coverage"]
+    labels = _labels_of(scanned)
+    per_area, _ = _region_categories(scanned, coverage)
+    total = sum(per_area.values()) or 1
+    expected = _area_expected(scanned)
+    n = story.effective_sample or story.placed
+    by_area = {
+        labels.get(area, f"area {area}"): (count / total, expected.get(area, 0.0))
+        for area, count in per_area.items()
+    }
     for insight in story.insights:
         assert insight.headline and insight.detail
         if insight.kind == "over":
-            row = next(r for name, r in by_area.items() if name in insight.headline)
-            assert row["share"] >= OVER_SHARE
-            assert row["share"] / row["map_share"] >= OVER_LIFT
+            observed, reference = next(
+                row for name, row in by_area.items() if name in insight.headline
+            )
+            assert observed >= OVER_SHARE
+            assert _shrunk_ratio(observed, reference, n, story.prior_strength) >= OVER_LIFT
         if insight.kind == "under":
             assert UNDER_MAP_SHARE <= 1.0 and UNDER_LIFT < 1.0
 

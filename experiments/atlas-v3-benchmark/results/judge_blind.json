@@ -1,0 +1,2360 @@
+[
+ {
+  "id": 0,
+  "kind": "exams_tr",
+  "item": "Physics",
+  "name": "Quantum physics, optics and nanomaterials"
+ },
+ {
+  "id": 1,
+  "kind": "mmlu",
+  "item": "world_religions",
+  "name": "Articles about Hindu and Buddhist scripture and philosophy"
+ },
+ {
+  "id": 2,
+  "kind": "mmlu_pro",
+  "item": "engineering",
+  "name": "Mobile devices, electronics and technical products"
+ },
+ {
+  "id": 3,
+  "kind": "source",
+  "item": "CShorten__ML-ArXiv-Papers",
+  "name": "Machine-learning, statistics and computer science papers"
+ },
+ {
+  "id": 4,
+  "kind": "source",
+  "item": "openbmb__UltraFeedback",
+  "name": "Questions, answers and puzzle prompts"
+ },
+ {
+  "id": 5,
+  "kind": "source",
+  "item": "iamtarun__python_code_instructions_18k_alpaca",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 6,
+  "kind": "exams_tr",
+  "item": "Chemistry",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 7,
+  "kind": "exams_tr",
+  "item": "Biology",
+  "name": "Cell biology, proteins and immunology"
+ },
+ {
+  "id": 8,
+  "kind": "source",
+  "item": "winddude__reddit_finance_43_250k",
+  "name": "Cryptocurrency, forex and market trading"
+ },
+ {
+  "id": 9,
+  "kind": "mmlu",
+  "item": "high_school_government_and_politics",
+  "name": "Government policy, advocacy and public affairs"
+ },
+ {
+  "id": 10,
+  "kind": "source",
+  "item": "commitpackft__php",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 11,
+  "kind": "source",
+  "item": "microsoft__orca-math-word-problems-200k",
+  "name": "Cost comparison and price calculation articles"
+ },
+ {
+  "id": 12,
+  "kind": "mmlu_pro",
+  "item": "law",
+  "name": "Courts, criminal cases and United States history"
+ },
+ {
+  "id": 13,
+  "kind": "source",
+  "item": "gretelai__synthetic_text_to_sql",
+  "name": "Government regulations, contracts and public records"
+ },
+ {
+  "id": 14,
+  "kind": "mmlu",
+  "item": "philosophy",
+  "name": "Philosophy, ideas and the humanities"
+ },
+ {
+  "id": 15,
+  "kind": "mmlu",
+  "item": "business_ethics",
+  "name": "Philosophy, ethics and intellectual history"
+ },
+ {
+  "id": 16,
+  "kind": "mmlu",
+  "item": "high_school_chemistry",
+  "name": "Chemical preparation and acid solution procedures"
+ },
+ {
+  "id": 17,
+  "kind": "mmlu",
+  "item": "high_school_geography",
+  "name": "Essays and articles about urbanization and smart cities"
+ },
+ {
+  "id": 18,
+  "kind": "mmlu",
+  "item": "college_medicine",
+  "name": "Protein supplement and anabolic steroid articles for bodybuilders"
+ },
+ {
+  "id": 19,
+  "kind": "source",
+  "item": "commitpackft__go",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 20,
+  "kind": "source",
+  "item": "microsoft__orca-math-word-problems-200k",
+  "name": "Money arithmetic word problems"
+ },
+ {
+  "id": 21,
+  "kind": "mmlu",
+  "item": "human_aging",
+  "name": "Children, parenting and child welfare"
+ },
+ {
+  "id": 22,
+  "kind": "source",
+  "item": "commitpackft__java",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 23,
+  "kind": "mmlu",
+  "item": "college_biology",
+  "name": "Stem cell and tissue regeneration research papers"
+ },
+ {
+  "id": 24,
+  "kind": "mmlu",
+  "item": "miscellaneous",
+  "name": "B-named band and artist encyclopedia entries"
+ },
+ {
+  "id": 25,
+  "kind": "source",
+  "item": "lex_glue__ledgar",
+  "name": "Statutes, court rulings and legal proceedings"
+ },
+ {
+  "id": 26,
+  "kind": "source",
+  "item": "xlangai__spider",
+  "name": "SQL query and stored-procedure troubleshooting snippets"
+ },
+ {
+  "id": 27,
+  "kind": "mmlu",
+  "item": "moral_disputes",
+  "name": "Philosophy, ideas and the humanities"
+ },
+ {
+  "id": 28,
+  "kind": "exams_tr",
+  "item": "History",
+  "name": "Turkey, the Middle East and neighbouring regions"
+ },
+ {
+  "id": 29,
+  "kind": "source",
+  "item": "nvidia__OpenMathInstruct-2",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 30,
+  "kind": "source",
+  "item": "commitpackft__shell",
+  "name": "Software installation guides and shell setup"
+ },
+ {
+  "id": 31,
+  "kind": "mmlu",
+  "item": "global_facts",
+  "name": "Research articles about children's development by age"
+ },
+ {
+  "id": 32,
+  "kind": "mmlu_pro",
+  "item": "other",
+  "name": "Money arithmetic word problems"
+ },
+ {
+  "id": 33,
+  "kind": "source",
+  "item": "tatsu-lab__alpaca",
+  "name": "Word game and anagram dictionary tools"
+ },
+ {
+  "id": 34,
+  "kind": "mmlu",
+  "item": "electrical_engineering",
+  "name": "Mobile devices, electronics and technical products"
+ },
+ {
+  "id": 35,
+  "kind": "exams_tr",
+  "item": "Business",
+  "name": "Workplace management and professional development"
+ },
+ {
+  "id": 36,
+  "kind": "exams_tr",
+  "item": "Geography",
+  "name": "Economies, growth and economic policy"
+ },
+ {
+  "id": 37,
+  "kind": "mmlu",
+  "item": "human_sexuality",
+  "name": "Psychology, relationships and self-help"
+ },
+ {
+  "id": 38,
+  "kind": "mmlu",
+  "item": "international_law",
+  "name": "Courts, lawyers and legal procedure"
+ },
+ {
+  "id": 39,
+  "kind": "mmlu",
+  "item": "high_school_chemistry",
+  "name": "Molecular biology, genomics and cancer research"
+ },
+ {
+  "id": 40,
+  "kind": "source",
+  "item": "tatsu-lab__alpaca",
+  "name": "Psychology, relationships and self-help"
+ },
+ {
+  "id": 41,
+  "kind": "mmlu",
+  "item": "world_religions",
+  "name": "Middle East politics, conflict and religion"
+ },
+ {
+  "id": 42,
+  "kind": "mmlu",
+  "item": "high_school_government_and_politics",
+  "name": "Local news about ballots, vote counts and voting procedures"
+ },
+ {
+  "id": 43,
+  "kind": "mmlu",
+  "item": "astronomy",
+  "name": "Astronomy, asteroids and space missions"
+ },
+ {
+  "id": 44,
+  "kind": "mmlu",
+  "item": "electrical_engineering",
+  "name": "Motors, power electronics and controllers"
+ },
+ {
+  "id": 45,
+  "kind": "mmlu_pro",
+  "item": "business",
+  "name": "Money arithmetic word problems"
+ },
+ {
+  "id": 46,
+  "kind": "mmlu",
+  "item": "high_school_physics",
+  "name": "Theoretical physics models and phase transitions"
+ },
+ {
+  "id": 47,
+  "kind": "mmlu",
+  "item": "high_school_mathematics",
+  "name": "Banking, loans and retail finance"
+ },
+ {
+  "id": 48,
+  "kind": "source",
+  "item": "lex_glue__scotus",
+  "name": "Court opinions, appeals and case law"
+ },
+ {
+  "id": 49,
+  "kind": "mmlu",
+  "item": "high_school_chemistry",
+  "name": "Chemical compounds, acids and natural ingredients"
+ },
+ {
+  "id": 50,
+  "kind": "source",
+  "item": "commitpackft__c",
+  "name": "Code review and algorithm optimization questions"
+ },
+ {
+  "id": 51,
+  "kind": "mmlu",
+  "item": "high_school_us_history",
+  "name": "Human rights, democracy and governance"
+ },
+ {
+  "id": 52,
+  "kind": "source",
+  "item": "iamtarun__python_code_instructions_18k_alpaca",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 53,
+  "kind": "mmlu",
+  "item": "machine_learning",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 54,
+  "kind": "mmlu",
+  "item": "miscellaneous",
+  "name": "Film, music and celebrity encyclopedia entries"
+ },
+ {
+  "id": 55,
+  "kind": "mmlu",
+  "item": "human_sexuality",
+  "name": "Articles about menstrual and reproductive health"
+ },
+ {
+  "id": 56,
+  "kind": "exams_tr",
+  "item": "Philosophy",
+  "name": "Philosophy, ideas and the humanities"
+ },
+ {
+  "id": 57,
+  "kind": "source",
+  "item": "winddude__reddit_finance_43_250k",
+  "name": "Stock markets, interest rates and market reports"
+ },
+ {
+  "id": 58,
+  "kind": "mmlu",
+  "item": "professional_psychology",
+  "name": "Behavioral psychology intervention studies"
+ },
+ {
+  "id": 59,
+  "kind": "mmlu",
+  "item": "public_relations",
+  "name": "Psychology, relationships and self-help"
+ },
+ {
+  "id": 60,
+  "kind": "mmlu_pro",
+  "item": "economics",
+  "name": "Macroeconomics, markets and central banks"
+ },
+ {
+  "id": 61,
+  "kind": "source",
+  "item": "lex_glue__unfair_tos",
+  "name": "Website terms and conditions boilerplate"
+ },
+ {
+  "id": 62,
+  "kind": "mmlu",
+  "item": "logical_fallacies",
+  "name": "Self-help, advice and personal reflection"
+ },
+ {
+  "id": 63,
+  "kind": "mmlu",
+  "item": "sociology",
+  "name": "Psychology, relationships and self-help"
+ },
+ {
+  "id": 64,
+  "kind": "source",
+  "item": "lex_glue__eurlex",
+  "name": "Commission regulations on export refunds and prices"
+ },
+ {
+  "id": 65,
+  "kind": "mmlu",
+  "item": "professional_psychology",
+  "name": "Research methods, studies and academic assessment"
+ },
+ {
+  "id": 66,
+  "kind": "mmlu",
+  "item": "high_school_physics",
+  "name": "Fluid dynamics and motion physics research"
+ },
+ {
+  "id": 67,
+  "kind": "mmlu",
+  "item": "us_foreign_policy",
+  "name": "Human rights, democracy and governance"
+ },
+ {
+  "id": 68,
+  "kind": "source",
+  "item": "allenai__c4__en",
+  "name": "Music, film and celebrity biographies"
+ },
+ {
+  "id": 69,
+  "kind": "mmlu",
+  "item": "abstract_algebra",
+  "name": "Papers about mathematical functions and equations"
+ },
+ {
+  "id": 70,
+  "kind": "source",
+  "item": "commitpackft__javascript",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 71,
+  "kind": "mmlu_pro",
+  "item": "chemistry",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 72,
+  "kind": "mmlu",
+  "item": "management",
+  "name": "Innovation, sustainable development and partnerships"
+ },
+ {
+  "id": 73,
+  "kind": "source",
+  "item": "proof-pile-2__arxiv",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 74,
+  "kind": "mmlu_pro",
+  "item": "chemistry",
+  "name": "Mobile devices, electronics and technical products"
+ },
+ {
+  "id": 75,
+  "kind": "mmlu",
+  "item": "high_school_geography",
+  "name": "European Union politics, economics and public policy"
+ },
+ {
+  "id": 76,
+  "kind": "source",
+  "item": "commitpackft__php",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 77,
+  "kind": "mmlu",
+  "item": "high_school_mathematics",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 78,
+  "kind": "source",
+  "item": "lex_glue__unfair_tos",
+  "name": "Statutes, court rulings and legal proceedings"
+ },
+ {
+  "id": 79,
+  "kind": "mmlu",
+  "item": "international_law",
+  "name": "Articles explaining legal theory and principles"
+ },
+ {
+  "id": 80,
+  "kind": "mmlu_pro",
+  "item": "economics",
+  "name": "News articles about inflation and consumer prices"
+ },
+ {
+  "id": 81,
+  "kind": "mmlu",
+  "item": "high_school_european_history",
+  "name": "Human rights, democracy and governance"
+ },
+ {
+  "id": 82,
+  "kind": "mmlu_pro",
+  "item": "history",
+  "name": "Human rights, democracy and governance"
+ },
+ {
+  "id": 83,
+  "kind": "source",
+  "item": "commitpackft__go",
+  "name": "Windows, servers and software administration"
+ },
+ {
+  "id": 84,
+  "kind": "source",
+  "item": "BEE-spoke-data__peS2o-100k_en-xlong",
+  "name": "Cell biology, proteins and immunology"
+ },
+ {
+  "id": 85,
+  "kind": "mmlu",
+  "item": "clinical_knowledge",
+  "name": "Molecular biology, genomics and cancer research"
+ },
+ {
+  "id": 86,
+  "kind": "source",
+  "item": "openai__gsm8k__main",
+  "name": "Money arithmetic word problems"
+ },
+ {
+  "id": 87,
+  "kind": "mmlu_pro",
+  "item": "physics",
+  "name": "Mobile devices, electronics and technical products"
+ },
+ {
+  "id": 88,
+  "kind": "source",
+  "item": "lex_glue__ledgar",
+  "name": "Statutes, decrees and official gazettes"
+ },
+ {
+  "id": 89,
+  "kind": "mmlu_pro",
+  "item": "psychology",
+  "name": "Mental health, stress and emotional wellbeing"
+ },
+ {
+  "id": 90,
+  "kind": "mmlu",
+  "item": "college_biology",
+  "name": "Molecular biology, genomics and cancer research"
+ },
+ {
+  "id": 91,
+  "kind": "source",
+  "item": "rajpurkar__squad",
+  "name": "Human rights, democracy and governance"
+ },
+ {
+  "id": 92,
+  "kind": "mmlu",
+  "item": "high_school_microeconomics",
+  "name": "Macroeconomics, markets and central banks"
+ },
+ {
+  "id": 93,
+  "kind": "source",
+  "item": "databricksbricks-dolly-15k",
+  "name": "US pro sports, coaches and draft news"
+ },
+ {
+  "id": 94,
+  "kind": "mmlu",
+  "item": "professional_law",
+  "name": "News articles about US federal courts and rulings"
+ },
+ {
+  "id": 95,
+  "kind": "source",
+  "item": "hendrycks_math__geometry",
+  "name": "Banking, loans and retail finance"
+ },
+ {
+  "id": 96,
+  "kind": "mmlu",
+  "item": "human_aging",
+  "name": "Research articles about children's development by age"
+ },
+ {
+  "id": 97,
+  "kind": "mmlu",
+  "item": "high_school_us_history",
+  "name": "Articles about the US Constitution and constitutional rights"
+ },
+ {
+  "id": 98,
+  "kind": "mmlu",
+  "item": "electrical_engineering",
+  "name": "Voltage and power supply circuit articles"
+ },
+ {
+  "id": 99,
+  "kind": "source",
+  "item": "allenai__c4__multilingual",
+  "name": "Court records, web pages and digitised books"
+ },
+ {
+  "id": 100,
+  "kind": "source",
+  "item": "open-web-math__open-web-math",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 101,
+  "kind": "source",
+  "item": "mcemilg__news-cat",
+  "name": "Football coverage of Turkey's Süper Lig clubs"
+ },
+ {
+  "id": 102,
+  "kind": "mmlu",
+  "item": "high_school_world_history",
+  "name": "Historical writings about government and political power"
+ },
+ {
+  "id": 103,
+  "kind": "mmlu",
+  "item": "computer_security",
+  "name": "Windows, consumer devices and system support"
+ },
+ {
+  "id": 104,
+  "kind": "mmlu",
+  "item": "college_medicine",
+  "name": "Molecular biology, genomics and cancer research"
+ },
+ {
+  "id": 105,
+  "kind": "mmlu",
+  "item": "anatomy",
+  "name": "Orthopedic fracture and spinal surgery research"
+ },
+ {
+  "id": 106,
+  "kind": "mmlu",
+  "item": "formal_logic",
+  "name": "Papers about mathematical functions and equations"
+ },
+ {
+  "id": 107,
+  "kind": "source",
+  "item": "commitpackft__javascript",
+  "name": "Typed class and API usage code snippets"
+ },
+ {
+  "id": 108,
+  "kind": "exams_tr",
+  "item": "Physics",
+  "name": "Renewable energy, power systems and climate policy"
+ },
+ {
+  "id": 109,
+  "kind": "mmlu",
+  "item": "high_school_biology",
+  "name": "Evolution and Darwinian theory essays"
+ },
+ {
+  "id": 110,
+  "kind": "source",
+  "item": "commitpackft__rust",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 111,
+  "kind": "source",
+  "item": "qiaojin__PubMedQA__pqa_artificial",
+  "name": "Cell biology, proteins and immunology"
+ },
+ {
+  "id": 112,
+  "kind": "mmlu",
+  "item": "high_school_microeconomics",
+  "name": "News articles about inflation and consumer prices"
+ },
+ {
+  "id": 113,
+  "kind": "source",
+  "item": "Anthropic__hh-rlhf",
+  "name": "NLI premise-hypothesis pairs about people observing others"
+ },
+ {
+  "id": 114,
+  "kind": "source",
+  "item": "mcemilg__news-cat",
+  "name": "Football leagues, transfers and player careers"
+ },
+ {
+  "id": 115,
+  "kind": "source",
+  "item": "tatsu-lab__alpaca",
+  "name": "Languages, linguistics and language learning"
+ },
+ {
+  "id": 116,
+  "kind": "mmlu",
+  "item": "global_facts",
+  "name": "Macroeconomics, markets and central banks"
+ },
+ {
+  "id": 117,
+  "kind": "mmlu",
+  "item": "econometrics",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 118,
+  "kind": "source",
+  "item": "openai__gsm8k__main",
+  "name": "Word problems about total cost and discounts"
+ },
+ {
+  "id": 119,
+  "kind": "source",
+  "item": "motherduckdb__duckdb-text2sql-25k",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 120,
+  "kind": "source",
+  "item": "commitpackft__java",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 121,
+  "kind": "mmlu",
+  "item": "medical_genetics",
+  "name": "Genetics and gene expression educational essays"
+ },
+ {
+  "id": 122,
+  "kind": "source",
+  "item": "finemath__finemath-3plus",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 123,
+  "kind": "mmlu",
+  "item": "virology",
+  "name": "Diseases, symptoms and clinical care"
+ },
+ {
+  "id": 124,
+  "kind": "source",
+  "item": "BEE-spoke-data__peS2o-100k_en-xlong",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 125,
+  "kind": "source",
+  "item": "xlcost-text-to-code__Python",
+  "name": "Product listings spanning cosmetics, livestock and lab gear"
+ },
+ {
+  "id": 126,
+  "kind": "source",
+  "item": "OpenAssistant__oasst1",
+  "name": "Machine-learning, statistics and computer science papers"
+ },
+ {
+  "id": 127,
+  "kind": "exams_tr",
+  "item": "Philosophy",
+  "name": "Philosophy, ethics and intellectual history"
+ },
+ {
+  "id": 128,
+  "kind": "mmlu_pro",
+  "item": "computer science",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 129,
+  "kind": "source",
+  "item": "openbmb__UltraFeedback",
+  "name": "Nonsensical-sentence and paraphrase-identification training prompts"
+ },
+ {
+  "id": 130,
+  "kind": "source",
+  "item": "gbharti__finance-alpaca",
+  "name": "Taxes, debt and personal finance"
+ },
+ {
+  "id": 131,
+  "kind": "mmlu",
+  "item": "nutrition",
+  "name": "Articles about vitamin and multivitamin supplements"
+ },
+ {
+  "id": 132,
+  "kind": "mmlu_pro",
+  "item": "history",
+  "name": "Political theory, democracy and international affairs"
+ },
+ {
+  "id": 133,
+  "kind": "exams_tr",
+  "item": "Business",
+  "name": "Compliance and operations management consulting"
+ },
+ {
+  "id": 134,
+  "kind": "mmlu",
+  "item": "abstract_algebra",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 135,
+  "kind": "mmlu_pro",
+  "item": "law",
+  "name": "Courts, lawyers and legal procedure"
+ },
+ {
+  "id": 136,
+  "kind": "mmlu",
+  "item": "high_school_microeconomics",
+  "name": "Stock markets, interest rates and market reports"
+ },
+ {
+  "id": 137,
+  "kind": "mmlu",
+  "item": "high_school_statistics",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 138,
+  "kind": "source",
+  "item": "proof-pile-2__arxiv",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 139,
+  "kind": "mmlu_pro",
+  "item": "business",
+  "name": "Cost comparison and price calculation articles"
+ },
+ {
+  "id": 140,
+  "kind": "mmlu",
+  "item": "college_physics",
+  "name": "Quantum physics, optics and nanomaterials"
+ },
+ {
+  "id": 141,
+  "kind": "source",
+  "item": "OpenAssistant__oasst1",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 142,
+  "kind": "source",
+  "item": "xlcost-text-to-code__Python",
+  "name": "Product listings, sizes and shopping-cart pages"
+ },
+ {
+  "id": 143,
+  "kind": "mmlu",
+  "item": "anatomy",
+  "name": "Molecular biology, genomics and cancer research"
+ },
+ {
+  "id": 144,
+  "kind": "mmlu",
+  "item": "security_studies",
+  "name": "Political theory, democracy and international affairs"
+ },
+ {
+  "id": 145,
+  "kind": "mmlu",
+  "item": "professional_medicine",
+  "name": "Digestive and urinary tract disorder articles"
+ },
+ {
+  "id": 146,
+  "kind": "source",
+  "item": "commitpackft__c",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 147,
+  "kind": "source",
+  "item": "lex_glue__ecthr_a",
+  "name": "Appellate opinions on civil judgments and procedural motions"
+ },
+ {
+  "id": 148,
+  "kind": "mmlu",
+  "item": "clinical_knowledge",
+  "name": "Symptoms, illnesses and medication side effects"
+ },
+ {
+  "id": 149,
+  "kind": "mmlu",
+  "item": "high_school_european_history",
+  "name": "Historical writings about government and political power"
+ },
+ {
+  "id": 150,
+  "kind": "mmlu_pro",
+  "item": "math",
+  "name": "Mobile devices, electronics and technical products"
+ },
+ {
+  "id": 151,
+  "kind": "mmlu",
+  "item": "moral_scenarios",
+  "name": "Personal feelings, grief and confessional writing"
+ },
+ {
+  "id": 152,
+  "kind": "mmlu_pro",
+  "item": "law",
+  "name": "Criminal appeal opinions addressing trial evidence errors"
+ },
+ {
+  "id": 153,
+  "kind": "mmlu",
+  "item": "formal_logic",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 154,
+  "kind": "source",
+  "item": "CShorten__ML-ArXiv-Papers",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 155,
+  "kind": "mmlu",
+  "item": "college_physics",
+  "name": "Atomic structure and chemistry explainers"
+ },
+ {
+  "id": 156,
+  "kind": "mmlu",
+  "item": "conceptual_physics",
+  "name": "Quantum physics, optics and nanomaterials"
+ },
+ {
+  "id": 157,
+  "kind": "source",
+  "item": "commitpackft__ruby",
+  "name": "React and Ruby package installation snippets"
+ },
+ {
+  "id": 158,
+  "kind": "source",
+  "item": "turkish-nlp-suite__InstrucTurca",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 159,
+  "kind": "mmlu",
+  "item": "high_school_government_and_politics",
+  "name": "Elections, voting and ballots"
+ },
+ {
+  "id": 160,
+  "kind": "source",
+  "item": "no_robots",
+  "name": "Personal blog poetry about dreams and emotions"
+ },
+ {
+  "id": 161,
+  "kind": "mmlu",
+  "item": "abstract_algebra",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 162,
+  "kind": "source",
+  "item": "stack-exchange-preferences",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 163,
+  "kind": "mmlu",
+  "item": "international_law",
+  "name": "Statutes, court rulings and legal proceedings"
+ },
+ {
+  "id": 164,
+  "kind": "source",
+  "item": "lex_glue__ledgar",
+  "name": "Consumer contract terms and conditions notices"
+ },
+ {
+  "id": 165,
+  "kind": "source",
+  "item": "commitpackft__rust",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 166,
+  "kind": "exams_tr",
+  "item": "Geography",
+  "name": "Essays and articles about urbanization and smart cities"
+ },
+ {
+  "id": 167,
+  "kind": "mmlu",
+  "item": "machine_learning",
+  "name": "Papers about mathematical functions and equations"
+ },
+ {
+  "id": 168,
+  "kind": "source",
+  "item": "allenai__c4__en",
+  "name": "Marketing copy for landscaping and home-renovation trades"
+ },
+ {
+  "id": 169,
+  "kind": "source",
+  "item": "proof-pile-2__arxiv",
+  "name": "Research abstracts about differential equations and operator theory"
+ },
+ {
+  "id": 170,
+  "kind": "exams_tr",
+  "item": "History",
+  "name": "Middle East politics, conflict and religion"
+ },
+ {
+  "id": 171,
+  "kind": "source",
+  "item": "commitpackft__javascript",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 172,
+  "kind": "mmlu",
+  "item": "medical_genetics",
+  "name": "Cell biology, proteins and immunology"
+ },
+ {
+  "id": 173,
+  "kind": "source",
+  "item": "open-web-math__open-web-math",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 174,
+  "kind": "source",
+  "item": "databricksbricks-dolly-15k",
+  "name": "Musical instrument description pages"
+ },
+ {
+  "id": 175,
+  "kind": "mmlu",
+  "item": "high_school_biology",
+  "name": "Genetics, genomics and biotechnology"
+ },
+ {
+  "id": 176,
+  "kind": "mmlu",
+  "item": "college_chemistry",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 177,
+  "kind": "source",
+  "item": "winddude__reddit_finance_43_250k",
+  "name": "Articles about saving money and personal budgeting"
+ },
+ {
+  "id": 178,
+  "kind": "exams_tr",
+  "item": "Biology",
+  "name": "Molecular biology, genomics and cancer research"
+ },
+ {
+  "id": 179,
+  "kind": "mmlu",
+  "item": "college_computer_science",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 180,
+  "kind": "source",
+  "item": "open-web-math__open-web-math",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 181,
+  "kind": "source",
+  "item": "hendrycks_math__number_theory",
+  "name": "Banking, loans and retail finance"
+ },
+ {
+  "id": 182,
+  "kind": "mmlu",
+  "item": "marketing",
+  "name": "Content and inbound marketing articles"
+ },
+ {
+  "id": 183,
+  "kind": "mmlu",
+  "item": "philosophy",
+  "name": "Philosophy, ethics and intellectual history"
+ },
+ {
+  "id": 184,
+  "kind": "mmlu",
+  "item": "college_medicine",
+  "name": "Cell biology, proteins and immunology"
+ },
+ {
+  "id": 185,
+  "kind": "mmlu",
+  "item": "high_school_macroeconomics",
+  "name": "News articles about inflation and consumer prices"
+ },
+ {
+  "id": 186,
+  "kind": "source",
+  "item": "BEE-spoke-data__peS2o-100k_en-xlong",
+  "name": "Research abstracts about cohort studies and disease risk factors"
+ },
+ {
+  "id": 187,
+  "kind": "source",
+  "item": "gbharti__finance-alpaca",
+  "name": "Loans, credit cards and personal payments"
+ },
+ {
+  "id": 188,
+  "kind": "mmlu",
+  "item": "us_foreign_policy",
+  "name": "Academic articles about governance and political science theory"
+ },
+ {
+  "id": 189,
+  "kind": "mmlu_pro",
+  "item": "computer science",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 190,
+  "kind": "mmlu",
+  "item": "medical_genetics",
+  "name": "Molecular biology, genomics and cancer research"
+ },
+ {
+  "id": 191,
+  "kind": "mmlu",
+  "item": "professional_accounting",
+  "name": "Accounting firms, careers and assignment help"
+ },
+ {
+  "id": 192,
+  "kind": "source",
+  "item": "lex_glue__unfair_tos",
+  "name": "Privacy policies and data protection notices"
+ },
+ {
+  "id": 193,
+  "kind": "source",
+  "item": "lex_glue__scotus",
+  "name": "Courts, criminal cases and United States history"
+ },
+ {
+  "id": 194,
+  "kind": "mmlu_pro",
+  "item": "physics",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 195,
+  "kind": "mmlu",
+  "item": "high_school_european_history",
+  "name": "Political theory, democracy and international affairs"
+ },
+ {
+  "id": 196,
+  "kind": "source",
+  "item": "deepmind__aqua_rat__raw",
+  "name": "Money arithmetic word problems"
+ },
+ {
+  "id": 197,
+  "kind": "mmlu",
+  "item": "management",
+  "name": "Sentence-rewriting prompts about workers and labor"
+ },
+ {
+  "id": 198,
+  "kind": "source",
+  "item": "b-mc2__sql-create-context",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 199,
+  "kind": "mmlu",
+  "item": "high_school_computer_science",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 200,
+  "kind": "source",
+  "item": "hendrycks_math__number_theory",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 201,
+  "kind": "mmlu",
+  "item": "college_mathematics",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 202,
+  "kind": "mmlu",
+  "item": "computer_security",
+  "name": "Cybersecurity, malware and data breaches"
+ },
+ {
+  "id": 203,
+  "kind": "source",
+  "item": "finemath__finemath-3plus",
+  "name": "Programming puzzles about number sequences and algorithms"
+ },
+ {
+  "id": 204,
+  "kind": "source",
+  "item": "openbmb__UltraFeedback",
+  "name": "Psychology, relationships and self-help"
+ },
+ {
+  "id": 205,
+  "kind": "mmlu",
+  "item": "elementary_mathematics",
+  "name": "Banking, loans and retail finance"
+ },
+ {
+  "id": 206,
+  "kind": "mmlu",
+  "item": "elementary_mathematics",
+  "name": "Multiple-choice aptitude-test math problems"
+ },
+ {
+  "id": 207,
+  "kind": "source",
+  "item": "stack-exchange-preferences",
+  "name": "Shell scripting and file-manipulation Q&A"
+ },
+ {
+  "id": 208,
+  "kind": "mmlu_pro",
+  "item": "physics",
+  "name": "Programming puzzles about number sequences and algorithms"
+ },
+ {
+  "id": 209,
+  "kind": "mmlu",
+  "item": "sociology",
+  "name": "Research methods, studies and academic assessment"
+ },
+ {
+  "id": 210,
+  "kind": "mmlu",
+  "item": "us_foreign_policy",
+  "name": "Russia, Ukraine and international politics"
+ },
+ {
+  "id": 211,
+  "kind": "mmlu",
+  "item": "computer_security",
+  "name": "Encryption and cryptography Q&A"
+ },
+ {
+  "id": 212,
+  "kind": "mmlu",
+  "item": "logical_fallacies",
+  "name": "Criminal charges, trials and prosecutions"
+ },
+ {
+  "id": 213,
+  "kind": "source",
+  "item": "ultrachat_200k",
+  "name": "Psychology, relationships and self-help"
+ },
+ {
+  "id": 214,
+  "kind": "source",
+  "item": "allenai__c4__en",
+  "name": "Club notices, recurring meetups and invitations"
+ },
+ {
+  "id": 215,
+  "kind": "source",
+  "item": "commitpackft__python",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 216,
+  "kind": "exams_tr",
+  "item": "Chemistry",
+  "name": "Quantum physics, optics and nanomaterials"
+ },
+ {
+  "id": 217,
+  "kind": "mmlu",
+  "item": "marketing",
+  "name": "Digital marketing and advertising agencies"
+ },
+ {
+  "id": 218,
+  "kind": "mmlu",
+  "item": "marketing",
+  "name": "Retail sales, products and order fulfillment"
+ },
+ {
+  "id": 219,
+  "kind": "exams_tr",
+  "item": "Philosophy",
+  "name": "Philosopher biography encyclopedia stubs"
+ },
+ {
+  "id": 220,
+  "kind": "source",
+  "item": "rajpurkar__squad",
+  "name": "Judaism religion and culture articles"
+ },
+ {
+  "id": 221,
+  "kind": "source",
+  "item": "nvidia__OpenMathInstruct-2",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 222,
+  "kind": "mmlu",
+  "item": "clinical_knowledge",
+  "name": "Digestive and urinary tract disorder articles"
+ },
+ {
+  "id": 223,
+  "kind": "source",
+  "item": "codeparrot-clean-valid",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 224,
+  "kind": "source",
+  "item": "lex_glue__ecthr_a",
+  "name": "Court opinions, appeals and case law"
+ },
+ {
+  "id": 225,
+  "kind": "source",
+  "item": "codecomplete__starcoderdata_0.003",
+  "name": "Typed class and API usage code snippets"
+ },
+ {
+  "id": 226,
+  "kind": "mmlu",
+  "item": "nutrition",
+  "name": "Nutrition, dieting and metabolic health"
+ },
+ {
+  "id": 227,
+  "kind": "mmlu",
+  "item": "philosophy",
+  "name": "Ethics and morality philosophy essays"
+ },
+ {
+  "id": 228,
+  "kind": "source",
+  "item": "commitpackft__java",
+  "name": "Typed class and API usage code snippets"
+ },
+ {
+  "id": 229,
+  "kind": "mmlu_pro",
+  "item": "psychology",
+  "name": "Mental health, counseling and wellbeing"
+ },
+ {
+  "id": 230,
+  "kind": "source",
+  "item": "TFLai__Turkish-Alpaca",
+  "name": "Psychology, relationships and self-help"
+ },
+ {
+  "id": 231,
+  "kind": "source",
+  "item": "motherduckdb__duckdb-text2sql-25k",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 232,
+  "kind": "mmlu",
+  "item": "high_school_physics",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 233,
+  "kind": "mmlu",
+  "item": "college_mathematics",
+  "name": "Forum questions and tutorials about geometry and equations"
+ },
+ {
+  "id": 234,
+  "kind": "source",
+  "item": "b-mc2__sql-create-context",
+  "name": "Programming puzzles about number sequences and algorithms"
+ },
+ {
+  "id": 235,
+  "kind": "mmlu_pro",
+  "item": "math",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 236,
+  "kind": "mmlu",
+  "item": "elementary_mathematics",
+  "name": "Money arithmetic word problems"
+ },
+ {
+  "id": 237,
+  "kind": "source",
+  "item": "hendrycks_math__number_theory",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 238,
+  "kind": "mmlu_pro",
+  "item": "chemistry",
+  "name": "Programming puzzles about number sequences and algorithms"
+ },
+ {
+  "id": 239,
+  "kind": "mmlu",
+  "item": "sociology",
+  "name": "Sociology and social science explainer articles"
+ },
+ {
+  "id": 240,
+  "kind": "exams_tr",
+  "item": "Physics",
+  "name": "Specification listings for industrial machinery and equipment"
+ },
+ {
+  "id": 241,
+  "kind": "mmlu_pro",
+  "item": "math",
+  "name": "Programming puzzles about number sequences and algorithms"
+ },
+ {
+  "id": 242,
+  "kind": "source",
+  "item": "hendrycks_math__algebra",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 243,
+  "kind": "source",
+  "item": "CShorten__ML-ArXiv-Papers",
+  "name": "Deep and convolutional neural network papers"
+ },
+ {
+  "id": 244,
+  "kind": "mmlu",
+  "item": "professional_medicine",
+  "name": "Symptoms, illnesses and medication side effects"
+ },
+ {
+  "id": 245,
+  "kind": "source",
+  "item": "TFLai__Turkish-Alpaca",
+  "name": "Sentence-rewriting prompts about behavior and descriptive facts"
+ },
+ {
+  "id": 246,
+  "kind": "source",
+  "item": "commitpackft__php",
+  "name": "Typed class and API usage code snippets"
+ },
+ {
+  "id": 247,
+  "kind": "mmlu",
+  "item": "high_school_psychology",
+  "name": "Cognitive psychology and neuroscience articles"
+ },
+ {
+  "id": 248,
+  "kind": "mmlu",
+  "item": "human_aging",
+  "name": "Mental health, counseling and wellbeing"
+ },
+ {
+  "id": 249,
+  "kind": "mmlu",
+  "item": "public_relations",
+  "name": "Descriptions of nonprofit and international organizations"
+ },
+ {
+  "id": 250,
+  "kind": "source",
+  "item": "xlangai__spider",
+  "name": "Names and entries starting with T"
+ },
+ {
+  "id": 251,
+  "kind": "source",
+  "item": "commitpackft__python",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 252,
+  "kind": "mmlu",
+  "item": "miscellaneous",
+  "name": "Music, film and celebrity biographies"
+ },
+ {
+  "id": 253,
+  "kind": "mmlu",
+  "item": "high_school_psychology",
+  "name": "Mental health, stress and emotional wellbeing"
+ },
+ {
+  "id": 254,
+  "kind": "exams_tr",
+  "item": "Sociology",
+  "name": "Sociology and social science explainer articles"
+ },
+ {
+  "id": 255,
+  "kind": "mmlu",
+  "item": "high_school_world_history",
+  "name": "Political theory, democracy and international affairs"
+ },
+ {
+  "id": 256,
+  "kind": "mmlu",
+  "item": "professional_medicine",
+  "name": "Diseases, symptoms and clinical care"
+ },
+ {
+  "id": 257,
+  "kind": "source",
+  "item": "allenai__c4__multilingual",
+  "name": "Local news articles and personal blog posts"
+ },
+ {
+  "id": 258,
+  "kind": "mmlu_pro",
+  "item": "philosophy",
+  "name": "Philosophy, ethics and intellectual history"
+ },
+ {
+  "id": 259,
+  "kind": "source",
+  "item": "commitpackft__go",
+  "name": "Code review and algorithm optimization questions"
+ },
+ {
+  "id": 260,
+  "kind": "mmlu",
+  "item": "high_school_biology",
+  "name": "Molecular biology, genomics and cancer research"
+ },
+ {
+  "id": 261,
+  "kind": "source",
+  "item": "nvidia__HelpSteer2",
+  "name": "Machine-learning, statistics and computer science papers"
+ },
+ {
+  "id": 262,
+  "kind": "exams_tr",
+  "item": "Business",
+  "name": "Corporate finance, investment and asset management"
+ },
+ {
+  "id": 263,
+  "kind": "mmlu_pro",
+  "item": "philosophy",
+  "name": "Philosophy, ideas and the humanities"
+ },
+ {
+  "id": 264,
+  "kind": "mmlu",
+  "item": "high_school_world_history",
+  "name": "Human rights, democracy and governance"
+ },
+ {
+  "id": 265,
+  "kind": "mmlu",
+  "item": "professional_accounting",
+  "name": "Banking, loans and retail finance"
+ },
+ {
+  "id": 266,
+  "kind": "source",
+  "item": "qiaojin__PubMedQA__pqa_artificial",
+  "name": "Research abstracts about cardiovascular and heart disease"
+ },
+ {
+  "id": 267,
+  "kind": "mmlu",
+  "item": "global_facts",
+  "name": "Economies, growth and economic policy"
+ },
+ {
+  "id": 268,
+  "kind": "source",
+  "item": "codecomplete__starcoderdata_0.003",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 269,
+  "kind": "mmlu_pro",
+  "item": "computer science",
+  "name": "Programming puzzles about number sequences and algorithms"
+ },
+ {
+  "id": 270,
+  "kind": "source",
+  "item": "microsoft__orca-math-word-problems-200k",
+  "name": "Banking, loans and retail finance"
+ },
+ {
+  "id": 271,
+  "kind": "source",
+  "item": "TFLai__Turkish-Alpaca",
+  "name": "Artificial intelligence, robotics and technology"
+ },
+ {
+  "id": 272,
+  "kind": "mmlu_pro",
+  "item": "engineering",
+  "name": "Specification listings for industrial machinery and equipment"
+ },
+ {
+  "id": 273,
+  "kind": "mmlu_pro",
+  "item": "economics",
+  "name": "Stock markets, interest rates and market reports"
+ },
+ {
+  "id": 274,
+  "kind": "mmlu",
+  "item": "college_computer_science",
+  "name": "Lessons about numbers, integers and number theory"
+ },
+ {
+  "id": 275,
+  "kind": "mmlu",
+  "item": "prehistory",
+  "name": "Human biology and behavior essays"
+ },
+ {
+  "id": 276,
+  "kind": "source",
+  "item": "lex_glue__eurlex",
+  "name": "EU regulations setting agricultural export refund rates"
+ },
+ {
+  "id": 277,
+  "kind": "mmlu_pro",
+  "item": "engineering",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 278,
+  "kind": "source",
+  "item": "finemath__finemath-3plus",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 279,
+  "kind": "mmlu",
+  "item": "econometrics",
+  "name": "Machine-learning, statistics and computer science papers"
+ },
+ {
+  "id": 280,
+  "kind": "mmlu_pro",
+  "item": "health",
+  "name": "Cardiovascular and blood vessel anatomy articles"
+ },
+ {
+  "id": 281,
+  "kind": "mmlu",
+  "item": "machine_learning",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 282,
+  "kind": "source",
+  "item": "no_robots",
+  "name": "Music, film and celebrity biographies"
+ },
+ {
+  "id": 283,
+  "kind": "mmlu",
+  "item": "high_school_statistics",
+  "name": "Machine-learning, statistics and computer science papers"
+ },
+ {
+  "id": 284,
+  "kind": "source",
+  "item": "allenai__c4__multilingual",
+  "name": "Forums, commentary and mixed web content"
+ },
+ {
+  "id": 285,
+  "kind": "source",
+  "item": "commitpackft__ruby",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 286,
+  "kind": "mmlu",
+  "item": "virology",
+  "name": "Virus biology and scientific research articles"
+ },
+ {
+  "id": 287,
+  "kind": "source",
+  "item": "nvidia__HelpSteer2",
+  "name": "Psychology, relationships and self-help"
+ },
+ {
+  "id": 288,
+  "kind": "mmlu",
+  "item": "world_religions",
+  "name": "India, Hindu culture and Indian places"
+ },
+ {
+  "id": 289,
+  "kind": "mmlu",
+  "item": "high_school_geography",
+  "name": "Human rights, democracy and governance"
+ },
+ {
+  "id": 290,
+  "kind": "exams_tr",
+  "item": "Chemistry",
+  "name": "Atomic structure and chemistry explainers"
+ },
+ {
+  "id": 291,
+  "kind": "mmlu_pro",
+  "item": "business",
+  "name": "Banking, loans and retail finance"
+ },
+ {
+  "id": 292,
+  "kind": "source",
+  "item": "codeparrot-clean-valid",
+  "name": "Code review and algorithm optimization questions"
+ },
+ {
+  "id": 293,
+  "kind": "source",
+  "item": "nvidia__OpenMathInstruct-2",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 294,
+  "kind": "source",
+  "item": "mcemilg__news-cat",
+  "name": "Football leagues, cups and match previews"
+ },
+ {
+  "id": 295,
+  "kind": "source",
+  "item": "gbharti__finance-alpaca",
+  "name": "Articles about stock investment strategy and ETFs"
+ },
+ {
+  "id": 296,
+  "kind": "source",
+  "item": "commitpackft__rust",
+  "name": "String and character-handling programming Q&A"
+ },
+ {
+  "id": 297,
+  "kind": "mmlu",
+  "item": "moral_scenarios",
+  "name": "Casual venting posts about bad days and dating frustration"
+ },
+ {
+  "id": 298,
+  "kind": "mmlu_pro",
+  "item": "other",
+  "name": "Banking, loans and retail finance"
+ },
+ {
+  "id": 299,
+  "kind": "source",
+  "item": "codecomplete__starcoderdata_0.003",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 300,
+  "kind": "source",
+  "item": "turkish-nlp-suite__InstrucTurca",
+  "name": "Multiple-choice aptitude-test math problems"
+ },
+ {
+  "id": 301,
+  "kind": "source",
+  "item": "ultrachat_200k",
+  "name": "Recipes, cooking and home kitchens"
+ },
+ {
+  "id": 302,
+  "kind": "source",
+  "item": "turkish-nlp-suite__InstrucTurca",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 303,
+  "kind": "source",
+  "item": "rajpurkar__squad",
+  "name": "Historical events, places and military heritage"
+ },
+ {
+  "id": 304,
+  "kind": "source",
+  "item": "databricksbricks-dolly-15k",
+  "name": "Music, film and celebrity biographies"
+ },
+ {
+  "id": 305,
+  "kind": "mmlu",
+  "item": "high_school_macroeconomics",
+  "name": "Macroeconomics, markets and central banks"
+ },
+ {
+  "id": 306,
+  "kind": "mmlu",
+  "item": "business_ethics",
+  "name": "Corporate finance, investment and asset management"
+ },
+ {
+  "id": 307,
+  "kind": "exams_tr",
+  "item": "Sociology",
+  "name": "Political theory, democracy and international affairs"
+ },
+ {
+  "id": 308,
+  "kind": "mmlu",
+  "item": "jurisprudence",
+  "name": "Statutes, court rulings and legal proceedings"
+ },
+ {
+  "id": 309,
+  "kind": "mmlu_pro",
+  "item": "biology",
+  "name": "Genetics and gene expression educational essays"
+ },
+ {
+  "id": 310,
+  "kind": "mmlu",
+  "item": "jurisprudence",
+  "name": "Articles explaining legal theory and principles"
+ },
+ {
+  "id": 311,
+  "kind": "source",
+  "item": "qiaojin__PubMedQA__pqa_artificial",
+  "name": "Molecular biology, genomics and cancer research"
+ },
+ {
+  "id": 312,
+  "kind": "mmlu",
+  "item": "high_school_us_history",
+  "name": "Political theory, democracy and international affairs"
+ },
+ {
+  "id": 313,
+  "kind": "mmlu",
+  "item": "professional_law",
+  "name": "Courts, criminal cases and United States history"
+ },
+ {
+  "id": 314,
+  "kind": "exams_tr",
+  "item": "Biology",
+  "name": "Protein-encoding gene description stubs"
+ },
+ {
+  "id": 315,
+  "kind": "mmlu_pro",
+  "item": "biology",
+  "name": "Molecular biology, genomics and cancer research"
+ },
+ {
+  "id": 316,
+  "kind": "mmlu",
+  "item": "college_chemistry",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 317,
+  "kind": "mmlu_pro",
+  "item": "health",
+  "name": "Symptoms, illnesses and medication side effects"
+ },
+ {
+  "id": 318,
+  "kind": "mmlu_pro",
+  "item": "other",
+  "name": "Cost comparison and price calculation articles"
+ },
+ {
+  "id": 319,
+  "kind": "source",
+  "item": "lex_glue__scotus",
+  "name": "Federal appellate opinions in United States v. defendant cases"
+ },
+ {
+  "id": 320,
+  "kind": "source",
+  "item": "stack-exchange-preferences",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 321,
+  "kind": "mmlu_pro",
+  "item": "psychology",
+  "name": "Behavioral psychology intervention studies"
+ },
+ {
+  "id": 322,
+  "kind": "source",
+  "item": "xlangai__spider",
+  "name": "Government regulations, contracts and public records"
+ },
+ {
+  "id": 323,
+  "kind": "source",
+  "item": "iamtarun__python_code_instructions_18k_alpaca",
+  "name": "Tutorials about Python data analysis and visualization"
+ },
+ {
+  "id": 324,
+  "kind": "mmlu",
+  "item": "professional_accounting",
+  "name": "Money arithmetic word problems"
+ },
+ {
+  "id": 325,
+  "kind": "mmlu",
+  "item": "security_studies",
+  "name": "Human rights, democracy and governance"
+ },
+ {
+  "id": 326,
+  "kind": "mmlu",
+  "item": "business_ethics",
+  "name": "Ethics and morality philosophy essays"
+ },
+ {
+  "id": 327,
+  "kind": "source",
+  "item": "deepmind__aqua_rat__raw",
+  "name": "Programming puzzles about number sequences and algorithms"
+ },
+ {
+  "id": 328,
+  "kind": "source",
+  "item": "gretelai__synthetic_text_to_sql",
+  "name": "Court records, web pages and digitised books"
+ },
+ {
+  "id": 329,
+  "kind": "mmlu",
+  "item": "logical_fallacies",
+  "name": "Opinion articles about controversial crime cases and punishment"
+ },
+ {
+  "id": 330,
+  "kind": "mmlu",
+  "item": "college_mathematics",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 331,
+  "kind": "source",
+  "item": "no_robots",
+  "name": "Narrative prose, outdoor stories and memoirs"
+ },
+ {
+  "id": 332,
+  "kind": "source",
+  "item": "commitpackft__shell",
+  "name": "Windows, servers and software administration"
+ },
+ {
+  "id": 333,
+  "kind": "source",
+  "item": "codeparrot-clean-valid",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 334,
+  "kind": "mmlu",
+  "item": "high_school_computer_science",
+  "name": "Web servers, SEO and software troubleshooting"
+ },
+ {
+  "id": 335,
+  "kind": "source",
+  "item": "ultrachat_200k",
+  "name": "Lessons about fiction genres and storytelling"
+ },
+ {
+  "id": 336,
+  "kind": "source",
+  "item": "commitpackft__ruby",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 337,
+  "kind": "mmlu",
+  "item": "college_biology",
+  "name": "Cell biology, proteins and immunology"
+ },
+ {
+  "id": 338,
+  "kind": "source",
+  "item": "deepmind__aqua_rat__raw",
+  "name": "Banking, loans and retail finance"
+ },
+ {
+  "id": 339,
+  "kind": "mmlu",
+  "item": "college_computer_science",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 340,
+  "kind": "mmlu",
+  "item": "professional_law",
+  "name": "Courts, lawyers and legal procedure"
+ },
+ {
+  "id": 341,
+  "kind": "mmlu",
+  "item": "moral_scenarios",
+  "name": "Self-help, advice and personal reflection"
+ },
+ {
+  "id": 342,
+  "kind": "source",
+  "item": "Anthropic__hh-rlhf",
+  "name": "Premise-hypothesis entailment prompts"
+ },
+ {
+  "id": 343,
+  "kind": "mmlu",
+  "item": "professional_psychology",
+  "name": "Mental health, counseling and wellbeing"
+ },
+ {
+  "id": 344,
+  "kind": "mmlu_pro",
+  "item": "history",
+  "name": "Articles about the US Constitution and constitutional rights"
+ },
+ {
+  "id": 345,
+  "kind": "mmlu",
+  "item": "high_school_macroeconomics",
+  "name": "Stock markets, interest rates and market reports"
+ },
+ {
+  "id": 346,
+  "kind": "source",
+  "item": "gretelai__synthetic_text_to_sql",
+  "name": "SQL query and stored-procedure troubleshooting snippets"
+ },
+ {
+  "id": 347,
+  "kind": "source",
+  "item": "OpenAssistant__oasst1",
+  "name": "Python installation and package-import troubleshooting posts"
+ },
+ {
+  "id": 348,
+  "kind": "mmlu",
+  "item": "college_physics",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 349,
+  "kind": "source",
+  "item": "commitpackft__python",
+  "name": "Command-line file and directory management questions"
+ },
+ {
+  "id": 350,
+  "kind": "source",
+  "item": "lex_glue__eurlex",
+  "name": "Government regulations, contracts and public records"
+ },
+ {
+  "id": 351,
+  "kind": "mmlu",
+  "item": "virology",
+  "name": "Infectious disease, vaccines and pandemic news"
+ },
+ {
+  "id": 352,
+  "kind": "mmlu",
+  "item": "jurisprudence",
+  "name": "Courts, lawyers and legal procedure"
+ },
+ {
+  "id": 353,
+  "kind": "exams_tr",
+  "item": "Sociology",
+  "name": "Research methods, studies and academic assessment"
+ },
+ {
+  "id": 354,
+  "kind": "mmlu",
+  "item": "conceptual_physics",
+  "name": "Physics, mathematics and academic research"
+ },
+ {
+  "id": 355,
+  "kind": "source",
+  "item": "Anthropic__hh-rlhf",
+  "name": "Psychology, relationships and self-help"
+ },
+ {
+  "id": 356,
+  "kind": "mmlu_pro",
+  "item": "biology",
+  "name": "Genetics, genomics and biotechnology"
+ },
+ {
+  "id": 357,
+  "kind": "mmlu",
+  "item": "moral_disputes",
+  "name": "Political theory, democracy and international affairs"
+ },
+ {
+  "id": 358,
+  "kind": "mmlu",
+  "item": "astronomy",
+  "name": "Solar system and planet educational essays"
+ },
+ {
+  "id": 359,
+  "kind": "mmlu",
+  "item": "human_sexuality",
+  "name": "Pregnancy, babies and women's health"
+ },
+ {
+  "id": 360,
+  "kind": "mmlu",
+  "item": "conceptual_physics",
+  "name": "Nuclear and neutron physics research"
+ },
+ {
+  "id": 361,
+  "kind": "source",
+  "item": "hendrycks_math__geometry",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 362,
+  "kind": "mmlu",
+  "item": "formal_logic",
+  "name": "Personal blogs, fiction and self-reflection"
+ },
+ {
+  "id": 363,
+  "kind": "mmlu",
+  "item": "moral_disputes",
+  "name": "Ethics and morality philosophy essays"
+ },
+ {
+  "id": 364,
+  "kind": "mmlu",
+  "item": "college_chemistry",
+  "name": "Scientific papers reporting experimental measurements and results"
+ },
+ {
+  "id": 365,
+  "kind": "mmlu_pro",
+  "item": "philosophy",
+  "name": "Ethics and morality philosophy essays"
+ },
+ {
+  "id": 366,
+  "kind": "source",
+  "item": "commitpackft__shell",
+  "name": "Embedded and IoT device setup instructions"
+ },
+ {
+  "id": 367,
+  "kind": "source",
+  "item": "hendrycks_math__geometry",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 368,
+  "kind": "mmlu",
+  "item": "anatomy",
+  "name": "Musculoskeletal injuries, pain and therapy"
+ },
+ {
+  "id": 369,
+  "kind": "source",
+  "item": "nvidia__HelpSteer2",
+  "name": "AI marketing and buzzword blog posts"
+ },
+ {
+  "id": 370,
+  "kind": "mmlu",
+  "item": "management",
+  "name": "Workplace management and professional development"
+ },
+ {
+  "id": 371,
+  "kind": "mmlu_pro",
+  "item": "health",
+  "name": "Diseases, symptoms and clinical care"
+ },
+ {
+  "id": 372,
+  "kind": "mmlu",
+  "item": "astronomy",
+  "name": "Astronomy, spacecraft and planetary science"
+ },
+ {
+  "id": 373,
+  "kind": "source",
+  "item": "hendrycks_math__algebra",
+  "name": "Banking, loans and retail finance"
+ },
+ {
+  "id": 374,
+  "kind": "mmlu",
+  "item": "prehistory",
+  "name": "Plants, animals and agricultural species"
+ },
+ {
+  "id": 375,
+  "kind": "source",
+  "item": "hendrycks_math__algebra",
+  "name": "Mathematics papers, proofs and theorems"
+ },
+ {
+  "id": 376,
+  "kind": "exams_tr",
+  "item": "History",
+  "name": "History of Bulgaria and Balkan geopolitics involving Russia"
+ },
+ {
+  "id": 377,
+  "kind": "source",
+  "item": "openai__gsm8k__main",
+  "name": "Banking, loans and retail finance"
+ },
+ {
+  "id": 378,
+  "kind": "source",
+  "item": "motherduckdb__duckdb-text2sql-25k",
+  "name": "Database and SQL query Q&A"
+ },
+ {
+  "id": 379,
+  "kind": "mmlu",
+  "item": "public_relations",
+  "name": "Research methods, studies and academic assessment"
+ },
+ {
+  "id": 380,
+  "kind": "source",
+  "item": "b-mc2__sql-create-context",
+  "name": "Government regulations, contracts and public records"
+ },
+ {
+  "id": 381,
+  "kind": "mmlu",
+  "item": "high_school_psychology",
+  "name": "Mental health, counseling and wellbeing"
+ },
+ {
+  "id": 382,
+  "kind": "mmlu",
+  "item": "econometrics",
+  "name": "Descriptive statistics and variable analysis articles"
+ },
+ {
+  "id": 383,
+  "kind": "mmlu",
+  "item": "nutrition",
+  "name": "Weight loss, nutrition and dieting"
+ },
+ {
+  "id": 384,
+  "kind": "source",
+  "item": "xlcost-text-to-code__Python",
+  "name": "Government regulations, contracts and public records"
+ },
+ {
+  "id": 385,
+  "kind": "mmlu",
+  "item": "high_school_mathematics",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 386,
+  "kind": "mmlu",
+  "item": "prehistory",
+  "name": "Genetics, genomics and biotechnology"
+ },
+ {
+  "id": 387,
+  "kind": "mmlu",
+  "item": "security_studies",
+  "name": "Articles about global conflict and international diplomacy"
+ },
+ {
+  "id": 388,
+  "kind": "source",
+  "item": "lex_glue__ecthr_a",
+  "name": "Courts, criminal cases and United States history"
+ },
+ {
+  "id": 389,
+  "kind": "source",
+  "item": "commitpackft__c",
+  "name": "Source code, functions and programming questions"
+ },
+ {
+  "id": 390,
+  "kind": "mmlu",
+  "item": "high_school_statistics",
+  "name": "Descriptive statistics and variable analysis articles"
+ },
+ {
+  "id": 391,
+  "kind": "exams_tr",
+  "item": "Geography",
+  "name": "Climate science, agriculture and environmental policy"
+ },
+ {
+  "id": 392,
+  "kind": "mmlu",
+  "item": "high_school_computer_science",
+  "name": "Lessons about numbers, integers and number theory"
+ }
+]

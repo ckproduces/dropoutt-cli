@@ -1,0 +1,202 @@
+{
+ "M00": {
+  "cell": 1659,
+  "coherence": 0.412153959274292,
+  "kind": "subject"
+ },
+ "M01": {
+  "cell": 778,
+  "coherence": 0.1918589472770691,
+  "kind": "subject"
+ },
+ "M02": {
+  "cell": 739,
+  "coherence": 0.30361059308052063,
+  "kind": "subject"
+ },
+ "M03": {
+  "cell": 2852,
+  "coherence": 0.15122050046920776,
+  "kind": "mixed"
+ },
+ "M04": {
+  "cell": 1692,
+  "coherence": 0.1090986579656601,
+  "kind": "mixed"
+ },
+ "M05": {
+  "cell": 433,
+  "coherence": 0.31317973136901855,
+  "kind": "mixed"
+ },
+ "M06": {
+  "cell": 1318,
+  "coherence": 0.19688844680786133,
+  "kind": "subject"
+ },
+ "M07": {
+  "cell": 4050,
+  "coherence": 0.2320278435945511,
+  "kind": "subject"
+ },
+ "M08": {
+  "cell": 1008,
+  "coherence": 0.2771810293197632,
+  "kind": "subject"
+ },
+ "M09": {
+  "cell": 1908,
+  "coherence": 0.24549102783203125,
+  "kind": "subject"
+ },
+ "M10": {
+  "cell": 2721,
+  "coherence": 0.34676000475883484,
+  "kind": "subject"
+ },
+ "M11": {
+  "cell": 182,
+  "coherence": 0.25099197030067444,
+  "kind": "subject"
+ },
+ "M12": {
+  "cell": 3892,
+  "coherence": 0.2640976309776306,
+  "kind": "subject"
+ },
+ "M13": {
+  "cell": 3177,
+  "coherence": 0.27397391200065613,
+  "kind": "form"
+ },
+ "M14": {
+  "cell": 2108,
+  "coherence": 0.17237062752246857,
+  "kind": "mixed"
+ },
+ "M15": {
+  "cell": 3317,
+  "coherence": 0.24379990994930267,
+  "kind": "subject"
+ },
+ "M16": {
+  "cell": 3252,
+  "coherence": 0.26546141505241394,
+  "kind": "subject"
+ },
+ "M17": {
+  "cell": 3276,
+  "coherence": 0.2008512020111084,
+  "kind": "subject"
+ },
+ "M18": {
+  "cell": 3885,
+  "coherence": 0.290610134601593,
+  "kind": "subject"
+ },
+ "M19": {
+  "cell": 944,
+  "coherence": 0.15752562880516052,
+  "kind": "subject"
+ },
+ "M20": {
+  "cell": 840,
+  "coherence": 0.22401712834835052,
+  "kind": "subject"
+ },
+ "M21": {
+  "cell": 471,
+  "coherence": 0.18889862298965454,
+  "kind": "subject"
+ },
+ "M22": {
+  "cell": 1433,
+  "coherence": 0.6123620271682739,
+  "kind": "subject"
+ },
+ "M23": {
+  "cell": 4016,
+  "coherence": 0.20551295578479767,
+  "kind": "subject"
+ },
+ "M24": {
+  "cell": 308,
+  "coherence": 0.22027824819087982,
+  "kind": "subject"
+ },
+ "M25": {
+  "cell": 1646,
+  "coherence": 0.2243514209985733,
+  "kind": "subject"
+ },
+ "M26": {
+  "cell": 3024,
+  "coherence": 0.3220321536064148,
+  "kind": "subject"
+ },
+ "M27": {
+  "cell": 3650,
+  "coherence": 0.20733943581581116,
+  "kind": "subject"
+ },
+ "M28": {
+  "cell": 2304,
+  "coherence": 0.2750509977340698,
+  "kind": "subject"
+ },
+ "M29": {
+  "cell": 3384,
+  "coherence": 0.23648777604103088,
+  "kind": "subject"
+ },
+ "M30": {
+  "cell": 2153,
+  "coherence": 0.2681955099105835,
+  "kind": "subject"
+ },
+ "M31": {
+  "cell": 901,
+  "coherence": 0.2826300263404846,
+  "kind": "mixed"
+ },
+ "M32": {
+  "cell": 4048,
+  "coherence": 0.36600810289382935,
+  "kind": "subject"
+ },
+ "M33": {
+  "cell": 3697,
+  "coherence": 0.20124128460884094,
+  "kind": "subject"
+ },
+ "M34": {
+  "cell": 3097,
+  "coherence": 0.29856905341148376,
+  "kind": "mixed"
+ },
+ "M35": {
+  "cell": 3033,
+  "coherence": 0.16232283413410187,
+  "kind": "mixed"
+ },
+ "M36": {
+  "cell": 375,
+  "coherence": 0.31361123919487,
+  "kind": "subject"
+ },
+ "M37": {
+  "cell": 1544,
+  "coherence": 0.1538303941488266,
+  "kind": "form"
+ },
+ "M38": {
+  "cell": 1853,
+  "coherence": 0.17674297094345093,
+  "kind": "form"
+ },
+ "M39": {
+  "cell": 449,
+  "coherence": 0.3566233217716217,
+  "kind": "subject"
+ }
+}

@@ -1,0 +1,26 @@
+{
+ "atlas-v3": {
+  "coherence": {
+   "cells": 4096,
+   "cells_scored": 4096,
+   "median": 0.24393347650766373,
+   "share_below_0.10": 0.018310546875,
+   "share_below_0.15": 0.075439453125,
+   "reservoir_share_in_cells_below_0.10": 0.026046,
+   "gate_below_0.10": false
+  },
+  "reservoir": "/Volumes/ck512/dropoutt-atlas-v2/work-v3-textnorm/reservoir.jsonl"
+ },
+ "atlas-v3-prev": {
+  "coherence": {
+   "cells": 4096,
+   "cells_scored": 4096,
+   "median": 0.2511988580226898,
+   "share_below_0.10": 0.035888671875,
+   "share_below_0.15": 0.0947265625,
+   "reservoir_share_in_cells_below_0.10": 0.039176,
+   "gate_below_0.10": false
+  },
+  "reservoir": "/Volumes/ck512/dropoutt-atlas-v2/work/reservoir.jsonl"
+ }
+}

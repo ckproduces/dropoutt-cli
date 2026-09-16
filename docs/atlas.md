@@ -18,56 +18,158 @@ The cost is low: once embeddings exist, assignment is one matrix multiply.
 
 ## How it is built
 
-`tools/build_atlas.py`, fully reproducible, writing a manifest of exactly which
-sources were used and which were unavailable. Client and build share one
-pipeline library under `dropoutt.atlas` — extraction, chunking, embedding,
+`tools/build_atlas_v2.py` builds every v2 and v3 product from one read-only
+corpus cache. `tools/run_atlas_v3_build.sh` holds the exact invocation for
+atlas-v3 and copies the finished artifact into the package with its checksum;
+the build's gates are recorded in
+`src/dropoutt/data/atlas/atlas-v3-release-notes.json`. Client and build share
+one pipeline library under `dropoutt.atlas` — extraction, chunking, embedding,
 normalization — so coordinates stay comparable.
 
 ```
-ingest → detect format → extract text → chunk → dedup → embed
-       → normalize → assign to cells → aggregate
+manifest → extract text → dedup → detect language → embed
+         → fit normalization → L1 k-means → L2 k-means per L1
+         → calibrate and name → artifact
 ```
 
-1. **Sample a stratified reference corpus** across code, math, instruction/chat,
-   legal/finance, scientific, dialogue/forum, structured/tabular, and
-   multilingual prose. The v2 build collected 786,180 records from 48 working
-   source/configuration pairs: FineWeb, Wikipedia in six languages,
-   StarCoderData plus ten explicit The Stack language configs, OpenWebMath,
-   FineMath, peS2o, arXiv, PubMed, OpenAssistant, UltraFeedback, Stack Exchange,
-   contracts, ECHR case law, finance, and SQL/tabular material. Per-source caps
-   keep English, Python, and the densest shards from defining the geometry.
+1. **Read a frozen manifest.** The atlas-v3 corpus is 244 manifest sources
+   over nine axes — web, encyclopedic, books, legal and government,
+   scientific, training, code, forum, educational — each with a byte target,
+   plus a non-English floor. 166,324,909 input records; 163,452,464 retained
+   after filtering, 212.8 GB, 60.6% non-English by bytes. The corpus hash
+   `4203fc3a0858de369f83763613f1911b` is stamped into the artifact. The cache
+   is never modified, so a rebuild reads the same bytes.
 2. **Format-aware extraction.** JSON/CSV/HTML/markdown/code are reduced to
-   natural-language content before embedding. `detected_format` is metadata, not
-   vector content — otherwise static embeddings collapse into a fake "structured
-   data" cluster.
-3. **Dedup.** Near-exact MinHash over word shingles, then semantic cosine on
-   temporary L2 vectors. Both thresholds are recorded in the manifest.
-4. **Embed with `potion-multilingual-128M`.** The fast tokenizer runs once.
-   Its flat token-ID cache fits both the unigram table and a CSR document/token
-   matrix; one sparse-dense multiply pools all documents with
-   `w = a/(a+p)`, `a=1e-3`. The embedding table is subset to observed tokens.
-   No per-record Python pooling loop, no torch, no model2vec.
-5. **Freeze normalization.** Mean removal, drop top-2 principal components
-   (all-but-the-top), L2. Constants ship in the artifact; the client applies
-   them and never refits.
-6. **Fit a two-level k-means hierarchy** on cosine distance, top-down so lite is
-   an exact coarsening of full: 50 L1 regions and 20 children each (1,000 L2
-   cells). L2 count is support-gated; a build cannot create a child for every
-   300 reference members it does not have.
-7. **Label and calibrate.** Each cell carries 12 distinctive terms, 17 distance
-   quantiles, eight radial prototype vectors, source/topic/language support,
-   and its 16 strongest source-level co-occurrence neighbors. Cells below 200
-   direct calibration members retain their local observations and borrow
-   residuals from siblings under the same L1 parent.
+   natural-language content before embedding and truncated to 2,000
+   characters. The builder keeps records of 80 characters or more; placement
+   at run time needs 40 (see [Records too short to
+   place](#records-too-short-to-place)). `detected_format` is metadata, not
+   vector content — otherwise static embeddings collapse into a fake
+   "structured data" cluster.
+3. **Dedup.** Exact duplicates are dropped by a 64-bit hash of the lower-cased
+   text, held in a disk-backed set across all 166 million rows.
+4. **Detect the language of every record.** Until v3 a record's language was
+   whatever its source declared, inherited by every row in the shard. That is
+   wrong often enough to matter: an earlier v3 candidate partitioned
+   Ukrainian text into cells named Serbian and Bulgarian because the shard
+   said so, and the per-language centering then subtracted the wrong mean.
+   The byte n-gram detector now runs on every record beside the encoder
+   (`language_labels_source` is `detected-per-record:dropoutt.langid`), and a
+   record keeps its declared language only when the detector will not commit.
+5. **Embed with `potion-multilingual-128M`, through the encoder input policy.**
+   The tokenizer runs once and one sparse-dense multiply pools each document
+   with SIF weights, fitted in a first pass over a stratified sample of the
+   manifest. Before tokenizing, runs of ALL-CAPS words are sentence-cased and
+   table rules are dropped; inside the pool, one- and two-character cased
+   pieces, symbol-only and digit-only tokens, and every token of a template
+   phrase count for a fifth or a tenth of their SIF weight. See [What the
+   encoder reads](#what-the-encoder-reads). Vectors land in one float16 store
+   on disk that both clustering and the off-atlas calibration read from.
+6. **Freeze normalization.** One mean per language, accumulated over every row
+   of that language — 59 languages cleared the 6,000-row floor — with the
+   global mean for the rest; then the top-2 principal directions removed, then
+   L2. The global mean and the PCA are fitted on a 2,000,000-row draw balanced
+   over (language, axis) strata rather than a proportional one, because a
+   proportional draw is 53% English web and its principal directions were
+   English-web-shaped. A linear probe on 300,000 held-out rows is recorded in
+   the artifact: balanced accuracy for language falls from 0.528 on raw
+   vectors to 0.365 after normalization, for axis from 0.697 to 0.580. Most
+   of the language signal goes; most of the subject signal stays.
+7. **Fit a two-level spherical k-means, weighted by content.** 256 L1 regions
+   on a 2,000,000-row draw taken at even steps of *text length* rather than of
+   row count, then every record assigned to its nearest L1 centroid. A record
+   weighs the characters the encoder reads, up to 2,000, so the corpus's
+   one-line prompts — a fifth of its rows — shape about as much of the map as
+   the text they contain, not a fifth of it. Budgets, the L2 fits and the
+   centroid means use the same weights; `region_size` and every density stay
+   in records (`fit_weights: length` in the artifact). The 4,096-cell L2
+   budget is split across regions as content to the power 0.75 (recorded as
+   `sqrt_population_budget`): proportional
+   allocation starves the small regions worth telling apart — code,
+   mathematics, law — and a square root swings cell populations by 11×, so the
+   exponent sits between. Each region is fitted with its allotted k (1 to 64
+   allowed; the shipped regions hold between 6 and 32 cells), sibling cells at
+   or above 0.95 cosine are merged (none were in this build), and every
+   centroid is recomputed from all of its members.
+8. **Calibrate and name.** Each cell carries 50 distance quantiles, 8 radial
+   prototype vectors, 64 contrastive terms, and its 32 strongest source-level
+   co-occurrence neighbours. Names come from
+   `tools/atlas-data/l1_labels_atlas-v3.json` and
+   `tools/atlas-data/region_labels_atlas-v3.json`, written by hand and keyed
+   to the corpus hash; see [Hand intervention](#hand-intervention). The
+   off-atlas cutoff is stamped afterwards by `tools/calibrate_off_atlas_v3.py`
+   — see [How the cutoff is calibrated](#how-the-cutoff-is-calibrated).
 
 Every result carries `atlas_version` + `pipeline_hash`. Encoder weights stay on
-disk — 63 MB since 1.2, quantised on first use from the 489 MB published file,
-which is then deleted — and the artifact stores their content hash, not the
-weights.
+disk — the published 489 MB float32 table is quantised on first use to one byte
+per weight with a per-row scale, 142 MB in
+`~/.cache/dropoutt/embedder/potion-multilingual-128M/` including the 18 MB
+tokenizer, and the original is deleted — and the artifact stores their content
+hash, not the weights.
+
+What ships is 13.8 MB compressed: centroids, reference sizes, normalization
+constants (global mean, 59 language means, two PCA directions), distance
+quantiles, prototype vectors, co-occurrence neighbours, the IDF table, term
+lists and names. The reference-record excerpts the builder writes for review
+(`exemplar_texts`) are not in the wheel. That is also why the report quotes
+your own records and never the map's.
+
+The whole v3 build ran 17,397.5 s (4.8 h); the release notes record only the
+total.
+
+### What the encoder reads
+
+The encoder is a static table: a record's vector is the weighted mean of its
+token rows, and nothing in that mean knows what a token means in context. So
+anything that fills a record with distinctive tokens without saying what the
+record is about decides where it lands. An audit of the first atlas-v3 (13
+September 2026) found four such things that had drawn cells of their own, each
+confirmed by removing the feature from a cell's members and placing them again:
+
+| feature | example | what removing it did |
+| --- | --- | --- |
+| ALL-CAPS text | `INFORMATIONEN ÜBER DATENSCHUTZERKLÄRUNG` tokenises into 13 capital-letter fragments and no word | sentence-casing moved every member of a "shouted web copy" cell to a subject cell |
+| table rules | pipe-delimited infoboxes, `---` separators | removing pipes moved 85% of a "tables about anything" cell |
+| one- and two-letter pieces | initials and the first fragment of rare names (`▁T`, `▁P`) | districts that shared only a first letter; removing each cell's heaviest pieces moved about half its members |
+| instruction templates | "generate a more complex version of this sentence", in fifty translations | ten districts split by the template's language, not by what the sentences said |
+
+The encoder input policy (`dropoutt.atlas.textnorm`, version 1) is the frozen
+answer. Before tokenizing, runs of three or more ALL-CAPS words are
+sentence-cased — so `NASA` in a sentence stays `NASA` — and table rules become
+spaces. Inside the pool, cased pieces of one or two characters, symbol-only
+tokens and digit-only tokens keep a fifth of their SIF weight; scripts without
+letter case are untouched, because a one-character token in Chinese or Japanese
+is a word. And every token inside a *template phrase* keeps a tenth: a
+four-token phrase is a template when it occurs in at least 10% of one source's
+sampled documents. Measured on the corpus, the rewriting template sits at
+37–83% of its source; the most repeated phrases of ordinary prose stay under
+15%, and a subject phrase such as "is a village in" at 4.6%. The builder finds
+these phrases in the same pass that fits the IDF table and ships them in the
+artifact (`encoder_phrase_hashes`).
+
+The policy is part of the coordinate system. The artifact declares it
+(`encoder_input`), and a scan binds the same policy to the encoder through
+`Atlas.bind_embedder`, so no record is read differently from the records the
+cells were drawn from. Maps built before the policy declare none and keep
+reading raw text.
+
+Measured on a 5-million-record pilot built through the same code, the policy
+cut template cells from 68 to 9 and, with content-weighted fitting, to 2;
+records clustering by language fell (cell–language NMI 0.093 → 0.080, the
+normalised language probe 0.30 → 0.20). It costs some separation of *sources*
+— the 52-source held-out panel's source AMI fell from 0.284 to 0.268 — because
+formatting that used to tell sources apart no longer places records. That is the
+trade the map is for.
 
 ### Measured v2 build time
 
-Measured on the release machine over 736,966 records after both dedup passes:
+The stage-by-stage timing below was measured on the 786,180-record build of
+the v2 pipeline — 48 working source/configuration pairs, 736,966 records after
+both dedup passes — that preceded the shipped atlas-v2. It was taken with the
+earlier `tools/build_atlas.py`, whose MinHash, semantic-dedup and crosswalk
+stages the v3 build does not run, and it is kept as the one stage-by-stage
+timing this document has. The shipped atlas-v2 was refitted on 69,071,324
+records from 59 sources, and atlas-v3 on 163,452,464 from 244.
 
 | stage | wall time |
 | --- | ---: |
@@ -95,74 +197,123 @@ than a section of the scan report. It writes `atlas.html`, `atlas.md` and
 `atlas.json` beside the scan's artifacts.
 
 ```bash
-dropoutt atlas ./my-corpus
-dropoutt atlas --model atlas-v2 ./my-corpus
+dropoutt atlas ./my-corpus                                 # picker, in a terminal
+dropoutt atlas --model atlas-v3 ./my-corpus
 dropoutt atlas --model atlas-v2-lite ./my-corpus --sampling 500
 ```
 
+Without `--model`, a terminal gets an arrow-key picker over `atlas-v3`,
+`atlas-v2` and `atlas-v2-lite`, with the `atlas` value from `dropoutt.toml`
+highlighted (atlas-v3 when the file names none). A pipe or a CI job gets no
+picker: it uses the `atlas` key if `dropoutt.toml` sets one, and otherwise
+exits 2 telling you to pass `--model` or set the key. Coverage is comparable
+only across runs on one product, and a default that a later release moved
+would make two CI runs silently incomparable; naming the product in a reviewed
+file is what prevents that. `--sampling` defaults to the product's own:
+500,000 records on atlas-v3, 200,000 on atlas-v2, 50,000 on atlas-v2-lite.
+
 Splitting it out was not tidying. Placement runs every sampled record through a
 neural encoder — the one part of a scan whose cost had nothing to do with which
-checks were enabled — and it needs an 81 MB model that a scan otherwise has no
-use for. It also answers a different question. A scan asks what would break a
-training run and gives you a list to act on; the map asks where the corpus sits,
-and the answer is right or wrong only against a goal the tool has not been told.
-Those two things sharing an exit code and a report was the mistake.
+checks were enabled — and it needs a 142 MB encoder that a scan otherwise has
+no use for. It also answers a different question. A scan asks what would break
+a training run and gives you a list to act on; the map asks where the corpus
+sits, and the answer is right or wrong only against a goal the tool has not
+been told. Those two things sharing an exit code and a report was the mistake.
 
 `fingerprint.json` still carries a `coverage` facet either way, so two
 fingerprints have the same shape and can be compared. A scan fills it with
 `not computed by scan (run dropoutt atlas)`.
 
+The bundled `tests/fixtures/messy` on atlas-v3, trimmed:
+
+<!-- transcript:start -->
 ```
   ◧◨ Where this corpus sits on the map
-     atlas-v1-lite
+     atlas-v3
 
-  4,000 records   ·   1 dataset   ·   en 100%
+  332 records   ·   5 datasets   ·   tr 100%
 
-    Effective coverage 26.9 of 215 (29 subregions hold any records) (mixed)
-    3,969 of 4,000 sampled records placed · 31 off the map (0.8%) · 0 too short to place
+    Effective coverage 13 of 4,096 (13 subregions hold any records) (specialised)
+    250 placed of 321 sampled records; 2 were too short to place · 71 off the map (22.1%)
 
-    Density is your share of a subject area against the map's own. 1.0× is parity.
-  subject area                              share    density    reach
-  Film and television                       22.5%       9.2×      2/5
-  Creative writing and fiction              17.7%       6.6×      4/4
-  Web development troubleshooting           12.8%       3.9×      1/6
-  Digit and counting puzzles                10.7%       6.6×      2/4
-  Open-source licensing and file headers     9.0%       3.1×      2/6
-    7 further areas reached; 31 of the map's 48 subject areas never reached
+    Each subject area you reached, then the subregions inside it. Density is your share of a 
+subregion against the reference corpus's share of the same one: 1.0× matches the map.
 
-    22% of your data sits in a single place on the map
-      877 records land there, 0.54 alike on average. Below 0.85 that is a
-      subject, not a template: they say the same kind of thing in enough
-      different ways to be worth keeping.
-      "Known for his Hollywood blockbusters with complex storytelling, Nolan…"
+    Names and entries starting with V  2/15 reach · 54.4% share · 136 records
+         49×  Taxonomy entries and medical t…           18×  Multiple-choice sentence-compl…  
 
-    Film and television — 9.7× denser here than on the map
-      The map spends 5 of its 215 places on that subject; 23% of your placed
-      records land there. That is what a specialist corpus looks like, and it is
-      only a problem if you meant to build a general one.
+    Sentence-rewriting prompts over institutional history  1/16 reach · 18.4% share · 46 records
+         23×  Sentence-rewriting prompts abo…      
 
-    Of the 29 places you reach, 9 hold 3% of your data between them
-      Real presence in 20 places, a toehold in the rest. An occupancy count
-      reads a place holding one record the same as one holding a third of the
-      corpus, which is how a narrow corpus comes to look broad.
+    Websites, cookies and web hosting  1/16 reach · 16.0% share · 40 records
+         21×  Articles about blogging platfo…      
+
+    Mathematics papers, proofs and theorems  1/18 reach · 6.4% share · 16 records
+        8.8×  Articles about measurement uni…      
+
+    Commission regulations on export refunds and prices  3/20 reach · 1.6% share · 4 records
+        2.0×  EU regulations on customs impo…          1.4×  EU court case filings and lega…  
+        1.5×  Pre-2004 EEA Joint Committee d…                                                 
+
+    Essay writing, research papers and author guidelines  1/15 reach · 1.6% share · 4 records
+        2.9×  Forum advice about writing res…      
+
+    Chatty personal posts and forum confessions  1/16 reach · 0.4% share · 1 record
+        1.5×  Forum confessions about health…      
+
+    Materials, metals and industrial surfaces  1/17 reach · 0.4% share · 1 record
+        1.5×  Product descriptions for home…      
+
+    2 further areas reached; their subregions are named in the report files
+
+    246 of the map's 256 subject areas never reached
+
+    40% of your data sits in a single place on the map
+      Records there are 1.00 alike, which is one thing written out many times rather than one 
+subject covered many ways. Near-duplicate detection will not catch it: they share almost no wording.
+      “Türkiye'nin 114. en kalabalık şehri hangisidir? Bu sorunun cevabı 114 numaralı şehirdir. 
+Detaylı açıklama: veri veri veri veri veri veri veri veri veri veri ver”
+
+    Names and entries starting with V — 48× denser here than on the map
+      The map holds 0.4% of its reference text in that subject (15 of its 4,096 places); 54% of your
+placed records land there. That is what a specialist corpus looks like, and it is only a problem if 
+you meant to build a general one.
+
+    Sentence-rewriting prompts over institutional history — 16× denser here than on the map
+      The map holds 0.4% of its reference text in that subject (16 of its 4,096 places); 18% of your
+placed records land there.
+
+    Websites, cookies and web hosting — 14× denser here than on the map
+      The map holds 0.4% of its reference text in that subject (16 of its 4,096 places); 16% of your
+placed records land there.
+
+    Of the 13 places you reach, 7 hold 3% of your data between them
+      Real presence in 6 places, a toehold in the rest. An occupancy count reads a place holding one
+record the same as one holding a third of the corpus, which is how a narrow corpus comes to look 
+broad.
 ```
+<!-- transcript:end -->
 
-Trimmed: the run also prints what you have most and least of, where you are
-farthest from the map in both directions, and the off-map diagnosis.
+Trimmed: the run goes on to print what you have most and least of, where your
+mix differs most from the map's in either direction, and the off-map
+diagnosis.
+The fixture is deliberately broken — the place holding 40% of the data is one
+template, 1.00 alike — which is why the map reads as it does.
 
 | line | how to read it |
 | --- | --- |
 | Effective coverage | two numbers, because occupancy alone is unreadable. The count in brackets says how many subregions hold *any* records, which reads a subregion holding one record the same as one holding a third of the corpus. Effective coverage sums `min(1, density)` over subregions: parity is a full score, thinner coverage a fraction, and over-representation does not count past one. The gap between them is the size of the tail. |
-| Placed / off the map / too short | every share below is over the placed records, and all three counts are printed so you can see what the shares are not about. Placement needs at least 80 characters; below that an embedding is noise. |
-| Density | your share of a subject area against *the map's* share of the same one. 1.0× is parity. This is the number a histogram of your own data cannot give you: a histogram says what is present, and it takes a fixed coordinate system to say what is absent or thin. |
-| Reach | `min(1, density)` summed over that area's subregions, against how many it has. `2/5` means you cover two subregions' worth of five, however unevenly your records are spread across them. |
+| Placed / off the map / too short | every share below is over the placed records, and all three counts are printed so you can see what the shares are not about. Placement needs at least 40 characters; below that an embedding is noise. |
+| Density | your share of a subregion against *the map's* share of the same one, where the map's share is its reference records in that cell over all 163,452,464 (`region_size`). 1.0× is parity. This is the number a histogram of your own data cannot give you: a histogram says what is present, and it takes a fixed coordinate system to say what is absent or thin. A cell holding one sampled record is shrunk toward parity rather than printed as a raw quotient, because one record in a rarely-used cell is a coin flip, not a 40× density. |
+| Reach | `min(1, density)` summed over that area's subregions, against how many it has. `2/15` means you cover two subregions' worth of fifteen, however unevenly your records are spread across them. |
 | What the map says | sentences that clear both a size gate and a significance gate. Nothing appears for being true; it appears for being large *and* true. |
-| the quoted record | your own record sitting closest to a region's centre — the only description of a neighbourhood that is true by construction. The atlas's own five-word captions describe the reference corpus, not yours. Suppressed by `--no-evidence`. |
+| the quoted record | your own record sitting closest to a cell's centre — the only description of a neighbourhood that is true by construction. The cell's hand-written name describes the reference corpus, not yours. Suppressed by `--no-evidence`. |
 | Off the map | records too far from every centroid to place. Described, never grounds for withholding the rest. |
 
 Nothing here is a verdict. A specialised corpus *should* be concentrated and a
 pretraining mixture should not, and the tool has not been told which you are
-building.
+building. The section on where your mix differs most from the map's says where
+the difference is largest; whether to move it depends on what you are building.
 
 When a scan covers more than one dataset, a further section reports the cosine
 between each pair's region histograms. Two datasets can share no wording and
@@ -172,10 +323,13 @@ cannot see it.
 
 ### What the atlas still cannot tell you
 
-`atlas-v1-lite` stores `region_size` / `l1_size` for the reference mass, so gaps
-can be reported as under-representation against the stratified baseline, not
-only as absolute absence. Read that baseline as a property of *this* reference
-corpus (topic- and language-capped on purpose), not as a natural population.
+Every offered product stores `region_size` and `l1_size` for the reference
+mass, so a gap is reported as under-representation against the reference
+corpus, not only as absence. Read that baseline as a property of *this*
+reference corpus — nine axes with byte targets, a non-English floor, per-source
+caps, 60.6% non-English by bytes on atlas-v3 — not as a natural population.
+And nothing here says whether a gap matters: the map has not been told what you
+are building.
 
 If the map cannot be drawn at all, `dropoutt atlas` exits 1 and says why. The
 usual cause is an encoder that is not in the cache and cannot be downloaded: run
@@ -245,48 +399,56 @@ discarded. Re-scanning fixes the second.
 **It does not rank datasets.** `New 62%` is geometry. Whether new coverage helps
 depends on what you are training, which the tool does not know.
 
-## Region labels: the five words
+## Cell names
 
-> The measurements in this section and in
-> [Reading the quality numbers](#reading-the-quality-numbers) were taken on the
-> 258-region build that preceded `atlas-v1-lite`. They are kept because the
-> failure modes they describe are properties of the *method*, which has not
-> changed, and because a measurement is worth more than a description of one.
-> The shipped artifact has 215 regions and twelve label slots each; the one
-> number re-measured against it is noted below.
-
-Each region prints with five words next to it:
+Every one of atlas-v3's 4,096 cells and 256 subject areas carries a
+hand-written name (`region_labels` and `l1_labels` in the artifact; sources
+`curated:region_labels_atlas-v3.json` and `curated:l1_labels_atlas-v3.json`).
+atlas-v2 and atlas-v2-lite carry hand-written subject-area names, and their
+cells are captioned at load time from the artifact's own term lists, re-scored
+against how many cells hold each word. atlas-v1-lite carried five-word frequency
+captions.
 
 ```
-  0  film, movie, films, filmi, best
-167  select, where, count, show, order
+  Personal feelings, grief and confessional writing
+    Casual venting posts about bad days and dating frustration
+    Infidelity confessions and celebrity breakup stories
+    Marriage, family life and explicit romance stories
 ```
 
-**These words are a caption, not a rule.** No record is ever tested against
-them. They play no part in placing anything, and deleting them would not change
-a single assignment.
+**A name is a caption, not a rule.** No record is ever tested against it. Names
+play no part in placing anything, and renaming a cell would not change a single
+assignment.
 
 ### How a record is actually placed
 
 1. Format-aware extraction pulls natural-language content (keys/syntax dropped).
-2. The text is embedded by `potion-multilingual-128M` with SIF pooling, then
-   corrected with the frozen mean/PCA/L2 constants. Since 1.2 the encoder is
-   stored as its first 128 columns at one byte per weight with a per-row scale —
-   63 MB instead of 489 MB — and the atlas is fitted in that quantised
-   coordinate system, on the same reference corpus as before, so the encoder a
-   scan applies is the encoder the map was built with. The report names it in
-   `atlas.identity.encoder_weight_hash`; if a scan ever applies an atlas
-   through weights it was not fitted on, the fitted hash is kept alongside as
+2. The text is embedded by `potion-multilingual-128M` with SIF pooling, read
+   through the map's own encoder input policy (see [What the encoder
+   reads](#what-the-encoder-reads)). The
+   encoder is stored quantised, one byte per weight with a per-row scale
+   (142 MB on disk with its tokenizer), and each product uses the first 128 of
+   its 256 columns — 64 for atlas-v2-lite. The map was fitted in that same
+   quantised coordinate system, so the encoder a run applies is the encoder the
+   map was built with. The report names it in
+   `atlas.identity.encoder_weight_hash`; if a run ever applies an atlas through
+   weights it was not fitted on, the fitted hash is kept alongside as
    `encoder_built_with` so the report says so.
-3. Cosine similarity is computed against all fine (L2) centroids. Soft
-   assignment keeps the top-5 with a temperature tuned so a typical document
-   holds weight on ~2–3 regions; the hard nearest cell still drives the
-   histogram.
-4. Below the off-atlas cutoff the record is placed nowhere. Coarse subject area
-   is the parent L1 cell — a strict coarsening of the fine map, not a second
-   model.
+3. The frozen constants are applied: the mean of the record's detected language
+   is subtracted (59 languages on atlas-v3, 20 on the v2 products; the global
+   mean for any other or unknown language), the two stripped principal
+   directions are removed, and the vector is L2-normalised. See
+   [Language is a nuisance parameter](#language-is-a-nuisance-parameter-not-a-clustering-axis).
+4. Cosine similarity is computed against all fine-cell centroids, and the
+   nearest cell drives the histogram.
+5. Below the off-atlas cutoff — 0.3538 on atlas-v3 — the record is placed
+   nowhere. The subject area is the cell's parent L1: a strict coarsening of the
+   fine map, not a second model.
 
-Word overlap is not consulted at any point. Four real placements:
+Word overlap is not consulted at any point. Four real placements, measured on
+the 258-region build that preceded `atlas-v1-lite` — the region ids and the
+five-word captions are that build's, and the point survives because the
+placement rule has not changed:
 
 | text | region | contains how many of the 5 label words |
 | --- | --- | --- |
@@ -300,125 +462,151 @@ Turkish sentence about a science-fiction film land in the *same* region, sharing
 no vocabulary with the label or with each other. That is the embedding doing the
 work.
 
-### Where the labels come from
+### Where the names come from
 
-After clustering, the **first 150 members in corpus order** — not a random 150 —
-are word-counted, non-letters are stripped from inside each word, words of three
-characters or fewer are dropped, an English and Turkish stoplist is applied, and
-the five most frequent survivors become the label.
+`tools/atlas_naming_worklist.py` writes one worklist per subject area: for
+every cell, thirty members of the build reservoir spread from the cell's centre to
+its edge, its source, language and axis mix, its 64 contrastive terms, and its coherence under an
+encoder that is not the atlas's own (see below). The names were written by hand
+from those under `tools/atlas-data/NAMING_GUIDE.md`, one per cell and one per
+subject area, and stored in `tools/atlas-data/region_labels_atlas-v3.json` and
+`l1_labels_atlas-v3.json` keyed to the corpus hash. A rebuild on a different
+corpus does not inherit them: it gets automatic contrastive-term captions and
+says so in `region_labels_source`, rather than carrying names for cells that no
+longer exist.
 
-The stoplist has 38 entries but **only 16 of them do anything**: the other 22
-(`the`, `and`, `bir`, `ve`, `bu`, …) are three characters or fewer and were
-already removed by the length filter one step earlier.
+Never only the records nearest the centroid. The first atlas-v3 names were
+written from the few nearest records, and in a cell with no shared subject those
+records are unrelated to each other, so the name became a list of topics the cell
+did not have: "Linux hardening logs, Brazilian court appeals and
+sentence-rewriting prompts". The thirty are drawn by rank instead: a cell's
+members are ordered by closeness to the centroid, cut into thirty bands of equal
+count, and one is drawn at random from each band. Equal bands keep the sample in
+proportion to the cell — two thirds of the thirty are two thirds of the cell —
+while a purely random draw could, by luck, come out mostly core or mostly edge.
+Bands are by rank rather than by distance, because a few stray records stretch
+the distance range and equal-width distance bands would give them as many slots
+as the dense core.
 
-### Why they read like random words
+**Every name carries a kind** (`region_kinds`, `l1_kinds` in the artifact, and
+`kind` beside each region in a fingerprint's `top_regions`):
 
-Because that method is weak, and measurably so. Three defects compound:
+| kind | the members share | the name reads |
+| --- | --- | --- |
+| `subject` | one subject, for at least two thirds of them | the subject, at the level the members support |
+| `form` | a format, genre or template, but not a subject | the form, and that the subjects vary |
+| `mixed` | neither | "Mixed …", then what little they share |
 
-**No inverse-document weighting.** Frequency is counted within a region, not
-against the other regions, so a word that is common *everywhere* still floats to
-the top. Only those 16 effective stopwords hold it back. `their` appears as a
-label word in **33 of 258 regions**, `they` in 21, `about` in 18. Across the whole
-atlas, **21.6% of the 1,290 label slots are filled by a word that appears in at
-least 8 regions** — words that by construction cannot distinguish anything. On
-the shipped 215-region artifact the same measurement is 14.1% of 2,580 slots:
-better, and still one slot in seven spent on a word that separates nothing.
+A k-means map places every record somewhere, so some cells will always be
+catch-alls of short fragments and leftovers. A `mixed` cell is still a
+coordinate — two corpora can be compared in it — but it is not a subject, and
+the report does not pretend it is. `tools/atlas_label_rules.py` refuses a name
+that lists three or more items for a form or mixed cell, names a first letter,
+or calls a subject cell mixed; the stamping tools run it on every name.
 
-**No lemmatisation, and Turkish is agglutinative.** Inflections of one stem are
-counted as separate words and eat multiple slots. **21% of regions spend two or
-more of their five slots on the same stem:**
+**Names and cells are checked by readers that did not write them.** B7 in
+`experiments/atlas-v3-benchmark` embeds twenty random members of every cell with
+`paraphrase-multilingual-MiniLM-L12-v2` and scores each cell by the mean
+pairwise cosine of its members, language by language centred: unrelated records
+score 0.00, two cells of one subject area 0.17, a median cell about 0.25. The
+atlas's own encoder cannot do this audit — a cell it drew is coherent to it by
+construction, which is how cells held together by a first letter passed every
+earlier name check. B7 then writes 160 cells, twenty from each coherence octile,
+for blind readers who classify the cell and grade its name from sixteen members
+drawn the same way, none of them shown to the namer where the cell has enough.
 
-```
-  0  film, movie, films, filmi, best          → 3 slots, one concept
-  7  cümle, cümlenin, cümleyi, adım, doğru    → 3 slots, one concept
- 15  veri, verilen, oluşturun, verileri, verin → 3 slots, one concept
-```
-
-**The 150 sampled members are the first 150, not a random 150.** In corpus order
-that is often one source file, so a large region can be named after whichever
-dataset happened to be read first.
-
-Between the generic words and the duplicated stems, roughly 40% of the label
-text carries no information. The regions are real; their captions are poor.
+Hand names replaced frequency captions because the captions were measured to
+be poor. On the 258-region build that preceded `atlas-v1-lite`, 21.6% of the
+1,290 label slots were filled by a word that appeared in at least 8 regions
+(14.1% of 2,580 slots on the shipped 215-region artifact), and 21% of regions
+spent two or more of their five slots on inflections of one stem, because
+nothing was lemmatised and Turkish is agglutinative. Roughly 40% of that label
+text carried no information. The regions were real; their captions were not.
 
 ### What this does and does not affect
 
 | affected | not affected |
 | --- | --- |
-| how readable a coverage report is | which region a record lands in |
-| whether you can guess a region's topic from its name | off-atlas rate |
+| how readable a coverage report is | which cell a record lands in |
+| whether you can tell a cell's subject from its name | off-atlas rate |
 | how easy the atlas is to review by hand | region entropy, coverage counts, fingerprint comparability |
 
 Every number the atlas produces is computed from centroids and assignments.
-Relabelling would change none of them.
-
-### The planned fix
-
-Score words by frequency inside the region against frequency across all regions,
-lemmatise before counting, and sample members randomly rather than taking a
-prefix. Production would name regions with an LLM, as Essential-Web did. All of
-this requires a rebuild, because member texts are not stored in the artifact —
-only centroids are.
+Renaming would change none of them.
 
 ## Why the coarse level is a hierarchy prefix, not a second model
 
-v1 drops the supervised taxonomy probe. L1 is k-means over the same vectors as
-L2, fitted first; L2 is k-means *within* each L1 membership. Lite reports are
-therefore exact unions of fine cells — they cannot contradict the full map.
+No shipped product carries a supervised taxonomy probe. L1 is k-means over the
+same vectors as L2, fitted first; L2 is k-means *within* each L1 membership.
+The subject area of a fine cell is its parent, so a subject-area row in the
+report is an exact union of fine cells and cannot contradict the fine map.
 
-Topic and language breadth still come from **stratified sampling** of the
-reference corpus (math held separate from academic prose, instruction/chat as
-its own mass, legal/finance capped in, Turkish and other languages over-weighted
-relative to the web), not from a classifier trained on dataset provenance.
+Topic and language breadth come from the **corpus plan** — nine axes with byte
+targets, per-source caps, and a non-English floor that atlas-v3 clears at 60.6%
+by bytes — not from a classifier trained on dataset provenance.
 
-## Why language is not a clustering axis
+## Language is a nuisance parameter, not a clustering axis
 
 Multilingual embeddings separate partly by language, so a flat k-means over a
-multilingual corpus can spend much of its region budget distinguishing Turkish
-from Arabic from Chinese rather than distinguishing topics. At 256 regions that
-would consume the entire map.
+multilingual corpus spends much of its region budget distinguishing Turkish
+from Arabic from Chinese rather than distinguishing topics. atlas-v2's coarse
+regions included "Turkish television and
+radio" and "Spanish-language server documentation" — registers of a language,
+not subjects — and the scan already reports language separately.
 
-An earlier design solved this by neutralising language geometrically: computing a
-mean embedding per detected language, subtracting it, and projecting out the
-components that predict language identity. **That was rejected**, for three
-reasons recorded here so the decision is not casually revisited.
+So atlas-v3 applies **per-language mean centering** as a nuisance-parameter
+correction, and this page says so plainly because
+[design.md](design.md) rule 7 records the case against altering the embedding
+space for language. What `Atlas.project` does: the mean vector of the record's
+detected language is subtracted — 59 languages on atlas-v3, each mean
+accumulated over every row of that language in the reference corpus — then the
+two principal directions and the L2 step as before. A record whose language is
+unknown, or which the build had fewer than 6,000 rows of, gets the global mean
+instead. The v2 products ship 20 language means and are centered the same way
+at run time. Nothing is projected
+out that predicts language identity; only the mean moves, and the means ship in
+the artifact as `norm_lang_means`.
 
-1. It conditions the geometry on a label that is least reliable exactly where
-   this tool needs it most. Language identification is weakest on short text and
-   on closely related languages, which is precisely the Turkish, Azerbaijani,
-   Turkmen and Ottoman cases. A misidentified record has the wrong centroid
-   subtracted and lands somewhere meaningless.
-2. A language centroid does not encode only language. Turkish web text is not
-   translated English web text; it has a different topical distribution.
-   Subtracting its mean removes part of what Turkish corpora are *about*.
-3. It is not inspectable. When a user asks why a record landed in a region, the
-   honest answer would involve a hidden vector subtraction they cannot examine.
+The three objections in rule 7 are still real. Where each one lands:
 
-The adopted approach conditions on topic through **supervision** and alters
-nothing: fine clustering is fitted within each level-0 category, so once you have
-conditioned on topic there is much less room left for language to dominate. Any
-language splitting that survives inside a category is visible and explicable
-rather than erased.
+1. *It conditions on a label that is least reliable on short text and on
+   closely related languages.* A record the detector will not commit to is
+   `unknown` and gets the global mean, so a low-confidence record is not
+   corrected wrongly — it is not corrected at all. The residual risk is a
+   confident misidentification, and that was measured once in the wrong
+   direction: an earlier v3 candidate took language from the source shard
+   rather than detecting it per record, subtracted Serbian and Bulgarian means
+   from Ukrainian text, and left the language in the geometry. Per-record
+   detection is the fix that shipped.
+2. *A language mean also encodes what that language's corpus is about.* True,
+   and paid for. The probe on 300,000 held-out rows shows the normalization as a
+   whole taking language balanced accuracy from 0.528 to 0.365 and axis
+   balanced accuracy from 0.697 to 0.580: most of the language signal goes,
+   and some subject signal goes with it.
+3. *It is not inspectable.* The 59 means ship in the artifact, the detected
+   language of every record is in the scan, and the fallback is a rule, so why
+   a record landed where it did can be reconstructed from the files. It is
+   hidden only in the sense that the report does not print the vector.
 
-Coverage is therefore reported as **category by language** and **region by
-language**, and language remains its own fingerprint facet, measured by
-identification rather than by clustering.
+The off-atlas rate is still reported **per language as well as globally**, and
+language remains its own fingerprint facet, measured by identification rather than by
+clustering.
 
 ### The Ottoman case
 
 Ottoman Turkish written in Arabic script gets its language and script from the
-language facet. Its content — legal, administrative, poetic — classifies into the
-corresponding level-0 category. So Ottoman legal text and modern Turkish legal
-text occupy the **same category with different language tags**, which is what
-makes a marginal-contribution comparison meaningful: this corpus adds language
-coverage without adding topical coverage, or the reverse.
-
-Under an unfactorised atlas the two would be separated by script alone and the
-topical relationship would be invisible.
+language facet. The atlas has no Ottoman mean — the 59 languages are those with
+6,000 or more reference rows — so the detector's call decides which mean is
+subtracted, or the global one if it says `unknown`. After that its cell is
+decided by its content, and its language tag by the language facet, so the two
+stay separable in the report: a corpus can be seen to add language coverage
+without adding topical coverage, or the reverse. Whether Ottoman legal text and
+modern Turkish legal text actually share cells on atlas-v3 has not been
+measured.
 
 ## Records too short to place
 
-A record below 80 characters is **excluded from placement**, not assigned. Its
+A record below 40 characters is **excluded from placement**, not assigned. Its
 embedding is dominated by noise, for the same reason language identification is
 gated on length. Including such records would inflate the off-atlas rate with
 records that were never placeable in the first place.
@@ -431,9 +619,10 @@ data, not all of it.
 ## Off-atlas data
 
 A record is **off-atlas** when its cosine similarity to the nearest centroid
-falls below a threshold calibrated at build time, currently 0.392. Those records
-are excluded from the region histogram and the category counts, so every share
-the report prints is a share of the **placed** records, and the placed count is
+falls below a threshold calibrated at build time and stamped into the artifact
+as `off_atlas_threshold`; atlas-v3 carries **0.354** (stored as 0.3538). Those records are
+excluded from the region histogram and the category counts, so every share the
+report prints is a share of the **placed** records, and the placed count is
 printed beside it.
 
 Until 0.1.4, an off-atlas rate above 10% discarded the whole coverage report and
@@ -475,6 +664,55 @@ is continuous and a corpus at 10.1% is not meaningfully different from one at
 Ten percent is not arbitrary. The cutoff was set at the 2nd percentile of the
 atlas's own reference records, so a corpus drawn from the same distribution as
 the atlas sits near 2%. Ten percent is five times that.
+
+### How the cutoff is calibrated
+
+The sentence above, made exact:
+
+> `off_atlas_threshold` is the 2nd percentile of nearest-cell cosine over the
+> build's language-and-axis-balanced calibration draw.
+
+The draw is the builder's `balanced_calibration_draw`: the same 2,000,000
+rows, from the same seed, that fit the global mean and the two stripped
+principal directions, so the cutoff and the normalization are calibrated on one
+sample. Every (language, axis) stratum gets the same quota, and a stratum too
+small to fill its quota hands the remainder back to the rest. Balance is the
+point. A proportional draw of the reference corpus is 53% English web, and a
+percentile of it is an English-web cutoff that rejects ordinary records of every
+smaller stratum at more than 2%. Measured on atlas-v3:
+
+| draw | p1 | p2 | p5 | p50 |
+| --- | --- | --- | --- | --- |
+| balanced calibration draw, 1,998,898 rows over 750 strata | 0.334 | **0.354** | 0.388 | 0.587 |
+| the same rows reweighted to the corpus's own proportions | | 0.379 | | |
+| held-out in-family prose (fineweb en, wikipedia en, fineweb-2 tr; 26,000 records, benchmark b4) | 0.403 | 0.425 | 0.466 | 0.653 |
+
+The cutoff is one number for every axis, and the axes do not sit at the same
+place under it. Second percentile by axis in the same draw: code 0.312, training
+0.334, educational 0.353, forum 0.370, books 0.375, encyclopedic 0.381, web
+0.391, legal and government 0.413, scientific 0.421. English alone is 0.422, and
+the English-web stratum 0.431, which is where the held-out in-family figure
+comes from. So a corpus of ordinary English web prose sits near 0.2% off-atlas,
+a corpus balanced like the reference draw at 2%, and a corpus of nothing but
+code near 9%, all under one cutoff and none of it because the records are unlike
+the atlas. The rate has to be read against what the corpus is made of, which is
+why the report says what the off-atlas records are.
+
+The similarities come from the build's own embedding store, whose rows are
+exactly what the runtime encoder produces for the same record (checked: cosine
+1.0 against re-encoding the reservoir text), projected through the artifact's
+per-language centering with each row's detected language. Rows the store never
+wrote — all-zero blocks left behind by an interrupted ingest, 115,200 rows in 17 runs of the
+163 million — are dropped rather than scored, since a zero row scores zero and
+enough of them would drag the percentile there.
+
+`tools/calibrate_off_atlas_v3.py` computes the number and stamps it; the
+artifact records the draw, the percentiles and the per-axis breakdown under
+`off_atlas_calibration`, and `tests/test_atlas_pipeline.py` fails if a bundled
+v3 ever ships without the key. A map that leaves the key out gets the loader's
+0.35 fallback, and that is not a calibrated number: atlas-v2's own 2nd
+percentile is 0.309, so on v2 the fallback puts 12–18% of ordinary held-out
+prose off-atlas. The v2 products still run on the fallback.
 
 ### Read the off-atlas rate as length first
 
@@ -548,6 +786,21 @@ The "not written like prose" diagnosis therefore fires only when machine-format
 records *also* happen to fall below the cutoff, which is a narrower case than it
 sounds. When it fires it is right; it is not a substitute for the checks.
 
+The cutoff cannot be asked to do more, and the reason is in the numbers rather
+than in the choice of number. On this encoder the machine formats sit inside the
+band where ordinary prose scores. Median similarity on atlas-v3 (benchmark b4,
+1,400 synthetic records): DNA strings 0.43, random letters 0.46, random unicode
+0.47, base64 0.49, minified JavaScript 0.52, hex log lines 0.59,
+comma-separated numbers 0.75 — against a 2nd percentile of 0.425 and a median of
+0.65 for held-out in-family prose. No cutoff separates the two. At the
+in-family 2nd percentile, 0.425, the cutoff rejects 2% of prose and 9.6% of the
+machine formats (45% of the DNA, none of the hex, JavaScript or numbers); at
+0.50 it rejects 9% of prose to catch 49% of them. Raising it buys machine
+formats with prose, roughly one for one, and the calibrated cutoff is set for
+prose. What identifies a machine-format off-atlas set is the surface-share
+diagnosis above — whitespace share and non-letter share — and what catches
+machine formats wherever they place is the encoding and degeneracy checks.
+
 ### What off-atlas does not mean
 
 It is not a quality score, and it does not run in the direction you might guess.
@@ -563,127 +816,141 @@ good the clustering is, and a global average would hide that.
 
 ## Reading the quality numbers
 
-Two figures belong next to any coverage number, and both travel in the
-`coverage` facet of every fingerprint:
+The v2 and v3 artifacts carry no supervised taxonomy probe, so the two figures
+that used to travel in the `coverage` facet — level-0 held-out accuracy and
+region purity by taxonomy — do not exist for them. They were v0 and v1
+concepts: a probe trained to reproduce the provenance label of each reference
+record, and a purity score against those labels. What was wrong with them is
+kept here because it is why v3 has no taxonomy at all.
 
-| number | meaning |
-| --- | --- |
-| level-0 held-out accuracy | how well the taxonomy probe generalises. Low accuracy means category counts look precise and are not. |
-| region purity by taxonomy | mean share of each region occupied by its most common category. Low purity means regions are mixing topics. |
+### What 0.864 accuracy did not mean
 
-### What 0.864 accuracy does not mean
+Measured on the 258-region v0 build. It measured how well the probe reproduced
+the **provenance labels** it was trained on, not whether those labels were
+correct. The level-0 label of every reference record was inherited from the
+dataset it came from, so `general_chat` held 106 of 258 regions — UltraChat,
+Alpaca, Dolly and four Turkish instruction sets, whose regions covered film,
+colour theory, poetry, blockchain, football and code — and two categories were
+mislabelled outright: `summarization` (regions 106–115) was `tr-wikihow-summ`,
+how-to instructions rather than summaries, and `religion_philosophy` (219–225)
+was Arabic Wikipedia, two of whose regions were about languages and computers.
+A high accuracy meant the probe had faithfully learned a wrong taxonomy.
 
-It measures how well the probe reproduces the **provenance labels** it was
-trained on. It does not measure whether those labels are correct.
+The fix was not a better probe but no probe: v3 has no categories to inherit or
+to learn. Subject areas are k-means over the same vectors as the cells, and
+every one is named by hand from its own members.
 
-In v0 the level-0 label of every reference record is inherited from the dataset
-it came from. Where a dataset is topically narrow that works. Where it is not, a
-high accuracy means the probe faithfully learned a wrong taxonomy. Three
-consequences are visible in the shipped artifact and are stated here rather than
-left to be discovered:
+What travels with an atlas-v3 map instead:
 
-**`general_chat` holds 106 of 258 regions.** UltraChat, Alpaca, Dolly and four
-Turkish instruction sets were all labelled `general_chat`, but instruction
-datasets span every topic there is. The probe learned "general_chat" to mean
-"came from an instruction dataset" rather than any subject. Its regions
-therefore include film, colour theory, poetry, blockchain, football and code —
-things that have proper categories elsewhere in the taxonomy.
+| number | where | meaning |
+| --- | --- | --- |
+| language probe | `language_probe` | balanced accuracy of a linear probe for language on 300,000 held-out rows: 0.528 on raw vectors, 0.365 after normalization. The same probe for axis: 0.697 to 0.580. Read as: most of the language signal removed, most of the subject signal kept. |
+| off-atlas calibration | `off_atlas_calibration` | the draw, the percentiles and the per-axis breakdown behind the 0.3538 cutoff; see [How the cutoff is calibrated](#how-the-cutoff-is-calibrated). |
+| reference mass | `region_size`, `l1_size` | how many of the 163,452,464 reference records sit in each cell and subject area — the denominator of every density the report prints. |
+| identity | `encoder_weight_hash`, `corpus_hash`, `pipeline_hash` | whether two maps, or a map and a run, are in the same coordinate system. |
 
-**Two categories are mislabelled outright.** `summarization` (regions 106–115)
-is `tr-wikihow-summ`, whose records are how-to instructions, not summaries —
-its label words are `tıkla, dokun, ekranın` (click, tap, screen).
-`religion_philosophy` (219–225) is Arabic Wikipedia, mapped there at build time;
-two of its regions are about languages and computers.
+## Products
 
-Read category counts as approximate, and read `general_chat` as "unclassified".
-Region assignment and the off-atlas rate are unaffected — those come from
-embedding geometry, not from labels.
+The package bundles four artifacts and offers three. Every figure below is
+read from the artifact's own metadata.
 
-The fix is per-record annotation rather than per-dataset inheritance: annotate a
-sample with a strong model, distil a small annotator, and label each record on
-its own content, as Essential-Web did. That requires a rebuild.
+| property | atlas-v3 (default) | atlas-v2 | atlas-v2-lite | atlas-v1-lite |
+| --- | --- | --- | --- | --- |
+| fine cells (L2) | 4,096 | 296 | 65 | 215 |
+| subject areas (L1) | 256 | 128 | 32 | 48 |
+| dimensions | 128 | 128 | 64 | 128 |
+| reference records | 163,452,464 | 69,071,324 | 69,071,324 | 2,125,556 |
+| sources | 244 | 59 | 59 | 102 |
+| non-English share | 60.6% by bytes | 48.3% | 48.3% | 31.1% |
+| language means | 59 | 20 | 20 | 13 |
+| L2 allocation | population budget of 4,096, k 1–64 per L1 | best-k cosine silhouette, k 1–10 per L1 | best-k cosine silhouette, k 1–10 per L1 | budget 800, k 4–24 |
+| default sample | 500,000 | 200,000 | 50,000 | 200,000 |
+| off-atlas cutoff | 0.3538, stamped | 0.35 loader fallback (own 2nd percentile 0.309) | 0.35 loader fallback | 0.277, stamped |
+| size in the wheel | 13.8 MB | 3.5 MB | 1.5 MB | 1.1 MB |
+| corpus hash | `4203fc3a…` | `74ad6030…` | `74ad6030…` | — |
 
-## Tiers
+All three offered products report at the fine-cell level (`user_resolution`
+is `l2`); the subject area is the cell's parent and only groups and names rows.
+They are not resolution levels of one hierarchy. atlas-v2-lite is a separate
+64-dimensional fit on the same corpus as atlas-v2 with its own cells — both
+artifacts record a population-overlap crosswalk between them
+(`crosswalk.full_to_lite`), which is a lookup, not an exact prefix — and
+atlas-v3 is a different corpus. Fingerprints are comparable only on the same
+product, and `diff` refuses across products.
 
-Tiers are **resolution levels of one hierarchy**, not separate atlases.
-Lite (L1) is a strict prefix of full (L2): every fine cell has one immutable
-parent. Fingerprints against lite and full stay comparable; upgrading
-re-aggregates rather than invalidating.
-
-The package ships one bundle, `atlas-v1-lite.npz`, carrying both levels.
-
-Every figure below is read from the shipped artifact's own metadata; the fuller
-build record is in `tools/atlas-data/atlas-lite-v3-release-notes.json`, filed
-under the name the bundle was built as.
-
-| property | value |
-| --- | --- |
-| L1 regions (lite) | 48 |
-| L2 fine cells | 215 |
-| reference records (after both dedup passes) | 2,125,556 |
-| distinct sources | 102 |
-| embedding | potion-multilingual-128M, first 128 columns, int8 per-row scale, SIF pool |
-| normalization | per-language mean + top-2 PCA removed + L2 |
-| soft-assign | top-5, T=0.08 (2.57 regions with weight > 0.15) |
-| topic purity (macro / micro) | 0.540 / 0.544 |
-| source purity (macro / micro; lower is better) | 0.298 / 0.295 |
-| source cluster AMI | 0.252 |
-| directly calibrated cells (≥200 members) | 215 of 215 |
-| non-English share | 31.1% |
-| artifact size | 1.08 MB |
-| off-atlas cutoff | 0.277 cosine |
-
-Every L2 cell clears the 200-member calibration floor directly, so none of them
-falls back to its L1 parent's residuals. The fallback path still exists, and the
-direct support and reliability flag travel with the artifact either way.
-
-The topic/source diagnostic does not compare raw NMI values directly: a
-language-specific source such as German Wikipedia makes source identity and
-language identical. Source purity is well below topic purity, which is the
-direction that matters — cells group by subject rather than by where the text
-came from. L1 exemplar review shows recognisable regions for clinical
-medicine, legal agreements, finance, SQL, mathematics, machine learning,
-biology, sports, and code. Some intentionally distinct registers remain visible
-(assistant dialogue, licences, and task-formatted instructions); format syntax
-itself is stripped before embedding.
-
-Superseded bundles are no longer installed. They live in `tools/atlas-data/`
-for rebuilds and for reading old fingerprints, and a wheel carries only
-`atlas-v1-lite.npz`, so a scan cannot silently report coordinates from a map
-other than the pinned one.
+`atlas-v1-lite` is still bundled and loads with `--model atlas-v1-lite`, so
+fingerprints placed on it can be re-read; the picker does not offer it and
+nothing new should be placed on it. For the record, its own metadata reports
+topic purity 0.540 / 0.544 (macro / micro), source purity 0.298 / 0.295 (lower
+is better), source cluster AMI 0.252, soft assignment top-5 at T=0.08 with
+2.57 regions above weight 0.15, and all 215 cells clearing the 200-member
+calibration floor. The v2 and v3 artifacts record none of those figures.
+Measurements in this document that were taken on `atlas-v1-lite`, or on the
+258-region build before it, say so where they appear.
 
 ## Hand intervention
 
-Human judgement is used where it has leverage and nowhere else.
+Human judgement is used where it has leverage and nowhere else, and every hand
+edit is a versioned file the build reads, never an edit to the artifact. Edits
+applied directly to the artifact would make it impossible to rebuild.
 
-| level | who decides |
+| what | who decides |
 | --- | --- |
-| level 0, ~30 categories | designed by hand |
-| level 1, 256 regions | clustered, then reviewable by hand |
-| deeper levels | unsupervised; 16,384 regions are not reviewable |
+| the corpus plan: nine axes, byte targets, per-source caps, the non-English floor | designed by hand, in `tools/atlas_sources.py` |
+| 256 subject areas and 4,096 cells | clustered |
+| the name of every subject area and every cell | written by hand, from the build's contrastive terms and review excerpts |
+| the off-atlas cutoff | computed by `tools/calibrate_off_atlas_v3.py` and stamped |
 
-Any hand edit must be declarative and versioned, so the atlas stays a
-reproducible function of the reference corpus, the embedding model and that file.
-Edits applied directly to the artifact would make it impossible to rebuild.
+The names live in `tools/atlas-data/l1_labels_atlas-v3.json` and
+`tools/atlas-data/region_labels_atlas-v3.json`, keyed to the corpus hash, so a
+build on a different corpus cannot pick them up by accident.
 
-Level-0 category ids are **append-only and never renumbered**, because they are
-part of the fingerprint schema.
+Cell ids are never renumbered inside a product, because they are part of the
+fingerprint schema. A rebuild that moves them ships under a new product name,
+which is why atlas-v2 and atlas-v3 sit beside each other rather than one
+replacing the other.
 
 ## Rebuilding
 
 ```bash
-python tools/build_atlas.py \
-  --scale 4.0 \
-  --budget 180 \
-  --out src/dropoutt/data/atlas/atlas-v1-lite.npz
+tools/run_atlas_v3_build.sh
 ```
 
-`--scale` multiplies every per-source sample target; `--budget` sets a per-source
-wall-clock limit so one slow shard cannot stall the build. Sources that have
-moved, gone gated or changed split names are skipped and recorded in the
-manifest rather than failing the build. A JSON timing log is written next to the
-artifact (`build-timing.json`) with collect / tokenize / embed / cluster wall
-times. `build-diagnostics.json` records every L1 label, exemplar, source
-concentration, topic mix, format mix, language mix, and calibration support.
-The build fails if the useful compressed artifact falls outside 3–5 MB; it does
-not add padding to meet the lower bound.
+That script runs, detached and with a live log,
+
+```bash
+ATLAS_BUILD_HASH_SLOTS=$((1 << 28)) \
+python tools/build_atlas_v2.py --product atlas-v3 \
+  --cache "$storage/corpus-cache" --work "$storage/work" --out-dir "$storage/release"
+```
+
+and, when the build exits 0, copies `atlas-v3.npz` and
+`atlas-v3-release-notes.json` into `src/dropoutt/data/atlas/` and writes
+`atlas-v3-SHA256SUMS` beside them. The storage root defaults to
+`/Volumes/ck512/dropoutt-atlas-v2` and is overridden with
+`DROPOUTT_ATLAS_STORAGE`; `ATLAS_NORM_DIR` points the normalized memmap at a
+fast disk for the L2 phase, which reads each region's members back as one
+contiguous slice.
+
+The corpus cache is fetched separately and never modified by a build. The
+manifest, its hash and the source ledger are recorded in the release notes, so
+the same manifest yields the same corpus hash. Ingest checkpoints after every
+shard and clustering at three points — normalization, the L1 fit, and every
+eight L1 regions of the L2 loop — each keyed to the corpus hash, so an
+interrupted build resumes where it stopped and a different corpus can never
+resume from its files; `tools/resume_atlas_v3_build.sh` restarts one. A build
+that did not consume every manifest shard fails rather than shipping a partial
+map. It warns, and the release notes record, when the IDF token mass, the
+non-English floor (50.5%) or an axis byte floor is missed: on the shipped
+build, books, scientific and code missed their floors and the rest cleared
+them.
+
+Three steps follow the build. `tools/calibrate_off_atlas_v3.py` computes the
+off-atlas cutoff from the build's own embedding store and stamps it into the
+artifact; the hand-written names are read from `tools/atlas-data/` when
+their corpus hash matches, otherwise the artifact carries automatic
+contrastive-term captions and `region_labels_source` says so; and
+`tools/strip_atlas_exemplars.py` removes the review excerpts
+(`exemplar_texts`) from the copy that ships and restamps the checksum, keeping
+the full artifact on the build volume for the next labelling pass.
+`tests/test_atlas_pipeline.py` fails if a bundled map carries a text array.

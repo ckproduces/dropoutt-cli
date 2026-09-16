@@ -1,0 +1,1402 @@
+{
+ "n": 163452464,
+ "logical_bytes": 212786662386,
+ "sources": {
+  "CohereLabs__aya_collection_language_split__bengali": {
+   "records": 368978,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__bulgarian": {
+   "records": 511194,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__catalan": {
+   "records": 910841,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__croatian": {
+   "records": 6825,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__czech": {
+   "records": 1025556,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__danish": {
+   "records": 921189,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__dutch": {
+   "records": 1020406,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__english": {
+   "records": 2450444,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__estonian": {
+   "records": 1188555,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__finnish": {
+   "records": 1088606,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__french": {
+   "records": 874693,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__georgian": {
+   "records": 291977,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__german": {
+   "records": 920268,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__greek": {
+   "records": 429125,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__hebrew": {
+   "records": 701770,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__hindi": {
+   "records": 280648,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__hungarian": {
+   "records": 974794,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__indonesian": {
+   "records": 928764,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__iranian_persian": {
+   "records": 576232,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__italian": {
+   "records": 928396,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__japanese": {
+   "records": 863514,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__korean": {
+   "records": 830545,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__lithuanian": {
+   "records": 1048452,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__north_azerbaijani": {
+   "records": 859813,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__norwegian": {
+   "records": 55189,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__polish": {
+   "records": 981635,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__portuguese": {
+   "records": 977198,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__romanian": {
+   "records": 922728,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__russian": {
+   "records": 481966,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__serbian": {
+   "records": 534475,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__simplified_chinese": {
+   "records": 946755,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__slovak": {
+   "records": 1027654,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__slovenian": {
+   "records": 1107660,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__spanish": {
+   "records": 900672,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__standard_arabic": {
+   "records": 379306,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__standard_latvian": {
+   "records": 1030687,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__standard_malay": {
+   "records": 921264,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__swahili": {
+   "records": 985432,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__swedish": {
+   "records": 1054527,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__tamil": {
+   "records": 215503,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__thai": {
+   "records": 319674,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__turkish": {
+   "records": 953167,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__ukrainian": {
+   "records": 503287,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__urdu": {
+   "records": 510330,
+   "axis": "training"
+  },
+  "CohereLabs__aya_collection_language_split__vietnamese": {
+   "records": 721805,
+   "axis": "training"
+  },
+  "CohereLabs__aya_dataset": {
+   "records": 159882,
+   "axis": "training"
+  },
+  "HuggingFaceFW__fineweb-2__data_arb_Arab_train_000_00000.parquet": {
+   "records": 268958,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_arb_Arab_train_000_00001.parquet": {
+   "records": 94745,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_azj_Latn_train_000_00000.parquet": {
+   "records": 38501,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_azj_Latn_train_001_00000.parquet": {
+   "records": 13159,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ben_Beng_train_000_00000.parquet": {
+   "records": 31081,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ben_Beng_train_001_00000.parquet": {
+   "records": 10660,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_bos_Latn_train_000_00000.parquet": {
+   "records": 40691,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_bos_Latn_train_001_00000.parquet": {
+   "records": 14080,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_bul_Cyrl_train_000_00000.parquet": {
+   "records": 135515,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_bul_Cyrl_train_000_00001.parquet": {
+   "records": 45962,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_cat_Latn_train_000_00000.parquet": {
+   "records": 83774,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_cat_Latn_train_001_00000.parquet": {
+   "records": 27511,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ces_Latn_train_000_00000.parquet": {
+   "records": 685544,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ces_Latn_train_000_00001.parquet": {
+   "records": 229794,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_cmn_Hani_train_000_00000.parquet": {
+   "records": 598884,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_cmn_Hani_train_000_00001.parquet": {
+   "records": 210999,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_dan_Latn_train_000_00000.parquet": {
+   "records": 332698,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_dan_Latn_train_000_00001.parquet": {
+   "records": 113098,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_deu_Latn_train_000_00000.parquet": {
+   "records": 3319154,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_deu_Latn_train_000_00001.parquet": {
+   "records": 1263045,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_deu_Latn_train_000_00002.parquet": {
+   "records": 1537198,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ekk_Latn_train_000_00000.parquet": {
+   "records": 78088,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ekk_Latn_train_001_00000.parquet": {
+   "records": 25783,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ell_Grek_train_000_00000.parquet": {
+   "records": 176870,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ell_Grek_train_000_00001.parquet": {
+   "records": 59709,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_fas_Arab_train_000_00000.parquet": {
+   "records": 386661,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_fas_Arab_train_000_00001.parquet": {
+   "records": 131747,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_fin_Latn_train_000_00000.parquet": {
+   "records": 290449,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_fin_Latn_train_000_00001.parquet": {
+   "records": 100527,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_fra_Latn_train_000_00000.parquet": {
+   "records": 3312892,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_fra_Latn_train_000_00001.parquet": {
+   "records": 91530,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_fra_Latn_train_000_00002.parquet": {
+   "records": 1140556,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_heb_Hebr_train_000_00000.parquet": {
+   "records": 173043,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_heb_Hebr_train_001_00000.parquet": {
+   "records": 57814,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_hin_Deva_train_000_00000.parquet": {
+   "records": 16907,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_hin_Deva_train_001_00000.parquet": {
+   "records": 5178,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_hrv_Latn_train_000_00000.parquet": {
+   "records": 120937,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_hrv_Latn_train_001_00000.parquet": {
+   "records": 40893,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_hun_Latn_train_000_00000.parquet": {
+   "records": 405176,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_hun_Latn_train_000_00001.parquet": {
+   "records": 137571,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ind_Latn_train_000_00000.parquet": {
+   "records": 725223,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ind_Latn_train_000_00001.parquet": {
+   "records": 246966,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ita_Latn_train_000_00000.parquet": {
+   "records": 2067691,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ita_Latn_train_000_00001.parquet": {
+   "records": 701936,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_jpn_Jpan_train_000_00000.parquet": {
+   "records": 2311191,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_jpn_Jpan_train_000_00001.parquet": {
+   "records": 776113,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_kat_Geor_train_000_00000.parquet": {
+   "records": 15409,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_kat_Geor_train_001_00000.parquet": {
+   "records": 5475,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_kor_Hang_train_000_00000.parquet": {
+   "records": 456929,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_kor_Hang_train_000_00001.parquet": {
+   "records": 153069,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_lit_Latn_train_000_00000.parquet": {
+   "records": 133052,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_lit_Latn_train_001_00000.parquet": {
+   "records": 43833,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_lvs_Latn_train_000_00000.parquet": {
+   "records": 71311,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_lvs_Latn_train_001_00000.parquet": {
+   "records": 23618,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_nld_Latn_train_000_00000.parquet": {
+   "records": 1871350,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_nld_Latn_train_000_00001.parquet": {
+   "records": 628864,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_nob_Latn_train_000_00000.parquet": {
+   "records": 252338,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_nob_Latn_train_000_00001.parquet": {
+   "records": 86804,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_pol_Latn_train_000_00000.parquet": {
+   "records": 1351973,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_pol_Latn_train_000_00001.parquet": {
+   "records": 457022,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_por_Latn_train_000_00000.parquet": {
+   "records": 3161947,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_por_Latn_train_000_00001.parquet": {
+   "records": 1047307,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ron_Latn_train_000_00000.parquet": {
+   "records": 368959,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ron_Latn_train_000_00001.parquet": {
+   "records": 125264,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_rus_Cyrl_train_000_00000.parquet": {
+   "records": 1394852,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_rus_Cyrl_train_000_00001.parquet": {
+   "records": 470743,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_slk_Latn_train_000_00000.parquet": {
+   "records": 319678,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_slk_Latn_train_000_00001.parquet": {
+   "records": 106807,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_slv_Latn_train_000_00000.parquet": {
+   "records": 82135,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_slv_Latn_train_001_00000.parquet": {
+   "records": 27077,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_spa_Latn_train_000_00000.parquet": {
+   "records": 3327891,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_spa_Latn_train_000_00001.parquet": {
+   "records": 1066616,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_spa_Latn_train_000_00002.parquet": {
+   "records": 1468560,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_srp_Cyrl_train_000_00000.parquet": {
+   "records": 83770,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_srp_Cyrl_train_001_00000.parquet": {
+   "records": 28109,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_swe_Latn_train_000_00000.parquet": {
+   "records": 424161,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_swe_Latn_train_000_00001.parquet": {
+   "records": 147020,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_swh_Latn_train_000_00000.parquet": {
+   "records": 41673,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_tam_Taml_train_000_00000.parquet": {
+   "records": 13341,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_tam_Taml_train_001_00000.parquet": {
+   "records": 5219,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_tha_Thai_train_000_00000.parquet": {
+   "records": 89297,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_tha_Thai_train_000_00001.parquet": {
+   "records": 30229,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_tur_Latn_train_000_00000.parquet": {
+   "records": 1144920,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_tur_Latn_train_000_00001.parquet": {
+   "records": 382417,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ukr_Cyrl_train_000_00000.parquet": {
+   "records": 261309,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_ukr_Cyrl_train_000_00001.parquet": {
+   "records": 86560,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_urd_Arab_train_000_00000.parquet": {
+   "records": 23358,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_urd_Arab_train_001_00000.parquet": {
+   "records": 8399,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_vie_Latn_train_000_00000.parquet": {
+   "records": 403642,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_vie_Latn_train_000_00001.parquet": {
+   "records": 138968,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_zsm_Latn_train_000_00000.parquet": {
+   "records": 35810,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-2__data_zsm_Latn_train_001_00000.parquet": {
+   "records": 12616,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb-edu__CC-MAIN-2024-46": {
+   "records": 1606322,
+   "axis": "training"
+  },
+  "HuggingFaceFW__fineweb__CC-MAIN-2024-51": {
+   "records": 11054254,
+   "axis": "web"
+  },
+  "HuggingFaceFW__fineweb__sample-100BT": {
+   "records": 30012152,
+   "axis": "web"
+  },
+  "HuggingFaceTB__smollm-corpus__cosmopedia-v2": {
+   "records": 1437612,
+   "axis": "training"
+  },
+  "OpenAssistant__oasst2": {
+   "records": 89344,
+   "axis": "training"
+  },
+  "common-pile__arxiv_abstracts_filtered": {
+   "records": 1523708,
+   "axis": "scientific"
+  },
+  "common-pile__arxiv_papers_filtered": {
+   "records": 295017,
+   "axis": "scientific"
+  },
+  "common-pile__biodiversity_heritage_library_filtered": {
+   "records": 737593,
+   "axis": "scientific"
+  },
+  "common-pile__caselaw_access_project_filtered": {
+   "records": 636547,
+   "axis": "legal_government"
+  },
+  "common-pile__doab_filtered": {
+   "records": 402683,
+   "axis": "educational"
+  },
+  "common-pile__library_of_congress_filtered": {
+   "records": 128058,
+   "axis": "books"
+  },
+  "common-pile__libretexts_filtered": {
+   "records": 39886,
+   "axis": "educational"
+  },
+  "common-pile__oercommons_filtered": {
+   "records": 5231,
+   "axis": "educational"
+  },
+  "common-pile__peS2o_filtered": {
+   "records": 723217,
+   "axis": "scientific"
+  },
+  "common-pile__pre_1929_books_filtered": {
+   "records": 123693,
+   "axis": "books"
+  },
+  "common-pile__pressbooks_filtered": {
+   "records": 53683,
+   "axis": "educational"
+  },
+  "common-pile__project_gutenberg_filtered": {
+   "records": 55314,
+   "axis": "books"
+  },
+  "common-pile__pubmed_filtered": {
+   "records": 1482978,
+   "axis": "scientific"
+  },
+  "common-pile__regulations_filtered": {
+   "records": 183249,
+   "axis": "legal_government"
+  },
+  "common-pile__stackexchange_filtered": {
+   "records": 1418631,
+   "axis": "forum"
+  },
+  "common-pile__stackv2_edu_filtered": {
+   "records": 1971424,
+   "axis": "code"
+  },
+  "common-pile__usgpo_filtered": {
+   "records": 319504,
+   "axis": "legal_government"
+  },
+  "common-pile__youtube_filtered": {
+   "records": 816771,
+   "axis": "educational"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_bg_caselaw_train_0.jsonl.xz": {
+   "records": 110688,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_cs_caselaw_train_0.jsonl.xz": {
+   "records": 160249,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_da_caselaw_train_0.jsonl.xz": {
+   "records": 174856,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_de_caselaw_train_0.jsonl.xz": {
+   "records": 163129,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_el_caselaw_train_0.jsonl.xz": {
+   "records": 101138,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_es_caselaw_train_0.jsonl.xz": {
+   "records": 165541,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_et_caselaw_train_0.jsonl.xz": {
+   "records": 195983,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_fi_caselaw_train_0.jsonl.xz": {
+   "records": 169131,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_fr_caselaw_train_0.jsonl.xz": {
+   "records": 175490,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_hr_caselaw_train_0.jsonl.xz": {
+   "records": 205451,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_hu_caselaw_train_0.jsonl.xz": {
+   "records": 166025,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_it_caselaw_train_0.jsonl.xz": {
+   "records": 168929,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_lt_caselaw_train_0.jsonl.xz": {
+   "records": 223360,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_lv_caselaw_train_0.jsonl.xz": {
+   "records": 203293,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_nl_caselaw_train_0.jsonl.xz": {
+   "records": 173871,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_pl_caselaw_train_0.jsonl.xz": {
+   "records": 179490,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_pt_caselaw_train_0.jsonl.xz": {
+   "records": 165386,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_ro_caselaw_train_0.jsonl.xz": {
+   "records": 189827,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_sk_caselaw_train_0.jsonl.xz": {
+   "records": 170431,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_sl_caselaw_train_0.jsonl.xz": {
+   "records": 192340,
+   "axis": "legal_government"
+  },
+  "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_sv_caselaw_train_0.jsonl.xz": {
+   "records": 170588,
+   "axis": "legal_government"
+  },
+  "wikimedia__wikipedia__20231101.ar": {
+   "records": 580260,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.az": {
+   "records": 106738,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.bg": {
+   "records": 115824,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.bn": {
+   "records": 41467,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.bs": {
+   "records": 88462,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.ca": {
+   "records": 201859,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.cs": {
+   "records": 336780,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.da": {
+   "records": 293114,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.de": {
+   "records": 1471233,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.el": {
+   "records": 91074,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.en": {
+   "records": 2571572,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.es": {
+   "records": 1388739,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.et": {
+   "records": 152049,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.fa": {
+   "records": 435877,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.fi": {
+   "records": 310812,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.fr": {
+   "records": 1533863,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.he": {
+   "records": 91827,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.hi": {
+   "records": 69961,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.hr": {
+   "records": 185297,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.hu": {
+   "records": 237481,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.id": {
+   "records": 552235,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.it": {
+   "records": 1228155,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.ja": {
+   "records": 558182,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.ka": {
+   "records": 43572,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.ko": {
+   "records": 322418,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.lt": {
+   "records": 190096,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.lv": {
+   "records": 121751,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.ms": {
+   "records": 244598,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.nl": {
+   "records": 1723788,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.no": {
+   "records": 281437,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.pl": {
+   "records": 955674,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.pt": {
+   "records": 1089125,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.ro": {
+   "records": 428606,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.ru": {
+   "records": 790317,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.simple": {
+   "records": 236438,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.sk": {
+   "records": 211370,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.sl": {
+   "records": 168181,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.sr": {
+   "records": 94198,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.sv": {
+   "records": 484491,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.sw": {
+   "records": 60235,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.ta": {
+   "records": 42647,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.th": {
+   "records": 53176,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.tr": {
+   "records": 525217,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.uk": {
+   "records": 356575,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.ur": {
+   "records": 121683,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.vi": {
+   "records": 1236538,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikipedia__20231101.zh": {
+   "records": 909926,
+   "axis": "encyclopedic"
+  },
+  "wikimedia__wikisource__20231201.ar": {
+   "records": 38055,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.cs": {
+   "records": 42686,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.de": {
+   "records": 135959,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.el": {
+   "records": 7893,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.es": {
+   "records": 37417,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.fr": {
+   "records": 18660,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.he": {
+   "records": 104584,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.it": {
+   "records": 64112,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.ja": {
+   "records": 11544,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.ko": {
+   "records": 23666,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.la": {
+   "records": 10829,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.pt": {
+   "records": 23003,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.ru": {
+   "records": 363504,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.sl": {
+   "records": 16982,
+   "axis": "books"
+  },
+  "wikimedia__wikisource__20231201.zh": {
+   "records": 228001,
+   "axis": "books"
+  }
+ },
+ "axes": {
+  "training": {
+   "records": 38825659,
+   "logical_bytes": 23988711783
+  },
+  "web": {
+   "records": 85622609,
+   "logical_bytes": 134542527065
+  },
+  "scientific": {
+   "records": 4762513,
+   "logical_bytes": 7234867012
+  },
+  "legal_government": {
+   "records": 4764496,
+   "logical_bytes": 9061021432
+  },
+  "educational": {
+   "records": 1318254,
+   "logical_bytes": 2306035200
+  },
+  "books": {
+   "records": 1433960,
+   "logical_bytes": 3051861632
+  },
+  "forum": {
+   "records": 1418631,
+   "logical_bytes": 2155192677
+  },
+  "code": {
+   "records": 1971424,
+   "logical_bytes": 668328115
+  },
+  "encyclopedic": {
+   "records": 23334918,
+   "logical_bytes": 29306164599
+  }
+ },
+ "langs": {
+  "bn": {
+   "records": 371656,
+   "logical_bytes": 704952922
+  },
+  "as": {
+   "records": 413,
+   "logical_bytes": 333177
+  },
+  "la": {
+   "records": 198152,
+   "logical_bytes": 243869632
+  },
+  "lb": {
+   "records": 81383,
+   "logical_bytes": 126287959
+  },
+  "bg": {
+   "records": 910035,
+   "logical_bytes": 1414345086
+  },
+  "mk": {
+   "records": 10509,
+   "logical_bytes": 5993932
+  },
+  "ru": {
+   "records": 3525164,
+   "logical_bytes": 7699953150
+  },
+  "ky": {
+   "records": 29208,
+   "logical_bytes": 35938194
+  },
+  "sr": {
+   "records": 728403,
+   "logical_bytes": 867544016
+  },
+  "mn": {
+   "records": 481,
+   "logical_bytes": 217869
+  },
+  "uk": {
+   "records": 1205871,
+   "logical_bytes": 1974393117
+  },
+  "ca": {
+   "records": 1217154,
+   "logical_bytes": 784445989
+  },
+  "oc": {
+   "records": 7271,
+   "logical_bytes": 5247911
+  },
+  "an": {
+   "records": 36356,
+   "logical_bytes": 35556387
+  },
+  "fr": {
+   "records": 7145312,
+   "logical_bytes": 9308238709
+  },
+  "es": {
+   "records": 8388708,
+   "logical_bytes": 11095659630
+  },
+  "gl": {
+   "records": 3689,
+   "logical_bytes": 1842859
+  },
+  "en": {
+   "records": 60200222,
+   "logical_bytes": 83610524987
+  },
+  "it": {
+   "records": 5146101,
+   "logical_bytes": 6125721863
+  },
+  "mr": {
+   "records": 3767,
+   "logical_bytes": 3643372
+  },
+  "da": {
+   "records": 1858283,
+   "logical_bytes": 1618911872
+  },
+  "pl": {
+   "records": 3928113,
+   "logical_bytes": 4430602491
+  },
+  "de": {
+   "records": 8833677,
+   "logical_bytes": 11844125652
+  },
+  "ps": {
+   "records": 2135,
+   "logical_bytes": 2292554
+  },
+  "pt": {
+   "records": 6463460,
+   "logical_bytes": 7708125210
+  },
+  "qu": {
+   "records": 14723,
+   "logical_bytes": 14042561
+  },
+  "ro": {
+   "records": 2016828,
+   "logical_bytes": 1787591171
+  },
+  "th": {
+   "records": 493607,
+   "logical_bytes": 1061668242
+  },
+  "vi": {
+   "records": 2511195,
+   "logical_bytes": 2259119680
+  },
+  "jv": {
+   "records": 31350,
+   "logical_bytes": 21395723
+  },
+  "nl": {
+   "records": 5387374,
+   "logical_bytes": 5210961813
+  },
+  "no": {
+   "records": 738036,
+   "logical_bytes": 831714872
+  },
+  "ja": {
+   "records": 4534318,
+   "logical_bytes": 10884939171
+  },
+  "sv": {
+   "records": 2276248,
+   "logical_bytes": 2063200137
+  },
+  "hu": {
+   "records": 1904272,
+   "logical_bytes": 1886482091
+  },
+  "et": {
+   "records": 1619979,
+   "logical_bytes": 1055962299
+  },
+  "ur": {
+   "records": 668249,
+   "logical_bytes": 611612663
+  },
+  "ga": {
+   "records": 3499,
+   "logical_bytes": 2238491
+  },
+  "lt": {
+   "records": 1613193,
+   "logical_bytes": 1225422801
+  },
+  "is": {
+   "records": 1219,
+   "logical_bytes": 1033076
+  },
+  "el": {
+   "records": 867593,
+   "logical_bytes": 1539082796
+  },
+  "hr": {
+   "records": 672291,
+   "logical_bytes": 902539326
+  },
+  "bs": {
+   "records": 45927,
+   "logical_bytes": 52887752
+  },
+  "cs": {
+   "records": 2428718,
+   "logical_bytes": 2514165097
+  },
+  "se": {
+   "records": 4750,
+   "logical_bytes": 3666186
+  },
+  "sl": {
+   "records": 1571118,
+   "logical_bytes": 1094610897
+  },
+  "sk": {
+   "records": 1824064,
+   "logical_bytes": 1554449965
+  },
+  "sw": {
+   "records": 1098906,
+   "logical_bytes": 532147001
+  },
+  "ar": {
+   "records": 1243993,
+   "logical_bytes": 2156440163
+  },
+  "zh": {
+   "records": 2945612,
+   "logical_bytes": 5226910965
+  },
+  "si": {
+   "records": 11514,
+   "logical_bytes": 13033245
+  },
+  "az": {
+   "records": 1026544,
+   "logical_bytes": 622584989
+  },
+  "fi": {
+   "records": 1955207,
+   "logical_bytes": 1716397049
+  },
+  "ml": {
+   "records": 1842,
+   "logical_bytes": 2502365
+  },
+  "rw": {
+   "records": 4022,
+   "logical_bytes": 4560661
+  },
+  "tr": {
+   "records": 2995049,
+   "logical_bytes": 3327199478
+  },
+  "hi": {
+   "records": 373362,
+   "logical_bytes": 617124216
+  },
+  "ta": {
+   "records": 287888,
+   "logical_bytes": 599803990
+  },
+  "ku": {
+   "records": 323,
+   "logical_bytes": 113674
+  },
+  "wa": {
+   "records": 773,
+   "logical_bytes": 210305
+  },
+  "id": {
+   "records": 3202398,
+   "logical_bytes": 2832588813
+  },
+  "br": {
+   "records": 5434,
+   "logical_bytes": 2635707
+  },
+  "ko": {
+   "records": 1789377,
+   "logical_bytes": 2625508764
+  },
+  "ms": {
+   "records": 433604,
+   "logical_bytes": 288017107
+  },
+  "fo": {
+   "records": 1098,
+   "logical_bytes": 983333
+  },
+  "eo": {
+   "records": 3333,
+   "logical_bytes": 2316950
+  },
+  "af": {
+   "records": 5514,
+   "logical_bytes": 2181782
+  },
+  "te": {
+   "records": 8169,
+   "logical_bytes": 15791986
+  },
+  "he": {
+   "records": 1131272,
+   "logical_bytes": 1514059443
+  },
+  "lv": {
+   "records": 1452001,
+   "logical_bytes": 1058747714
+  },
+  "eu": {
+   "records": 3524,
+   "logical_bytes": 1158211
+  },
+  "mg": {
+   "records": 14898,
+   "logical_bytes": 4419205
+  },
+  "tl": {
+   "records": 7503,
+   "logical_bytes": 6243443
+  },
+  "mt": {
+   "records": 2513,
+   "logical_bytes": 959655
+  },
+  "zu": {
+   "records": 1283,
+   "logical_bytes": 871347
+  },
+  "cy": {
+   "records": 5884,
+   "logical_bytes": 4646331
+  },
+  "ht": {
+   "records": 4495,
+   "logical_bytes": 4989816
+  },
+  "xh": {
+   "records": 2665,
+   "logical_bytes": 2584058
+  },
+  "gu": {
+   "records": 3672,
+   "logical_bytes": 6990419
+  },
+  "kn": {
+   "records": 360,
+   "logical_bytes": 410378
+  },
+  "vo": {
+   "records": 329,
+   "logical_bytes": 99568
+  },
+  "am": {
+   "records": 923,
+   "logical_bytes": 758029
+  },
+  "ka": {
+   "records": 356679,
+   "logical_bytes": 577857404
+  },
+  "or": {
+   "records": 68,
+   "logical_bytes": 124736
+  },
+  "sq": {
+   "records": 868,
+   "logical_bytes": 558119
+  },
+  "lo": {
+   "records": 442,
+   "logical_bytes": 543839
+  },
+  "ne": {
+   "records": 4227,
+   "logical_bytes": 4000133
+  },
+  "fa": {
+   "records": 1528556,
+   "logical_bytes": 2287131432
+  },
+  "kk": {
+   "records": 3550,
+   "logical_bytes": 2016027
+  },
+  "km": {
+   "records": 2043,
+   "logical_bytes": 2554950
+  },
+  "hy": {
+   "records": 152,
+   "logical_bytes": 218205
+  },
+  "be": {
+   "records": 302,
+   "logical_bytes": 263057
+  },
+  "pa": {
+   "records": 6180,
+   "logical_bytes": 15860038
+  },
+  "ug": {
+   "records": 19,
+   "logical_bytes": 16331
+  },
+  "dz": {
+   "records": 20,
+   "logical_bytes": 19734
+  }
+ }
+}

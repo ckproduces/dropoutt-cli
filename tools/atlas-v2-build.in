@@ -1,0 +1,14 @@
+# Resolve this file on the cluster with:
+# uv pip compile --generate-hashes tools/atlas-v2-build.in -o atlas-v2-build.lock
+# The resulting lock is retained with the release provenance and installed with
+# pip --require-hashes.  Versions are intentionally exact: map geometry must
+# not drift when a solver selects a newer numerical backend.
+torch==2.11.0
+scikit-learn==1.9.0
+faiss-cpu==1.15.0
+igraph==1.0.0
+leidenalg==0.12.0
+datasets==5.0.1
+datasketch==1.6.5
+numpy==2.4.0
+tokenizers==0.22.2

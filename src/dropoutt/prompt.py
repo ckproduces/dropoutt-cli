@@ -108,6 +108,10 @@ def _read_key_posix() -> str:
 
 
 def _read_key_windows() -> str:
+    # typeshed declares ``msvcrt`` empty off Windows, so the body is guarded
+    # by the platform rather than by a per-line ignore.
+    if sys.platform != "win32":  # pragma: no cover - dispatch above prevents it
+        raise PromptError("not a Windows console")
     import msvcrt
 
     first = msvcrt.getwch()

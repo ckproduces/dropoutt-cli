@@ -225,3 +225,98 @@ def test_a_sample_larger_than_the_corpus_is_planned_as_all_records(tmp_path):
     assert over.sample_bound_by == "all"
     assert over.sample_target == 50_000
     assert none.sample_target == -1
+
+
+def test_the_sample_budget_ceiling_covers_the_largest_product_default():
+    """The memory cap and the biggest atlas sample have to move together.
+
+    A sampled record costs ``atlas_text_chars * 2.5`` bytes, the parent holds
+    the whole merged sample and each live shard holds ``SAMPLE_HEADROOM`` times
+    its expected share — twenty thousand bytes per record on a corpus split
+    into no more shards than there are workers. The 4 GiB ceiling this replaced
+    was exactly the 200,000-record v2 target and went stale the moment a
+    product asked for more, which is the failure this pins down.
+    """
+    from dropoutt.atlas.profiles import PROFILES
+    from dropoutt.hardware import MAX_SAMPLE_BUDGET, SAMPLE_BYTES_PER_RECORD
+
+    largest = max(p.default_sample for p in PROFILES.values())
+
+    assert largest * SAMPLE_BYTES_PER_RECORD <= MAX_SAMPLE_BUDGET
+
+
+def test_a_trimmed_headroom_is_not_reported_as_a_smaller_sample():
+    """Losing headroom and losing records are different, and read differently.
+
+    The headroom exists so a shard's local bottom-k is certain to contain the
+    global one. Trimming it narrows that certainty; it does not drop records,
+    and the merged sample still reaches the target. Reporting it as "drawn from
+    fewer records than usual" told the reader their coverage numbers were thin
+    when every record they asked for had in fact been kept.
+    """
+    from dropoutt.parallel import ScanPlan, _size_samples
+
+    def plan_for(target: int, budget: int) -> ScanPlan:
+        plan = ScanPlan(shards=[[] for _ in range(4)], workers=8,
+                        atlas_text_chars=2_000, estimated_records=50_000_000)
+        _size_samples(plan, atlas_target=target, budget_target=2_000,
+                      datasets=4, memory_budget=budget)
+        return plan
+
+    roomy = plan_for(200_000, 8 << 30)
+    tight = plan_for(500_000, 8 << 30)
+    starved = plan_for(20_000_000, 8 << 30)
+
+    assert roomy.sample_bound_by == "target"
+    assert tight.sample_bound_by == "headroom"
+    assert starved.sample_bound_by == "memory"
+    # The distinction is only worth drawing because it is true: a headroom
+    # trim still delivers every record the target asked for.
+    assert tight.atlas_cap * 4 >= 500_000
+    assert starved.atlas_cap * 4 < 20_000_000
+
+
+def test_a_target_the_budget_cannot_hold_is_cut_to_what_it_holds():
+    """Under the old sizing an 8 GB laptop placed 1,024 records of a 500,000 target.
+
+    The parent heap was costed at the full target before the shards were sized,
+    so once the budget was below that one cost the shards got a record each
+    and the floors took over. The target is cut to what fits first now, and
+    the run says the sample was reduced rather than quietly placing a
+    thousandth of it.
+    """
+    from dropoutt.parallel import ScanPlan, _size_samples
+
+    def plan_for(target: int, budget: int, *, shards: int, workers: int) -> ScanPlan:
+        plan = ScanPlan(shards=[[] for _ in range(shards)], workers=workers,
+                        atlas_text_chars=2_000, estimated_records=50_000_000,
+                        sample_target=target)
+        _size_samples(plan, atlas_target=target, budget_target=2_000,
+                      datasets=4, memory_budget=budget)
+        return plan
+
+    laptop = plan_for(500_000, int(1.2 * (1 << 30)), shards=4, workers=4)
+    assert laptop.sample_bound_by == "memory"
+    assert laptop.sample_target < 500_000
+    assert laptop.atlas_cap * 4 >= 100_000, laptop.atlas_cap
+    assert laptop.atlas_cap * 4 >= laptop.sample_target * 0.9
+
+    serial = plan_for(500_000, int(1.2 * (1 << 30)), shards=1, workers=1)
+    assert serial.sample_bound_by == "memory"
+    assert serial.atlas_cap >= 100_000, serial.atlas_cap
+
+    # A corpus just under the target used to keep everything, and one just
+    # over it fell off the cliff. Both now get the same memory-bound sample.
+    under = ScanPlan(shards=[[] for _ in range(4)], workers=4, atlas_text_chars=2_000,
+                     estimated_records=499_000, sample_target=500_000)
+    _size_samples(under, atlas_target=500_000, budget_target=2_000, datasets=4,
+                  memory_budget=int(1.2 * (1 << 30)))
+    assert under.sample_bound_by == "memory"
+    assert under.atlas_cap > 0
+
+    # Every record, asked for by name, is still every record.
+    every = ScanPlan(shards=[[] for _ in range(4)], workers=4, atlas_text_chars=2_000,
+                     estimated_records=499_000, sample_target=-1)
+    _size_samples(every, atlas_target=-1, budget_target=2_000, datasets=4,
+                  memory_budget=int(1.2 * (1 << 30)))
+    assert every.sample_bound_by == "all" and every.atlas_cap == -1

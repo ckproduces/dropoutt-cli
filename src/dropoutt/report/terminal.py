@@ -34,6 +34,7 @@ from rich.table import Table
 from ..models import Severity
 from ..runner import ScanResult
 from ..tokenizer_panel import BudgetReport
+from .atlas_story import DENSITY_DEFINITION, density_ratio
 from .payload import build as build_payload
 from .summary import ScanSummary, build
 
@@ -251,7 +252,7 @@ def _print_area_cells(console: Console, reached: list[dict]) -> None:
     # Two columns share the console, minus the indent and the density prefix
     # each entry carries. Clipping to a constant instead would either wrap on an
     # eighty-column terminal or waste half a wide one.
-    width = max(18, (console.width - 12) // 2 - 8)
+    width = max(18, (console.width - 12) // 2 - DENSITY_WIDTH - 3)
     for area in named[:AREAS_NAMED]:
         cells = sorted(
             (c for c in area["cells"] if c["records"]),
@@ -278,8 +279,15 @@ def _print_area_cells(console: Console, reached: list[dict]) -> None:
         )
 
 
+#: Width of the density prefix on a subregion row, sized for the longest thing
+#: :func:`density_ratio` says (``under 0.1×``). The same formatter as the page
+#: and the Markdown file, so one cell does not read ``50x`` here and ``49.6×``
+#: there.
+DENSITY_WIDTH = 10
+
+
 def _cell_entry(cell: dict | None, width: int) -> str:
-    """``1.5x  flowers, plant, perennial`` — density inline, name clipped to fit.
+    """``1.5×  flowers, plant, perennial`` — density inline, name clipped to fit.
 
     Density shares the column rather than taking its own: two name columns and
     two number columns leaves each name about twenty-four characters on an
@@ -293,12 +301,11 @@ def _cell_entry(cell: dict | None, width: int) -> str:
     if cell is None:
         return ""
     caption = cell.get("caption") or f"cell {cell['region']}"
-    ratio = cell.get("density") or 0.0
-    density = f"{ratio:.0f}x" if ratio >= 10 else f"{ratio:.1f}x"
+    density = density_ratio(cell.get("density") or 0.0)
     caption = " ".join(str(caption).split())
     if cell_len(caption) > width:
         caption = set_cell_size(caption, max(1, width - 1)).rstrip() + "…"
-    return f"[dim]{density:>5}[/dim]  {_m(caption)}"
+    return f"[dim]{density:>{DENSITY_WIDTH}}[/dim]  {_m(caption)}"
 
 
 def _table(*columns: tuple[str, Justify], headers: bool = True) -> Table:
@@ -485,33 +492,34 @@ def _render_atlas(console: Console, atlas: dict) -> None:
         return
     console.print(
         f"    Effective coverage [bold]{atlas['effective_reach_label']}[/bold] of "
-        f"{atlas['subregions_total']} "
-        f"({atlas['subregions_touched']} subregions hold any records)"
+        f"{atlas['subregions_total']:,} "
+        f"({atlas['subregions_touched']:,} subregions hold any records)"
         + (f" [dim]({_m(atlas['shape'])})[/dim]" if atlas["shape"] else "")
     )
     console.print(
-        f"    [dim]{atlas['placed_records']:,} of {atlas['sampled_records']:,} "
-        f"sampled records placed · {atlas['off_map_records']:,} off the map "
-        f"({_pct(atlas['off_map_rate'])}) · {atlas['too_short_to_place']:,} too "
-        f"short to place[/dim]"
+        f"    [dim]{atlas['placed_label']} placed {_m(atlas['placed_note'])} · "
+        f"{atlas['off_map_records']:,} off the map "
+        f"({_pct(atlas['off_map_rate'])})[/dim]"
     )
 
     reached = [area for area in atlas["subject_areas"] if area["records"]]
     if reached:
         console.print()
         console.print("    [dim]Each subject area you reached, then the subregions "
-                      "inside it. Density is your share of a subregion against the "
-                      "map's own. 1.0× is parity.[/dim]")
+                      f"inside it. {DENSITY_DEFINITION}[/dim]")
         _print_area_cells(console, reached)
         empty = len(atlas["subject_areas"]) - len(reached)
         if empty:
             console.print()
             console.print(
-                f"    [dim]{empty} of the map's {len(atlas['subject_areas'])} "
+                f"    [dim]{empty:,} of the map's {len(atlas['subject_areas']):,} "
                 f"subject areas never reached[/dim]"
             )
 
-    for insight in atlas["insights"][:5]:
+    # Every insight, as the Markdown file prints them. The list is already
+    # capped per kind where it is built, and a terminal that silently showed
+    # five of eight was the parity failure this module exists to end.
+    for insight in atlas["insights"]:
         console.print()
         console.print(f"    [bold]{_m(insight['headline'])}[/bold]")
         console.print(f"      [dim]{_m(insight['detail'])}[/dim]")
@@ -523,10 +531,10 @@ def _render_atlas(console: Console, atlas: dict) -> None:
 
     if atlas["imbalances"]:
         console.print()
-        console.print("    [dim]Farthest from the map. Denser: cut volume. "
-                      "Empty or thinner: grow. Grow starts at 0×.[/dim]")
-        table = _table(("density", "right"), ("do", "left"), ("subject area", "left"),
-                       ("share", "right"), ("one of your records", "left"))
+        console.print(f"    [dim]Farthest from the map. {_m(atlas['imbalances_note'])}[/dim]")
+        table = _table(("density", "right"), ("against the map", "left"),
+                       ("subject area", "left"), ("share", "right"),
+                       ("one of your records", "left"))
         for item in atlas["imbalances"][:LIST_ROWS]:
             sample = _clip(item["yours"]) if item.get("yours") else ""
             if not sample:
@@ -535,7 +543,7 @@ def _render_atlas(console: Console, atlas: dict) -> None:
                     else "never reached"
                 )
             table.add_row(
-                _m(item["density_label"]), item["action"], _m(item["area"] or "—"),
+                _m(item["density_label"]), item["direction"], _m(item["area"] or "—"),
                 _pct(item["share"]) if item["records"] else "—",
                 _m(sample),
             )
@@ -672,8 +680,8 @@ def _render_atlas_brief(console: Console, s: ScanSummary) -> None:
 
     console.print(
         f"    Effective coverage [bold]{format_reach(atlas.effective)}[/bold] of "
-        f"{atlas.regions_total} "
-        f"({atlas.regions_touched} hold any records)"
+        f"{atlas.regions_total:,} "
+        f"({atlas.regions_touched:,} hold any records)"
         + (f" [dim]({_m(atlas.shape)})[/dim]" if atlas.shape else "")
     )
     if atlas.insights:

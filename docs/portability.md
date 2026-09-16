@@ -164,9 +164,10 @@ That note matters. Without a template, records are counted as raw text, every
 token number shifts, and the loss-mask checks do not run at all, so the numbers
 must not be read as if the template had been applied.
 
-The same offline flag gates atlas model loading. If its three files are absent
-from `$DROPOUTT_CACHE/embedder`, `dropoutt atlas` exits 1 saying so, without a
-connection attempt. The cache directory is always used for
+The same offline flag gates atlas model loading. If the quantised encoder
+(`encoder-int8/`) and `tokenizer.json` are absent from
+`$DROPOUTT_CACHE/embedder/potion-multilingual-128M`, `dropoutt atlas` exits 1
+saying so, without a connection attempt. The cache directory is always used for
 `$DROPOUTT_CACHE/contamination`; it never writes into read-only site-packages.
 
 `DROPOUTT_OFFLINE=1` and `HF_HUB_OFFLINE=1` are also honored by `scan` and

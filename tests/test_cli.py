@@ -351,8 +351,9 @@ def test_atlas_places_records_and_writes_the_map_in_every_shape(tmp_path):
     """`dropoutt atlas` is a complete command, not a flag in disguise."""
     (tmp_path / "data.jsonl").write_text(
         "\n".join(
-            json.dumps({"text": f"The garden strawberry is a widely grown hybrid "
-                                f"plant cultivated worldwide for its fruit, {i}."})
+            json.dumps({"text": " ".join([
+                f"The garden strawberry is a widely grown hybrid plant cultivated worldwide for its fruit, {i}."
+            ] * 4)})
             for i in range(20)
         ),
         encoding="utf-8",
@@ -383,8 +384,9 @@ def test_atlas_omits_evidence_everywhere_at_once(tmp_path):
     secret = "SPECIMEN-TOKEN-9d4f1c"
     (tmp_path / "data.jsonl").write_text(
         "\n".join(
-            json.dumps({"text": f"{secret} appears in a record with enough other "
-                                f"prose around it to be placed, number {i}."})
+            json.dumps({"text": " ".join([
+                f"{secret} appears in a record with enough other prose around it to be placed, number {i}."
+            ] * 4)})
             for i in range(20)
         ),
         encoding="utf-8",
@@ -401,12 +403,62 @@ def test_atlas_omits_evidence_everywhere_at_once(tmp_path):
 
 
 def test_atlas_without_a_model_asks_instead_of_guessing(tmp_path):
-    """A pipe is not a terminal, so the picker refuses rather than picking lite."""
+    """A pipe is not a terminal, so the picker refuses rather than picking one.
+
+    The refusal names every way out: each product by flag, and the config key
+    a CI job is expected to set.
+    """
     (tmp_path / "data.jsonl").write_text('{"text": "hello there"}\n', encoding="utf-8")
     result = runner.invoke(app, ["atlas", str(tmp_path), "--offline"])
     assert result.exit_code == 2
-    assert "--model atlas-v2" in words(result.output)
-    assert "atlas-v2-lite" in words(result.output)
+    text = words(result.output)
+    assert "--model atlas-v3" in text
+    assert "--model atlas-v2" in text
+    assert "atlas-v2-lite" in text
+    assert 'atlas = "atlas-v3"' in text
+    assert "dropoutt.toml" in text
+
+
+def test_config_records_whether_the_atlas_was_declared(tmp_path):
+    from dropoutt.config import Config
+
+    assert Config.load(tmp_path).atlas_declared is False
+    (tmp_path / "dropoutt.toml").write_text("[scan]\ntier = 1\n", encoding="utf-8")
+    assert Config.load(tmp_path).atlas_declared is False
+    (tmp_path / "dropoutt.toml").write_text(
+        '[scan]\natlas = "atlas-v2-lite"\n', encoding="utf-8"
+    )
+    cfg = Config.load(tmp_path)
+    assert cfg.atlas == "atlas-v2-lite"
+    assert cfg.atlas_declared is True
+
+
+@needs_encoder
+def test_atlas_in_a_pipe_uses_the_product_dropoutt_toml_declares(tmp_path):
+    """`[scan] atlas = ...` is how a CI job runs `dropoutt atlas` without `--model`.
+
+    A declared product is a reviewed decision, not a guess, so the picker's
+    refusal does not apply to it. The map is then placed on that product and
+    says so.
+    """
+    (tmp_path / "dropoutt.toml").write_text(
+        '[scan]\natlas = "atlas-v2-lite"\n', encoding="utf-8"
+    )
+    (tmp_path / "data.jsonl").write_text(
+        "\n".join(
+            json.dumps({"text": " ".join([
+                f"The garden strawberry is a widely grown hybrid plant cultivated worldwide for its fruit, {i}."
+            ] * 4)})
+            for i in range(20)
+        ),
+        encoding="utf-8",
+    )
+    result = runner.invoke(
+        app, ["atlas", str(tmp_path), "--no-open", "--offline", "--quiet", "--no-html"]
+    )
+    assert result.exit_code == 0, plain(result.output)
+    data = json.loads((tmp_path / ".dropoutt" / "atlas.json").read_text())
+    assert data["atlas"]["identity"]["version"] == "atlas-v2-lite"
 
 
 def test_atlas_rejects_an_unknown_model(tmp_path):
@@ -440,8 +492,9 @@ def test_sampling_above_the_corpus_matches_sampling_zero(tmp_path):
     data.mkdir()
     (data / "data.jsonl").write_text(
         "\n".join(
-            json.dumps({"text": f"The garden strawberry is a widely grown hybrid "
-                                f"plant cultivated worldwide for its fruit, {i}."})
+            json.dumps({"text": " ".join([
+                f"The garden strawberry is a widely grown hybrid plant cultivated worldwide for its fruit, {i}."
+            ] * 4)})
             for i in range(20)
         ),
         encoding="utf-8",
@@ -459,11 +512,38 @@ def test_sampling_above_the_corpus_matches_sampling_zero(tmp_path):
 
 
 @needs_encoder
+def test_a_corpus_placed_whole_is_not_reported_as_an_estimate(tmp_path):
+    """Every record placed means every record stands for itself.
+
+    The weight used to be scanned / sampled whatever the target, so the nine
+    records too short to enter the heap inflated the rest into "≈256 placed,
+    estimated" on a corpus that had been placed in full.
+    """
+    rows = [
+        json.dumps({"text": " ".join([
+            f"The garden strawberry is a widely grown hybrid plant cultivated worldwide for its fruit, {i}."
+        ] * 4)})
+        for i in range(20)
+    ] + [json.dumps({"text": "short"})] * 5
+    (tmp_path / "data.jsonl").write_text("\n".join(rows), encoding="utf-8")
+    result = runner.invoke(
+        app, ["atlas", str(tmp_path), "--model", "atlas-v2-lite",
+              "--no-open", "--offline", "--quiet", "--no-html"]
+    )
+    assert result.exit_code == 0, plain(result.output)
+    data = json.loads((tmp_path / ".dropoutt" / "atlas.json").read_text())
+    assert data["atlas"]["sampled_records"] == 20
+    assert data["atlas"]["placed_records"] == data["atlas"]["placed_sampled_records"]
+    assert "estimated" not in (tmp_path / ".dropoutt" / "atlas.md").read_text()
+
+
+@needs_encoder
 def test_sampling_n_places_n_records(tmp_path):
     (tmp_path / "data.jsonl").write_text(
         "\n".join(
-            json.dumps({"text": f"The garden strawberry is a widely grown hybrid "
-                                f"plant cultivated worldwide for its fruit, {i}."})
+            json.dumps({"text": " ".join([
+                f"The garden strawberry is a widely grown hybrid plant cultivated worldwide for its fruit, {i}."
+            ] * 4)})
             for i in range(20)
         ),
         encoding="utf-8",

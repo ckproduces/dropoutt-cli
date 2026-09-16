@@ -40,6 +40,9 @@ letting the reader assume the third.
 from __future__ import annotations
 
 import json
+import math
+import unicodedata
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -49,6 +52,7 @@ import numpy as np
 from ..textutil import surface_shares
 from .normalize import NormConstants
 from .profiles import get_profile
+from .textnorm import RAW_INPUT, EncoderInput
 
 
 class AssignedRecords(NamedTuple):
@@ -111,6 +115,44 @@ SURFACE_WHITESPACE_RATIO = 0.5
 SURFACE_NON_LETTER_MARGIN = 0.15
 
 
+
+def _contrastive_labels(terms: list[str], width: int = 4, depth: int = 32) -> list[str]:
+    """Re-rank stored cell terms so the head separates the cell from the others.
+
+    Mirrors ``contrastive_cell_labels`` in the builder, for artifacts that
+    predate it. Inflections are collapsed on an accent-folded five-character
+    stem so a cell does not spend two slots on ``spiele``/``spielen``.
+    """
+    split = [value.split(", ") for value in terms]
+    total = len(split) or 1
+    document_frequency: Counter[str] = Counter()
+    for cell in split:
+        document_frequency.update(set(cell[:depth]))
+
+    def stem(word: str) -> str:
+        plain = unicodedata.normalize("NFKD", word)
+        return "".join(c for c in plain if not unicodedata.combining(c))[:5].lower()
+
+    labels: list[str] = []
+    for index, cell in enumerate(split):
+        scored = sorted(
+            ((depth - rank) * math.log(total / document_frequency[term]), rank, term)
+            for rank, term in enumerate(cell[:depth])
+        )
+        picked: list[str] = []
+        seen: set[str] = set()
+        for _, _, term in reversed(scored):
+            key = stem(term)
+            if key in seen:
+                continue
+            seen.add(key)
+            picked.append(term)
+            if len(picked) == width:
+                break
+        labels.append(", ".join(picked) if picked else f"cell {index}")
+    return labels
+
+
 @dataclass
 class Atlas:
     """A frozen coordinate system."""
@@ -165,6 +207,21 @@ class Atlas:
     #: Per-family: are the children distinct enough to name individually?
     family_distinguishable: np.ndarray | None = None
     family_sibling_overlap: np.ndarray | None = None
+    #: What the encoder reads for this map: raw text for maps that predate
+    #: :mod:`textnorm`, the build's own policy and phrase table otherwise.
+    encoder_input: EncoderInput = RAW_INPUT
+
+    def bind_embedder(self, embedder):
+        """The encoder as this map was built with it: its IDF and its text policy.
+
+        Every path that places records on the map goes through here, so a scan
+        cannot read text differently from the build that drew the cells.
+        """
+        if self.token_log_prob:
+            embedder = embedder.bind_idf(self.token_log_prob)
+        if self.encoder_input.active:
+            embedder = embedder.bind_input(self.encoder_input)
+        return embedder
 
     @property
     def n_regions(self) -> int:
@@ -209,6 +266,16 @@ class Atlas:
 
     @property
     def off_threshold(self) -> float:
+        """Cosine below which a record is off-atlas.
+
+        A calibrated map stamps ``off_atlas_threshold``: the 2nd percentile of
+        nearest-cell cosine over the build's language-and-axis-balanced
+        calibration draw (``tools/calibrate_off_atlas_v3.py`` for v3, with the
+        draw and percentiles recorded under ``off_atlas_calibration``). The 0.35
+        is a fallback for artifacts that predate stamping, and it is not a
+        calibrated number: atlas-v2's own 2nd percentile is 0.309, so on v2 the
+        fallback puts 12-18% of ordinary held-out prose off-atlas.
+        """
         return float(self.meta.get("off_atlas_threshold", 0.35))
 
     @property
@@ -224,8 +291,42 @@ class Atlas:
         return list(self.meta.get("region_terms", []))
 
     @property
+    def region_labels(self) -> list[str]:
+        """Short contrastive names per fine cell.
+
+        v3 bakes these in at build time. Maps built before it carry only
+        ``region_terms`` — ranked against corpus-wide document frequency, which
+        still lets function words to the head, so v2 cells captioned themselves
+        ``this, firefox, that, with``. Those are re-scored here against how many
+        *cells* hold each word, which is a pure function of the artifact: the
+        same file yields the same captions on every machine, so this changes no
+        coordinate and makes no report machine-dependent.
+        """
+        labels = list(self.meta.get("region_labels", []))
+        if labels:
+            return labels
+        return _contrastive_labels(self.region_terms)
+
+    @property
     def l1_labels(self) -> list[str]:
         return list(self.meta.get("l1_labels", []))
+
+    @property
+    def region_kinds(self) -> list[str]:
+        """``subject``, ``form`` or ``mixed`` per fine cell; empty on maps named before kinds.
+
+        A ``form`` cell's members share a format or template but not a subject,
+        and a ``mixed`` cell's share neither. The names already say so in words;
+        the kind is the same fact for code, so a report or a CI check can tell a
+        subject area from a catch-all without parsing a name.
+        """
+        kinds = list(self.meta.get("region_kinds", []))
+        return kinds if len(kinds) == self.n_regions else []
+
+    @property
+    def l1_kinds(self) -> list[str]:
+        kinds = list(self.meta.get("l1_kinds", []))
+        return kinds if len(kinds) == len(self.l1_labels) else []
 
     @property
     def pipeline_hash(self) -> str:
@@ -257,17 +358,30 @@ class Atlas:
         documentation", which are registers of a language rather than subjects,
         and the scan already reports language separately. A row whose language
         is unknown, or which the build had too few examples of, falls back to the
-        global mean — which is exactly what v2 did for every row.
+        global mean, which is the only correction a map without language means
+        applies to any row. The v2 products carry twenty language means and
+        atlas-v3 fifty-nine; atlas-v1-lite carries thirteen.
         """
         emb = np.asarray(embeddings, dtype=np.float32)
         if emb.ndim == 1:
             emb = emb.reshape(1, -1)
+        # A row of exact zeros is a record that pooled to nothing: whitespace,
+        # or text the tokenizer found no tokens in. Mean removal would turn it
+        # into the fixed direction ``-mean``, which on atlas-v3 scores 0.76 to
+        # one particular cell — a confident placement of a record that has no
+        # content to place. Such rows stay zero through every branch below, so
+        # they score 0 against every centroid and fall under any cutoff. The
+        # build's own calibration dropped them for the same reason.
+        empty = ~np.any(emb, axis=1)
         if self.norm is None:
             if emb.shape[1] > self.dim:
                 emb = emb[:, : self.dim]
             return emb / (np.linalg.norm(emb, axis=1, keepdims=True) + 1e-9)
         if languages is None or not self.uses_language_centering:
-            return self.norm.apply(emb)
+            out = self.norm.apply(emb)
+            if empty.any():
+                out[empty] = 0.0
+            return out
 
         if emb.shape[1] > self.dim:
             emb = emb[:, : self.dim]
@@ -287,7 +401,10 @@ class Atlas:
         if self.norm.pca_components.size:
             comps = self.norm.pca_components
             x = x - (x @ comps.T) @ comps
-        return (x / (np.linalg.norm(x, axis=1, keepdims=True) + 1e-9)).astype(np.float32)
+        out = (x / (np.linalg.norm(x, axis=1, keepdims=True) + 1e-9)).astype(np.float32)
+        if empty.any():
+            out[empty] = 0.0
+        return out
 
     @classmethod
     def load(cls, path: str | Path) -> Atlas:
@@ -423,6 +540,12 @@ class Atlas:
                 if "family_sibling_overlap" in data.files
                 else None
             ),
+            encoder_input=EncoderInput.from_artifact(
+                meta.get("encoder_input"),
+                data["encoder_phrase_hashes"]
+                if "encoder_phrase_hashes" in data.files
+                else None,
+            ),
         )
 
     # -- assignment -------------------------------------------------------
@@ -486,13 +609,27 @@ class Atlas:
         cell_ids[off] = -1
         return cell_ids.astype(np.int32), weights.astype(np.float32), best.astype(np.float32)
 
-    #: Rows per chunk in :meth:`assign_all`. The similarity matrix is
-    #: ``(rows, cells)`` and a scan places up to 200,000 records on a 212-cell
-    #: map, so the whole thing at once is 170 MB per copy and there are several
-    #: copies alive between the argpartition and the softmax. Thirty-two
-    #: thousand rows keeps that under 30 MB while leaving the matrix multiply
-    #: large enough to stay BLAS-bound.
-    ASSIGN_CHUNK = 32_768
+    #: Bytes one similarity chunk may occupy in :meth:`assign_all`.
+    #:
+    #: The matrix is ``(rows, cells)`` of float32, and several copies are alive
+    #: between the partition and the softmax. This used to be a fixed 32,768
+    #: rows, chosen when the map had 212 cells and a chunk was 28 MB; on the
+    #: 4,096-cell atlas-v3 the same row count is a 512 MB matrix and the pass
+    #: peaked at 2.1 GB of resident memory on top of the sample text. Sizing by
+    #: bytes keeps the chunk near the same footprint whatever the map, and
+    #: leaves the multiply large enough to stay BLAS-bound.
+    ASSIGN_CHUNK_BYTES = 32 << 20
+
+    #: Row bounds for a chunk: never so few that Python overhead dominates,
+    #: never more than the old fixed size on a small map.
+    ASSIGN_CHUNK_MIN_ROWS = 1_024
+    ASSIGN_CHUNK_MAX_ROWS = 32_768
+
+    def assign_chunk_rows(self) -> int:
+        """Rows per chunk for this map's cell count."""
+        cells = max(1, int(self.centroids.shape[0]))
+        rows = self.ASSIGN_CHUNK_BYTES // (cells * 4)
+        return int(min(self.ASSIGN_CHUNK_MAX_ROWS, max(self.ASSIGN_CHUNK_MIN_ROWS, rows)))
 
     def assign_all(
         self, embeddings: np.ndarray, languages: list[str] | None = None
@@ -524,15 +661,18 @@ class Atlas:
         soft_weights = np.zeros((rows, k), dtype=np.float32)
         temp = max(self.soft_temperature, 1e-6)
 
-        for start in range(0, rows, self.ASSIGN_CHUNK):
-            stop = min(rows, start + self.ASSIGN_CHUNK)
+        chunk = self.assign_chunk_rows()
+        for start in range(0, rows, chunk):
+            stop = min(rows, start + chunk)
             langs = languages[start:stop] if languages is not None else None
             sims = self.project(emb[start:stop], langs) @ self.centroids.T
 
             nearest[start:stop] = sims.argmax(axis=1)
             score[start:stop] = sims.max(axis=1)
 
-            part = np.argpartition(-sims, kth=k - 1, axis=1)[:, :k]
+            # Partition on the matrix itself: the top-k land in the last k
+            # columns, and no negated copy of the whole matrix is made.
+            part = np.argpartition(sims, kth=cells - k, axis=1)[:, cells - k:]
             part_sims = np.take_along_axis(sims, part, axis=1)
             order = np.argsort(-part_sims, axis=1)
             ids = np.take_along_axis(part, order, axis=1)
@@ -797,7 +937,8 @@ class Atlas:
                     "region": int(r),
                     "records": int(region_counts[r]),
                     "share": round(float(mass[r]), 4),
-                    "terms": self.region_terms[r] if r < len(self.region_terms) else "",
+                    "terms": self.region_labels[r] if r < len(self.region_labels) else "",
+                    **({"kind": self.region_kinds[r]} if self.region_kinds else {}),
                     **({} if self.flat_cells else {"category": int(self.region_category[r])}),
                 }
                 for r in np.argsort(-region_counts)[:12]
@@ -965,7 +1106,7 @@ class Atlas:
         """
         total = max(int(region_counts.sum()), 1)
         cats = np.asarray(self.region_category)
-        terms = self.region_terms
+        terms = self.region_labels
         out: list[dict[str, Any]] = []
 
         for cid in sorted({int(c) for c in cats}):
@@ -1130,7 +1271,7 @@ class Atlas:
             counts = np.bincount(near, minlength=self.n_regions)
             detail["nearest_regions"] = [
                 {"region": int(r), "records": int(counts[r]),
-                 "terms": self.region_terms[r] if r < len(self.region_terms) else ""}
+                 "terms": self.region_labels[r] if r < len(self.region_labels) else ""}
                 for r in np.argsort(-counts)[:6] if counts[r] > 0
             ]
             detail["nearest_region_spread"] = int((counts > 0).sum())
@@ -1311,8 +1452,9 @@ def atlas_path_for(version: str) -> Path | None:
 def bundled_atlas_path(version: str | None = None) -> Path | None:
     """Path to a named atlas, or to the pinned default.
 
-    Two products ship (atlas-v2 and atlas-v2-lite). An unknown name or an
-    absent file returns None rather than quietly loading a different map.
+    Three products ship (atlas-v3, atlas-v2 and atlas-v2-lite). An unknown
+    name or an absent file returns None rather than quietly loading a
+    different map.
     """
     try:
         selected = get_profile(version).version
@@ -1322,10 +1464,35 @@ def bundled_atlas_path(version: str | None = None) -> Path | None:
 
 
 def load_bundled(version: str | None = None) -> Atlas | None:
-    path = bundled_atlas_path(version)
+    try:
+        profile = get_profile(version)
+    except ValueError:
+        return None
+    path = bundled_atlas_path(profile.version)
     if path is None:
         return None
     try:
-        return Atlas.load(path)
+        atlas = Atlas.load(path)
     except Exception:
         return None
+    stored = atlas.meta.get("profile")
+    if not isinstance(stored, dict):
+        return atlas if profile.version == "atlas-v1-lite" else None
+    expected = {
+        "version": profile.version,
+        "dim": profile.dim,
+        "pooling": profile.pooling,
+        "max_chars": profile.max_chars,
+        "max_tokens": profile.max_tokens,
+        "pca_k": profile.pca_k,
+        "n_l1": profile.n_l1,
+        "l2_k_min": profile.l2_k_min,
+        "l2_k_max": profile.l2_k_max,
+    }
+    if any(stored.get(key) != value for key, value in expected.items()):
+        return None
+    if atlas.dim != profile.dim or atlas.n_l1 != profile.n_l1:
+        return None
+    if profile.l2_budget is not None and atlas.n_regions != profile.l2_budget:
+        return None
+    return atlas

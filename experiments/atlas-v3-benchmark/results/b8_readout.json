@@ -1,0 +1,903 @@
+{
+ "_written_at": "2026-09-16T16:05:55",
+ "products": {
+  "atlas-v3": {
+   "self_calibration": {
+    "n_sampled": 200000,
+    "placed": 197852,
+    "off_atlas_rate": 0.01074,
+    "cutoff": 0.3352,
+    "off_by_axis": {
+     "books": {
+      "n": 1728,
+      "off_rate": 0.008101851851851851,
+      "median_sim": 0.5824131965637207
+     },
+     "code": {
+      "n": 2336,
+      "off_rate": 0.0351027397260274,
+      "median_sim": 0.5089949369430542
+     },
+     "educational": {
+      "n": 1618,
+      "off_rate": 0.004326328800988875,
+      "median_sim": 0.6043993234634399
+     },
+     "encyclopedic": {
+      "n": 28464,
+      "off_rate": 0.008185778527262507,
+      "median_sim": 0.6058740615844727
+     },
+     "forum": {
+      "n": 1781,
+      "off_rate": 0.0011229646266142617,
+      "median_sim": 0.6218436360359192
+     },
+     "legal_government": {
+      "n": 5746,
+      "off_rate": 0.005569091541942221,
+      "median_sim": 0.5903900861740112
+     },
+     "scientific": {
+      "n": 5787,
+      "off_rate": 0.0005184033177812338,
+      "median_sim": 0.6646551489830017
+     },
+     "training": {
+      "n": 47623,
+      "off_rate": 0.029838523402557587,
+      "median_sim": 0.5246122479438782
+     },
+     "web": {
+      "n": 104917,
+      "off_rate": 0.0033740957137546822,
+      "median_sim": 0.601276159286499
+     }
+    },
+    "off_by_language_top25": {
+     "en": {
+      "n": 73764,
+      "off_rate": 0.0033485168917086927
+     },
+     "de": {
+      "n": 10710,
+      "off_rate": 0.008683473389355743
+     },
+     "es": {
+      "n": 10293,
+      "off_rate": 0.006412124744972311
+     },
+     "fr": {
+      "n": 8752,
+      "off_rate": 0.006055758683729433
+     },
+     "pt": {
+      "n": 7892,
+      "off_rate": 0.007602635580334516
+     },
+     "nl": {
+      "n": 6584,
+      "off_rate": 0.009416767922235723
+     },
+     "it": {
+      "n": 6213,
+      "off_rate": 0.009979076130693708
+     },
+     "ja": {
+      "n": 5470,
+      "off_rate": 0.007129798903107861
+     },
+     "pl": {
+      "n": 4843,
+      "off_rate": 0.008259343382201115
+     },
+     "ru": {
+      "n": 4210,
+      "off_rate": 0.005225653206650831
+     },
+     "id": {
+      "n": 3950,
+      "off_rate": 0.0210126582278481
+     },
+     "tr": {
+      "n": 3771,
+      "off_rate": 0.016441262264651285
+     },
+     "zh": {
+      "n": 3633,
+      "off_rate": 0.015414258188824663
+     },
+     "vi": {
+      "n": 3070,
+      "off_rate": 0.02736156351791531
+     },
+     "cs": {
+      "n": 2967,
+      "off_rate": 0.015166835187057633
+     },
+     "sv": {
+      "n": 2816,
+      "off_rate": 0.013139204545454546
+     },
+     "ro": {
+      "n": 2526,
+      "off_rate": 0.015439429928741092
+     },
+     "hu": {
+      "n": 2384,
+      "off_rate": 0.017197986577181208
+     },
+     "fi": {
+      "n": 2306,
+      "off_rate": 0.02645273200346921
+     },
+     "da": {
+      "n": 2227,
+      "off_rate": 0.02155365963179165
+     },
+     "sk": {
+      "n": 2202,
+      "off_rate": 0.022706630336058128
+     },
+     "ko": {
+      "n": 2165,
+      "off_rate": 0.023556581986143188
+     },
+     "lt": {
+      "n": 2017,
+      "off_rate": 0.02825979176995538
+     },
+     "sl": {
+      "n": 1963,
+      "off_rate": 0.02598064187468161
+     },
+     "et": {
+      "n": 1958,
+      "off_rate": 0.03881511746680286
+     }
+    },
+    "regions_occupied": 4096,
+    "effective_regions": 3719.49,
+    "effective_share": 0.90807861328125,
+    "raw": {
+     "label": "reservoir sample, raw quotient",
+     "placed": 197852,
+     "cells_occupied": 4096,
+     "median_density": 0.9762199886418557,
+     "median_abs_log2": 0.2746026091553004,
+     "share_cells_within_0.5_2x": 0.963134765625,
+     "share_cells_within_0.8_1.25x": 0.564208984375,
+     "share_cells_above_2x": 0.01513671875,
+     "share_cells_below_0.5x": 0.021728515625,
+     "refmass_weighted_share_within_0.5_2x": 0.9697808804776189,
+     "unoccupied_reference_mass": 0.0
+    },
+    "cli": {
+     "median_density": 0.98095,
+     "share_cells_within_0.5_2x": 0.99072265625,
+     "share_cells_within_0.8_1.25x": 0.658935546875,
+     "prior_strength": 10.041,
+     "unreached_density": 0.1721
+    },
+    "expected_multinomial": {
+     "placed": 197852.0,
+     "cells_occupied": 4095.9,
+     "median_density": 0.9961990913777823,
+     "median_abs_log2": 0.143777403475055,
+     "share_cells_within_0.5_2x": 0.99882810711424,
+     "share_cells_within_0.8_1.25x": 0.8569788745325855,
+     "share_cells_above_2x": 7.32421875e-05,
+     "share_cells_below_0.5x": 0.0010986506982600733,
+     "refmass_weighted_share_within_0.5_2x": 0.9995257403282473,
+     "unoccupied_reference_mass": 3.3862534605690395e-06
+    },
+    "chi2_real": 19382.985722934507,
+    "chi2_expected_multinomial": 4071.9703659241195,
+    "chi2_ratio": 4.760099897862495,
+    "dof": 4095,
+    "most_overdense_cells": [
+     [
+      1893,
+      3.89,
+      19.8,
+      "United States court cases and legal opinions"
+     ],
+     [
+      2082,
+      3.53,
+      19.5,
+      "EU directives and regulations on assorted subjects"
+     ],
+     [
+      1967,
+      8.28,
+      16.2,
+      "Mixed short web fragments with no shared subject"
+     ],
+     [
+      615,
+      5.3,
+      14.8,
+      "Smoking, vaping and tobacco"
+     ],
+     [
+      2131,
+      5.49,
+      13.1,
+      "Mixed teaching dialogues with no shared subject"
+     ],
+     [
+      1588,
+      4.74,
+      13.1,
+      "Halloween, costumes and spooky celebrations"
+     ],
+     [
+      4055,
+      2.66,
+      11.7,
+      "Moth species encyclopedia entries"
+     ],
+     [
+      3998,
+      3.71,
+      11.4,
+      "Horses, riding and equine care"
+     ]
+    ],
+    "most_underdense_cells": [
+     [
+      2505,
+      0.36,
+      -5.8,
+      "Court procedure, evidence and judicial process"
+     ],
+     [
+      1009,
+      0.28,
+      -5.3,
+      "Civil actions, notes and court judgments"
+     ],
+     [
+      2046,
+      0.48,
+      -5.2,
+      "Diseases, symptoms and their medical causes"
+     ],
+     [
+      1024,
+      0.34,
+      -5.1,
+      "Personal income, payroll and retirement savings"
+     ],
+     [
+      3093,
+      0.36,
+      -5.0,
+      "EU infringement actions and annulment proceedings"
+     ],
+     [
+      1075,
+      0.37,
+      -5.0,
+      "Health drinks, detox elixirs and immune tonics"
+     ],
+     [
+      1041,
+      0.37,
+      -5.0,
+      "Dessert recipes and sweet preparations"
+     ],
+     [
+      6,
+      0.32,
+      -4.7,
+      "EU customs tariffs, trade quotas and nomenclature"
+     ]
+    ],
+    "detected_vs_build_language_agreement": 0.993515
+   },
+   "web": {
+    "C4 English web (held out)": {
+     "label": "C4 English web (held out)",
+     "placed": 39935,
+     "cells_occupied": 3690,
+     "median_density": 0.9523951927456479,
+     "median_abs_log2": 0.897577241898271,
+     "share_cells_within_0.5_2x": 0.5447154471544715,
+     "share_cells_within_0.8_1.25x": 0.19349593495934958,
+     "share_cells_above_2x": 0.1772357723577236,
+     "share_cells_below_0.5x": 0.2780487804878049,
+     "refmass_weighted_share_within_0.5_2x": 0.5220500494606983,
+     "unoccupied_reference_mass": 0.09766543867283572,
+     "off_atlas_rate": 0.001625,
+     "effective_share": 0.68387451171875,
+     "regions_occupied": 3690,
+     "densest_cells_cli": [
+      [
+       826,
+       13.7479,
+       "Crushers, grinding mills and mining machinery"
+      ],
+      [
+       2541,
+       10.9689,
+       "Web images, wallpapers and picture files"
+      ],
+      [
+       3976,
+       8.1101,
+       "Homes for sale with floor plans and interiors"
+      ],
+      [
+       2105,
+       7.9466,
+       "Mixed short web fragments with no shared subject"
+      ],
+      [
+       1588,
+       7.0394,
+       "Halloween, costumes and spooky celebrations"
+      ],
+      [
+       1764,
+       6.5587,
+       "Home, property and personal-lines insurance"
+      ]
+     ],
+     "l1_share_top5": [
+      [
+       248,
+       0.014,
+       "Property listings, rentals and holiday homes"
+      ],
+      [
+       96,
+       0.014,
+       "Blog and website page boilerplate with varied content"
+      ],
+      [
+       79,
+       0.013,
+       "Clothing, footwear and fashion products"
+      ],
+      [
+       109,
+       0.013,
+       "Mixed product listings and entertainment web pages"
+      ],
+      [
+       234,
+       0.012,
+       "Jewellery, decorative goods and home furnishings for sale"
+      ]
+     ]
+    },
+    "fineweb English (in family)": {
+     "label": "fineweb English (in family)",
+     "placed": 19985,
+     "cells_occupied": 3464,
+     "median_density": 1.0279385901582292,
+     "median_abs_log2": 0.8707732007761442,
+     "share_cells_within_0.5_2x": 0.5635103926096998,
+     "share_cells_within_0.8_1.25x": 0.19572748267898382,
+     "share_cells_above_2x": 0.1922632794457275,
+     "share_cells_below_0.5x": 0.24422632794457275,
+     "refmass_weighted_share_within_0.5_2x": 0.5426876464552572,
+     "unoccupied_reference_mass": 0.15824758429788754,
+     "off_atlas_rate": 0.00075,
+     "effective_share": 0.69222900390625,
+     "regions_occupied": 3464,
+     "densest_cells_cli": [
+      [
+       3598,
+       5.4536,
+       "Burgers, barbecue and casual fast food"
+      ],
+      [
+       3919,
+       4.7995,
+       "Baseball games, innings and hitting"
+      ],
+      [
+       933,
+       4.5423,
+       "First-person blogs and opinion posts on assorted subjects"
+      ],
+      [
+       1439,
+       4.4847,
+       "Student essays and academic essay-writing advice"
+      ],
+      [
+       3905,
+       4.4422,
+       "Mixed basketball and football team news"
+      ],
+      [
+       2736,
+       4.3292,
+       "US federal budget, spending and appropriations"
+      ]
+     ],
+     "l1_share_top5": [
+      [
+       243,
+       0.022,
+       "American football, baseball and basketball game reports"
+      ],
+      [
+       172,
+       0.015,
+       "United States presidents, Congress and party politics"
+      ],
+      [
+       109,
+       0.015,
+       "Mixed product listings and entertainment web pages"
+      ],
+      [
+       79,
+       0.013,
+       "Clothing, footwear and fashion products"
+      ],
+      [
+       96,
+       0.012,
+       "Blog and website page boilerplate with varied content"
+      ]
+     ]
+    }
+   }
+  },
+  "atlas-v3-prev": {
+   "self_calibration": {
+    "n_sampled": 200000,
+    "placed": 197628,
+    "off_atlas_rate": 0.01186,
+    "cutoff": 0.3538,
+    "off_by_axis": {
+     "books": {
+      "n": 1703,
+      "off_rate": 0.007633587786259542,
+      "median_sim": 0.5733387470245361
+     },
+     "code": {
+      "n": 2334,
+      "off_rate": 0.022279348757497857,
+      "median_sim": 0.5570096373558044
+     },
+     "educational": {
+      "n": 1520,
+      "off_rate": 0.003947368421052632,
+      "median_sim": 0.5964833498001099
+     },
+     "encyclopedic": {
+      "n": 28411,
+      "off_rate": 0.005490831016155715,
+      "median_sim": 0.6232437491416931
+     },
+     "forum": {
+      "n": 1689,
+      "off_rate": 0.0011841326228537595,
+      "median_sim": 0.6253336071968079
+     },
+     "legal_government": {
+      "n": 5865,
+      "off_rate": 0.006308610400682012,
+      "median_sim": 0.6472381949424744
+     },
+     "scientific": {
+      "n": 5959,
+      "off_rate": 0.0018459473065950663,
+      "median_sim": 0.6483019590377808
+     },
+     "training": {
+      "n": 47434,
+      "off_rate": 0.02949361217691951,
+      "median_sim": 0.530063271522522
+     },
+     "web": {
+      "n": 105085,
+      "off_rate": 0.006623209782556978,
+      "median_sim": 0.5928616523742676
+     }
+    },
+    "off_by_language_top25": {
+     "en": {
+      "n": 73726,
+      "off_rate": 0.0039334834386783495
+     },
+     "de": {
+      "n": 11064,
+      "off_rate": 0.013015184381778741
+     },
+     "es": {
+      "n": 10148,
+      "off_rate": 0.00660228616476153
+     },
+     "fr": {
+      "n": 8628,
+      "off_rate": 0.010199350950394067
+     },
+     "pt": {
+      "n": 7991,
+      "off_rate": 0.010261544237266926
+     },
+     "nl": {
+      "n": 6639,
+      "off_rate": 0.009640006025003766
+     },
+     "it": {
+      "n": 6371,
+      "off_rate": 0.009103751373410768
+     },
+     "ja": {
+      "n": 5530,
+      "off_rate": 0.005605786618444846
+     },
+     "pl": {
+      "n": 4791,
+      "off_rate": 0.009810060530160718
+     },
+     "ru": {
+      "n": 4240,
+      "off_rate": 0.008018867924528302
+     },
+     "id": {
+      "n": 3925,
+      "off_rate": 0.02038216560509554
+     },
+     "tr": {
+      "n": 3659,
+      "off_rate": 0.009292156326865263
+     },
+     "zh": {
+      "n": 3615,
+      "off_rate": 0.007192254495159059
+     },
+     "cs": {
+      "n": 3046,
+      "off_rate": 0.011818778726198293
+     },
+     "vi": {
+      "n": 3019,
+      "off_rate": 0.0076184166942696255
+     },
+     "sv": {
+      "n": 2808,
+      "off_rate": 0.019943019943019943
+     },
+     "ro": {
+      "n": 2461,
+      "off_rate": 0.022348638764729784
+     },
+     "fi": {
+      "n": 2379,
+      "off_rate": 0.031946195880622114
+     },
+     "da": {
+      "n": 2332,
+      "off_rate": 0.019296740994854202
+     },
+     "hu": {
+      "n": 2316,
+      "off_rate": 0.01683937823834197
+     },
+     "sk": {
+      "n": 2261,
+      "off_rate": 0.02697921273772667
+     },
+     "ko": {
+      "n": 2106,
+      "off_rate": 0.01566951566951567
+     },
+     "lt": {
+      "n": 2050,
+      "off_rate": 0.03121951219512195
+     },
+     "et": {
+      "n": 1927,
+      "off_rate": 0.04151530877010898
+     },
+     "sl": {
+      "n": 1912,
+      "off_rate": 0.038702928870292884
+     }
+    },
+    "regions_occupied": 4095,
+    "effective_regions": 3745.39,
+    "effective_share": 0.91440185546875,
+    "raw": {
+     "label": "reservoir sample, raw quotient",
+     "placed": 197628,
+     "cells_occupied": 4095,
+     "median_density": 0.9892191361040309,
+     "median_abs_log2": 0.2739883703683743,
+     "share_cells_within_0.5_2x": 0.9684981684981685,
+     "share_cells_within_0.8_1.25x": 0.568009768009768,
+     "share_cells_above_2x": 0.018315018315018316,
+     "share_cells_below_0.5x": 0.013186813186813187,
+     "refmass_weighted_share_within_0.5_2x": 0.9752720559622319,
+     "unoccupied_reference_mass": 2.0629851135189985e-05
+    },
+    "cli": {
+     "median_density": 0.9913,
+     "share_cells_within_0.5_2x": 0.9892551892551893,
+     "share_cells_within_0.8_1.25x": 0.6581196581196581,
+     "prior_strength": 9.685,
+     "unreached_density": 0.1672
+    },
+    "expected_multinomial": {
+     "placed": 197628.0,
+     "cells_occupied": 4095.9,
+     "median_density": 0.9960689273174301,
+     "median_abs_log2": 0.1429509964822885,
+     "share_cells_within_0.5_2x": 0.9989257574023199,
+     "share_cells_within_0.8_1.25x": 0.8629606179410867,
+     "share_cells_above_2x": 2.44140625e-05,
+     "share_cells_below_0.5x": 0.0010498285351800978,
+     "refmass_weighted_share_within_0.5_2x": 0.9995697836191713,
+     "unoccupied_reference_mass": 1.5233786870291536e-06
+    },
+    "chi2_real": 19172.4915312789,
+    "chi2_expected_multinomial": 4114.742559775917,
+    "chi2_ratio": 4.659463199156501,
+    "dof": 4095,
+    "most_overdense_cells": [
+     [
+      871,
+      5.44,
+      25.3,
+      "US court of appeals case caption headers"
+     ],
+     [
+      1523,
+      4.27,
+      18.3,
+      "EU trademark and intellectual-property court rulings"
+     ],
+     [
+      2081,
+      2.64,
+      11.5,
+      "COVID-19 symptom and testing explainers"
+     ],
+     [
+      2635,
+      3.16,
+      11.5,
+      "Articles about Ireland's history, rugby and geography"
+     ],
+     [
+      1937,
+      4.65,
+      11.1,
+      "IC catalog galaxy and star stub entries"
+     ],
+     [
+      1664,
+      2.98,
+      10.8,
+      "Computer-science and physics preprint openings"
+     ],
+     [
+      1668,
+      3.01,
+      10.6,
+      "Taxonomy stubs and E. coli pathogen research fragments"
+     ],
+     [
+      2311,
+      3.1,
+      9.9,
+      "Alice-and-Bob dialogue educational scripts"
+     ]
+    ],
+    "most_underdense_cells": [
+     [
+      859,
+      0.07,
+      -8.1,
+      "Premise-hypothesis inference and reading-comprehension prompts"
+     ],
+     [
+      862,
+      0.14,
+      -7.1,
+      "Sentence-complexity rewriting prompts over encyclopedic trivia"
+     ],
+     [
+      1911,
+      0.24,
+      -6.2,
+      "Tax law rulings and administrative decrees"
+     ],
+     [
+      1908,
+      0.35,
+      -5.7,
+      "EU Court of Justice preliminary ruling notices"
+     ],
+     [
+      1514,
+      0.29,
+      -5.5,
+      "EU regulations and directives on trade and infrastructure"
+     ],
+     [
+      1862,
+      0.47,
+      -5.5,
+      "Casino and pokies bonus codes in Australia"
+     ],
+     [
+      3004,
+      0.4,
+      -5.5,
+      "Appellate opinions on civil judgments and procedural motions"
+     ],
+     [
+      2997,
+      0.34,
+      -5.4,
+      "Court opinions on contract disputes"
+     ]
+    ],
+    "detected_vs_build_language_agreement": 0.99346
+   },
+   "web": {
+    "C4 English web (held out)": {
+     "label": "C4 English web (held out)",
+     "placed": 39892,
+     "cells_occupied": 3493,
+     "median_density": 0.9309158761169737,
+     "median_abs_log2": 0.9455406331864411,
+     "share_cells_within_0.5_2x": 0.5267678213569997,
+     "share_cells_within_0.8_1.25x": 0.17348983681649013,
+     "share_cells_above_2x": 0.17892928714572,
+     "share_cells_below_0.5x": 0.2943028914972803,
+     "refmass_weighted_share_within_0.5_2x": 0.5288587279697764,
+     "unoccupied_reference_mass": 0.13717650044113133,
+     "off_atlas_rate": 0.0027,
+     "effective_share": 0.63669677734375,
+     "regions_occupied": 3493,
+     "densest_cells_cli": [
+      [
+       784,
+       12.1584,
+       "Marketing copy for mining and crushing equipment"
+      ],
+      [
+       3989,
+       9.7016,
+       "Wallpaper and stock image download sites"
+      ],
+      [
+       427,
+       8.4796,
+       "Marketing copy for landscaping and home-renovation trades"
+      ],
+      [
+       1825,
+       8.2663,
+       "Realtor property-sale announcements with addresses"
+      ],
+      [
+       3616,
+       7.6096,
+       "Wallpaper and image download galleries"
+      ],
+      [
+       212,
+       7.4062,
+       "Articles about golf courses and golf clubs"
+      ]
+     ],
+     "l1_share_top5": [
+      [
+       113,
+       0.014,
+       "Home listings, villas and apartments for sale"
+      ],
+      [
+       26,
+       0.012,
+       "Local service firms, cleaning and repairs"
+      ],
+      [
+       162,
+       0.012,
+       "Tools, hardware and gear product specs"
+      ],
+      [
+       126,
+       0.012,
+       "Clothing, fabrics and garment descriptions"
+      ],
+      [
+       82,
+       0.011,
+       "Recipes, cooking and home kitchens"
+      ]
+     ]
+    },
+    "fineweb English (in family)": {
+     "label": "fineweb English (in family)",
+     "placed": 19977,
+     "cells_occupied": 3222,
+     "median_density": 1.0238739653618507,
+     "median_abs_log2": 0.8925433295075248,
+     "share_cells_within_0.5_2x": 0.5456238361266295,
+     "share_cells_within_0.8_1.25x": 0.19832402234636873,
+     "share_cells_above_2x": 0.20080695220360026,
+     "share_cells_below_0.5x": 0.2535692116697703,
+     "refmass_weighted_share_within_0.5_2x": 0.5407463912649461,
+     "unoccupied_reference_mass": 0.20101814433338855,
+     "off_atlas_rate": 0.00115,
+     "effective_share": 0.6356298828125,
+     "regions_occupied": 3222,
+     "densest_cells_cli": [
+      [
+       103,
+       6.0552,
+       "Newspaper obituaries for deceased family members"
+      ],
+      [
+       2219,
+       5.2361,
+       "US state and school budget cut news"
+      ],
+      [
+       3500,
+       5.2022,
+       "Chocolate and candy product reviews"
+      ],
+      [
+       3621,
+       5.0607,
+       "Forum post metadata and thread archives"
+      ],
+      [
+       121,
+       4.7563,
+       "Domain name registration and registrar services"
+      ],
+      [
+       212,
+       4.7236,
+       "Articles about golf courses and golf clubs"
+      ]
+     ],
+     "l1_share_top5": [
+      [
+       165,
+       0.02,
+       "US pro sports, coaches and draft news"
+      ],
+      [
+       116,
+       0.016,
+       "US presidents, Congress and party politics"
+      ],
+      [
+       50,
+       0.015,
+       "Match reports, scores and season results"
+      ],
+      [
+       197,
+       0.013,
+       "Livestream and video transcripts"
+      ],
+      [
+       82,
+       0.011,
+       "Recipes, cooking and home kitchens"
+      ]
+     ]
+    }
+   }
+  }
+ }
+}

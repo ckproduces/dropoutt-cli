@@ -1,0 +1,43 @@
+{
+  "_comment": [
+    "Curated human-readable labels for the 32 atlas-v2-lite L1 scaffold regions.",
+    "Derived from representative records, L2 contrastive terms, and population overlap with atlas-v2.",
+    "Declarative curation: builds and promotion re-apply these names.",
+    "Subject names only; geography is named only when the region itself is geographically specific."
+  ],
+  "atlas_version": "atlas-v2-lite",
+  "labels": {
+    "0": "Environmental science, municipalities and natural geography",
+    "1": "Software administration, web development and mobile technology",
+    "2": "Vehicles, electronics and industrial products",
+    "3": "Education, institutions and public services",
+    "4": "Crime, courts and public safety",
+    "5": "Customer support, online orders and personal finance",
+    "6": "Regional public affairs and reference web content",
+    "7": "Scientific research, biology and astronomy",
+    "8": "Retail products, fashion and manufacturing",
+    "9": "Food, recipes, nutrition and beauty",
+    "10": "Middle East and Eastern European current affairs",
+    "11": "Transport, travel and outdoor recreation",
+    "12": "Law, politics and international relations",
+    "13": "Business, community events and professional services",
+    "14": "Shopping, fashion and lifestyle products",
+    "15": "Sports, fitness and athlete biographies",
+    "16": "Politics, law and religion",
+    "17": "Food, services and personal events",
+    "18": "Architecture, municipalities and natural places",
+    "19": "Self-help, workplace and social commentary",
+    "20": "General web content, forums and technical help",
+    "21": "Football, games and competitive sports",
+    "22": "Crime, disasters and military conflict",
+    "23": "Philosophy, books and education",
+    "24": "Arts, music and cultural events",
+    "25": "Hotels, resorts and real estate",
+    "26": "Health, nutrition and biomedical science",
+    "27": "Blogs, social media and popular culture",
+    "28": "Film, music and celebrity entertainment",
+    "29": "Regulations, software and technical reference",
+    "30": "Video games, gambling and online entertainment",
+    "31": "Markets, finance and economic policy"
+  }
+}

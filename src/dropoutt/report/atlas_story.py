@@ -33,7 +33,31 @@ from dataclasses import dataclass, field
 from itertools import zip_longest
 from typing import Any
 
+from .escaping import safe_snippet
 from .phrasing import share as _share
+
+#: Longest excerpt of the reader's own record a report quotes for a place.
+EXCERPT_CHARS = 240
+
+#: One caption for the rebalance section, shared by every rendering. It
+#: describes and stops: the tool has not been told what the corpus is for, so
+#: it cannot say whether a difference from the map is a fault.
+IMBALANCE_CAPTION = (
+    "Where your mix differs most from the map's. Whether to move it depends on "
+    "what you are building, which the tool has not been told. Subregions never "
+    "reached come first among the thinner ones."
+)
+
+#: The two definitions every rendering of the grid repeats, written once so the
+#: page and the text file cannot define reach two different ways.
+DENSITY_DEFINITION = (
+    "Density is your share of a subregion against the reference corpus's share "
+    "of the same one: 1.0× matches the map."
+)
+REACH_DEFINITION = (
+    "Reach sums min(1, density) over an area's subregions, so parity is a full "
+    "score and over-representation does not add more."
+)
 
 
 @dataclass
@@ -64,7 +88,7 @@ class Place:
 
 @dataclass
 class Imbalance:
-    """One cell far from map density, with an example and a cut/grow cue."""
+    """One cell far from map density, with an example and which way it differs."""
 
     region: int
     ratio: float
@@ -72,8 +96,10 @@ class Imbalance:
     share: float
     yours: str
     area: str
-    #: ``cut`` when denser than the map, ``grow`` when thinner.
-    action: str
+    #: ``denser`` than the map, ``thinner`` than it, or ``unreached``. A
+    #: description of where the cell sits, not an instruction: the tool does
+    #: not know what the corpus is for, so it cannot say which way to move.
+    direction: str
 
 
 @dataclass
@@ -114,15 +140,13 @@ class Cell:
         The ratio used to be a hover tooltip. A number that only exists while a
         mouse is over it does not exist on paper, in a screenshot pasted into a
         ticket, or for anyone reading with a keyboard — which is most of the
-        ways this page is read. An unreached cell says ``0``.
+        ways this page is read. An unreached cell says ``0``; every other cell
+        says what :func:`density_ratio` says, so the number inside a square is
+        the same number the tables and the screen-reader text print for it.
         """
         if not self.records:
             return "0"
-        if self.ratio >= 10:
-            return f"{self.ratio:.0f}×"
-        if self.ratio >= 1:
-            return f"{self.ratio:.1f}×"
-        return f"{self.ratio:.2f}×".lstrip("0")
+        return density_ratio(self.ratio)
 
     @property
     def described(self) -> str:
@@ -211,7 +235,14 @@ class AtlasStory:
 
     available: bool = False
     unavailable_reason: str = ""
+    #: The total every share on the page is a share of: the sum of the region
+    #: histogram. When the sample was weighted to stand for the whole corpus
+    #: this is the weighted total, and it is what the Placed card prints, so
+    #: "40% of your placed records" and the card agree on the denominator.
     placed: int = 0
+    #: How many sampled records were actually placed, before weighting. Equal
+    #: to `placed` on an unweighted scan.
+    placed_sampled: int = 0
     sampled: int = 0
     too_short: int = 0
     regions_touched: int = 0
@@ -220,31 +251,29 @@ class AtlasStory:
     concentration: float | None = None
     shape: str = ""
     shape_line: str = ""
-    headline: str = ""
     off_rate: float = 0.0
     off_count: int = 0
     off_line: str = ""
     off_detail: dict[str, Any] = field(default_factory=dict)
     off_examples: list[dict] = field(default_factory=list)
-    crowding: str = ""
     places: list[Place] = field(default_factory=list)
     #: Occupied regions holding almost nothing. Reaching a place is not the same
     #: as covering it, and the difference is invisible in an occupancy count.
     thin_places: list[Place] = field(default_factory=list)
-    #: Cells farthest from map density, cut and grow interleaved, so a reader
-    #: can see which records to thin and which subjects to add.
+    #: Cells farthest from map density, denser and thinner interleaved, so a
+    #: reader can see both ends of the difference at once.
     imbalances: list[Imbalance] = field(default_factory=list)
     #: The single place holding most of the corpus, by share rather than by
     #: density. `places` is ranked on density, and "42% of your data is here"
     #: is a different sentence from "you are 26x the map here".
     dominant: Place | None = None
+    #: What the toehold regions hold between them, and how many there are.
+    #: Both come from one pass over the histogram so the headline "N places
+    #: hold X%" counts the same set X sums over.
     thin_share: float = 0.0
+    thin_count: int = 0
     insights: list[Insight] = field(default_factory=list)
     twins: list[dict] = field(default_factory=list)
-    twins_line: str = ""
-    gaps: list[dict] = field(default_factory=list)
-    gaps_line: str = ""
-    categories: list[dict] = field(default_factory=list)
 
     #: Every subject area of the map, occupied or not, each carrying its own
     #: fine cells. The whole map rather than the part this corpus reached,
@@ -267,6 +296,37 @@ class AtlasStory:
     unreached_density: float = 0.0
     version: str = ""
     probe_accuracy: float | None = None
+
+    @property
+    def weighted(self) -> bool:
+        """Whether the placed total is an estimate rather than a record count."""
+        return self.placed != self.placed_sampled
+
+    @property
+    def placed_label(self) -> str:
+        """The Placed card's number: ``≈256`` when estimated, ``250`` when not."""
+        return f"≈{self.placed:,}" if self.weighted else f"{self.placed:,}"
+
+    @property
+    def placed_note(self) -> str:
+        """The line under the Placed number, the same in every rendering.
+
+        An unweighted scan says how many of the sampled records were placed.
+        A weighted one has two numbers that disagree — the records placed and
+        the total they stand for — and both are stated, once, here, rather
+        than one on the card and the other under every share on the page.
+        """
+        if self.weighted:
+            note = (
+                f"estimated from the {self.placed_sampled:,} of {self.sampled:,} "
+                f"sampled records that were placed, each weighted by how much of "
+                f"the corpus it stands for"
+            )
+        else:
+            note = f"of {self.sampled:,} sampled records"
+        if self.too_short:
+            note += f"; {self.too_short:,} were too short to place"
+        return note
 
     def redact(self) -> AtlasStory:
         """Drop every field that quotes a record, in place, and return self.
@@ -303,7 +363,7 @@ BROAD_CONCENTRATION = 0.75
 
 
 def build_story(result) -> AtlasStory | None:
-    from ..atlas.compare import category_labels, concentration, unusable_reason
+    from ..atlas.compare import concentration, unusable_reason
 
     coverage = result.ctx.stats.get("atlas_coverage")
     if not coverage:
@@ -317,13 +377,24 @@ def build_story(result) -> AtlasStory | None:
 
     story.available = status == "ok"
     story.sampled = int(coverage.get("records", 0))
-    story.placed = int(coverage.get("placed", 0))
+    story.placed_sampled = int(coverage.get("placed", 0))
+    # The histogram is the one source every share divides by. Its sum is the
+    # weighted total when the scan weighted its sample and the raw count when
+    # it did not, and the card prints whichever it is.
+    story.placed = sum(
+        int(count) for count in (coverage.get("region_counts") or {}).values()
+    ) or story.placed_sampled
     story.too_short = int(coverage.get("excluded_too_short", 0))
     story.off_count = int(coverage.get("off_atlas", 0))
     story.off_rate = float(coverage.get("off_atlas_rate", 0.0))
     story.off_detail = coverage.get("off_atlas_detail") or {}
     story.probe_accuracy = coverage.get("l0_holdout_accuracy")
-    story.off_examples = list(result.ctx.stats.get("atlas_off_examples") or [])
+    # Corpus text enters the story here and in `_place`, and nowhere else. It
+    # is made safe on the way in so that no renderer has to remember to.
+    story.off_examples = [
+        {**ex, "excerpt": safe_snippet(str(ex.get("excerpt", "")).replace("\n", " "), 160)}
+        for ex in (result.ctx.stats.get("atlas_off_examples") or [])
+    ]
 
     if not story.available:
         story.unavailable_reason = (
@@ -339,16 +410,13 @@ def build_story(result) -> AtlasStory | None:
     story.regions_touched = int(coverage.get("regions_occupied", 0))
     story.regions_total = int(coverage.get("regions_total", 0))
     story.concentration = concentration(coverage)
-    labels = category_labels(_atlas_of(result))
+    labels = _labels_of(result)
 
     story.places, story.thin_places = _ranked_places(result, coverage)
     story.imbalances = _imbalances(result, coverage)
     story.dominant = _dominant(result, coverage)
-    story.thin_share = _thin_share(coverage)
-    story.crowding = _crowding(story)
-    story.twins, story.twins_line = _twins(coverage)
-    story.gaps, story.gaps_line = _gaps(coverage, labels)
-    story.categories, _palette = _categories(result, coverage)
+    story.thin_share, story.thin_count = _thin_share(coverage)
+    story.twins = _twins(coverage)
     story.grid, story.grid_peak = _grid(result, coverage, labels)
     # Prefer the density-capped sum from the grid; fall back to the facet.
     if story.grid:
@@ -356,19 +424,17 @@ def build_story(result) -> AtlasStory | None:
     else:
         story.effective = float(coverage.get("effective_regions", 0.0))
     story.shape_path = _shape_path(result, coverage, story.grid_peak)
-    story.shape, story.shape_line, story.headline = _shape(story)
+    story.shape, story.shape_line = _shape(story)
     story.insights = _insights(result, coverage, story)
     story.off_line = _off_line(story)
     return story
 
 
-def _shape(story: AtlasStory) -> tuple[str, str, str]:
+def _shape(story: AtlasStory) -> tuple[str, str]:
     """How spread out the corpus is, said without a verdict attached."""
-    touched, total = story.regions_touched, story.regions_total or 1
-    effective = story.effective
     conc = story.concentration
     if conc is None:
-        return "", "", ""
+        return "", ""
     if conc < SPECIALIST_CONCENTRATION:
         shape = "specialised"
         line = (
@@ -387,12 +453,7 @@ def _shape(story: AtlasStory) -> tuple[str, str, str]:
             "This sits between a specialist set and a general mixture: several "
             "areas, with most of the weight in a few of them."
         )
-    headline = (
-        f"Your data reaches {touched} of {total} places on the map, with "
-        f"{format_reach(effective)} of {total} in effective coverage "
-        f"(1× density counts as one)."
-    )
-    return shape, line, headline
+    return shape, line
 
 
 def _place(result, region: int, records: int, share: float,
@@ -410,11 +471,19 @@ def _place(result, region: int, records: int, share: float,
         area = category_labels(atlas).get(int(atlas.region_category[region]), "")
     if not caption and atlas is not None and region < len(atlas.region_labels):
         caption = atlas.region_labels[region]
+    # The reader's record is untrusted text, and this is the one door it comes
+    # in through: every place, imbalance and insight quotes what is set here,
+    # so a control character or a bidi override is neutralised once, above
+    # every renderer, rather than in each of the four.
+    yours = (
+        safe_snippet(str(rows[0].get("excerpt", "")).replace("\n", " "), EXCERPT_CHARS)
+        if rows else ""
+    )
     return Place(
         region=region,
         share=share,
         records=records,
-        yours=str(rows[0].get("excerpt", "")).replace("\n", " ").strip() if rows else "",
+        yours=yours,
         caption=caption,
         ratio=ratio,
         cohesion=float(coh) if coh is not None else None,
@@ -478,21 +547,23 @@ def _ranked_places(result, coverage: dict) -> tuple[list[Place], list[Place]]:
     return dense, thin
 
 
-#: How many cut/grow cells to show in the rebalance section. Split evenly so a
-#: corpus with hundreds of empty cells cannot crowd out every cut cue.
+#: How many cells to show in the rebalance section. Split evenly between the
+#: denser and the thinner end so a corpus with hundreds of empty cells cannot
+#: crowd out the dense ones.
 IMBALANCE_SHOWN = 8
 IMBALANCE_EACH = IMBALANCE_SHOWN // 2
 
 
 def _imbalances(result, coverage: dict) -> list[Imbalance]:
-    """Cells farthest from map density, so a reader knows what to cut or grow.
+    """Cells farthest from map density, in both directions.
 
-    Cut and grow are ranked separately, then interleaved. Grow starts with
-    cells the corpus never reached (0×): those are farther from the map than
-    any thin toehold, and used to be invisible because only occupied cells
-    entered the list. Among empty cells, larger map mass ranks first — grow
-    into a big gap before a tiny one. Occupied cells still use log-distance
-    from parity: 6× and 0.17× are the same distance from 1×.
+    The denser and the thinner end are ranked separately, then interleaved.
+    The thinner end starts with cells the corpus never reached (0×): those are
+    farther from the map than any thin toehold, and used to be invisible
+    because only occupied cells entered the list. Among empty cells, larger
+    map mass ranks first, so the biggest gap is named before a tiny one.
+    Occupied cells use log-distance from parity: 6× and 0.17× are the same
+    distance from 1×.
     """
     atlas = _atlas_of(result)
     counts = {
@@ -519,14 +590,14 @@ def _imbalances(result, coverage: dict) -> list[Imbalance]:
         else None
     )
 
-    cuts: list[tuple] = []
-    grows: list[tuple] = []
+    denser: list[tuple] = []
+    thinner: list[tuple] = []
     for region in range(n_regions):
         records = counts.get(region, 0)
         ratio = ratios.get(region, 0.0) if records else 0.0
         share = records / placed
         if ratio > 1.0:
-            cuts.append((abs(math.log(ratio)), region, records, share, ratio))
+            denser.append((abs(math.log(ratio)), region, records, share, ratio))
         elif records == 0 or ratio < 1.0:
             # Tier 0 = never reached; tier 1 = thin but present. Map mass only
             # breaks ties inside the empty tier.
@@ -535,13 +606,12 @@ def _imbalances(result, coverage: dict) -> list[Imbalance]:
                 key = (0, -mass, region)
             else:
                 key = (1, -abs(math.log(max(ratio, 1e-12))), region)
-            grows.append((key, region, records, share, ratio))
+            thinner.append((key, region, records, share, ratio))
 
-    cuts.sort(key=lambda row: (-row[0], row[1]))
-    grows.sort(key=lambda row: (row[0], row[1]))
+    denser.sort(key=lambda row: (-row[0], row[1]))
+    thinner.sort(key=lambda row: (row[0], row[1]))
 
-    def _item(region: int, records: int, share: float, ratio: float,
-              action: str) -> Imbalance:
+    def _item(region: int, records: int, share: float, ratio: float) -> Imbalance:
         place = _place(result, region, records, share, ratio)
         return Imbalance(
             region=region,
@@ -550,19 +620,21 @@ def _imbalances(result, coverage: dict) -> list[Imbalance]:
             share=share,
             yours=place.yours,
             area=place.area,
-            action=action,
+            direction=(
+                "denser" if ratio > 1.0 else "thinner" if records else "unreached"
+            ),
         )
 
     out: list[Imbalance] = []
-    for cut, grow in zip_longest(
-        cuts[:IMBALANCE_EACH], grows[:IMBALANCE_EACH],
+    for dense, thin in zip_longest(
+        denser[:IMBALANCE_EACH], thinner[:IMBALANCE_EACH],
     ):
-        if cut is not None:
-            _, region, records, share, ratio = cut
-            out.append(_item(region, records, share, ratio, "cut"))
-        if grow is not None:
-            _, region, records, share, ratio = grow
-            out.append(_item(region, records, share, ratio, "grow"))
+        if dense is not None:
+            _, region, records, share, ratio = dense
+            out.append(_item(region, records, share, ratio))
+        if thin is not None:
+            _, region, records, share, ratio = thin
+            out.append(_item(region, records, share, ratio))
     return out
 
 
@@ -619,8 +691,8 @@ def _shape_path(result, coverage: dict, peak: float) -> list[Cell]:
     terms = getattr(atlas, "region_labels", ()) or ()
 
     path: list[Cell] = []
-    for region in order:
-        region = int(region)
+    for index in order:
+        region = int(index)
         records = counts.get(region, 0)
         ratio = ratios.get(region, 0.0) if records else 0.0
         caption = ""
@@ -644,14 +716,35 @@ def _shape_path(result, coverage: dict, peak: float) -> list[Cell]:
 #: the occupancy count is telling the reader something the data does not support.
 THIN_SHARE = 0.005
 
+#: Below this many placed records a region is a toehold whatever the map: the
+#: sample cannot tell presence from chance from one or two records.
+THIN_MIN_RECORDS = 3
 
-def _thin_share(coverage: dict) -> float:
-    """What the toehold regions hold between them.
 
-    Occupancy — "you reach 34 of 215 places" — counts a region holding one
-    record the same as one holding a third of the corpus, which is exactly how
-    a narrow corpus comes to look broad. This is the other half of that number,
-    and it feeds the insight rather than a list.
+def thin_cutoff(placed: int, regions_total: int) -> float:
+    """Share of placed records under which a region is a toehold.
+
+    The map's even mass per cell, or three records, whichever is larger.
+    :data:`THIN_SHARE` was written against 215 cells, where one record in two
+    hundred is even mass; on 4,096 cells even mass is 0.024%, and the fixed
+    figure called 893 of the 922 places a 2,100-record sample reached toeholds,
+    holding 64% of the data between them — a sentence about the rule, not the
+    corpus.
+    """
+    even = (1.0 / regions_total) if regions_total > 0 else THIN_SHARE
+    floor = (THIN_MIN_RECORDS / placed) if placed > 0 else 0.0
+    return max(even, floor)
+
+
+def _thin_share(coverage: dict) -> tuple[float, int]:
+    """What the toehold regions hold between them, and how many there are.
+
+    Occupancy — "you reach N of the map's places" — counts a region holding
+    one record the same as one holding a third of the corpus, which is exactly
+    how a narrow corpus comes to look broad. This is the other half of that
+    number, and it feeds the insight rather than a list. The share and the
+    count come from the same pass over the same histogram, so the sentence
+    "N places hold X%" counts the places X sums over.
     """
     counts = {
         int(region): int(count)
@@ -659,9 +752,12 @@ def _thin_share(coverage: dict) -> float:
     }
     placed = sum(counts.values())
     if not placed or len(counts) < 4:
-        return 0.0
-    thin = [count for count in counts.values() if count / placed < THIN_SHARE]
-    return sum(thin) / placed if len(thin) >= 3 else 0.0
+        return 0.0, 0
+    cutoff = thin_cutoff(placed, int(coverage.get("regions_total") or 0))
+    thin = [count for count in counts.values() if count / placed < cutoff]
+    if len(thin) < 3:
+        return 0.0, 0
+    return sum(thin) / placed, len(thin)
 
 
 def _dominant(result, coverage: dict) -> Place | None:
@@ -682,32 +778,10 @@ def _dominant(result, coverage: dict) -> Place | None:
                   ratios.get(region, 0.0))
 
 
-def _crowding(story: AtlasStory) -> str:
-    """The single most useful thing the map says about a lopsided corpus."""
-    if story.dominant is None:
-        return ""
-    top = story.dominant
-    if top.share < 0.2:
-        return ""
-    if top.repetitive:
-        return (
-            f"{_share(top.share)} of your data sits in one place, and those records "
-            f"are {top.cohesion:.2f} alike. That is one thing written out many "
-            f"times, not one subject covered many ways — near-duplicate detection "
-            f"will not catch it, because they share almost no wording."
-        )
-    return (
-        f"{_share(top.share)} of your data sits in one place on the map. The records "
-        f"there vary in wording, so this is a subject you cover heavily rather than "
-        f"a template."
-    )
-
-
-def _twins(coverage: dict) -> tuple[list[dict], str]:
+def _twins(coverage: dict) -> list[dict]:
+    """Dataset pairs standing on each other's ground, most alike first."""
     block = coverage.get("by_dataset_regions") or {}
     alike = list(block.get("most_alike") or [])
-    if not alike:
-        return [], ""
     rows: list[dict[str, Any]] = []
     for pair in alike[:5]:
         similarity = float(pair["similarity"])
@@ -721,59 +795,46 @@ def _twins(coverage: dict) -> tuple[list[dict], str]:
                 else "different ground"
             ),
         })
-    top = rows[0]
-    if top["similarity"] >= 0.8:
-        line = (
-            f"{top['a']} and {top['b']} occupy the same ground ({top['similarity']:.2f}). "
-            f"Merging them adds volume, not coverage — and text-level duplicate "
-            f"detection cannot see this, because they may share no wording at all."
-        )
-    else:
-        line = (
-            f"Your datasets cover different ground; the closest pair, {top['a']} and "
-            f"{top['b']}, overlaps at {top['similarity']:.2f}."
-        )
-    return rows, line
-
-
-def _gaps(coverage: dict, labels: dict[int, str]) -> tuple[list[dict], str]:
-    raw = coverage.get("coverage_gaps") or []
-    total = int(coverage.get("categories_total", 0)) or len(raw)
-    rows = [
-        {
-            "name": labels.get(int(g["category"]), f"area {g['category']}"),
-            "regions": int(g["regions"]),
-            "records": int(g["records"]),
-            "caption": str(g.get("terms") or ""),
-        }
-        for g in raw
-    ]
-    if not rows:
-        return [], "Your data reaches every subject area the map covers."
-    line = (
-        f"{len(rows)} of the {total} subject areas the map covers are empty or "
-        f"nearly empty here. Whether that matters depends on what you are "
-        f"building — a specialist set is supposed to have gaps."
-    )
-    return rows, line
-
-
-#: Distinct fills the subject bars cycle through, plus one for everything past
-#: the named few. Chosen to stay apart at bar width, not to be pretty.
-MAP_HUES = 6
-OTHER_HUE = 6
+    return rows
 
 
 def _atlas_of(result):
-    atlas = result.ctx.atlas
-    if atlas is not None:
-        return atlas
-    try:
-        from ..atlas import load_bundled
+    """The atlas the coverage facet was measured in, or None.
 
-        return load_bundled()
-    except Exception:  # pragma: no cover - defensive
+    None rather than the default map when the two disagree: the facet names
+    the atlas it was measured against, and captioning a v2 histogram with the
+    bundled v3's labels would name cells the numbers were never counted in.
+    The fallback loads the version the facet names, not whatever ships first.
+    """
+    coverage = result.ctx.stats.get("atlas_coverage") or {}
+    version = coverage.get("atlas_version")
+    atlas = result.ctx.atlas
+    if atlas is None:
+        try:
+            from ..atlas import load_bundled
+
+            atlas = load_bundled(version if isinstance(version, str) else None)
+        except Exception:  # pragma: no cover - defensive
+            return None
+    if atlas is None:
         return None
+    stored = (getattr(atlas, "meta", None) or {}).get("version")
+    if version and stored != version:
+        return None
+    return atlas
+
+
+def _labels_of(result) -> dict[int, str]:
+    """Subject-area names from the facet's own atlas; nothing when it is absent.
+
+    ``category_labels(None)`` would load the default map and name a foreign
+    facet's areas with it, which is the mistake :func:`_atlas_of` exists to
+    refuse. An area with no atlas to name it is called by its number instead.
+    """
+    from ..atlas.compare import category_labels
+
+    atlas = _atlas_of(result)
+    return category_labels(atlas) if atlas is not None else {}
 
 
 def _region_categories(result, coverage: dict) -> tuple[dict[int, int], dict[int, int]]:
@@ -801,33 +862,41 @@ def _region_categories(result, coverage: dict) -> tuple[dict[int, int], dict[int
     return per_area, counts
 
 
-def _categories(result, coverage: dict) -> tuple[list[dict], dict[int, int]]:
-    """Each subject area's share of this corpus, beside the map's own share.
+def _area_expected(result) -> dict[int, float]:
+    """The share of the reference corpus the map holds in each subject area.
 
-    The second number is what turns a bar chart into a comparison. On its own
-    "27% code generation" is a fact with nothing to weigh it against; next to
-    "the map spends 4% of itself there" it is the finding.
+    From ``region_size`` — the reference mass behind each fine cell — summed
+    over the cells filed under each area. This is the denominator the grid's
+    row ratios use, and the insights have to use the same one or the same
+    area reads "48×" in the table and "149×" in the sentence beside it. When
+    an artifact carries no sizes, the cell allocation from
+    :func:`_map_allocation` is the only reference distribution left.
     """
-    from ..atlas.compare import category_labels
+    atlas = _atlas_of(result)
+    sizes = getattr(atlas, "region_size", None) if atlas is not None else None
+    if atlas is None or sizes is None or not len(atlas.region_category):
+        return _map_allocation(result)[0]
+    mass = [float(x) for x in sizes]
+    per_area: dict[int, float] = {}
+    for region, area in enumerate(atlas.region_category):
+        if region < len(mass):
+            per_area[int(area)] = per_area.get(int(area), 0.0) + mass[region]
+    total = sum(per_area.values())
+    if total <= 0:
+        return _map_allocation(result)[0]
+    return {area: value / total for area, value in per_area.items()}
 
-    labels = category_labels(_atlas_of(result))
-    per_area, _ = _region_categories(result, coverage)
-    if not per_area:
-        return [], {}
-    allocation, _total_regions = _map_allocation(result)
-    placed = sum(per_area.values()) or 1
-    ranked = sorted(per_area.items(), key=lambda kv: -kv[1])
-    palette = {area: i for i, (area, _) in enumerate(ranked[:MAP_HUES])}
-    rows = [
-        {
-            "name": labels.get(area, f"area {area}"),
-            "share": count / placed,
-            "map_share": allocation.get(area, 0.0),
-            "hue": palette.get(area, OTHER_HUE),
-        }
-        for area, count in ranked[:8]
-    ]
-    return rows, palette
+
+def _shrunk_ratio(observed: float, expected: float, n: float, alpha: float) -> float:
+    """A share against its expectation, pulled towards parity by the prior.
+
+    The same rule :meth:`dropoutt.atlas.apply.Atlas._density` applies to each
+    cell, so a row, a cell and a sentence about the same area agree. ``n`` is
+    the effective sample and ``alpha`` the prior strength the facet carries.
+    """
+    if expected <= 0:
+        return 0.0
+    return (n * observed + alpha) / (n * expected + alpha)
 
 
 #: How many of a cell's caption terms are worth showing. The caption is a
@@ -836,7 +905,13 @@ CAPTION_TERMS = 4
 
 
 def density_ratio(value: float) -> str:
-    """A density ratio as the reader would say it out loud."""
+    """A density ratio as the reader would say it out loud.
+
+    The one formatter for the number, wherever it appears: a grid cell, a
+    table column, a headline, a terminal row. The glyph is ``×`` everywhere,
+    the terminal included, so the same cell does not read ``49.6×`` in one
+    file and ``50x`` in another.
+    """
     if value <= 0:
         return "0×"
     if value < 0.1:
@@ -931,9 +1006,13 @@ def _grid(result, coverage: dict,
         area.cells.sort(key=lambda cell: (-cell.ratio, cell.region))
         area.share = area.records / placed
         if reference > 0:
-            expected = sum(sizes[cell.region] for cell in area.cells) / reference
-            if expected > 0:
-                area.ratio = (n * area.share + alpha) / (n * expected + alpha)
+            # An artifact whose size vector is shorter than its cell list is
+            # malformed rather than impossible; a cell past its end weighs
+            # nothing rather than raising.
+            expected = sum(
+                sizes[cell.region] for cell in area.cells if cell.region < len(sizes)
+            ) / reference
+            area.ratio = _shrunk_ratio(area.share, expected, n, alpha)
     return sorted(grid, key=lambda a: (-a.share, a.name.lower())), peak
 
 
@@ -1016,8 +1095,11 @@ UNDER_LIFT = 0.25
 #: and a half is about a 1% two-sided false-positive rate per area tested, which
 #: at twenty areas is the right trade for a page nobody should have to audit.
 SIGMA = 2.5
-#: One region holding this much of a corpus is the single most useful sentence
-#: the map produces, so it leads.
+#: One fine cell holding this much of a corpus is the single most useful
+#: sentence the map produces, so it leads. The threshold is a share of the
+#: corpus rather than of the map, so it means the same on a map of any size;
+#: what changes with the map is how remarkable it is, and the sentence says
+#: how many places the map has so the reader can weigh it.
 DOMINANT_REGION = 0.20
 #: Below this many placed records, no comparison against the map is made at all.
 #: The binomial gate above would happily clear a 4x difference on thirty records
@@ -1074,18 +1156,27 @@ def _map_allocation(result) -> tuple[dict[int, float], int]:
 
 def _insights(result, coverage: dict, story: AtlasStory) -> list[Insight]:
     """Every claim the map supports, largest first."""
-    from ..atlas.compare import category_labels
-
     out: list[Insight] = []
     # Effective, not placed: every gate below asks "could this be noise", and
     # the answer depends on how many independent records were seen rather than
     # on how many they were scaled up to represent.
     placed = story.effective_sample or story.placed or 1
-    labels = category_labels(_atlas_of(result))
+    # The same prior the grid's rows are shrunk with, so the lift a sentence
+    # names is the lift the table beside it prints.
+    alpha = story.prior_strength
+    labels = _labels_of(result)
     per_area, _counts = _region_categories(result, coverage)
+    # Expected shares come from reference mass, as the grid's do. The cell
+    # allocation is kept only for the "N of M places" aside, which is a fact
+    # about the map's resolution rather than about its contents.
+    expected_share = _area_expected(result)
     allocation, n_regions = _map_allocation(result)
     area_counts_by_id = dict(per_area)
     corpus_area = {a: c / max(sum(per_area.values()), 1) for a, c in per_area.items()}
+
+    def _places(area: int) -> str:
+        cells = round(allocation.get(area, 0.0) * n_regions)
+        return f"{cells:,} of its {n_regions:,} places"
 
     # -- one place holding most of the corpus ------------------------------
     if story.dominant is not None and story.dominant.share >= DOMINANT_REGION:
@@ -1106,8 +1197,8 @@ def _insights(result, coverage: dict, story: AtlasStory) -> list[Insight]:
             )
         else:
             detail = (
-                f"{top.records:,} of your placed records land there — a quarter "
-                f"of the corpus or more in one neighbourhood of the map."
+                f"{top.records:,} of your placed records land in one of the "
+                f"map's {story.regions_total:,} places."
             )
         out.append(Insight(
             kind="dominance",
@@ -1129,17 +1220,18 @@ def _insights(result, coverage: dict, story: AtlasStory) -> list[Insight]:
         if not comparable or over >= INSIGHTS_PER_KIND:
             break
         observed = corpus_area.get(area, 0.0)
-        expected = allocation.get(area, 0.0)
+        expected = expected_share.get(area, 0.0)
         if not expected or observed < OVER_SHARE:
             continue
-        if observed / expected < OVER_LIFT:
+        lift = _shrunk_ratio(observed, expected, placed, alpha)
+        if lift < OVER_LIFT:
             continue
         if not _significant(observed, expected, placed):
             continue
-        regions = round(expected * n_regions)
         detail = (
-            f"The map spends {regions} of its {n_regions} places on that "
-            f"subject; {_share(observed)} of your placed records land there."
+            f"The map holds {_share(expected)} of its reference text in that "
+            f"subject ({_places(area)}); {_share(observed)} of your placed "
+            f"records land there."
         )
         if not over:
             detail += (
@@ -1149,7 +1241,7 @@ def _insights(result, coverage: dict, story: AtlasStory) -> list[Insight]:
         out.append(Insight(
             kind="over",
             headline=(
-                f"{labels.get(area, f'area {area}')} — {observed / expected:.1f}× "
+                f"{labels.get(area, f'area {area}')} — {density_ratio(lift)} "
                 f"denser here than on the map"
             ),
             detail=detail,
@@ -1159,7 +1251,7 @@ def _insights(result, coverage: dict, story: AtlasStory) -> list[Insight]:
 
     # -- subjects the map is built for and this corpus barely reaches ------
     under = 0
-    for area, expected in sorted(allocation.items(), key=lambda kv: -kv[1]):
+    for area, expected in sorted(expected_share.items(), key=lambda kv: -kv[1]):
         if not comparable or under >= INSIGHTS_PER_KIND:
             break
         if expected < UNDER_MAP_SHARE:
@@ -1169,10 +1261,9 @@ def _insights(result, coverage: dict, story: AtlasStory) -> list[Insight]:
             continue
         if not _significant(observed, expected, placed):
             continue
-        regions = round(expected * n_regions)
         detail = (
-            f"{regions} of the map's {n_regions} places sit in that subject "
-            f"because the reference corpus had enough of it to need them."
+            f"The reference corpus had enough of that subject to give it "
+            f"{_places(area)}."
         )
         if not under:
             detail += " Whether the gap matters depends on what you are building."
@@ -1189,8 +1280,7 @@ def _insights(result, coverage: dict, story: AtlasStory) -> list[Insight]:
 
     # -- reached but not covered -------------------------------------------
     if story.thin_places and story.thin_share:
-        thin = len([1 for r, c in (coverage.get("region_counts") or {}).items()
-                    if int(c) / placed < THIN_SHARE])
+        thin = story.thin_count
         solid = story.regions_touched - thin
         if thin >= 3 and solid >= 1:
             out.append(Insight(

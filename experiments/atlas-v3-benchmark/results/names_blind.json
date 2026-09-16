@@ -1,0 +1,1092 @@
+[
+ {
+  "id": 0,
+  "slice": "MMLU exam questions: business ethics",
+  "name": "Ethics, morality and civic values"
+ },
+ {
+  "id": 1,
+  "slice": "motherduckdb__duckdb-text2sql-25k (structured dataset)",
+  "name": "Database and SQL query Q&A"
+ },
+ {
+  "id": 2,
+  "slice": "microsoft__orca-math-word-problems-200k (math dataset)",
+  "name": "Integers, counting and properties of numbers"
+ },
+ {
+  "id": 3,
+  "slice": "MMLU exam questions: public relations",
+  "name": "Mixed communication fragments with no shared subject"
+ },
+ {
+  "id": 4,
+  "slice": "MMLU exam questions: clinical knowledge",
+  "name": "Blood, blood cells and hematology"
+ },
+ {
+  "id": 5,
+  "slice": "MMLU exam questions: econometrics",
+  "name": "Descriptive statistics and variable analysis articles"
+ },
+ {
+  "id": 6,
+  "slice": "commitpackft__ruby (code dataset)",
+  "name": "Functions, classes and programming patterns"
+ },
+ {
+  "id": 7,
+  "slice": "MMLU exam questions: management",
+  "name": "Leadership skills, leaders and organisational leadership"
+ },
+ {
+  "id": 8,
+  "slice": "commitpackft__go (code dataset)",
+  "name": "Code installation and build docs on assorted projects"
+ },
+ {
+  "id": 9,
+  "slice": "MMLU exam questions: human aging",
+  "name": "Dementia, Alzheimer's and neurodegenerative disease"
+ },
+ {
+  "id": 10,
+  "slice": "MMLU exam questions: marketing",
+  "name": "Marketing strategies, campaigns and customer growth"
+ },
+ {
+  "id": 11,
+  "slice": "deepmind__aqua_rat__raw (math dataset)",
+  "name": "Integers, counting and properties of numbers"
+ },
+ {
+  "id": 12,
+  "slice": "OpenAssistant__oasst1 (instruction dataset)",
+  "name": "Python installation and package-import troubleshooting posts"
+ },
+ {
+  "id": 13,
+  "slice": "MMLU exam questions: astronomy",
+  "name": "Planetary and Earth physical processes"
+ },
+ {
+  "id": 14,
+  "slice": "TFLai__Turkish-Alpaca (instruction dataset)",
+  "name": "English grammar, parts of speech and usage"
+ },
+ {
+  "id": 15,
+  "slice": "allenai__c4__multilingual (web dataset)",
+  "name": "Local news articles and personal blog posts"
+ },
+ {
+  "id": 16,
+  "slice": "MMLU exam questions: security studies",
+  "name": "Conflict, peacebuilding and international relations"
+ },
+ {
+  "id": 17,
+  "slice": "MMLU exam questions: elementary mathematics",
+  "name": "Integers, counting and properties of numbers"
+ },
+ {
+  "id": 18,
+  "slice": "commitpackft__python (code dataset)",
+  "name": "Code installation and build docs on assorted projects"
+ },
+ {
+  "id": 19,
+  "slice": "winddude__reddit_finance_43_250k (legal / finance dataset)",
+  "name": "Articles about saving money and personal budgeting"
+ },
+ {
+  "id": 20,
+  "slice": "deepmind__aqua_rat__raw (math dataset)",
+  "name": "Programming puzzles about number sequences and algorithms"
+ },
+ {
+  "id": 21,
+  "slice": "commitpackft__php (code dataset)",
+  "name": "Typed class and API usage code snippets"
+ },
+ {
+  "id": 22,
+  "slice": "MMLU exam questions: formal logic",
+  "name": "Court cases and legal disputes in many jurisdictions"
+ },
+ {
+  "id": 23,
+  "slice": "hendrycks_math__algebra (math dataset)",
+  "name": "Mixed analysis papers and unrelated fragments"
+ },
+ {
+  "id": 24,
+  "slice": "MMLU exam questions: human aging",
+  "name": "Research articles about children's development by age"
+ },
+ {
+  "id": 25,
+  "slice": "MMLU exam questions: abstract algebra",
+  "name": "Mathematical functions and functional analysis"
+ },
+ {
+  "id": 26,
+  "slice": "MMLU exam questions: high school computer science",
+  "name": "Python install, virtualenv and packages"
+ },
+ {
+  "id": 27,
+  "slice": "OpenAssistant__oasst1 (instruction dataset)",
+  "name": "Programming languages, code and formal grammars"
+ },
+ {
+  "id": 28,
+  "slice": "b-mc2__sql-create-context (structured dataset)",
+  "name": "Programming puzzles about number sequences and algorithms"
+ },
+ {
+  "id": 29,
+  "slice": "gbharti__finance-alpaca (legal / finance dataset)",
+  "name": "Articles about stock investment strategy and ETFs"
+ },
+ {
+  "id": 30,
+  "slice": "MMLU exam questions: computer security",
+  "name": "Encryption and cryptography Q&A"
+ },
+ {
+  "id": 31,
+  "slice": "MMLU exam questions: high school biology",
+  "name": "Evolution, Darwin and evolutionary biology"
+ },
+ {
+  "id": 32,
+  "slice": "Anthropic__hh-rlhf (instruction dataset)",
+  "name": "NLI premise-hypothesis pairs about people observing others"
+ },
+ {
+  "id": 33,
+  "slice": "MMLU exam questions: virology",
+  "name": "Virus species, genomes and classification"
+ },
+ {
+  "id": 34,
+  "slice": "MMLU exam questions: human sexuality",
+  "name": "Articles about menstrual and reproductive health"
+ },
+ {
+  "id": 35,
+  "slice": "MMLU exam questions: college biology",
+  "name": "Stem cell and tissue regeneration research papers"
+ },
+ {
+  "id": 36,
+  "slice": "commitpackft__php (code dataset)",
+  "name": "Functions, classes and programming patterns"
+ },
+ {
+  "id": 37,
+  "slice": "xlcost-text-to-code__Python (code dataset)",
+  "name": "Mixed newspaper text and unrelated fragments"
+ },
+ {
+  "id": 38,
+  "slice": "MMLU exam questions: nutrition",
+  "name": "Articles about vitamin and multivitamin supplements"
+ },
+ {
+  "id": 39,
+  "slice": "MMLU exam questions: business ethics",
+  "name": "Ethics and morality philosophy essays"
+ },
+ {
+  "id": 40,
+  "slice": "MMLU exam questions: medical genetics",
+  "name": "Genomes, chromosomes and chromatin"
+ },
+ {
+  "id": 41,
+  "slice": "MMLU exam questions: high school european history",
+  "name": "Historical writings about government and political power"
+ },
+ {
+  "id": 42,
+  "slice": "MMLU exam questions: college computer science",
+  "name": "Code and forum posts on assorted computing topics"
+ },
+ {
+  "id": 43,
+  "slice": "ultrachat_200k (instruction dataset)",
+  "name": "Fiction, graphic novels and mythic storytelling"
+ },
+ {
+  "id": 44,
+  "slice": "commitpackft__rust (code dataset)",
+  "name": "Code installation and build docs on assorted projects"
+ },
+ {
+  "id": 45,
+  "slice": "lex_glue__ecthr_a (legal / finance dataset)",
+  "name": "Appellate opinions on civil judgments and procedural motions"
+ },
+ {
+  "id": 46,
+  "slice": "turkish-nlp-suite__InstrucTurca (instruction dataset)",
+  "name": "Programming variables, types and data structures"
+ },
+ {
+  "id": 47,
+  "slice": "iamtarun__python_code_instructions_18k_alpaca (code dataset)",
+  "name": "Tutorials about Python data analysis and visualization"
+ },
+ {
+  "id": 48,
+  "slice": "MMLU exam questions: college mathematics",
+  "name": "Forum questions and tutorials about geometry and equations"
+ },
+ {
+  "id": 49,
+  "slice": "MMLU exam questions: professional law",
+  "name": "News articles about US federal courts and rulings"
+ },
+ {
+  "id": 50,
+  "slice": "commitpackft__go (code dataset)",
+  "name": "Code review and algorithm optimization questions"
+ },
+ {
+  "id": 51,
+  "slice": "codecomplete__starcoderdata_0.003 (code dataset)",
+  "name": "Typed class and API usage code snippets"
+ },
+ {
+  "id": 52,
+  "slice": "xlcost-text-to-code__Python (code dataset)",
+  "name": "Product listings spanning cosmetics, livestock and lab gear"
+ },
+ {
+  "id": 53,
+  "slice": "motherduckdb__duckdb-text2sql-25k (structured dataset)",
+  "name": "SQL, databases and spreadsheet tables"
+ },
+ {
+  "id": 54,
+  "slice": "MMLU exam questions: high school chemistry",
+  "name": "Chemical preparation and acid solution procedures"
+ },
+ {
+  "id": 55,
+  "slice": "MMLU exam questions: high school us history",
+  "name": "Articles about the US Constitution and constitutional rights"
+ },
+ {
+  "id": 56,
+  "slice": "codecomplete__starcoderdata_0.003 (code dataset)",
+  "name": "Code installation and build docs on assorted projects"
+ },
+ {
+  "id": 57,
+  "slice": "allenai__c4__en (web dataset)",
+  "name": "Marketing copy for landscaping and home-renovation trades"
+ },
+ {
+  "id": 58,
+  "slice": "stack-exchange-preferences (dialogue dataset)",
+  "name": "Programming, scripts and source-code examples"
+ },
+ {
+  "id": 59,
+  "slice": "MMLU exam questions: professional medicine",
+  "name": "Abdominal, pelvic and gastrointestinal conditions"
+ },
+ {
+  "id": 60,
+  "slice": "MMLU exam questions: world religions",
+  "name": "Articles about Hindu and Buddhist scripture and philosophy"
+ },
+ {
+  "id": 61,
+  "slice": "hendrycks_math__geometry (math dataset)",
+  "name": "Triangles, circles and elementary geometry"
+ },
+ {
+  "id": 62,
+  "slice": "lex_glue__eurlex (legal / finance dataset)",
+  "name": "EU regulations setting agricultural export refund rates"
+ },
+ {
+  "id": 63,
+  "slice": "Anthropic__hh-rlhf (instruction dataset)",
+  "name": "Premise-and-hypothesis items on assorted scenes"
+ },
+ {
+  "id": 64,
+  "slice": "MMLU exam questions: college biology",
+  "name": "DNA, sequencing and nucleic-acid analysis"
+ },
+ {
+  "id": 65,
+  "slice": "commitpackft__java (code dataset)",
+  "name": "Software READMEs and API docs on assorted subjects"
+ },
+ {
+  "id": 66,
+  "slice": "MMLU exam questions: professional psychology",
+  "name": "Psychotherapy, counselling and addiction treatment"
+ },
+ {
+  "id": 67,
+  "slice": "databricksbricks-dolly-15k (instruction dataset)",
+  "name": "Musical instrument description pages"
+ },
+ {
+  "id": 68,
+  "slice": "MMLU exam questions: machine learning",
+  "name": "Papers about mathematical functions and equations"
+ },
+ {
+  "id": 69,
+  "slice": "gretelai__synthetic_text_to_sql (structured dataset)",
+  "name": "Software READMEs and API docs on assorted subjects"
+ },
+ {
+  "id": 70,
+  "slice": "MMLU exam questions: college chemistry",
+  "name": "Scientific papers reporting experimental measurements and results"
+ },
+ {
+  "id": 71,
+  "slice": "MMLU exam questions: high school geography",
+  "name": "Cities, municipalities and urban centres"
+ },
+ {
+  "id": 72,
+  "slice": "MMLU exam questions: high school biology",
+  "name": "Evolution and Darwinian theory essays"
+ },
+ {
+  "id": 73,
+  "slice": "hendrycks_math__algebra (math dataset)",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 74,
+  "slice": "lex_glue__eurlex (legal / finance dataset)",
+  "name": "European Union Official Journal acts on assorted subjects"
+ },
+ {
+  "id": 75,
+  "slice": "MMLU exam questions: econometrics",
+  "name": "Statistics, probability and statistical learning"
+ },
+ {
+  "id": 76,
+  "slice": "MMLU exam questions: anatomy",
+  "name": "Orthopedic fracture and spinal surgery research"
+ },
+ {
+  "id": 77,
+  "slice": "MMLU exam questions: management",
+  "name": "Sentence-rewriting prompts about workers and labor"
+ },
+ {
+  "id": 78,
+  "slice": "MMLU exam questions: college physics",
+  "name": "Atoms, electrons and atomic theory"
+ },
+ {
+  "id": 79,
+  "slice": "openbmb__UltraFeedback (instruction dataset)",
+  "name": "Nonsensical-sentence and paraphrase-identification training prompts"
+ },
+ {
+  "id": 80,
+  "slice": "nvidia__OpenMathInstruct-2 (math dataset)",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 81,
+  "slice": "b-mc2__sql-create-context (structured dataset)",
+  "name": "SQL, databases and spreadsheet tables"
+ },
+ {
+  "id": 82,
+  "slice": "qiaojin__PubMedQA__pqa_artificial (scientific dataset)",
+  "name": "Research abstracts about cardiovascular and heart disease"
+ },
+ {
+  "id": 83,
+  "slice": "MMLU exam questions: high school european history",
+  "name": "Mixed political and historical fragments"
+ },
+ {
+  "id": 84,
+  "slice": "codeparrot-clean-valid (code dataset)",
+  "name": "Code installation and build docs on assorted projects"
+ },
+ {
+  "id": 85,
+  "slice": "hendrycks_math__number_theory (math dataset)",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 86,
+  "slice": "MMLU exam questions: high school government and politics",
+  "name": "Constitutions, constitutional law and constitutional reform"
+ },
+ {
+  "id": 87,
+  "slice": "CShorten__ML-ArXiv-Papers (scientific dataset)",
+  "name": "Deep and convolutional neural network papers"
+ },
+ {
+  "id": 88,
+  "slice": "MMLU exam questions: elementary mathematics",
+  "name": "Multiple-choice aptitude-test math problems"
+ },
+ {
+  "id": 89,
+  "slice": "MMLU exam questions: high school microeconomics",
+  "name": "Prices of energy, fuel and everyday goods"
+ },
+ {
+  "id": 90,
+  "slice": "lex_glue__ledgar (legal / finance dataset)",
+  "name": "Terms of service, sales conditions and consumer contracts"
+ },
+ {
+  "id": 91,
+  "slice": "MMLU exam questions: college mathematics",
+  "name": "Mixed pages on vectors and code"
+ },
+ {
+  "id": 92,
+  "slice": "stack-exchange-preferences (dialogue dataset)",
+  "name": "Shell scripting and file-manipulation Q&A"
+ },
+ {
+  "id": 93,
+  "slice": "MMLU exam questions: human sexuality",
+  "name": "Sexuality, sexual behaviour and sexual identity"
+ },
+ {
+  "id": 94,
+  "slice": "MMLU exam questions: us foreign policy",
+  "name": "Academic articles about governance and political science theory"
+ },
+ {
+  "id": 95,
+  "slice": "microsoft__orca-math-word-problems-200k (math dataset)",
+  "name": "Cost comparison and price calculation articles"
+ },
+ {
+  "id": 96,
+  "slice": "no_robots (instruction dataset)",
+  "name": "Landscape, weather and nature lyric writing"
+ },
+ {
+  "id": 97,
+  "slice": "MMLU exam questions: college medicine",
+  "name": "Protein supplement and anabolic steroid articles for bodybuilders"
+ },
+ {
+  "id": 98,
+  "slice": "MMLU exam questions: high school physics",
+  "name": "Classical mechanics, motion, force and acceleration"
+ },
+ {
+  "id": 99,
+  "slice": "MMLU exam questions: moral disputes",
+  "name": "Ethics, morality and civic values"
+ },
+ {
+  "id": 100,
+  "slice": "nvidia__OpenMathInstruct-2 (math dataset)",
+  "name": "Mixed analysis papers and unrelated fragments"
+ },
+ {
+  "id": 101,
+  "slice": "MMLU exam questions: philosophy",
+  "name": "Ethics and morality philosophy essays"
+ },
+ {
+  "id": 102,
+  "slice": "hendrycks_math__number_theory (math dataset)",
+  "name": "Integers, counting and properties of numbers"
+ },
+ {
+  "id": 103,
+  "slice": "finemath__finemath-3plus (math dataset)",
+  "name": "Programming puzzles about number sequences and algorithms"
+ },
+ {
+  "id": 104,
+  "slice": "MMLU exam questions: high school macroeconomics",
+  "name": "News articles about inflation and consumer prices"
+ },
+ {
+  "id": 105,
+  "slice": "MMLU exam questions: electrical engineering",
+  "name": "Voltage and power supply circuit articles"
+ },
+ {
+  "id": 106,
+  "slice": "MMLU exam questions: conceptual physics",
+  "name": "Sound, acoustics and audio signals"
+ },
+ {
+  "id": 107,
+  "slice": "MMLU exam questions: high school psychology",
+  "name": "Perception, attention and sensory cognition"
+ },
+ {
+  "id": 108,
+  "slice": "proof-pile-2__arxiv (scientific dataset)",
+  "name": "Mixed analysis papers and unrelated fragments"
+ },
+ {
+  "id": 109,
+  "slice": "MMLU exam questions: jurisprudence",
+  "name": "Articles explaining legal theory and principles"
+ },
+ {
+  "id": 110,
+  "slice": "BEE-spoke-data__peS2o-100k_en-xlong (scientific dataset)",
+  "name": "Tumour biology, metastasis and cancer signalling"
+ },
+ {
+  "id": 111,
+  "slice": "MMLU exam questions: high school statistics",
+  "name": "Descriptive statistics and variable analysis articles"
+ },
+ {
+  "id": 112,
+  "slice": "MMLU exam questions: college chemistry",
+  "name": "Organic reaction mechanisms and acid-base chemistry"
+ },
+ {
+  "id": 113,
+  "slice": "MMLU exam questions: international law",
+  "name": "Contracts, property rights and public-law principles"
+ },
+ {
+  "id": 114,
+  "slice": "openbmb__UltraFeedback (instruction dataset)",
+  "name": "English grammar, parts of speech and usage"
+ },
+ {
+  "id": 115,
+  "slice": "commitpackft__java (code dataset)",
+  "name": "Typed class and API usage code snippets"
+ },
+ {
+  "id": 116,
+  "slice": "MMLU exam questions: abstract algebra",
+  "name": "Papers about mathematical functions and equations"
+ },
+ {
+  "id": 117,
+  "slice": "no_robots (instruction dataset)",
+  "name": "Personal blog poetry about dreams and emotions"
+ },
+ {
+  "id": 118,
+  "slice": "lex_glue__unfair_tos (legal / finance dataset)",
+  "name": "Terms of service, sales conditions and consumer contracts"
+ },
+ {
+  "id": 119,
+  "slice": "lex_glue__ecthr_a (legal / finance dataset)",
+  "name": "Civil procedure, trials and courtroom orders"
+ },
+ {
+  "id": 120,
+  "slice": "MMLU exam questions: professional psychology",
+  "name": "Behavioral psychology intervention studies"
+ },
+ {
+  "id": 121,
+  "slice": "MMLU exam questions: sociology",
+  "name": "Sociology and social science explainer articles"
+ },
+ {
+  "id": 122,
+  "slice": "ultrachat_200k (instruction dataset)",
+  "name": "Lessons about fiction genres and storytelling"
+ },
+ {
+  "id": 123,
+  "slice": "MMLU exam questions: global facts",
+  "name": "Economic growth, recessions and national economies"
+ },
+ {
+  "id": 124,
+  "slice": "xlangai__spider (structured dataset)",
+  "name": "SQL query and stored-procedure troubleshooting snippets"
+ },
+ {
+  "id": 125,
+  "slice": "commitpackft__rust (code dataset)",
+  "name": "String and character-handling programming Q&A"
+ },
+ {
+  "id": 126,
+  "slice": "MMLU exam questions: high school world history",
+  "name": "Mixed political and historical fragments"
+ },
+ {
+  "id": 127,
+  "slice": "MMLU exam questions: clinical knowledge",
+  "name": "Digestive and urinary tract disorder articles"
+ },
+ {
+  "id": 128,
+  "slice": "allenai__c4__en (web dataset)",
+  "name": "Mixed short web fragments with no shared subject"
+ },
+ {
+  "id": 129,
+  "slice": "MMLU exam questions: high school physics",
+  "name": "Fluid dynamics and motion physics research"
+ },
+ {
+  "id": 130,
+  "slice": "MMLU exam questions: college computer science",
+  "name": "Lessons about numbers, integers and number theory"
+ },
+ {
+  "id": 131,
+  "slice": "MMLU exam questions: computer security",
+  "name": "Encryption, cryptography and confidential computing"
+ },
+ {
+  "id": 132,
+  "slice": "open-web-math__open-web-math (math dataset)",
+  "name": "Mixed analysis papers and unrelated fragments"
+ },
+ {
+  "id": 133,
+  "slice": "MMLU exam questions: moral disputes",
+  "name": "Ethics and morality philosophy essays"
+ },
+ {
+  "id": 134,
+  "slice": "tatsu-lab__alpaca (instruction dataset)",
+  "name": "Word game and anagram dictionary tools"
+ },
+ {
+  "id": 135,
+  "slice": "winddude__reddit_finance_43_250k (legal / finance dataset)",
+  "name": "Household budgeting, saving and personal financial planning"
+ },
+ {
+  "id": 136,
+  "slice": "MMLU exam questions: high school mathematics",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 137,
+  "slice": "codeparrot-clean-valid (code dataset)",
+  "name": "Code review and algorithm optimization questions"
+ },
+ {
+  "id": 138,
+  "slice": "MMLU exam questions: professional accounting",
+  "name": "Accounting, audit and financial reporting"
+ },
+ {
+  "id": 139,
+  "slice": "MMLU exam questions: virology",
+  "name": "Virus biology and scientific research articles"
+ },
+ {
+  "id": 140,
+  "slice": "MMLU exam questions: prehistory",
+  "name": "Human biology and behavior essays"
+ },
+ {
+  "id": 141,
+  "slice": "MMLU exam questions: professional medicine",
+  "name": "Digestive and urinary tract disorder articles"
+ },
+ {
+  "id": 142,
+  "slice": "MMLU exam questions: anatomy",
+  "name": "Neurons, synapses and the nervous system"
+ },
+ {
+  "id": 143,
+  "slice": "TFLai__Turkish-Alpaca (instruction dataset)",
+  "name": "Sentence-rewriting prompts about behavior and descriptive facts"
+ },
+ {
+  "id": 144,
+  "slice": "BEE-spoke-data__peS2o-100k_en-xlong (scientific dataset)",
+  "name": "Research abstracts about cohort studies and disease risk factors"
+ },
+ {
+  "id": 145,
+  "slice": "MMLU exam questions: formal logic",
+  "name": "Papers about mathematical functions and equations"
+ },
+ {
+  "id": 146,
+  "slice": "MMLU exam questions: high school microeconomics",
+  "name": "News articles about inflation and consumer prices"
+ },
+ {
+  "id": 147,
+  "slice": "MMLU exam questions: international law",
+  "name": "Articles explaining legal theory and principles"
+ },
+ {
+  "id": 148,
+  "slice": "MMLU exam questions: security studies",
+  "name": "Articles about global conflict and international diplomacy"
+ },
+ {
+  "id": 149,
+  "slice": "MMLU exam questions: high school mathematics",
+  "name": "Mixed analysis papers and unrelated fragments"
+ },
+ {
+  "id": 150,
+  "slice": "commitpackft__c (code dataset)",
+  "name": "Code review and algorithm optimization questions"
+ },
+ {
+  "id": 151,
+  "slice": "MMLU exam questions: world religions",
+  "name": "Mixed Indian cultural fragments with no shared subject"
+ },
+ {
+  "id": 152,
+  "slice": "MMLU exam questions: logical fallacies",
+  "name": "Opinion articles about controversial crime cases and punishment"
+ },
+ {
+  "id": 153,
+  "slice": "allenai__c4__multilingual (web dataset)",
+  "name": "Mixed short web pages with no shared subject"
+ },
+ {
+  "id": 154,
+  "slice": "MMLU exam questions: us foreign policy",
+  "name": "Conflict, peacebuilding and international relations"
+ },
+ {
+  "id": 155,
+  "slice": "MMLU exam questions: public relations",
+  "name": "Descriptions of nonprofit and international organizations"
+ },
+ {
+  "id": 156,
+  "slice": "nvidia__HelpSteer2 (dialogue dataset)",
+  "name": "AI marketing and buzzword blog posts"
+ },
+ {
+  "id": 157,
+  "slice": "CShorten__ML-ArXiv-Papers (scientific dataset)",
+  "name": "Machine learning, reinforcement learning and training algorithms"
+ },
+ {
+  "id": 158,
+  "slice": "commitpackft__python (code dataset)",
+  "name": "Command-line file and directory management questions"
+ },
+ {
+  "id": 159,
+  "slice": "commitpackft__javascript (code dataset)",
+  "name": "Functions, classes and programming patterns"
+ },
+ {
+  "id": 160,
+  "slice": "MMLU exam questions: sociology",
+  "name": "Sociology, society and social interaction"
+ },
+ {
+  "id": 161,
+  "slice": "MMLU exam questions: college physics",
+  "name": "Atomic structure and chemistry explainers"
+ },
+ {
+  "id": 162,
+  "slice": "MMLU exam questions: moral scenarios",
+  "name": "Casual venting posts about bad days and dating frustration"
+ },
+ {
+  "id": 163,
+  "slice": "MMLU exam questions: philosophy",
+  "name": "Ethics, morality and civic values"
+ },
+ {
+  "id": 164,
+  "slice": "rajpurkar__squad (dialogue dataset)",
+  "name": "Judaism religion and culture articles"
+ },
+ {
+  "id": 165,
+  "slice": "openai__gsm8k__main (math dataset)",
+  "name": "Arithmetic word problems about money and prices"
+ },
+ {
+  "id": 166,
+  "slice": "MMLU exam questions: college medicine",
+  "name": "DNA, sequencing and nucleic-acid analysis"
+ },
+ {
+  "id": 167,
+  "slice": "openai__gsm8k__main (math dataset)",
+  "name": "Word problems about total cost and discounts"
+ },
+ {
+  "id": 168,
+  "slice": "MMLU exam questions: astronomy",
+  "name": "Solar system and planet educational essays"
+ },
+ {
+  "id": 169,
+  "slice": "commitpackft__ruby (code dataset)",
+  "name": "React and Ruby package installation snippets"
+ },
+ {
+  "id": 170,
+  "slice": "mcemilg__news-cat (news dataset)",
+  "name": "Football club coaches, presidents and governance"
+ },
+ {
+  "id": 171,
+  "slice": "MMLU exam questions: miscellaneous",
+  "name": "Colour codes, colour models and digital colour systems"
+ },
+ {
+  "id": 172,
+  "slice": "open-web-math__open-web-math (math dataset)",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 173,
+  "slice": "commitpackft__shell (code dataset)",
+  "name": "Embedded and IoT device setup instructions"
+ },
+ {
+  "id": 174,
+  "slice": "nvidia__HelpSteer2 (dialogue dataset)",
+  "name": "Question-and-answer items on assorted subjects"
+ },
+ {
+  "id": 175,
+  "slice": "MMLU exam questions: conceptual physics",
+  "name": "Nuclear and neutron physics research"
+ },
+ {
+  "id": 176,
+  "slice": "gbharti__finance-alpaca (legal / finance dataset)",
+  "name": "Stocks, shares and equity markets"
+ },
+ {
+  "id": 177,
+  "slice": "lex_glue__unfair_tos (legal / finance dataset)",
+  "name": "Website terms and conditions boilerplate"
+ },
+ {
+  "id": 178,
+  "slice": "tatsu-lab__alpaca (instruction dataset)",
+  "name": "English grammar, parts of speech and usage"
+ },
+ {
+  "id": 179,
+  "slice": "MMLU exam questions: high school chemistry",
+  "name": "Organic reaction mechanisms and acid-base chemistry"
+ },
+ {
+  "id": 180,
+  "slice": "MMLU exam questions: high school geography",
+  "name": "Essays and articles about urbanization and smart cities"
+ },
+ {
+  "id": 181,
+  "slice": "MMLU exam questions: high school psychology",
+  "name": "Cognitive psychology and neuroscience articles"
+ },
+ {
+  "id": 182,
+  "slice": "commitpackft__c (code dataset)",
+  "name": "Code installation and build docs on assorted projects"
+ },
+ {
+  "id": 183,
+  "slice": "MMLU exam questions: professional law",
+  "name": "Criminal defense, convictions and criminal courts"
+ },
+ {
+  "id": 184,
+  "slice": "turkish-nlp-suite__InstrucTurca (instruction dataset)",
+  "name": "Multiple-choice aptitude-test math problems"
+ },
+ {
+  "id": 185,
+  "slice": "MMLU exam questions: global facts",
+  "name": "Research articles about children's development by age"
+ },
+ {
+  "id": 186,
+  "slice": "MMLU exam questions: high school world history",
+  "name": "Historical writings about government and political power"
+ },
+ {
+  "id": 187,
+  "slice": "hendrycks_math__geometry (math dataset)",
+  "name": "Math research abstracts and proof-based forum questions"
+ },
+ {
+  "id": 188,
+  "slice": "MMLU exam questions: logical fallacies",
+  "name": "Formal arguments, logic and mathematical models"
+ },
+ {
+  "id": 189,
+  "slice": "commitpackft__javascript (code dataset)",
+  "name": "Typed class and API usage code snippets"
+ },
+ {
+  "id": 190,
+  "slice": "MMLU exam questions: electrical engineering",
+  "name": "Electronic circuits, voltage and analog devices"
+ },
+ {
+  "id": 191,
+  "slice": "qiaojin__PubMedQA__pqa_artificial (scientific dataset)",
+  "name": "Inflammation, pathogenesis and disease mechanisms"
+ },
+ {
+  "id": 192,
+  "slice": "MMLU exam questions: high school government and politics",
+  "name": "Local news about ballots, vote counts and voting procedures"
+ },
+ {
+  "id": 193,
+  "slice": "MMLU exam questions: moral scenarios",
+  "name": "Mixed personal narratives and unrelated fragments"
+ },
+ {
+  "id": 194,
+  "slice": "commitpackft__shell (code dataset)",
+  "name": "Git clone, repositories and version control"
+ },
+ {
+  "id": 195,
+  "slice": "MMLU exam questions: jurisprudence",
+  "name": "Procedural law, statutes and codes of procedure"
+ },
+ {
+  "id": 196,
+  "slice": "MMLU exam questions: machine learning",
+  "name": "Statistics, probability and statistical learning"
+ },
+ {
+  "id": 197,
+  "slice": "iamtarun__python_code_instructions_18k_alpaca (code dataset)",
+  "name": "Python, NumPy and data-analysis tutorials"
+ },
+ {
+  "id": 198,
+  "slice": "MMLU exam questions: high school computer science",
+  "name": "Lessons about numbers, integers and number theory"
+ },
+ {
+  "id": 199,
+  "slice": "mcemilg__news-cat (news dataset)",
+  "name": "Football coverage of Turkey's Süper Lig clubs"
+ },
+ {
+  "id": 200,
+  "slice": "lex_glue__scotus (legal / finance dataset)",
+  "name": "Federal appellate opinions in United States v. defendant cases"
+ },
+ {
+  "id": 201,
+  "slice": "rajpurkar__squad (dialogue dataset)",
+  "name": "Britain, England and the United Kingdom"
+ },
+ {
+  "id": 202,
+  "slice": "MMLU exam questions: nutrition",
+  "name": "Vitamins, vitamin supplements and micronutrients"
+ },
+ {
+  "id": 203,
+  "slice": "lex_glue__ledgar (legal / finance dataset)",
+  "name": "Consumer contract terms and conditions notices"
+ },
+ {
+  "id": 204,
+  "slice": "MMLU exam questions: high school us history",
+  "name": "The United States, nations and indigenous peoples"
+ },
+ {
+  "id": 205,
+  "slice": "MMLU exam questions: professional accounting",
+  "name": "Accounting firms, careers and assignment help"
+ },
+ {
+  "id": 206,
+  "slice": "MMLU exam questions: miscellaneous",
+  "name": "B-named band and artist encyclopedia entries"
+ },
+ {
+  "id": 207,
+  "slice": "lex_glue__scotus (legal / finance dataset)",
+  "name": "Court petitions, appeals and procedural motions"
+ },
+ {
+  "id": 208,
+  "slice": "MMLU exam questions: medical genetics",
+  "name": "Genetics and gene expression educational essays"
+ },
+ {
+  "id": 209,
+  "slice": "proof-pile-2__arxiv (scientific dataset)",
+  "name": "Research abstracts about differential equations and operator theory"
+ },
+ {
+  "id": 210,
+  "slice": "MMLU exam questions: high school statistics",
+  "name": "Statistics, probability and statistical learning"
+ },
+ {
+  "id": 211,
+  "slice": "MMLU exam questions: prehistory",
+  "name": "Humans, Homo sapiens and human nature"
+ },
+ {
+  "id": 212,
+  "slice": "MMLU exam questions: high school macroeconomics",
+  "name": "Inflation, consumer prices and the cost of living"
+ },
+ {
+  "id": 213,
+  "slice": "databricksbricks-dolly-15k (instruction dataset)",
+  "name": "Musical instruments and how they are played"
+ },
+ {
+  "id": 214,
+  "slice": "xlangai__spider (structured dataset)",
+  "name": "Cities, municipalities and urban centres"
+ },
+ {
+  "id": 215,
+  "slice": "gretelai__synthetic_text_to_sql (structured dataset)",
+  "name": "SQL query and stored-procedure troubleshooting snippets"
+ },
+ {
+  "id": 216,
+  "slice": "MMLU exam questions: marketing",
+  "name": "Content and inbound marketing articles"
+ },
+ {
+  "id": 217,
+  "slice": "finemath__finemath-3plus (math dataset)",
+  "name": "Mixed analysis papers and unrelated fragments"
+ }
+]

@@ -26,10 +26,23 @@ from .base import Check, make_finding, register
 
 ALL_PROFILES = (Profile.SFT, Profile.CORPUS, Profile.PREFERENCE, Profile.UNKNOWN)
 
-#: A single region holding more than this share of placed records is worth a
-#: sentence. Chosen against the atlas's own geometry rather than by taste: with
-#: 215 regions, even mass is 0.47% per region, so 20% is forty times even.
-CROWDED_REGION_SHARE = 0.20
+#: A single cell holding at least this many times its even share of the
+#: placed records is crowded, floored at :data:`CROWDED_REGION_FLOOR`. Set
+#: against the map's own geometry rather than as one fixed share: on the
+#: 215-cell atlas-v1-lite even mass is 0.47% per cell and forty times that is
+#: the 20% the threshold used to be written as; on the 4,096-cell atlas-v3 a
+#: fixed 20% was eight hundred times even mass, a bar no template cluster
+#: reaches, and the check could not fire on the product it ships with.
+CROWDED_REGION_MULTIPLE = 40
+CROWDED_REGION_FLOOR = 0.02
+
+
+def crowded_region_share(regions_total: int) -> float:
+    """Share of placed records above which one cell counts as crowded."""
+    if regions_total <= 0:
+        return CROWDED_REGION_FLOOR
+    return max(CROWDED_REGION_FLOOR, CROWDED_REGION_MULTIPLE / regions_total)
+
 
 #: Mean pairwise cosine inside a crowded region, above which its contents are
 #: better described as one thing repeated than as a topic. Calibrated on the
@@ -38,14 +51,22 @@ CROWDED_REGION_SHARE = 0.20
 CROWDED_REGION_COHESION = 0.75
 
 #: Below this many placed records the histogram is too thin to describe shape.
+#: Scaled with the map: three hundred records over 4,096 cells leaves every
+#: cell's expected count under the floor the density prior needs, so each
+#: occupied cell rounds to parity and reach collapses to occupancy.
 MIN_PLACED = 300
+MIN_PLACED_PER_CELLS = 8
+
+
+def min_placed(regions_total: int) -> int:
+    return max(MIN_PLACED, regions_total // MIN_PLACED_PER_CELLS)
 
 
 def _coverage(ctx: ScanContext) -> dict[str, Any] | None:
     cov = ctx.stats.get("atlas_coverage")
     if not cov or cov.get("status") != "ok":
         return None
-    if int(cov.get("placed", 0)) < MIN_PLACED:
+    if int(cov.get("placed", 0)) < min_placed(int(cov.get("regions_total", 0))):
         return None
     return cov
 
@@ -66,18 +87,21 @@ class TopicalConcentration(Check):
     )
     rationale = (
         "Occupancy counts a region the same whether it holds one record or a third of the "
-        "corpus, so '34 of 215 regions occupied' can describe a broad corpus or a corpus that "
-        "is really two regions with noise around them. Effective coverage sums "
+        "corpus, so 'a few dozen regions occupied' can describe a broad corpus or a corpus "
+        "that is really two regions with noise around them. Effective coverage sums "
         "min(1, density_ratio) over subregions — parity is a full score, thinner coverage a "
         "fraction — and the gap between occupied and effective is the finding. This is "
         "reported, never judged: a Turkish legal-QA set should be concentrated, and a "
         "pretraining mixture should not, and the tool has not been told which one this is."
     )
 
-    #: Narrowness is tested in absolute terms, not against the occupied count.
-    #: These two bounds fire only when the corpus is genuinely small in topical
-    #: extent or genuinely dominated by one region.
-    MAX_EFFECTIVE = 10.0
+    #: Narrowness is tested against the map's size, not against the occupied
+    #: count. Effective coverage at or under this share of the map's cells is
+    #: small in topical extent whatever the map: ten cells' worth of the
+    #: 215-cell atlas-v1-lite, which is where the bound was first drawn, is
+    #: 4.7%, and the same share of atlas-v3 is 205 of its 4,096 cells. A lead
+    #: cell holding a quarter of the corpus is dominance on any map.
+    MAX_EFFECTIVE_SHARE = 0.05
     MAX_TOP_SHARE = 0.25
 
     def finalize(self, ctx: ScanContext) -> list[Finding]:
@@ -86,12 +110,13 @@ class TopicalConcentration(Check):
             return []
         occupied = int(cov.get("regions_occupied", 0))
         effective = float(cov.get("effective_regions", 0.0))
-        if occupied < 2 or effective <= 0:
+        total = int(cov.get("regions_total", 0))
+        if occupied < 2 or effective <= 0 or total <= 0:
             return []
         tops = cov.get("top_regions") or []
         lead = tops[0] if tops else {}
         lead_share = float(lead.get("share", 0.0)) if lead else 0.0
-        if effective > self.MAX_EFFECTIVE and lead_share < self.MAX_TOP_SHARE:
+        if effective > self.MAX_EFFECTIVE_SHARE * total and lead_share < self.MAX_TOP_SHARE:
             return []
         detail = (
             f"placed records touch {occupied} of {int(cov.get('regions_total', 0))} "
@@ -152,11 +177,12 @@ class RedundantRegion(Check):
         if not cohesion:
             return []
         offenders = []
+        crowded = crowded_region_share(int(cov.get("regions_total", 0)))
         for entry in cov.get("top_regions") or []:
             region = int(entry.get("region", -1))
             share = float(entry.get("share", 0.0))
             coh = cohesion.get(region)
-            if coh is None or share < CROWDED_REGION_SHARE:
+            if coh is None or share < crowded:
                 continue
             if coh >= CROWDED_REGION_COHESION:
                 offenders.append((region, share, float(coh), entry.get("terms", "")))

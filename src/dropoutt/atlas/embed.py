@@ -53,6 +53,7 @@ import numpy as np
 
 from ..compat import HAVE_TOKENIZERS
 from .normalize import EMBED_DIM_FULL, SIF_A, sif_weights_from_probs, truncate
+from .textnorm import RAW_INPUT, EncoderInput, phrase_mask, token_factors
 
 DEFAULT_MODEL = "minishlab/potion-multilingual-128M"
 
@@ -188,6 +189,7 @@ class Embedder:
         out_dim: int = EMBED_DIM_FULL,
         weight_hash: str = "",
         normalize: bool = True,
+        encoder_input: EncoderInput = RAW_INPUT,
     ) -> None:
         self._table = table
         self._tokenizer = tokenizer
@@ -196,6 +198,13 @@ class Embedder:
         self._token_log_prob = token_log_prob or {}
         self._weight_hash = weight_hash
         self._normalize = normalize
+        self._input = encoder_input
+        self._log_prob_table: np.ndarray | None = None
+
+    @property
+    def encoder_input(self) -> EncoderInput:
+        """The text policy this wrapper reads with; see :mod:`textnorm`."""
+        return self._input
 
     @property
     def dim(self) -> int:
@@ -288,6 +297,10 @@ class Embedder:
 
         if max_chars is not None:
             texts = [select_window(text, max_chars) for text in texts]
+        if self._input.active:
+            # After windowing, so the window is chosen over the text as written
+            # and the build, which truncates before it tokenizes, agrees.
+            texts = [self._input.prepare(text) for text in texts]
         tokenizer = self._tokenizer
         encode = getattr(tokenizer, "encode_batch_fast", None) or tokenizer.encode_batch
         chunks: list[np.ndarray] = []
@@ -342,17 +355,17 @@ class Embedder:
 
         row_lengths = np.diff(tokens.indptr)
         if weighted and self._token_log_prob:
-            # Dense probabilities make all token-weight lookups vectorized.
-            # Tokens omitted from the shipped top-frequency table retain the
-            # previous conservative p=exp(-12) fallback.
-            log_probs = np.full(self._table.n_rows, -12.0, dtype=np.float32)
-            for token_id, log_prob in self._token_log_prob.items():
-                if 0 <= token_id < self._table.n_rows:
-                    log_probs[token_id] = log_prob
-            probs = np.exp(log_probs[tokens.token_ids])
+            probs = np.exp(self._dense_log_probs()[tokens.token_ids])
             weights = sif_weights_from_probs(probs, a=SIF_A)
         else:
             weights = np.ones(tokens.n_tokens, dtype=np.float32)
+        if self._input.damps_tokens:
+            weights = weights * token_factors(
+                self._tokenizer, self._table.n_rows, self._input
+            )[tokens.token_ids]
+        if self._input.damps_phrases:
+            covered = phrase_mask(tokens.token_ids, tokens.indptr, self._input.phrase_hashes)
+            weights[covered] *= np.float32(self._input.phrase_weight)
 
         row_sums = np.zeros(tokens.n_docs, dtype=np.float32)
         nonempty = np.flatnonzero(row_lengths)
@@ -379,6 +392,26 @@ class Embedder:
         if vectors is None:
             vectors = matrix @ dense
         return np.asarray(vectors, dtype=np.float32)
+
+    def _dense_log_probs(self) -> np.ndarray:
+        """The IDF table as one array over the vocabulary, built once per wrapper.
+
+        Dense probabilities make every token-weight lookup vectorized. Tokens
+        omitted from the shipped top-frequency table keep the conservative
+        p=exp(-12) fallback. Building it walks a 427,000-entry dict in Python,
+        which was rebuilt on every pool call until this cache: a quarter of the
+        atlas build's ingest time, and 31 rebuilds in a 500,000-record scan.
+        """
+        table = self._log_prob_table
+        if table is None:
+            table = np.full(self._table.n_rows, -12.0, dtype=np.float32)
+            size = len(self._token_log_prob)
+            ids = np.fromiter(self._token_log_prob.keys(), dtype=np.int64, count=size)
+            values = np.fromiter(self._token_log_prob.values(), dtype=np.float32, count=size)
+            inside = (ids >= 0) & (ids < self._table.n_rows)
+            table[ids[inside]] = values[inside]
+            self._log_prob_table = table
+        return table
 
     def encode_tokenized(self, tokens: TokenizedCorpus) -> np.ndarray:
         """SIF-pool a token cache with one sparse-dense matrix multiply."""
@@ -421,6 +454,20 @@ class Embedder:
             out_dim=self.out_dim,
             weight_hash=self._weight_hash,
             normalize=self._normalize,
+            encoder_input=self._input,
+        )
+
+    def bind_input(self, encoder_input: EncoderInput) -> Embedder:
+        """Return a new wrapper sharing the table but reading with ``encoder_input``."""
+        return Embedder(
+            self._table,
+            self._tokenizer,
+            self.name,
+            token_log_prob=self._token_log_prob,
+            out_dim=self.out_dim,
+            weight_hash=self._weight_hash,
+            normalize=self._normalize,
+            encoder_input=encoder_input,
         )
 
 

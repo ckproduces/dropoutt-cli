@@ -1,0 +1,84 @@
+{
+  "seed": 42,
+  "encoder_input": {
+    "version": 1,
+    "fold_caps_runs": true,
+    "strip_rules": true,
+    "short_cased_weight": 0.2,
+    "symbol_weight": 0.2,
+    "digit_weight": 0.2,
+    "phrase_weight": 0.1,
+    "phrase_n": 4,
+    "phrase_count": 5515,
+    "phrase_digest": "c3f1138f173acbeec3e785357159a1af"
+  },
+  "source_ledger": "/Volumes/ck512/dropoutt-atlas-v2/corpus-cache/source-ledger.json",
+  "manifest": "/Volumes/ck512/dropoutt-atlas-v2/corpus-cache/manifest.json",
+  "manifest_hash": "54348328c2f0b3253fdf2ea35b3be5e0",
+  "gates": {
+    "input_logical_bytes": 318195398474,
+    "post_filter_logical_bytes": 212786662386,
+    "idf_observed_token_mass": 1.0,
+    "non_english_share": 0.6060240821988481,
+    "non_english_share_by_bytes": 0.6060240821988481,
+    "non_english_byte_ledger_complete": true,
+    "non_english_bytes_counted": 212176503243,
+    "non_english_share_by_rows": 0.6312523422965204,
+    "non_english_floor": 0.505,
+    "axis_floors": {
+      "web": true,
+      "encyclopedic": true,
+      "books": false,
+      "legal_government": true,
+      "scientific": false,
+      "training": true,
+      "code": false,
+      "forum": true,
+      "educational": true
+    },
+    "axis_share_of_target": {
+      "web": 0.7458,
+      "encyclopedic": 0.6971,
+      "books": 0.1356,
+      "legal_government": 0.5092,
+      "scientific": 0.4991,
+      "training": 0.7451,
+      "code": 0.1037,
+      "forum": 0.669,
+      "educational": 0.7157
+    },
+    "axis_rows": {
+      "training": 38820985,
+      "web": 85622298,
+      "scientific": 4762142,
+      "legal_government": 4743723,
+      "educational": 1317898,
+      "books": 1431274,
+      "forum": 1418614,
+      "code": 1970703,
+      "encyclopedic": 23101565
+    },
+    "input_records": 166324909,
+    "manifest_sources": 244,
+    "elapsed_s": 20298.0,
+    "atlas_v3_records": 163189202
+  },
+  "artifacts": {
+    "atlas-v3": {
+      "path": "/Volumes/ck512/dropoutt-atlas-v2/release-v3-textnorm/atlas-v3.npz",
+      "size_mb": 17.636954,
+      "n_regions": 4096,
+      "n_l1": 256,
+      "l2_budget": 4096
+    }
+  },
+  "packaged": {
+    "note": "The wheel carries the build artifact with `exemplar_texts` removed by tools/strip_atlas_exemplars.py: the excerpts were a labelling aid nothing at runtime reads, and verbatim reference text does not ship. Every other array is byte-identical to the build output above.",
+    "artifacts": {
+      "atlas-v3": {
+        "size_mb": 13.748402,
+        "sha256": "575e5b011b0be00fe53845d6372a8a22712e6c43cf4aef25ab1297924ec2e75e"
+      }
+    }
+  }
+}

@@ -54,7 +54,6 @@ TOKENS = """
   --red-300:#b21235; --red-400:#ca2844; --red-500:#dc3c52;
   --red-800:#ffbcbd; --red-900:#ffdddd; --red-1000:#fff4f3;
   --teal-400:#008ca1; --teal-500:#009cb1; --teal-900:#d8f0f5; --teal-1000:#f1fdff;
-  --pink-400:#984ea9; --pink-500:#a85db9;
   --yellow-300:#b17b00; --yellow-500:#e7ad00;
 
   --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
@@ -66,7 +65,7 @@ TOKENS = """
   --s-12:12px; --s-16:16px; --s-20:20px; --s-24:24px; --s-32:32px;
   --s-40:40px; --s-48:48px; --s-64:64px; --s-80:80px;
 
-  --r-sm:2px; --r-md:4px; --r-lg:6px; --r-xl:8px; --r-2xl:12px; --r-full:99999px;
+  --r-xs:1px; --r-sm:2px; --r-md:4px; --r-lg:6px; --r-xl:8px; --r-2xl:12px; --r-full:99999px;
 
   --t-11:11px; --t-12:12px; --t-13:13px; --t-14:14px; --t-15:15px; --t-16:16px;
   --t-18:18px; --t-20:20px; --t-24:24px; --t-28:28px; --t-36:36px;
@@ -80,18 +79,17 @@ TOKENS = """
   --text-faint:var(--neutral-800);
   --border:var(--neutral-400); --border-subtle:var(--neutral-300);
   --accent:var(--brand-400); --accent-soft:var(--brand-1000);
-  --accent-border:var(--brand-900);
-  --ok:var(--green-400); --ok-soft:var(--green-1000); --ok-border:var(--green-900);
-  --warn:var(--orange-400); --warn-soft:var(--orange-1000); --warn-border:var(--orange-900);
-  --bad:var(--red-400); --bad-soft:var(--red-1000); --bad-border:var(--red-900);
+  --accent-border:var(--brand-900); --focus:var(--brand-500);
+  --progress-fill:var(--brand-500); --progress-track:var(--bg-subtle);
+  --ok:var(--green-400); --ok-text:var(--green-300); --ok-soft:var(--green-1000);
+  --ok-border:var(--green-900);
+  --warn:var(--orange-400); --warn-text:var(--orange-300); --warn-soft:var(--orange-1000);
+  --warn-border:var(--orange-900);
+  --bad:var(--red-400); --bad-text:var(--red-300); --bad-soft:var(--red-1000);
+  --bad-border:var(--red-900);
   --info:var(--teal-400); --info-soft:var(--teal-1000);
   --shadow-sm:0 1px 3px color-mix(in srgb, black 6%, transparent);
   --shadow-md:0 4px 16px color-mix(in srgb, black 10%, transparent);
-
-  /* Chart series. Distinct at bar width first, pretty second. */
-  --c0:var(--brand-500); --c1:var(--teal-500); --c2:var(--pink-500);
-  --c3:var(--green-500); --c4:var(--yellow-500); --c5:var(--orange-500);
-  --c6:var(--neutral-700);
 }
 
 
@@ -99,281 +97,282 @@ TOKENS = """
 
 LAYOUT = """
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 body{background:var(--bg-canvas);color:var(--text);font-family:var(--font);
-font-size:var(--t-15);line-height:var(--lh-normal);
+font-size:var(--t-14);line-height:var(--lh-normal);
 -webkit-font-smoothing:antialiased;padding:0 var(--s-24) var(--s-80)}
-.wrap{max-width:1060px;margin:0 auto}
-a{color:var(--accent);text-underline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto}
+a{color:var(--accent);text-underline-offset:2px;text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--focus);
+outline-offset:2px;border-radius:var(--r-sm)}
 code,.mono{font-family:var(--mono);font-size:.92em}
 .num{font-variant-numeric:tabular-nums}
 .muted{color:var(--text-muted)}
 .faint{color:var(--text-faint)}
 .t12{font-size:var(--t-12)}.t13{font-size:var(--t-13)}.t14{font-size:var(--t-14)}
+b,strong{font-weight:var(--w-semibold)}
 h1,h2,h3,h4{font-weight:var(--w-medium);line-height:var(--lh-tight);
-letter-spacing:var(--ls-tight)}
+letter-spacing:var(--ls-tight);text-wrap:balance}
+h1{font-size:var(--t-36);line-height:var(--lh-snug);letter-spacing:var(--ls-tighter)}
 h2{font-size:var(--t-24);letter-spacing:var(--ls-tighter)}
 h3{font-size:var(--t-16);font-weight:var(--w-semibold);letter-spacing:0}
-h4{font-size:var(--t-13);font-weight:var(--w-semibold);letter-spacing:0}
-p{margin:var(--s-8) 0}
+h4{font-size:var(--t-14);font-weight:var(--w-semibold);letter-spacing:0}
+p{margin:var(--s-8) 0;text-wrap:pretty}
 .prose{max-width:74ch}
+/* Read by assistive technology, drawn nowhere. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* -- masthead --
    What the document is over whose product made it, and the folder it is about
-   on the far side of the same line. The path is the one thing here that
-   identifies the run, so it gets its own column rather than a third line: at
-   the foot of a stack it read as a caption on the logo. */
+   on the far side of the same line. */
 .masthead{display:flex;align-items:flex-end;justify-content:space-between;
-flex-wrap:wrap;gap:var(--s-12) var(--s-24);padding:var(--s-40) 0 var(--s-24);
+flex-wrap:wrap;gap:var(--s-12) var(--s-24);padding:var(--s-32) 0 var(--s-20);
 border-bottom:1px solid var(--border-subtle)}
 .masthead .brand{display:flex;flex-direction:column;align-items:flex-start;
 gap:var(--s-8)}
-.masthead .kind{color:var(--text-muted);font-size:var(--t-13);
+.masthead .kind{color:var(--text-muted);font-size:var(--t-12);
 font-weight:var(--w-medium);letter-spacing:var(--ls-wide);text-transform:uppercase}
-.mark{display:block;height:34px;width:auto;color:var(--text)}
+.mark{display:block;height:30px;width:auto;color:var(--text)}
 .masthead .where{color:var(--text-faint);font-size:var(--t-12);
-overflow-wrap:anywhere;font-family:var(--mono);text-align:right;
-max-width:52ch}
+overflow-wrap:anywhere;font-family:var(--mono);text-align:right;max-width:52ch}
 
-/* -- verdict strip --
-   It sits at the head of the findings rather than at the head of the page. The
-   sentence it carries is a count of what is below it and a name for the worst
-   of them, which is a caption for that list; above the composition section it
-   was a verdict on a corpus the reader had not been shown yet. */
-.verdict{display:flex;align-items:center;gap:var(--s-12);flex-wrap:wrap;
-padding:var(--s-16) var(--s-20);margin-bottom:var(--s-16);
-border-radius:var(--r-2xl);
-border:1px solid var(--border-subtle);background:var(--bg-subtle)}
+/* -- intro --
+   The page's name, one sentence saying what the corpus is, and a row of links
+   to the sections. Nothing here is a verdict: the reader is told what they are
+   looking at before anything is said about it. */
+.report-intro h1{max-width:26ch}
+.report-intro .lede{margin:var(--s-16) 0 0;font-size:var(--t-16);line-height:1.6;
+color:var(--text-muted);max-width:66ch}
+.report-intro .lede b{color:var(--text)}
+.report-nav{display:flex;flex-wrap:wrap;gap:var(--s-6) var(--s-20);
+margin-top:var(--s-20);font-size:var(--t-14);font-weight:var(--w-medium)}
+.report-nav a{text-decoration:none}
+.report-nav a:hover{text-decoration:underline}
+.report-nav .n{color:var(--text-faint);font-variant-numeric:tabular-nums;
+margin-right:var(--s-6)}
+
+/* -- sections --
+   Separated by space and one hairline, the way the product's own pages are.
+   Only the page's own sections get the rule: the topic blocks inside the map
+   are sections too, and they carry their own frame. */
+.wrap>section{margin-top:var(--s-40);padding-top:var(--s-32);
+border-top:1px solid var(--border-subtle);scroll-margin-top:var(--s-16)}
+.wrap>section.report-intro{margin-top:0;padding-top:var(--s-40);border-top:0}
+.wrap>section>*+*{margin-top:var(--s-12)}
+.wrap>section>.sechead+*{margin-top:var(--s-20)}
+.sechead h2{display:flex;align-items:baseline;gap:var(--s-12)}
+.sechead .n{color:var(--text-faint);font-variant-numeric:tabular-nums;
+font-weight:var(--w-medium)}
+.sechead .n:empty{display:none}
+.sechead p{color:var(--text-muted);max-width:66ch;margin:var(--s-8) 0 0}
+
+/* -- cards --
+   The product's Card: white, one hairline, the small radius. No shadow. */
+.card{background:var(--bg-surface);border:1px solid var(--border);
+border-radius:var(--r-lg);padding:var(--s-20);min-width:0}
+.card>h3+*,.card>h4+*{margin-top:var(--s-12)}
+.card>h3+p,.card>h4+p{margin-top:var(--s-6)}
+.card>h3 .fid{margin-left:var(--s-8)}
+.desc{color:var(--text-muted);font-size:var(--t-13);max-width:74ch}
+.grid{display:grid;gap:var(--s-12)}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.stat .k{display:block;color:var(--text-muted);font-size:var(--t-13);
+font-weight:var(--w-medium)}
+.stat .v{display:block;font-size:var(--t-28);font-weight:var(--w-medium);
+letter-spacing:var(--ls-tight);line-height:1.15;margin-top:var(--s-8);
+font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat .v small{font-size:var(--t-16);color:var(--text-muted);
+font-weight:var(--w-regular)}
+.stat .n{display:block;color:var(--text-muted);font-size:var(--t-13);
+line-height:var(--lh-snug);margin-top:var(--s-6)}
+
+/* -- badges --
+   Soft fill, ink one step darker than the fill's hue so eleven-pixel text
+   clears 4.5:1 on every tint. */
+.badge{display:inline-flex;align-items:center;gap:var(--s-4);
+padding:var(--s-2) var(--s-10);border-radius:var(--r-full);font-size:var(--t-11);
+font-weight:var(--w-medium);line-height:16px;white-space:nowrap;
+background:var(--bg-inset);color:var(--text-muted)}
+.badge.bad{background:var(--bad-soft);color:var(--bad-text)}
+.badge.warn{background:var(--warn-soft);color:var(--warn-text)}
+.badge.ok{background:var(--ok-soft);color:var(--ok-text)}
+.badge.info{background:var(--accent-soft);color:var(--accent)}
+
+/* -- bars --
+   One hue. A colour per row said nothing a label did not. The label column is
+   sized for the longest layout name; below it the label moves above the bar. */
+.bars{display:grid;gap:var(--s-8);margin-top:var(--s-12)}
+.bar{display:grid;grid-template-columns:minmax(84px,14rem) 1fr auto;gap:var(--s-12);
+align-items:center;font-size:var(--t-13)}
+.bar .label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .track{height:6px;background:var(--progress-track);border-radius:var(--r-full);
+position:relative;min-width:40px;overflow:hidden}
+.bar .fill{position:absolute;inset:0 auto 0 0;border-radius:var(--r-full);
+background:var(--progress-fill)}
+.bar .v{color:var(--text-muted);font-variant-numeric:tabular-nums;min-width:3.2rem;
+text-align:right}
+.chips{display:flex;flex-wrap:wrap;gap:var(--s-6);margin-top:var(--s-8)}
+
+/* -- verdict --
+   A caption for the findings list under it. */
+.verdict{display:flex;align-items:flex-start;gap:var(--s-10);flex-wrap:wrap;
+padding:var(--s-16) var(--s-20);border-radius:var(--r-lg);
+border:1px solid var(--border);background:var(--bg-subtle)}
 .verdict.block{background:var(--bad-soft);border-color:var(--bad-border)}
 .verdict.warn{background:var(--warn-soft);border-color:var(--warn-border)}
 .verdict.clean{background:var(--ok-soft);border-color:var(--ok-border)}
 .verdict .dot{width:8px;height:8px;border-radius:var(--r-full);flex:none;
-background:var(--ok)}
+background:var(--ok);margin-top:7px}
 .verdict.block .dot{background:var(--bad)}.verdict.warn .dot{background:var(--warn)}
-.verdict .headline{font-weight:var(--w-semibold);font-size:var(--t-16)}
-.verdict .lead{color:var(--text-muted);font-size:var(--t-14);flex-basis:100%}
-
-/* -- sections --
-   The number is part of the heading rather than a marginal note beside it. Set
-   small it read as a footnote marker and was skipped; set at heading size it
-   does the one thing a section number is for, which is telling a reader who
-   scrolled past something how far past it they are.
-
-   The gap below the heading belongs to the heading. It used to belong to the
-   standfirst paragraph, so the one section without a standfirst had its card
-   welded to its title. */
-section{margin-top:var(--s-64)}
-.sechead{display:flex;align-items:baseline;gap:var(--s-12);
-margin-bottom:var(--s-24)}
-.sechead h2{display:flex;align-items:baseline;gap:var(--s-12)}
-.sechead .n{color:var(--text-faint);font-variant-numeric:tabular-nums;
-font-weight:var(--w-medium)}
-
-/* -- cards -- */
-.card{background:var(--bg-surface);border:1px solid var(--border-subtle);
-border-radius:var(--r-xl);padding:var(--s-20)}
-/* A heading owns the space under it wherever it appears. Tables and grids
-   carry no top margin of their own, so without this the first header row sits
-   on the baseline of the title above it. */
-.card>h3+*,.card>h4+*{margin-top:var(--s-12)}
-.grid{display:grid;gap:var(--s-12)}
-.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-.g4{grid-template-columns:repeat(auto-fit,minmax(168px,1fr))}
-.stat .k{display:block;color:var(--text-muted);font-size:var(--t-13);
-font-weight:var(--w-medium)}
-.stat .v{display:block;font-size:var(--t-28);font-weight:var(--w-medium);
-letter-spacing:var(--ls-tight);margin-top:var(--s-8);font-variant-numeric:tabular-nums}
-.stat .n{display:block;color:var(--text-muted);font-size:var(--t-13);margin-top:var(--s-4)}
-
-/* -- badges -- */
-.badge{display:inline-flex;align-items:center;gap:var(--s-4);padding:var(--s-1) var(--s-10);
-border-radius:var(--r-full);font-size:var(--t-11);font-weight:var(--w-medium);
-line-height:18px;white-space:nowrap;background:var(--bg-inset);color:var(--text-muted)}
-.badge.bad{background:var(--bad-soft);color:var(--bad)}
-.badge.warn{background:var(--warn-soft);color:var(--warn)}
-.badge.ok{background:var(--ok-soft);color:var(--ok)}
-.badge.info{background:var(--accent-soft);color:var(--accent)}
-
-/* -- bars -- */
-.bars{display:grid;gap:var(--s-10);margin-top:var(--s-12)}
-/* The label column is sized for the atlas taxonomy, whose longest name is
-   "Turkish literature, idiom and culture". Anything narrower truncates every
-   subject to an ellipsis and the chart stops being readable. */
-.bar{display:grid;grid-template-columns:minmax(84px,17rem) 1fr auto;gap:var(--s-12);
-align-items:center;font-size:var(--t-13)}
-.bar .label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar .track{height:6px;background:var(--bg-inset);border-radius:var(--r-full);
-position:relative;min-width:40px}
-.bar .fill{position:absolute;inset:0 auto 0 0;border-radius:var(--r-full);
-background:var(--hue,var(--c0))}
-.bar .ref{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text-faint);
-border-radius:var(--r-sm)}
-.bar .v{color:var(--text-muted);font-variant-numeric:tabular-nums;min-width:3.2rem;
-text-align:right}
-.h0{--hue:var(--c0)}.h1{--hue:var(--c1)}.h2{--hue:var(--c2)}
-.h3{--hue:var(--c3)}.h4{--hue:var(--c4)}.h5{--hue:var(--c5)}.h6{--hue:var(--c6)}
+.verdict .headline{font-weight:var(--w-semibold);font-size:var(--t-16);
+line-height:var(--lh-snug);flex:1 1 20ch}
+.verdict .lead{color:var(--text-muted);font-size:var(--t-14);flex-basis:100%;
+margin:0;max-width:74ch}
 
 /* -- findings -- */
-.finding{background:var(--bg-surface);border:1px solid var(--border-subtle);
-border-left:3px solid var(--border);border-radius:var(--r-xl);padding:var(--s-16) var(--s-20);
-margin-bottom:var(--s-12)}
+.finding{background:var(--bg-surface);border:1px solid var(--border);
+border-left:3px solid var(--border);border-radius:var(--r-lg);
+padding:var(--s-16) var(--s-20)}
 .finding.bad{border-left-color:var(--bad)}
 .finding.warn{border-left-color:var(--warn)}
 .finding.info{border-left-color:var(--info)}
-.ftop{display:flex;align-items:center;gap:var(--s-8);flex-wrap:wrap}
+.ftop{display:flex;align-items:center;gap:var(--s-10);flex-wrap:wrap}
 .ftop h3{flex:1 1 auto;min-width:0}
-.fid{color:var(--text-faint);font-size:var(--t-11);font-family:var(--mono)}
-.fscale{margin-top:var(--s-8);font-size:var(--t-15);font-weight:var(--w-medium);
+.fid{color:var(--text-faint);font-size:var(--t-11);font-family:var(--mono);
+font-weight:var(--w-regular);letter-spacing:0}
+.fscale{margin-top:var(--s-8);font-size:var(--t-14);font-weight:var(--w-medium);
 font-variant-numeric:tabular-nums}
-.fscale .cost{color:var(--bad)}
+.fscale .cost{color:var(--bad-text)}
 .fscale .sep{color:var(--text-faint);font-weight:var(--w-regular);padding:0 var(--s-6)}
 .fdetail{color:var(--text-muted);font-size:var(--t-14);margin-top:var(--s-6);max-width:74ch}
 .ffix{margin-top:var(--s-12);padding:var(--s-10) var(--s-12);background:var(--bg-subtle);
-border-radius:var(--r-lg);font-size:var(--t-14)}
-.ffix b{font-weight:var(--w-semibold)}
+border-radius:var(--r-md);font-size:var(--t-14);max-width:none}
+.allclear{border:1px solid var(--ok-border);background:var(--ok-soft);
+border-radius:var(--r-lg);padding:var(--s-16) var(--s-20)}
+
+/* -- disclosure --
+   A closed block still announces what it holds. When the block is a card the
+   summary is its title. */
 details{margin-top:var(--s-12)}
 summary{cursor:pointer;color:var(--text-muted);font-size:var(--t-13);
 font-weight:var(--w-medium)}
+summary:hover{color:var(--text)}
 summary::marker{color:var(--text-faint)}
+details.card>summary{font-size:var(--t-16);font-weight:var(--w-semibold);
+color:var(--text)}
+details.card[open]>summary{margin-bottom:var(--s-12)}
 .excerpt{margin-top:var(--s-8);padding:var(--s-10) var(--s-12);background:var(--bg-inset);
-border-radius:var(--r-lg);font-size:var(--t-13);line-height:var(--lh-normal);
+border-radius:var(--r-md);font-size:var(--t-13);line-height:var(--lh-normal);
 white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--mono)}
 .excerpt .loc{display:block;color:var(--text-faint);font-size:var(--t-11);
 margin-bottom:var(--s-4);overflow-wrap:anywhere}
-.allclear{border:1px solid var(--ok-border);background:var(--ok-soft);
-border-radius:var(--r-2xl);padding:var(--s-20)}
 
 /* -- insights --
-   Each of these headlines is about a different quantity: a share of the corpus,
-   a share of the map, a similarity between two datasets. Five of them stacked
-   under one title read as one undifferentiated list, so each carries a badge
-   naming which kind of claim it is, and the tinted panel keeps the group from
-   dissolving into the card around it. */
-.insights{display:grid;gap:var(--s-10)}
+   A list drawn as a list: one hairline between claims, a coloured rule for
+   the kind of claim, and a badge naming it. */
+.insights{list-style:none;margin-top:var(--s-4)}
 .insight{display:grid;grid-template-columns:3px 1fr;gap:var(--s-16);
-padding:var(--s-16);border:1px solid var(--border-subtle);
-border-radius:var(--r-xl);background:var(--bg-subtle)}
-.insight .rule{border-radius:var(--r-full);background:var(--accent)}
+padding:var(--s-12) 0}
+.insight+.insight{border-top:1px solid var(--border-subtle)}
+.insight .rule{border-radius:var(--r-full);background:var(--accent);margin:var(--s-4) 0}
 .insight.warn .rule{background:var(--warn)}
-.insight.warn{background:var(--warn-soft);border-color:var(--warn-border)}
-.insight h3{margin:var(--s-6) 0 var(--s-4)}
+.insight .ihead{font-size:var(--t-15);font-weight:var(--w-semibold);
+line-height:var(--lh-snug);margin:var(--s-8) 0 var(--s-4);overflow-wrap:anywhere}
 .insight p{color:var(--text-muted);font-size:var(--t-14);margin:0;max-width:74ch}
-.insight .quote{display:block;margin-top:var(--s-10);padding-left:var(--s-12);
+.insight .quote{display:block;margin-top:var(--s-8);padding-left:var(--s-12);
 border-left:2px solid var(--border);color:var(--text-faint);font-size:var(--t-13);
 overflow-wrap:anywhere}
 
-/* -- place lists -- */
-.places{list-style:none}
-.places li{display:grid;grid-template-columns:3.6rem 1fr;gap:var(--s-12);
-padding:var(--s-12) 0;border-top:1px solid var(--border-subtle);align-items:start}
-.places li:first-child{border-top:0;padding-top:var(--s-4)}
-.places .pct{font-weight:var(--w-semibold);font-variant-numeric:tabular-nums;
-text-align:right;font-size:var(--t-14)}
-.places .yours{display:block;font-size:var(--t-14);overflow-wrap:anywhere}
-.places .cap{display:block;color:var(--text-faint);font-size:var(--t-12);
-margin-top:var(--s-4)}
-.places .flag{display:block;color:var(--warn);font-size:var(--t-12);margin-top:var(--s-4)}
+/* -- place lists --
+   A ratio, then the reader's own record and where the map files it. */
+.places,.imbalances{list-style:none}
+.places li,.imbalances li{display:grid;grid-template-columns:4.8rem 1fr;gap:var(--s-12);
+padding:var(--s-10) 0;border-top:1px solid var(--border-subtle);align-items:start}
+.places li:first-child,.imbalances li:first-child{border-top:0;padding-top:var(--s-4)}
+.pct{font-weight:var(--w-semibold);font-variant-numeric:tabular-nums;
+text-align:right;font-size:var(--t-14);line-height:var(--lh-normal)}
+/* The direction a cell differs in is a description, so neither end is
+   coloured as a fault: denser takes the accent, thinner and unreached the
+   muted text. */
+.pct.denser{color:var(--accent)}
+.pct.thinner,.pct.unreached{color:var(--text-muted)}
+.yours{display:block;font-size:var(--t-14);overflow-wrap:anywhere}
+.cap{display:block;color:var(--text-faint);font-size:var(--t-12);margin-top:var(--s-4)}
+.flag{display:block;color:var(--warn-text);font-size:var(--t-12);margin-top:var(--s-4)}
+.imbalances .badge{margin-right:var(--s-8);vertical-align:2px}
+.imbalances .yours{display:inline}
 
-/* The map: one block per subject area, and inside it every subregion of that
-   area named, with its own density on the line beside it.
-
-   It used to be two lists, one after the other — a grid of coloured chips
-   carrying multipliers and nothing else, then a separate table of names — and
-   joining them meant holding four thousand squares in your head. One nested
-   list instead, so a subregion's name and its density are the same line and
-   the area's own numbers sit directly above them.
-
-   Two columns above 44rem, one below. A grid rather than CSS `columns`
-   because the areas are ranked: a grid reads left-to-right in rank order,
-   where a multi-column flow puts the first half of the ranking down the left
-   column and makes the reader scroll back up for the second half. */
-.amap{display:grid;grid-template-columns:1fr;gap:var(--s-20) var(--s-32);
-margin-top:var(--s-16)}
-@media (min-width:44rem){.amap{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.amap-area{min-width:0;break-inside:avoid;page-break-inside:avoid}
-.amap-area .aname{display:block;font-size:var(--t-14);
-font-weight:var(--w-semibold);overflow-wrap:anywhere}
-.amap-area.empty .aname{color:var(--text-faint);font-weight:var(--w-medium)}
-
-/* The area's own numbers: reach, share, records. */
-.ameta{display:flex;flex-wrap:wrap;gap:0 var(--s-10);
-margin:2px 0 var(--s-6);color:var(--text-faint);font-size:var(--t-11);
-font-variant-numeric:tabular-nums}
-.ameta .reach-ok{color:var(--ok)}
-.ameta .reach-miss{color:var(--text-faint)}
-
-/* One subregion. Density sits in the chip; the name sits beside it. No side
-   rail — the multiplier already carries the heat. */
-.acell-list{list-style:none;margin:0;padding:0}
-.acell{display:grid;grid-template-columns:3.2rem minmax(0,1fr);gap:var(--s-8);
-align-items:center;padding:2px 0;font-size:var(--t-12)}
+/* -- the map --
+   Topic blocks in two columns, each a frame around one table. The reading key
+   sits above them, once. */
+.key{display:grid;gap:var(--s-12);padding:var(--s-16);margin-top:var(--s-12);
+background:var(--bg-subtle);border-radius:var(--r-lg);
+font-size:var(--t-13);color:var(--text-muted)}
+.key p{margin:0;max-width:none}
+.key b{color:var(--text)}
+.legend{display:grid;gap:var(--s-6);font-size:var(--t-12);color:var(--text-muted)}
+.legend .ramp{height:10px;border-radius:var(--r-full);border:1px solid var(--border)}
+.legend .ends{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--s-12)}
+.legend .ends>span:last-child{text-align:right}
+.legend .mid{text-align:center}
+.amap{display:grid;grid-template-columns:1fr;gap:var(--s-16);margin-top:var(--s-16)}
+@media (min-width:768px){.amap{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.amap-area{min-width:0;border:1px solid var(--border);border-radius:var(--r-lg);
+overflow:hidden;align-self:start;break-inside:avoid;page-break-inside:avoid}
+.topic-heading{display:grid;grid-template-columns:minmax(0,1fr) 9rem;
+gap:var(--s-16);align-items:start;padding:var(--s-12) var(--s-16)}
+.aname{font-size:var(--t-14);font-weight:var(--w-semibold);overflow-wrap:anywhere}
+.ameta{display:flex;flex-wrap:wrap;gap:var(--s-4) var(--s-10);margin:var(--s-4) 0 0;
+color:var(--text-muted);font-size:var(--t-12)}
+.topic-reach{display:grid;gap:var(--s-6);font-size:var(--t-12);color:var(--text-muted)}
+.coverage-value{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.coverage-value b{color:var(--text)}
+.coverage-track{display:block;height:var(--s-6);background:var(--progress-track);
+border-radius:var(--r-full);overflow:hidden}
+.coverage-track>span{display:block;height:100%;background:var(--progress-fill);
+border-radius:inherit}
+.topic-table{table-layout:fixed}
+.topic-table th:last-child,.topic-table td:last-child{width:6.5rem}
+.topic-table th,.topic-table td{padding:var(--s-8) var(--s-16);font-size:var(--t-12);
+border-bottom:1px solid var(--border-subtle);vertical-align:middle}
+.topic-table th{white-space:normal;background:var(--bg-subtle);
+border-top:1px solid var(--border-subtle);border-bottom-color:var(--border)}
+.topic-table tbody tr:last-child td{border-bottom:0}
 .acell .cn{color:var(--text);overflow-wrap:anywhere}
-.acell:not(.on) .cn{color:var(--text-faint)}
+.acell:not(.on) .cn{color:var(--text-muted)}
 
-/* One fine cell's density, carrying its own ratio. Bold, because the label
-   sits on a saturated fill at 11px and regular weight is the difference
-   between a number and a smudge. The fill and its ink are inherited from the
-   row's ramp class, where the ink was chosen by measured contrast — see _ink.
-   Every cell carries an inset border so white and near-white fills still read
-   as boxes rather than as empty gaps. */
-.cell{display:inline-flex;align-items:center;justify-content:center;
-min-width:2.7rem;height:20px;padding:0 var(--s-4);flex:none;
-border-radius:var(--r-md);background:var(--cell,var(--bg-inset));
-box-shadow:inset 0 0 0 1px var(--neutral-500);
-color:var(--ink,var(--text));font-size:var(--t-11);
-font-weight:var(--w-bold);font-variant-numeric:tabular-nums;
-letter-spacing:0;text-transform:none}
-/* Never reached: white fill, same border, a zero instead of a blank. */
-.acell:not(.on) .cell{background:var(--white);color:var(--text-faint);
-font-weight:var(--w-medium)}
+/* One cell's density: a swatch from the ramp and the ratio beside it in
+   ordinary ink, so the number never depends on the colour behind it. The fill
+   is inherited from the row's ramp class. */
+.cell{display:inline-flex;align-items:center;gap:var(--s-8);
+font-variant-numeric:tabular-nums;font-weight:var(--w-medium);color:var(--text);
+white-space:nowrap}
+.cell::before{content:"";width:10px;height:10px;flex:none;border-radius:var(--r-sm);
+background:var(--cell,var(--white));
+box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 14%,transparent)}
+.acell:not(.on) .cell{color:var(--text-faint);font-weight:var(--w-regular)}
 
-/* Contribution-style shape strip: every L2 cell along the map diameter. */
-.shape-strip{display:grid;grid-template-columns:repeat(64,minmax(0,1fr));
-gap:2px;margin-top:var(--s-12);max-width:100%}
-.shape-sq{aspect-ratio:1;border-radius:var(--r-sm);
-background:var(--cell,var(--bg-inset));
-box-shadow:inset 0 0 0 1px var(--neutral-400);min-width:0}
-.shape-sq:not(.on){background:var(--neutral-200);
-box-shadow:inset 0 0 0 1px var(--neutral-400)}
-@media (max-width:640px){
-  .shape-strip{grid-template-columns:repeat(32,minmax(0,1fr));gap:1px}
-}
-
-.imbalances{list-style:none}
-.imbalances li{display:grid;grid-template-columns:4.2rem 1fr;gap:var(--s-12);
-padding:var(--s-12) 0;border-top:1px solid var(--border-subtle);align-items:start}
-.imbalances li:first-child{border-top:0;padding-top:var(--s-4)}
-.imbalances .pct{font-weight:var(--w-semibold);font-variant-numeric:tabular-nums;
-text-align:right;font-size:var(--t-14)}
-.imbalances .pct.cut{color:var(--bad)}
-.imbalances .pct.grow{color:var(--ok)}
-.imbalances .yours{display:block;font-size:var(--t-14);overflow-wrap:anywhere}
-.imbalances .cap{display:block;color:var(--text-faint);font-size:var(--t-12);
-margin-top:var(--s-4)}
-.imbalances .act{display:inline-block;margin-top:var(--s-4);font-size:var(--t-12);
-font-weight:var(--w-medium)}
-.imbalances .act.cut{color:var(--bad)}
-.imbalances .act.grow{color:var(--ok)}
-
-/* The scale is continuous, so the legend is a gradient rather than four
-   swatches the reader has to interpolate between by eye. */
-.legend{display:grid;grid-template-columns:1fr;gap:var(--s-6);
-margin-top:var(--s-32);color:var(--text-muted);font-size:var(--t-12)}
-.legend .ramp{height:10px;border-radius:var(--r-full);
-border:1px solid var(--border-subtle)}
-.legend .ends{display:flex;justify-content:space-between;gap:var(--s-12)}
-.legend .mid{color:var(--text-faint)}
+/* Subject areas past the first screenful, and the ones never reached, fold away
+   under a line that says how many there are and what they hold. Inside,
+   they are drawn exactly like the open ones. */
+details.more{margin-top:var(--s-16);padding-top:var(--s-12);
+border-top:1px solid var(--border-subtle)}
+details.more>summary{font-size:var(--t-14);color:var(--text)}
+details.more>summary .muted{font-weight:var(--w-regular)}
 
 /* -- tables -- */
 .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:var(--t-13)}
-th{text-align:left;color:var(--text-faint);font-weight:var(--w-semibold);
-font-size:var(--t-11);letter-spacing:var(--ls-wide);text-transform:uppercase;
-padding:var(--s-8) var(--s-10);border-bottom:1px solid var(--border);white-space:nowrap}
+th{text-align:left;color:var(--text-muted);font-weight:var(--w-medium);
+font-size:var(--t-12);padding:var(--s-8) var(--s-10);
+border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:var(--s-10);border-bottom:1px solid var(--border-subtle);vertical-align:top}
 tbody tr:last-child td{border-bottom:0}
 td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
-.chips{display:flex;flex-wrap:wrap;gap:var(--s-6);margin-top:var(--s-8)}
 
 footer{margin-top:var(--s-64);padding-top:var(--s-20);
 border-top:1px solid var(--border-subtle);color:var(--text-faint);
@@ -381,69 +380,63 @@ font-size:var(--t-12);max-width:80ch}
 footer p{margin:var(--s-6) 0}
 
 /* -- narrow screens --
-   The report is a file, and a file gets sent to someone. Where it is opened is
-   not where it was written, so a phone is a first-class target and not a
-   courtesy. Nothing is hidden at any width: wide content scrolls inside its own
-   box, and everything else reflows. */
-@media (max-width:900px){
-  .masthead{padding-top:var(--s-32)}
-  section{margin-top:var(--s-48)}
+   A file gets sent to someone, so a phone is a first-class target. Nothing is
+   hidden at any width: wide content scrolls inside its own box. */
+@media (max-width:1024px){
+  .masthead{padding-top:var(--s-24)}
+  .wrap>section{margin-top:var(--s-32);padding-top:var(--s-24)}
 }
-
 @media (max-width:640px){
-  body{padding:0 var(--s-16) var(--s-48);font-size:var(--t-14)}
-  section{margin-top:var(--s-40)}
+  body{padding:0 var(--s-16) var(--s-48)}
+  h1{font-size:var(--t-28)}
   h2{font-size:var(--t-20)}
-  .masthead{padding:var(--s-24) 0 var(--s-16);gap:var(--s-6)}
-  .mark{height:28px}
-  .verdict{padding:var(--s-12) var(--s-16);margin-top:var(--s-16)}
+  .masthead{padding:var(--s-20) 0 var(--s-16);gap:var(--s-6)}
+  .masthead .where{text-align:left;max-width:none}
+  .mark{height:26px}
+  .report-intro .lede{font-size:var(--t-15)}
+  .verdict{padding:var(--s-12) var(--s-16)}
   .card{padding:var(--s-16)}
   .stat .v{font-size:var(--t-24)}
   .finding{padding:var(--s-12) var(--s-16)}
   .ftop{gap:var(--s-6)}
   .ftop h3{flex-basis:100%;order:3}
-  /* The label goes above the bar rather than beside it. A seven-rem column
-     truncates "Tool calls and agentic trajectories" to three words, and the
-     name is the part worth reading. */
   .bar{grid-template-columns:1fr auto;gap:var(--s-4) var(--s-8)}
   .bar .label{grid-column:1/-1;white-space:normal;overflow:visible}
   .bar .v{min-width:2.8rem}
-  .places li{grid-template-columns:2.8rem 1fr;gap:var(--s-8)}
-  .insight{gap:var(--s-10);padding:var(--s-12)}
-  /* One subregion per line already; on a narrow screen the density column
-     shrinks so the name keeps the width it needs. */
-  .acell{grid-template-columns:2.9rem minmax(0,1fr);gap:var(--s-6)}
-  /* A dataset name or an install hint is one long token; on a 320px screen it
-     has to be allowed to break rather than push the page sideways. */
+  .places li,.imbalances li{grid-template-columns:3.6rem 1fr;gap:var(--s-8)}
+  .insight{gap:var(--s-10)}
+  .key{padding:var(--s-12)}
+  .topic-heading{grid-template-columns:minmax(0,1fr) 7rem;gap:var(--s-12);
+  padding:var(--s-10) var(--s-12)}
+  .topic-table th,.topic-table td{padding:var(--s-8) var(--s-12)}
   code,.mono{overflow-wrap:anywhere}
   .badge{white-space:normal;text-align:left}
 }
-
-@media (max-width:400px){
+@media (max-width:480px){
   body{padding-inline:var(--s-12)}
   .g4{grid-template-columns:1fr}
   .stat .v{font-size:var(--t-20)}
 }
 
+/* -- paper --
+   Cards keep their hairlines, nothing keeps a shadow, and every colour that
+   carries information is forced through the printer. A closed disclosure
+   prints as its summary line, which is honest about what the file holds. */
 @media print{
   body{background:#fff;color:#000;font-size:10.5pt;padding:0}
-  .card,.finding,.verdict,.allclear{box-shadow:none;break-inside:avoid}
-  section{break-before:auto;margin-top:22pt}
-  .sechead,h3{break-after:avoid}
-  details{display:block}
-  details>summary{display:none}
-  .insight,.places li,tr{break-inside:avoid}
+  .wrap{max-width:none}
+  .card,.finding,.verdict,.allclear,.amap-area{box-shadow:none;break-inside:avoid}
+  .wrap>section{break-before:auto;margin-top:18pt;padding-top:12pt}
+  .sechead,h3,h4{break-after:avoid}
+  .report-nav{display:none}
+  .insight,.places li,.imbalances li,tr{break-inside:avoid}
   a{color:#000;text-decoration:none}
   .masthead .where{font-size:8pt}
-  /* Any table here can cross a page boundary. A header repeats itself across
-     pages when it is told to; without this the second page is an unlabelled
-     block. The map is not a table any more, so an area block is kept whole
-     instead, and every cell carries its own ratio — nothing on the page
-     depends on a pointer or on a colour surviving the printer. */
   thead{display:table-header-group}
-  .amap{columns:2;column-gap:18pt;display:block}
-  .amap-area,.acell{break-inside:avoid}
-  .cell,.shape-sq{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .amap{display:block;columns:2;column-gap:14pt}
+  .amap-area{margin-bottom:10pt}
+  .cell::before,.coverage-track,.legend .ramp,.bar .fill,.verdict,.badge,.finding{
+  print-color-adjust:exact;-webkit-print-color-adjust:exact}
 }
 """
 
@@ -548,7 +541,7 @@ def _ramp() -> str:
     for step in range(RAMP_STEPS + 1):
         fill = _fill(step / RAMP_DIVISOR)
         ink, _ = _ink(fill)
-        rules.append(f".d{step}{{--cell:{fill};--ink:{ink};color:{ink}}}")
+        rules.append(f".d{step}{{--cell:{fill};--ink:{ink}}}")
     return "\n".join(rules) + "\n"
 
 

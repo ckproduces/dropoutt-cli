@@ -1,0 +1,474 @@
+{
+ "_written_at": "2026-09-16T16:32:04",
+ "external_alignment": {
+  "atlas-v3": {
+   "l2": {
+    "n": 4096,
+    "median_rank": 3.0,
+    "top1": 0.352294921875,
+    "top1_ci95": [
+     0.33781041257022637,
+     0.36705623398509435
+    ],
+    "top10": 0.73779296875,
+    "top100": 0.93408203125,
+    "median_rank_within_family": 2.0,
+    "top1_within_family": 0.46142578125,
+    "chance_median_rank": 2048.0,
+    "worst": [
+     [
+      2105,
+      "Mixed short web fragments with no shared subject",
+      3708
+     ],
+     [
+      744,
+      "Mixed encyclopedia articles with no shared subject",
+      3343
+     ],
+     [
+      1601,
+      "Personal diary blog posts on assorted subjects",
+      2647
+     ],
+     [
+      2905,
+      "Mixed encyclopedia fragments with no shared subject",
+      2441
+     ],
+     [
+      1455,
+      "Mixed short web fragments with no shared subject",
+      2411
+     ],
+     [
+      3291,
+      "Mixed short web fragments with no shared subject",
+      2372
+     ],
+     [
+      3644,
+      "Mixed short web fragments with no shared subject",
+      2335
+     ],
+     [
+      1054,
+      "Mixed short web fragments with no shared subject",
+      2324
+     ],
+     [
+      1989,
+      "Mixed short web fragments with no shared subject",
+      2205
+     ],
+     [
+      2684,
+      "Mixed short web fragments with no shared subject",
+      2195
+     ]
+    ],
+    "by_kind": {
+     "form": {
+      "n": 146,
+      "median_rank": 38.5,
+      "top10": 0.23972602739726026
+     },
+     "mixed": {
+      "n": 448,
+      "median_rank": 30.5,
+      "top10": 0.35714285714285715
+     },
+     "subject": {
+      "n": 3502,
+      "median_rank": 2.0,
+      "top10": 0.8072529982866933
+     }
+    }
+   },
+   "l1": {
+    "n": 256,
+    "median_rank": 1.0,
+    "top1": 0.75,
+    "top1_ci95": [
+     0.6935238434514225,
+     0.7990839606877146
+    ],
+    "top5": 0.92578125,
+    "chance_median_rank": 128.0,
+    "worst": [
+     [
+      158,
+      "Mixed leisure forum posts and personal writing",
+      54
+     ],
+     [
+      100,
+      "Mixed personal lifestyle posts and reasoning prompts",
+      25
+     ],
+     [
+      239,
+      "Mixed encyclopedia stubs and garbled web text",
+      20
+     ],
+     [
+      23,
+      "Eastern Europe, its notable people and dynasties",
+      12
+     ],
+     [
+      38,
+      "Personal diaries and stories about everyday home life",
+      11
+     ],
+     [
+      119,
+      "Mixed biographies and entertainment pages clustered by names",
+      10
+     ],
+     [
+      86,
+      "Mixed encyclopedic fragments with no shared subject",
+      10
+     ],
+     [
+      11,
+      "Villages and rural municipalities with administrative data",
+      10
+     ]
+    ]
+   }
+  },
+  "atlas-v3-prev": {
+   "l2": {
+    "n": 4096,
+    "median_rank": 3.0,
+    "top1": 0.321533203125,
+    "top1_ci95": [
+     0.30740229174058803,
+     0.33599856550228696
+    ],
+    "top10": 0.700439453125,
+    "top100": 0.915771484375,
+    "median_rank_within_family": 2.0,
+    "top1_within_family": 0.43505859375,
+    "chance_median_rank": 2048.0,
+    "worst": [
+     [
+      2387,
+      "NLI premise-hypothesis pairs about men in everyday scenes",
+      3133
+     ],
+     [
+      3154,
+      "Trivia question-and-answer training pairs",
+      2813
+     ],
+     [
+      3134,
+      "Transcripts of unboxing and product review videos",
+      2677
+     ],
+     [
+      3156,
+      "NLI entailment prompts about circus and barbershop scenes",
+      2597
+     ],
+     [
+      3158,
+      "Verifiable-fact yes-or-no question training prompts",
+      2202
+     ],
+     [
+      2380,
+      "NLI premise-hypothesis pairs about daily outdoor activities",
+      2116
+     ],
+     [
+      2379,
+      "NLI premise-hypothesis pairs framed as Denny's questions",
+      1653
+     ],
+     [
+      3102,
+      "Forum posts introducing new members and seeking tech help",
+      1557
+     ],
+     [
+      865,
+      "Corrupted multiple-choice commonsense reasoning prompts",
+      1548
+     ],
+     [
+      3962,
+      "Summarization prompts about household tools and repairs",
+      1493
+     ]
+    ]
+   },
+   "l1": {
+    "n": 256,
+    "median_rank": 1.0,
+    "top1": 0.73828125,
+    "top1_ci95": [
+     0.6811946050676242,
+     0.7883222082524909
+    ],
+    "top5": 0.90234375,
+    "chance_median_rank": 128.0,
+    "worst": [
+     [
+      241,
+      "Forum chatter, fiction and mixed web posts",
+      36
+     ],
+     [
+      144,
+      "Reference lists, abbreviations and catalogue stubs",
+      34
+     ],
+     [
+      197,
+      "Livestream and video transcripts",
+      33
+     ],
+     [
+      185,
+      "Narrative prose, outdoor stories and memoirs",
+      25
+     ],
+     [
+      195,
+      "Chatty personal posts and forum confessions",
+      22
+     ],
+     [
+      235,
+      "Villages, rural settlements and county seats",
+      20
+     ],
+     [
+      200,
+      "Sentence-rewriting prompts about American public figures",
+      18
+     ],
+     [
+      37,
+      "Religious texts, archive scans and mixed stubs",
+      13
+     ]
+    ]
+   }
+  }
+ },
+ "mixed_landing": {
+  "atlas-v3": {
+   "mixed_cells": 448,
+   "mixed_cells_share": 0.109375,
+   "reference_mass_in_mixed_cells": 0.11100565342552506,
+   "how_identified": "stamped kind",
+   "held-out panel": {
+    "share_in_mixed": 0.1398550724637681,
+    "ci95": [
+     0.1368737230682545,
+     0.14289061021292973
+    ],
+    "sources_over_half_in_mixed": [
+     "xlcost-text-to-code__Python"
+    ],
+    "per_source_top8": [
+     [
+      "xlcost-text-to-code__Python",
+      0.8128128128128128
+     ],
+     [
+      "hendrycks_math__algebra",
+      0.3192771084337349
+     ],
+     [
+      "proof-pile-2__arxiv",
+      0.2962962962962963
+     ],
+     [
+      "open-web-math__open-web-math",
+      0.2682682682682683
+     ],
+     [
+      "nvidia__OpenMathInstruct-2",
+      0.26104417670682734
+     ],
+     [
+      "finemath__finemath-3plus",
+      0.21743486973947895
+     ],
+     [
+      "hendrycks_math__geometry",
+      0.20114942528735633
+     ],
+     [
+      "commitpackft__rust",
+      0.1807967313585291
+     ]
+    ]
+   },
+   "MMLU": {
+    "share_in_mixed": 0.15463389656938045,
+    "ci95": [
+     0.14867018282013725,
+     0.16079165401751946
+    ]
+   },
+   "C4 English web": {
+    "share_in_mixed": 0.09387755102040816,
+    "ci95": [
+     0.09105590922349358,
+     0.09677732027107444
+    ]
+   }
+  },
+  "atlas-v3-prev": {
+   "mixed_cells": 15,
+   "mixed_cells_share": 0.003662109375,
+   "reference_mass_in_mixed_cells": 0.003420395057489008,
+   "how_identified": "name words",
+   "held-out panel": {
+    "share_in_mixed": 0.0028952053052681,
+    "ci95": [
+     0.002465308209006008,
+     0.003399811776812621
+    ],
+    "sources_over_half_in_mixed": [],
+    "per_source_top8": [
+     [
+      "commitpackft__rust",
+      0.011133603238866396
+     ],
+     [
+      "TFLai__Turkish-Alpaca",
+      0.009404388714733543
+     ],
+     [
+      "commitpackft__go",
+      0.00911854103343465
+     ],
+     [
+      "allenai__c4__multilingual",
+      0.00910010111223458
+     ],
+     [
+      "commitpackft__java",
+      0.009027081243731194
+     ],
+     [
+      "turkish-nlp-suite__InstrucTurca",
+      0.00819672131147541
+     ],
+     [
+      "commitpackft__python",
+      0.007042253521126761
+     ],
+     [
+      "b-mc2__sql-create-context",
+      0.00631578947368421
+     ]
+    ]
+   },
+   "MMLU": {
+    "share_in_mixed": 0.003672420124862284,
+    "ci95": [
+     0.0027868938515966573,
+     0.004837954358694592
+    ]
+   },
+   "C4 English web": {
+    "share_in_mixed": 0.0020555499849593904,
+    "ci95": [
+     0.001656482295429404,
+     0.0025505125508705675
+    ]
+   }
+  }
+ },
+ "blind": {
+  "n_items_scored": 218,
+  "products": {
+   "atlas-v3": {
+    "n": 109,
+    "mean_score_of_2": 1.146788990825688,
+    "describes_share": 0.3211009174311927,
+    "describes_ci95": [
+     0.24082843883410393,
+     0.4135543419843177
+    ],
+    "wrong_share": 0.1743119266055046,
+    "wrong_ci95": [
+     0.11452781593206733,
+     0.2562716055578796
+    ],
+    "at_least_partly_share": 0.8256880733944955,
+    "describes_share_source": 0.2692307692307692,
+    "describes_share_mmlu": 0.3684210526315789
+   },
+   "atlas-v3-prev": {
+    "n": 109,
+    "mean_score_of_2": 1.091743119266055,
+    "describes_share": 0.24770642201834864,
+    "describes_ci95": [
+     0.17618414860824202,
+     0.3364069525459422
+    ],
+    "wrong_share": 0.1559633027522936,
+    "wrong_ci95": [
+     0.09971462165945087,
+     0.23563687991443671
+    ],
+    "at_least_partly_share": 0.8440366972477065,
+    "describes_share_source": 0.2692307692307692,
+    "describes_share_mmlu": 0.22807017543859648
+   }
+  },
+  "paired_v3_minus_prev": {
+   "delta": 0.027522935779816515,
+   "ci95": [
+    -0.04128440366972477,
+    0.0963302752293578
+   ],
+   "n": 109,
+   "significant": false,
+   "v3_better": 24,
+   "prev_better": 18,
+   "tie": 67
+  },
+  "mini_cells": {
+   "judged": 40,
+   "content": {
+    "subject": 30,
+    "grab-bag": 7,
+    "form": 3
+   },
+   "name_verdict": {
+    "accurate": 34,
+    "vague": 5,
+    "false-specific": 1
+   },
+   "grab_bag_share": 0.175,
+   "grab_bag_ci95": [
+    0.08745302996883066,
+    0.3195029205439244
+   ],
+   "accurate_share": 0.85,
+   "accurate_ci95": [
+    0.7092737396097997,
+    0.9293890829149256
+   ],
+   "soup_names": 0,
+   "grab_bag_share_coherence_below_0.15": 1.0,
+   "grab_bag_share_coherence_at_least_0.15": 0.15384615384615385,
+   "gates": {
+    "grab_bag": false,
+    "no_soup": true,
+    "accurate": true
+   }
+  }
+ }
+}

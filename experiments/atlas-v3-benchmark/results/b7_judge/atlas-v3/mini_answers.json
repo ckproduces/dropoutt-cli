@@ -1,0 +1,242 @@
+[
+ {
+  "tag": "M00",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M01",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 8
+ },
+ {
+  "tag": "M02",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 8
+ },
+ {
+  "tag": "M03",
+  "content": "grab-bag",
+  "name_verdict": "accurate",
+  "fit": 5
+ },
+ {
+  "tag": "M04",
+  "content": "grab-bag",
+  "name_verdict": "accurate",
+  "fit": 6
+ },
+ {
+  "tag": "M05",
+  "content": "subject",
+  "name_verdict": "vague",
+  "fit": 8
+ },
+ {
+  "tag": "M06",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 8
+ },
+ {
+  "tag": "M07",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M08",
+  "content": "subject",
+  "name_verdict": "vague",
+  "fit": 6
+ },
+ {
+  "tag": "M09",
+  "content": "subject",
+  "name_verdict": "vague",
+  "fit": 5
+ },
+ {
+  "tag": "M10",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 7
+ },
+ {
+  "tag": "M11",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 8
+ },
+ {
+  "tag": "M12",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M13",
+  "content": "form",
+  "name_verdict": "accurate",
+  "fit": 8
+ },
+ {
+  "tag": "M14",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 7
+ },
+ {
+  "tag": "M15",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M16",
+  "content": "grab-bag",
+  "name_verdict": "accurate",
+  "fit": 8
+ },
+ {
+  "tag": "M17",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 8
+ },
+ {
+  "tag": "M18",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M19",
+  "content": "form",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M20",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 7
+ },
+ {
+  "tag": "M21",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 7
+ },
+ {
+  "tag": "M22",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M23",
+  "content": "grab-bag",
+  "name_verdict": "false-specific",
+  "fit": 4
+ },
+ {
+  "tag": "M24",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 7
+ },
+ {
+  "tag": "M25",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 8
+ },
+ {
+  "tag": "M26",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 8
+ },
+ {
+  "tag": "M27",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 8
+ },
+ {
+  "tag": "M28",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M29",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 8
+ },
+ {
+  "tag": "M30",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M31",
+  "content": "subject",
+  "name_verdict": "vague",
+  "fit": 10
+ },
+ {
+  "tag": "M32",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 10
+ },
+ {
+  "tag": "M33",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M34",
+  "content": "grab-bag",
+  "name_verdict": "accurate",
+  "fit": 6
+ },
+ {
+  "tag": "M35",
+  "content": "grab-bag",
+  "name_verdict": "accurate",
+  "fit": 6
+ },
+ {
+  "tag": "M36",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M37",
+  "content": "form",
+  "name_verdict": "accurate",
+  "fit": 9
+ },
+ {
+  "tag": "M38",
+  "content": "grab-bag",
+  "name_verdict": "vague",
+  "fit": 5
+ },
+ {
+  "tag": "M39",
+  "content": "subject",
+  "name_verdict": "accurate",
+  "fit": 9
+ }
+]

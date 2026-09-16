@@ -119,7 +119,7 @@ Homepage = "https://dropoutt.com"
 # dropoutt.com/docs is not published yet and returned 404, which is what the
 # PyPI sidebar would have linked to. Point at the docs that exist; switch back
 # when the site has that page.
-Documentation = "https://github.com/ckproduces/dropoutt-cli/tree/v1.2.0/docs"
+Documentation = "https://github.com/ckproduces/dropoutt-cli/tree/v1.4.0/docs"
 Source = "https://github.com/ckproduces/dropoutt-cli"
 Issues = "https://github.com/ckproduces/dropoutt-cli/issues"
 Changelog = "https://github.com/ckproduces/dropoutt-cli/blob/main/CHANGELOG.md"
@@ -144,7 +144,12 @@ include = [
 # hatchling refuses to build: "A second file is being added to the wheel
 # archive at the same path". Do not add one back.
 packages = ["src/dropoutt"]
-exclude = ["**/.DS_Store", "**/*.tmp.npz"]
+# Anything with a second suffix after .npz is a build or patch scratch copy
+# (`atlas-v3.npz.tmp.npz`, `atlas-v3.npz.patching.npz`), never a product. The
+# pattern used to name `*.tmp.npz` alone, and a 17 MB `.patching.npz` rode
+# inside the 1.4 wheel unnoticed. `tests/test_packaging.py` asserts the data
+# directory holds only what ships.
+exclude = ["**/.DS_Store", "**/*.npz.*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -164,6 +169,10 @@ ignore_missing_imports = true
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+# Benchmark harnesses and research notebooks under experiments/ are run by
+# hand and kept as the record of an experiment; they are not shipped and not
+# held to the package's lint. `ruff check .` in CI would otherwise fail on them.
+extend-exclude = ["experiments"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF", "PL"]

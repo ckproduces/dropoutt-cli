@@ -1,0 +1,759 @@
+=== C000
+CURRENT NAME: News and stub articles about film releases and premieres
+  - La segunda parte de esa gran película de culto que es Blade Runner ya tiene fecha de estreno, y esta se nos va a ir hasta el lejano 2018, concretamente hasta el 12 de Enero. La pelicula como ya sabiamos volvera a contar
+  - KLRU-Q’s Saturday Night at the Movies presents a full-length feature film every Saturday night, plus extra content that gives the evening an exciting spin. Each film explores the work of legendary actors and actresses th
+  - Valamiehet (Runaway Jury) on vuonna 2003 ensi-iltansa saanut Gary Flederin ohjaama yhdysvaltalainen jännityselokuva, jonka pääosissa näyttelevät John Cusack, Gene Hackman, Dustin Hoffman ja Rachel Weisz. Lähteet Vuoden 2
+  - co Grunts é um premiado filme pornográfico gay dirigido pelos atores e diretores Chris Ward e Ben Leon, produzido pela Raging Stallion Studios. Apresentando uma temática militar, o filme possuiu um orçamento de US$250,00
+  - Την σκηνοθεσία της ταινίας ανέλαβε ένας μετρ των ταινιών τρόμου ο Τοντ Μπράουνινγκ ενώ τη διασκευή του σεναρίου από το μυθιστόρημα ανέλαβε ο σεναριογράφος Γκάρετ Φορτ. Η ταινία υπολογιζόταν να είναι επίσης μια κινηματογρ
+  - Más allá de la trama misma que es tan simple y predecible como sus precuelas el gran acierto es que los espectadores pueden disfrutar del primer parque temático del mundo. Así es El otro acierto es que la cinta tiene per
+  - Combine facts and answer this: Sigourney Weaver starred in the 1984 supernatural comedy film directed by whom? Ivan Reitman
+  - Çek Cumhuriyeti’nde düzenlenen Karlovy Vary Film Festivali sona erdi. Festivalin kapanış gecesine ünlü Amerikalı aktör Harvey Keitel de katıldı. Bu sene 50. kez düzenlenen festivalin büyük ödülü Kristal Küre “Bob and the
+  - Dia mengikuti audisi dengan dua rakan sekolah menengah untuk peranan Fogell (alias'' McLovin'') dalam filem'' Superbad '. Sudah tentu, versi yang lebih kompleks dari ayat ini adalah "Dia mengikuti audisi dengan dua rakan
+  - Kuzalisha toleo ngumu zaidi ya sentensi hii filamu ni remake ya 1965 filamu ya Uingereza The Big Job, ingawa filamu ya awali ni uncredited. Bila shaka, toleo ngumu zaidi ya hukumu ni "Filamu ni remake ya 1965 filamu ya U
+  - نسخه ی پیچیده تری از این جمله بسازید شاید معروف ترین آهنگش آهنگ ویژه ی کریسمس " رودولف گوزن سرخ " باشه که برای اولین بار در سال 1964 پخش شد البته، یک نسخه پیچیده تر از این جمله این است که "شاید معروف ترین آهنگ او آهنگ وی
+  - Su papel más importante en la película de " Trek " fue en la que Troi y Riker se casan. Por supuesto, una versión más compleja de la oración es "Su papel más importante en el largometraje 'Trek' fue en ',' sobre el cual
+  - Viņš debija Orijas kino industrijā bija 2004. gada filmā " Es tevi mīlu " kopā ar Namrātu Thapu. Protams, sarežģītāks teikuma variants ir "Viņš debija Orijas kino industrijā 2004. gadā ar filmu "Es tevi mīlu" kopā ar Nam
+  - Il sogno di Robin (Flying) è un film del 1986 diretto da Paul Lynch. Trama Robin Crew è una studentessa liceale intenzionata a diventare campionessa di ginnastica artistica. Il suo sogno però si infrange quando rimane co
+  - est un film d'animation de John Halas réalisé au Royaume-Uni en 1945. Commandité par l'Admiralty, l'équivalent de l'état-major de la marine française, ce film à visée didactique n'a pas été projeté en salles et n'était p
+  - Eu admiro o Sr. Jonathan Demme. Ele é um destes sujeitos que faz filmes em Hollywood no que se popularizou como sendo o “cinema autoral”. Demme foi o responsável por dois filmes espetaculares: The Silence of the Lambs e
+
+=== C001
+CURRENT NAME: Programming language and software engineering papers
+  - Normalmente se dan de dos tipos el de localización en el que la empresa te proporciona el archivo sin separar el código de programación de las partes traducibles; y el de traducción en el que sí que están separadas. En e
+  - Приоритет, ранг или старшинство операции или оператора — формальное свойство оператора/операции, влияющее на очередность его выполнения в выражении с несколькими различными операторами при отсутствии явного (с помощью ск
+  - Interfejs – definicja abstrakcyjnego typu posiadającego jedynie operacje, a nie dane. Kiedy w konkretnej klasie zdefiniowane są wszystkie metody interfejsu mówimy, że klasa implementuje dany interfejs. W programie mogą b
+  - This software has been built to support the assignment of actions (alternatives, projects, candidates) described by their evaluation (performance) at multiple dimensions (criteria) to a set of predefined ordered categori
+  - Сильная и слабая типизация или строгая и нестрогая типизация — характеристика системы типов языка программирования, отражающая существенные ограничения на приведение типов при присваиваниях и операциях. Языки, в которых
+  - Access Control List MTA includes a complete Access Control List (ACL) that allows you to secure and limit access to the server, its functions, and resources in any number of ways. The key concept of MTA's ACL (and ACLs i
+  - - another term for subroutine.More example sentences - From the above PCS computation, important PC scores are screened (PCA is a subroutine subprogram of PCS). - Since software uses the stack quite actively, particularl
+  - The paper proposes an algorithm for the script recognition based on the texture characteristics. The image texture is achieved by coding each letter with the equivalent script type (number code) according to its position
+  - This page is under construction and currently only providing very limited information. section of your nzyme-node configuration file lets you fine-tune certain parameters that will influece the resource usage and perform
+  - We present a forward-backward-based algorithm to minimize a sum of a differentiable function and a nonsmooth function, both being possibly nonconvex. The main contribution of this work is to consider the challenging case
+  - Verification conditions (VCs) are logical formulas whose satisfiability guarantees program correctness. We consider VCs in the form of constrained Horn clauses (CHC) which are automatically generated from the encoding of
+  - In Part 1, I provided an overview of FaaS defining what it is as well as discussing some of the advantages and disadvantages of the architecture. In this part, I will discuss applying some microservice patterns & best pr
+  - A long-standing shortcoming of statically typed functional languages is that type checking does not rule out pattern-matching failures (run-time match exceptions). Refinement types distinguish different values of datatyp
+  - ## Sparse Matrices and Operations in Python In this chapter, we will explore sparse matrices, a special type of matrix that has a majority of elements as zeros. We will also delve into various operations that can be perf
+  - Menjana versi yang lebih kompleks daripada ayat ini Dengan cara ini, program-program ini hanya memerlukan satu alamat memori permulaan untuk rentetan. Sudah tentu, versi yang lebih kompleks dari ayat ini adalah "Dalam ca
+  - Cyberdemon wrote:Modern rendering software will eat up 100% of the available cores. That's why your computer will suck at doing anything while you're rendering even if you have 64 gigs of ram. There's a lot of factors to
+
+=== C002
+CURRENT NAME: Industrial parts and materials supplier pages
+  - Держатель лопастей Xtreme металлический для Honey Bee на вал V2 Внимание! Внешний вид товара, комплектация и характеристики могут изменяться производителем без предварительных уведомлений. Данный интернет-сайт носит искл
+  - Somos a Audrey Fabricante das melhores e mais desejadas macas do Brasil, nossos produtos são produzidos de forma ecológica e sustentável, utilizamos energia solar, madeira tratada, ferragens selecionadas, insumos e mater
+  - Arctic Cooling, marchio svizzero specializzato nella produzione di sistemi di raffreddamento per pc, ha proposto tra i suoi ultimi modelli il dissipatore low-cost Alpine 64-Pro: sicuramente quello che contraddistingue ma
+  - StarTech.com is opgericht in 1985 en produceert meer dan 3000 producten op het gebied van elektronica. Als je niet zo goed weet wat je nodig hebt, kom je daar makkelijk achter dankzij StarTech.com. Als je eenmaal weet wa
+  - GGM Gastro là thương hiệu bếp từ gia dụng của Germany nên có rất nhiều tính năng vượt trội mà các loại bếp từ khác không thể có được như: + Bếp từ GGM được sở hữu công nghệ cũng như các linh kiện sản xuất ở Đức,Ý, Tây Ba
+  - Ein Staubsauger muss nicht immer teuer sein. Es reicht komplett aus, wenn ein Produkt leicht in seinem Gewicht ist, um die Reinigung zu Hause zu erleichtern. Es ist wichtig, dass vor dem Kauf ein Produkt genutzt wird, we
+  - ELEKTROPORCELANA Wypiekanie izolatorów ELEKTROPORCELANA to jeden z zakładów produkcyjnych RADPOL S.A., będący jednym z czołowych producentów porcelany elektrotechnicznej w Polsce. Zakład ELEKTROPORCELANA posiada silną po
+  - W swojej codziennej pracy zużywasz duże ilości smarów do serwisowania różnych maszyn i sprzętów? Doskonale wiesz, jak ważna jest dobra ochrona przed tarciem i jak istotne jest to, aby maszyny regularnie w ten sposób serw
+  - Wir bieten Ihnen präzise gearbeitete Schrauben und Muttern an, die für die verschiedensten Anwendungen genutzt werden können. In unserem Sortiment von Eisenwaren finden Sie die typischen Standardformen wie Vierkant-, Sec
+  - 中古ホイール 検索結果はこちら ホイールは、大きく分けてスチールホイールとアルミホイールの2種類が一般的です。 スチールホイール（鉄ホイール）の方が重いですがお安く、 アルミホイールは軽いが高いものが多いですが、 タイヤ・ホイールカンパニーでは両方とも激安特価でお取り扱いをしております。 ドレスアップに使用されるアルミホイールも 様々なデザインの物が取りそろえてあり、お客様のご希望に合うホイールがきっと見つかるはずです。 対応車種もプリ
+  - الاستخدام الثنائي أو منتجات الاستخدام الثنائي ، هي صفة تطلق على بعض المنتجات الصناعية التي يمكن في نفس الوقت أن تستعمل في ميادين مدنية أو في مجالات عسكرية. غالبا ما يكون تصدير منتجات الاستعمال الثنائي خاضعا لقوانين ورقاب
+  - Clique nas imagens para ampliar SAIBA QUAIS SÃO AS PRINCIPAIS VANTAGENS DO SERVIÇO DE CORTE E DOBRA DE AÇO Atualmente, é comum avistar o aumento de empresas e indústrias em diversas cidades. Uma das industriais que teve
+  - A Big C saját márkákat is fejleszt. Természetesen a mondat egy bonyolultabb változata: "A Big C saját exkluzív márkákat is fejleszt, ezeket a termékeket teljesen helyi gyártók állítják elő a Big C minőségi követelményei
+  - Vật liệu in 3D kim loại Máy in 3D kim loại hoạt động với nhiều loại bột kim loại có tính chất cơ học tốt như khả năng chống các yếu tố khác nhau và khả năng tương thích sinh học. Các vật liệu làm cho kim loại 3D in ấn mộ
+  - Đặc tính nổi trội của Bồn nước Inox Toàn Thành - Công nghệ hàn lăn tự động: Để đảm bảo độ bền đẹp của sản phẩm, - công nghệ hàn lăn điều khiển tự động bằng kỹ thuật số để ứng dụng cho sản phẩm bồn nước INOX có tuổi thọ r
+  - Датчики, защитные этикетки (наклейки) и деактиваторы для них могут быть очень похожи внешне, но отличаться "внутренней начинкой". Два абсолютно идентичных внешне датчика могут не определяться различными антикражными сист
+
+=== C003
+CURRENT NAME: Sensor and antenna frequency engineering
+  - 1. Introduction {#sec1-sensors-19-02471} Functional electrical stimulation (FES) is the application of electrical stimulation to assist functional movements such as standing \[[@B1-sensors-19-02471],[@B2-sensors-19-02471
+  - Many theories beyond the Standard Model contain hidden photons. A light hidden photon will generically couple to the Standard Model through a kinetic mixing term, giving a powerful avenue for detection using "Light-Shini
+  - Integrating nanoscale electromechanical transducers and nanophotonic devices potentially can enable new acousto-optic devices to reach unprecedented high frequencies and modulation efficiency. Here, we demonstrate acoust
+  - **6. Conclusion** In this chapter, we summarize our recent efforts in realizing reconfigurable FPC antenna basing on the reconfigurable MS. PIN diodes are added on the MS to realize the reflection phase control. Using th
+  - 1. Introduction {#sec1-sensors-19-01264} Efficient and low-cost sensors for the detection of chemical parameters in liquids are facing an ever-increasing demand in many different application fields, such as medical care
+  - We report on the detection of extreme giant pulses (GPs) from one of the oldest-known pulsars, the highly variable PSR B0950+08, with the Amsterdam-ASTRON Radio Transient Facility And Analysis Centre (AARTFAAC), a parall
+  - A fiber optic Fourier transform spectrometer capable of coherent interferogram averaging is constructed, for the first time to our knowledge. One fiber arm of the interferometer is periodically stretched, and the amplitu
+  - - Recherches sur des effets biologiques des rayonnements des antennes et du Wifi Tableaux de synthese des publi-effets biologiques (En 2008) sur le site de la F.N.E Les tomates sensibles aux rayonnements (Novembre 2011)
+  - Detailed Study of Four-wave Mixing in Raman DFB Fiber Lasers We both experimentally and numerically studied the ultracompact wavelength conversion by using the four-wave mixing (FWM) process in Raman distributed-feedback
+  - **3. Frequency measurement using digital signal processing** To remove the effect of common offset oscillator phase noise and improve the accuracy of measuring frequency, we proposed to make use of digital signal process
+  - الجهد المنخفض هو مصطلح نسبي، له عدة تعريفات تختلف على حسب الحالة، وتستخدم هذه التعاريف في مجال نقل الكهرباء وتوزيعها، وفي مجال صناعة الإلكترونات . وتعرف أكواد السلامة الكهربية مصطلح الجهد المنخفض على أنها الدوائر التي لا
+  - The rapid development of modern science and technology such as radar technology and modern electronic information industry has promoted increasing demand for high effective microwave absorbing (MA) materials. For example
+  - 1. Introduction {#sec1-sensors-19-02748} Monitoring volatile organic compounds (VOCs) plays an important role in many application fields such as environment monitoring, industrial safety, plant health, and human disease
+  - Optical fibres are used increasingly frequently in waveguides and in communications systems, generally, wherein light energy is transmitted through very long distances within optical fibres with little or no concomitant
+  - Bimorph material/structure designs for high sensitivity flexible surface acoustic wave temperature sensors A fundamental challenge for surface acoustic wave (SAW) temperature sensors is the detection of small temperature
+  - 1. Introduction {#sec1-sensors-18-02849} Localization of a source in wireless sensors networks (WSNs) has been commonly used in several real life applications, such as explorations (deep water, outer space, underground),
+
+=== C004
+CURRENT NAME: Tourism guide event listings
+  - Nashville is one of those places that you can feel the energy as soon you set foot within the city limits. The creativity, the talent, the passion…it’s contagious. Below are some of my favorite snaps from my trips to Mus
+  - Fresh Tracks has been organising team building in Reading for over 20 years. Fresh Tracks team building programmes offer a mix of indoor and outdoor activities and we would be happy to put together a tailored programme f
+  - In addition to our program of regular tours, we host special events – from concerts and art exhibitions through to sports competitions and community open days – that celebrate the natural and heritage values of our sites
+  - This website is not owned or operated by Bruce Springsteen, any venues, Columbia record labels, or other agencies and organizations discussed within it. It makes no attempt to claim association with Bruce Springsteen or
+  - La municipalité et les associations ont déjà mis en place, entre autres, le Festival des marionnettes, de bandes-dessinées, des soirées dansantes, les Nuits de la Citadelle, des spectacles, qui animent déjà la saison est
+  - To Each Its Own Bostonia leverages multiple platforms for outstanding results. By Tony Silber Online, you will find yourself in this 2,000-year-old village, riding shotgun as a Portuguese journalist steers his way past t
+  - As I look out my window and see that neighbourhood homes have been adorned with festive lights, I realise that Christmas is fast approaching and another year has suddenly flown by. It's time to reflect on the last 12 mon
+  - میامی کیا ہے؟ پچھلے سوال کو دیکھتے ہوئے ، ایک ایسا سیاق و سباق لکھیں جس میں جواب موجود ہو۔ یہ 1 - 20 جملے ہو سکتے ہیں. سیاق و سباق سیاحت بھی میامی میں ایک اہم صنعت ہے. فنانس اور کاروبار کے ساتھ ساتھ ، ساحل ، کنونشنز ، تہ
+  - We’re a small, humble design studio operating out of Auckland with big ideas and a savvy repertoire in the design and marketing field. We’re a savvy band of flat white fanatics with a crafty culture and an ample apprecia
+  - Las mejores atracciones en Sharjah A pesar de que Sharjah puede que no tenga el glamour de su vecina Dubái, la tercera ciudad más grande de los Emiratos Árabes Unidos ofrece una gran cantidad de atracciones para los visi
+  - Nella storica e suggestiva cornice della Certosa Cantù di Casteggio, in occasione del 400° anniversario della scomparsa di William Shakespeare, la rassegna Notturni Shakespeariani farà della città di Casteggio un luogo s
+  - Faszination Poker Bei uns erleben Sie Pokerspiel-Atmosphäre pur! Dazu gehören ein stimmungsvolles Ambiente und ein ausgewählter Kreis von Gleichgesinnten. Das bietet Ihnen der «Poker Circle» auf der Galerie im Grand Casi
+  - 36th Annual July Summer Solstice Craft Show The best of Traditional, Country and Contemporary arts and crafts featuring herbs & everlastings, jewelry, pottery, graphics, folk art, photography, stained glass and more. . .
+  - Popup Markets have been an explosive community staple in downtown Las Vegas. During the weekend of the annual International Beauty Show, Fergusons Downtown will host a popup beauty event for all convention goers and beau
+  - Philly superstar chef Michael Solomonov On the menu: Lachmagine The dinner’s a preview of sorts of the duo’s next cookbook Why “Philadelphia is frequently compared to other large East Coast cities and so we have a little
+  - Copenhagen Carnival is an annual carnival event taking place in Fælledparken and on the streets of Copenhagen, Denmark for three days (Friday-Sunday) during the Whitsun Holiday. Over the years it has developed into the l
+
+=== C005
+CURRENT NAME: Regional council administration and EU court judgments
+  - Le CAO travaille dans le monde entier au côté de groupes communautaires et d’organismes de la société civile afin d’aider à résoudre les sujets de préoccupation soulevés par des projets de l’IFC ou de la MIGA. Cette sect
+  - 1 Stand: Merkblatt über die Durchführung des Bundesfreiwilligendienstes Abschluss einer Vereinbarung Der Bund (Bundesamt für Familie und zivilgesellschaftliche Aufgaben) und die oder der Freiwillige schließen vor Beginn
+  - CONCLUSÕES DO ADVOGADO‐GERAL MANUEL CAMPOS SÁNCHEZ‐BORDONA apresentadas em 23 de janeiro de 2019 ( 1 ) Processo C‐697/17 Telecom Italia SpA contra Ministero dello Sviluppo Economico, Infrastrutture e telecomunicazioni
+  - Il Responsabile Dipartimento Sanità di Forza Italia Toscana Tullio Rizzini : “STOP al caos della Sanità, subito un Comitato Regionale per la riorganizzazione” Molte, troppo difficoltà a gestire con proprietà l’ indispens
+  - Javaslat az Egri Törvényszék, valamint az Egri Közigazgatási és Munkaügyi Bíróság ülnökeinek megválasztására - PDF Download "Javaslat az Egri Törvényszék, valamint az Egri Közigazgatási és Munkaügyi
+  - A Haditengerészet vezetői úgy tekintettek Radfordra, mint szakértőre, aki a haditengerészet érdekeit védte a költségvetési korlátozásoktól. Természetesen a mondat egy bonyolultabb változata: "Radfordra a haditengerészeti
+  - In the few instances I have been taken to the ER, no complaints. The gynocological portion of the OB-GYN department made a bumbling mess of my care. Inattentive, unorganized, horrible communication internally and with me
+  - SAFN? To ask the Scottish Government what action it is taking to improve the condition of the road network in the highlands and islands. Since 2007, the Scottish Government has spent, in excess of £336 million to maintai
+  - Για τη νομιμοποίηση των εκπροσώπων ομόρρυθμης – ετερόρρυθμης εταιρείας, απαιτείται να προσκομίζονται τα κατωτέρω δικαιολογητικά έγγραφα: 1.Επίσημο αντίγραφο της δημοσιευθείσας αρχικής εταιρικής σύμβασης και των δημοσιευθ
+  - TÜRK İDARE HUKUKU SİTESİ [www.idare.gen.tr] Tekin Akıllıoğlu,"Yönetim Hukukumuz ve Geleceği", www.idare.gen.tr/akillioglu-yonetim.htm (11 Ağustos 2004). YÖNETİM HUKUKUMUZ VE GELECEĞİ Tekin Akıllıoğlu 01. Öğretim kurumlar
+  - De Nederlandse Zorgautoriteit (NZa) en de Inspectie Gezondheidszorg en Jeugd (IGJ) zijn een onderzoek begonnen naar zorginstelling DeSeizoenen, waarvan onder anderen de bekende zorgondernemer Loek Winter aandeelhouder is
+  - Rechtsanwalt Carsten M. Herrle “Anwaltliche Geschäftsmodelle, die allein auf die massenhafte Abmahnung von Internetnutzern ausgerichtet sind, drängen den eigentliche Abmahnzweck, nämlich berechtigte Interessen unbürokrat
+  - Bezrobocie jawne – kategoria bezrobocia odnosząca się do osób niepracujących i gotowych do podjęcia pracy, a ujawniających swoją sytuację poprzez rejestrację w Urzędach pracy. Obejmuje wszystkich, którzy znajdują się w o
+  - Job Title: Practice Group Director – Public Benefits FLSA Classification: Exempt Reports To: Deputy Director of Litigation Supervises: Attorneys, Paralegals and Support Staff and as assigned DUTIES AND RESPONSIBILITIES:
+  - 5.5.2014 SK Úradný vestník Európskej únie C 135/21 Návrh na začatie prejudiciálneho konania, ktorý podal Tribunale regionale di giiustizia amministrativa di Trento (Taliansko) 7. februára 2014 – Orrizzonte Salu
+  - Ante las numerosas consultas que sobre Legislación nos hacéis desde distintos Cursos. Publicamos el Compendio del Ministerio de 2015, donde no sólo encontraréis Legislación estatal sino también autonómica en el ámbito de
+
+=== C006
+CURRENT NAME: Sentence-rewriting prompts about places and geographic facts
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun Bağlı uydular üç parçadan oluşur. Tabii ki, cümlenin daha karmaşık bir versiyonu "Bağlı uydular üç parçadan oluşur: taban - uydu; bağ; ve alt uydu. "
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun 1987'de planlar Orca Aircraft'a satıldı. Elbette, cümlenin daha karmaşık bir versiyonu " 1987'de, planlar Orca Aircraft'a satıldı, ama dünya ekonomisindeki bir çöküş, O
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun Diğerleri Kartaca'nın ablukasından kaçınmak için karaya yakın kalmış ve sadece geceleri yelken açmış olabileceğine inanıyordu. Tabii ki, cümlenin daha karmaşık bir vers
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun James Barnet tarzında inşa edilen son deniz feneri. Tabii ki, cümlenin daha karmaşık bir versiyonu "Bu, inşa edilecek son James Barnet tarzı feneridir ve Yeni Güney Gal
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun. Ancak, Merle'in kaçmak için elini kestiğini keşfederler. Tabii ki, cümlenin daha karmaşık bir versiyonu "Ancak, Merle'nin kaçmak için elini kestiğini ve bir grup yürüy
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun. St. Feriole Adası'nda büyük bir nehir ve bir park var. Tabii ki, cümlenin daha karmaşık bir versiyonu "St. Feriole Adası, adanın etrafında dolaşan bir bisiklet yoluna
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun Birkaç yıl sonra bölgenin doğal gaz kaynağı tükendi. Tabii ki, cümlenin daha karmaşık bir versiyonu "Birkaç yıl sonra bölgenin doğal gaz kaynağı yerel endüstriler taraf
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun 1960'larda, Kullorsuaq, Melville Körfezi'nin kuzey ucunda, kuzeybatıda, Savissivik'e daha fazla genişlemenin bir aşama noktasıydı. Tabii ki, cümlenin daha karmaşık bir
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun Kerry ilçesinin batı kıyısında bulunan Skellig Michael muhtemelen 7. yüzyılda kurulmuştur. Elbette, cümlenin daha karmaşık bir versiyonu "Keri ilçesinin batı kıyısında
+  - Powstała bardziej skomplikowana wersja tego zdania Hamulce były hydrauliczne z 9 cali (228 mm) bębnami na całej długości. Oczywiście bardziej skomplikowana wersja zdania brzmi: "Hamuje były hydrauliczne z 9 cali (228 mm)
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun Tarif kontrolü platform seviyesindedir ve herhangi bir açık crossunders veya crossovers içermez. Tabii ki, cümlenin daha karmaşık bir versiyonu "Hediye kontrolü platfor
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun Strand genellikle'' The Strand'' (Afrikaans:'' Die Strand'') olarak adlandırılır. Tabii ki, cümlenin daha karmaşık bir versiyonu "Strand'a genellikle kasabanın eski adı
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun. Monçada'nın ailesi onu bir manastıra kapatır. Tabii ki, cümlenin daha karmaşık bir versiyonu "Monçada'nın ailesi onu bir manastıra kapatır, burada koşulları dayanılmaz
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun Laguna de Castillo kasabanın güneybatısında yer almaktadır. Tabii ki, cümlenin daha karmaşık bir versiyonu "Laguna de Castillo şehrin güneybatısında yer alır, kuzeyinde
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun. Aline kardeşinin cesedini 94 kişinin arasında bulur. Elbette, cümlenin daha karmaşık bir versiyonu "Aline, kardeşi Giles'ın cesedini dokuz dört arasında bulur ve Giles
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun, geçici kedi gözleri, otoban tamir işlerinde sıklıkla kullanılır. Tabii ki, cümlenin daha karmaşık bir versiyonu, "Otoyol onarım çalışmaları sırasında sadece yansıtıcı
+
+=== C007
+CURRENT NAME: Dinosaur and fossil paleontology articles
+  - Bildiğimiz gibi 2008 yılında Malapa’da bulunan 12-13 yaşında bir kafatası fosiline Australopithecus Sediba ismi verildi. 2010–2013 arasında bu fosile ait altı ayrı makale Science dergisinde yayınlandı ve evrimciler arası
+  - The connection bolsters the prevailing theory that the sole route of human migration into North America took place over a Siberia-Alaska land bridge known as Beringia starting 15 000 to 20 000 years ago. NPR Science Corr
+  - Xeradipterus is an extinct genus of lungfish which existed in Australia during the Frasnian period. Of moderate size (), it is believed to be a primitive member of the family Holodontidae characterized by its powerful cr
+  - По-сложна версия на това изречение Измерването на популациите на дивите слепи змии е практически невъзможно поради тайната им природа. Разбира се, по-сложна версия на изречението е "Измерване на популациите на дивите сле
+  - Why are turtles classified as reptiles and not amphibians? I understand that turtles are reptiles because like all reptiles, they have scales on their body. But turtles (specifically sea turtles) live on both land and wa
+  - Cientistas encontram garra de escorpião pré-histórico gigante Pesquisadores europeus encontraram a garra fossilizada de um escorpião do mar de 2,5 metros de comprimento em uma pedreira, na Alemanha, segundo artigo public
+  - Il tienshanosauro (Tienshanosaurus chitaiensis) è un dinosauro erbivoro appartenente ai sauropodi. Visse all'inizio del Giurassico superiore (Oxfordiano, circa 160 milioni di anni fa) e i suoi resti fossili sono stati ri
+  - The Mock Dig Each year the Shreveport Geological Society participates in the Red River Revel by organizing the Mock Geological Dig, courtesy of Security Exploration. SGS members volunteer to introduce young people to the
+  - Unter dem Titel "Stages - Episoden des Lebens" geht es von diesem Freitag bis zum 27. Januar 2019 um Metamorphose, das Alter und Wachstum von Lebewesen sowie um lebende Fossilien. "Die Schimpansen sind dein nächster Verw
+  - ZOOPHYTES 473 an extent is this carried, that if an individual is cut into several pieces, each of them becomes a fresh Hydra. Powers of this kind are common among lower animals, and, as might be expected, are greatest w
+  - Learn about dinosaurs with online courses and programs Dinosaurs were a diverse group of reptiles that lived millions of years ago — some as tall as buildings and others as tiny as hummingbirds. Learn about dinosaurs wit
+  - Na arqueologia, fragmentos de ossos e outros restos de pessoas mortas há muito tempo são coisas comuns. Mas algumas descobertas são simplesmente terríveis. Essa lista, do Live Science, reúne 25 descobertas arqueológicas
+  - Adamantisaurus ( ) is a poorly-known genus of titanosaurian sauropod dinosaur from the Late Cretaceous of Brazil. It is only known from six tail vertebrae, but, as a sauropod, it can be assumed that this dinosaur was a v
+  - Come eye-to-eye with the giants of our prehistoric past Giant beasts roam the halls of Cincinnati Museum Center. From massive plant-eating sauropods to fierce two-legged predators, Dinosaur Hall features incredible, awe-
+  - Presbyornis is an extinct genus of anseriform bird. It contains two unequivocally accepted species; the well-known P. pervetus and the much lesser-known P. isoni. P. pervetus was approximately the size and shape of a goo
+  - The case files contain thousands of reported sightings, yet no actual specimen has ever been found. Hundreds of photographs exist, but the creature has not been identified. Still, the clues accumulate year after year. In
+
+=== C008
+CURRENT NAME: Clinical health research studies and patient outcomes
+  - Лечение ангины в домашних условиях проводится в тех ситуациях, когда заболевание протекает достаточно легко, и нет риска развития тяжелых осложнений. Госпитализируют при ангине в стационар только маленьких детей с высоко
+  - 人として何が良いのか 日常生活に限らず、医療化はさまざまな場面で進んでいます。 例えば、かつては親のしつけや教育の問題とされてきた「落ち着きのない子ども」、「子どもの成績不振」が、多動症、学習障害と呼ばれるようになってきました。また、生まれるときも、死ぬときも、かつては家族や地域がみていましたが、今はほとんどが医療現場でのことになっています。 ほかに、これまで周囲の期待通りに妊娠や出産をできなかった女性が、「本人が原因」であるかのように
+  - 이 문장의 좀 더 복잡한 버전을 생성하기 아일랜드는 1990년대 후반에 간호사 채용을 위해 필리핀을 목표로 삼기 시작했습니다. 물론, 이 문장의 더 복잡한 버전은 "아일랜드는 1990년대 후반에 간호사 채용을 위해 필리핀을 목표로 삼기 시작했다. 2006년까지, 3,831명의 필리핀 사람들이 아일랜드에서 간호사로 일했고, 그들을 외국인 간호사 중 가장 큰 그룹으로 만들었습니다. 인도인들보다
+  - Delivering exceptionally safe transitions of care to older people: a qualitative study of multidisciplinary staff perspectives Background Transitions of care are often risky, particularly for older people, and shorter ho
+  - Per a cada tren hi ha una estació Les cures pal·liatives són aquelles que se centren en l’atenció integral als pacients amb malalties el tractament curatiu de les quals no obté el resultat esperat. L’objectiu, per tant,
+  - Nutrition Counseling for Hypertension Patients in the Working Area of Puuwatu Health Center, Kendari City Hypertension is the factor that contributes the most to the incidence of cardiovascular disease. Hypertension need
+  - Dzięki postępowi medycyny duża grupa ludzi ma możliwość, by zrealizować swoje marzenie o posiadaniu dziecka. Postęp metod oraz wiele badań sprawiają, że diagnostyka niepłodności stała się szybsza i dokładniejsza. Badania
+  - Unter Vorsorgeprogramm versteht man die von der gesetzlichen Krankenversicherung (GKV) vorgesehenen Vorsorgeuntersuchungen zur Früherkennung von Krankheiten. Es werden Vorsorgeprogramme für Neugeborene und Kinder, Jugend
+  - Al pasar de los años, uno de los mayores temores con el que ha vivido el ser humano es sufrir de alguna enfermedad incurable. Hoy en día los avances médicos y tecnológicos han ido avanzando casi al mismo tiempo; para la
+  - We take around 22,000 breaths every day, but more than half of all Australians do not think about their lung health. November is Lung Health Awareness month, which is a good time for everybody to pause and think about th
+  - DATE: October 11, 2016 A state analysis of readmissions among all patients, not just those on Medicare, found that rates in Massachusetts barely budged between 2012 and 2014. That could be because providers are focusing
+  - Friday Five – 5 Benefits of Patient Virtual Monitoring Although evidence exists to support Virtual Monitoring as a cost-effective, patient safety measure, it is underutilized in acute care settings. Also referred to as “
+  - The impact of a hospital audit on psychiatrists' letters to general practitioners The quality of written communication between psychiatrists and general practitioners has become increasingly important, with the introduct
+  - For prospective population-based studies to be used for research into the determinants of dementia participants developing dementia (the "cases" in nested case-control or case-cohort studies) must be identified. One meth
+  - Hän suositteli tätä hoitoa - potilaille, joilla on vaikeita ja kroonisia psykologisia häiriöitä. Tietenkin, monimutkaisempi versio lauseesta on "Hän suositteli tätä hoitoa olisi idea asiakkaille, joilla on vaikeita ja kr
+  - 「動悸が止まらなくて苦しい、夜も眠れない」「病院に行っても原因が分からないし、気のせいですと言われてしまい悲しくなる」「婦人科に行くと更年期障害ではないかと言われるけど具体的に何が原因か分からない」 東京都府中市で医療機関に行っても原因が分からない動悸・息切れにお悩みの方。 動悸や息切れがひどくて医療機関に行っても、検査しても原因が分からず「気のせいではないですか？」と言われてしまうと余計に辛いですよね。 「とても苦しいのにそのことを分
+
+=== C009
+CURRENT NAME: Marketing for auto maintenance and repair technicians
+  - Unfall? Kratzer dran? Pech gehabt? Beule drin? Das Fahrzeug wird bei Ihnen abgeholt. Ein Ersatzfahrzeug für die Dauer der Reparatur wird Ihnen bereitgestellt. Wir erstellen einen aussagefähigen Kostenvoranschlag mit Bild
+  - Maintaining proper wheel alignment is crucial not just for the performance and safety of your vehicle but also for the longevity of your tyres. Unfortunately, our roads are currently plagued with potholes, and the uneven
+  - Blevins Auto Body Blevins Auto Body is located next to Blevins Motors at 6703 Route 56 in Potsdam. Since the early 1980’s Blevins Auto Body has been repairing vehicle ranging from minor to extensive damage. Our experienc
+  - De onderdelen van het onderstel van een auto zijn zeer divers en afhankelijk van het type auto. Het is belangrijk dat het onderstel van jouw auto of die van jouw klant in orde is. Het onderstel en de kwaliteit ervan make
+  - Our mobile mechanics offer services 7 days a week. Upfront and transparent pricing. Included for free with this service Mechanic comes to you 12-month / 12k-mile warranty Free 50 point safety inspection Our certified mob
+  - Mobile Oil Change and Maintenance Services Detailed Vehicle Checkup You want to drive a safe and reliable car, we want to help. Every LubeVan appointment includes a thorough check of over 20 vital components on your car
+  - Sên xe máy là phụ tùng không thể thiếu trên chiếc xe, là cầu nối trong hệ thống động cơ truyền lực đến bánh sau xe giúp xe di chuyển được. Tuổi thọ của hệ thống nhông sên dĩa phụ thuộc rất nhiều vào việc kiểm tra và bảo
+  - When you are looking for a tire for your passenger car light truck or SUV give us a call. We get deliveries every day to keep a stock of the best tires from Michelin® BFGoodrich® Uniroyal® Dumas Tire can also take care o
+  - De moraal van dit verhaal is: glans is niet altijd goed. Zeker niet wanneer het materiaal niet glanzend uit de fabriek is gekomen. Het loont altijd om je auto van binnen en van buiten schoon te houden maar als je het doe
+  - 3 Reasons to Never Skip Oil Changes There are many different services that vehicles require in order to remain in tip top shape. While many of these services, such as timing belt replacements and transmission services, o
+  - Specifications and Options ||Two Brothers Racing |Canister Material Type ||BikeBandit.com makes no representation or warranty with respect to on-highway use in California or any other state. Consult with the manufacturer
+  - The Toyota auto service specialists at the Walker Jones Toyota invite Toyota drivers near Douglas and Jesup, Georgia, to our service center for professional brake service and repair. Our talented team of Toyota Certified
+  - In het Sallandse dorp Wesepe, gelegen tussen Raalte en Deventer, staat het vooraanstaande car-restauratiebedrijf van Bas Jansen. De onderneming maakt deel uit van de Dutch Car Restorers Association en is lid van de BOVAG
+  - Bringing Classics Back to Life Bumper2Bumper Bodyshop Ltd specialises in automotive restoration, breathing new life into classic and vintage vehicles. Our skilled panel beaters can fabricate panels that are no longer ava
+  - Kierowcy bardzo często przyjeżdżają do warsztatu z problemem przekładni kierowniczej. Kłopoty z układem kierowniczym zazwyczaj zaczynają się od wycieków, stuków lub niewłaściwego działania wspomagania. Diagnoza często by
+  - L'autofficina Ford di Roma è un punto di riferimento per gli automobilisti della provincia, sia per quanto riguarda la manutenzione ordinaria dell'auto, sia per gli interventi straordinari e riparazioni meccaniche. Grazi
+
+=== C010
+CURRENT NAME: Priesthood and religious-order encyclopedia articles
+  - La commission pontificale pour l'Amérique latine est un dicastère de la curie romaine dont la mission est de fournir des conseils et de l'aide aux églises catholiques d'Amérique latine. Histoire et mission La commission
+  - Es precisamente en esta región india pegada a la que viera llegar a san Francisco Javier que está enterrado en la ciudad de Goa La víctima del ataque en Belagavi fue el padre Francis D’Souza párroco de la iglesia de San
+  - С тех пор Реджинальд был постоянным и близким спутником святого. Конечно, более сложная версия предложения: "С того времени Реджинальд был постоянным и близким спутником святого, и его свидетельство постоянно цитируется
+  - I have a prayer request. Mr. Alphonse Matt died on Sunday, 8 December. He was 88 years old. Al, whom I had known for many years and was was a fellow parishioner at St. Agnes in St. Paul, was the publisher of the Catholic
+  - Cutie is momenteel rector en pastoraal werkzaam in een parochie in Biscayne Park, Miami, Florida. Een meer complexe versie van de zin is natuurlijk: "Cutie dient momenteel als rector en is betrokken bij pastoraal werk in
+  - After twenty-five years in the same parish So the priest took it upon himself to fill the time At this point the politician arrived and apologized for being late “I’ll always remember when Father O’Shaunessey first came
+  - O nome Solange significa aquela que vive sozinha. Para esta menina francesa o senhor concedeu muitos dons, além de uma beleza impressionante e a disponibilidade para o trabalho. Não lhe faltaram pretendentes para o casam
+  - L' attitude de Henshaw face à la pénurie de prêtres était simple. Bien sûr, une version plus complexe de la phrase est "L'attitude de Henshaw face à la pénurie continue de prêtres était simple: priez et le Seigneur pourv
+  - El Obispado será a partir de ahora el encargado de organizar cualquier tipo de culto al patrón de los periodistas, festividad que se celebra cada 24 de enero. El patrón Francisco de Sales, más conocido como San Francisco
+  - Environ 1300 paroissiens dénoncent 14 pasteurs qui collectaient des fonds pour un hôpital qui n’a jamais été construit Les événements remontent à 2001, lorsque 14 «anciens» (le nom par lequel les Témoins de Jéhovah conna
+  - Generate a more complex version of this sentence In den 1590er Jahren erreichten spanische Franziskaner Missionare den Potano, zuerst mit Besuchen eines reisenden Missionars. Natürlich ist eine komplexere Version des Sat
+  - De heiligen Processus en Martinianus zijn christelijke martelaars. Zij zouden soldaten van keizer Nero geweest zijn, die Petrus en Paulus moesten bewaken in de Mamertijnse gevangenis. Petrus zou hen bekeerd hebben, nadat
+  - La chasuble est un vêtement sacerdotal / sportif à deux pans et sans manche avec une ouverture pour la tête, que le prêtre revêt par-dessus l'aube et l'étole pour célébrer la messe, ou d'autres actions liturgiques précéd
+  - IL--Springfield bishop pays predator priest's lawyer For immediate release: Monday, May 4 Springfield’s Catholic bishop is using church funds to pay the legal fees for a credibly accused and permanently removed predator
+  - Спиридон — св., епископ тримифунтский; родился на Кипре от родителей простого звания. По смерти жены. С. за святость жизни был избран во епископы города Тримифунта. С. присутствовал на первом вселенском соборе. Здесь, не
+  - Em 26 de Maio de 1945, aos 22 anos, foi ordenado sacerdote em Novara, Itália. É claro que uma versão mais complexa da sentença é "Em 26 de maio de 1945, aos 22 anos, ele foi ordenado sacerdote em Novara, Itália, seguido
+
+=== C011
+CURRENT NAME: Transcripts of casual YouTube vlogs with banter
+  - Old English. I pulled a trick on my brother saying I knew of this really good beer cheap beer when we were at the liquor store, and I first said O.E., he was confused. I hesitated on purpose then said "Olde English" and
+  - I lost my orange Teebird on hole 12. Turned it over in to the bushes. Has my #. Reward if someone happens to find it you hukin today? yeah just until two. I'm going to play and look for my disc. You have time to drive up
+  - Hi friends welcome back to my channel. It is Drew here from Lone Fox and where all of my one tree hill fans at I'm wearing my Clothes over bro shirt today and literally I'm obsessed with this shirt. It's a woman shirt. T
+  - A neurologist is trying to sue a Thai restaurant for apparently serving an appetizer that was so spicy it has actually permanently burned her throat and tongue. Ah! Yeah, this is going viral for a lot of different reason
+  - Welcome to our new beta design! Click here to go back to the old Newschoolers. it really shouldn't matter that much to you if it really gets bad just make your own playlist and play it when you watch the movie, thats wha
+  - Today for my afternoon nap, dad tucked me in bed with some celery and carrots and I watched The Three Little Pigs on my flatscreen. I know it’s old school from the 1930’s but I love Mr. Disney and his movies. This is lik
+  - So totally made plans to go to the movies yesterday..finally..and it turned into more than movies? I don’t know what happened. Somehow just hanging out turned into a damn date. Not that it was bad because it was a whole
+  - So I came across this post on Material World today, where the beauty/fashion/lifestyle website founder Deborah shared TEN (OMG, I applaud her bravery) of the crazy, silly things she did because of her crush. So I thought
+  - "I mean I hate the French, don't get me wrong. Just last week I posted a picture about an old bloke not being able to find any Frenchmen to show his passport to on D-Day." In between xenophobic and racist shares from the
+  - Bueno... esta historia no deja de tenerme en vilo y dejarme sin aliento!!!!!Cornelio se portó como lo que es,..un Sr. (aunque no se si tiene una "doble" intención).Veremos que hace mi tierno Funes.Guibu, simplemente grac
+  - |Apresentação no Pelourinho: eu amo a Bahia!| Qual o limite entre a brincadeira e o preconceito? Entre o humor e o desrespeito? Entre a "pegadinha" e a violência? Difícil responder num tempo em que é preciso chocar para
+  - Everybody feels like a Parrothead sometimes man, dig the Buffett. Reminds me its time to dig out the blender. Ups and downs man. Next thing you know, you're feeling like a cheeseburger in paradise. This album is so solid
+  - Will had a feeling it would go down like this. He'd have to go to Texas for Thanksgiving. "But Dad and Clare will be there. At least they'll be there." He told Bree he'd really hoped to be here for Thanksgiving. After al
+  - Ohhhh damn son. Challenge is on I guess. I don't remember them all but I'll start and people can add. I'll edit my other post where I just asked you the same question in the other thread <- Just made me noticed that some
+  - 55Get ready for some quick laughs with these one liner dad jokes! Perfect for when you need a quick chuckle, these jokes are short, sweet, and guaranteed to get a groan or a giggle. Let’s dive into the pun-filled world o
+  - Hãy cẩn thận khi nghe câu nói 'chó nhà tôi ngoan lắm, chẳng cắn ai bao giờ'! 702 Lượt xem 0 Yêu thích Chia sẻ Câu nói muôn thuở của những gia đình có chó khi có khách tới chơi nhà 'Chó nhà cô ngoan lắm, không cắn ai bao
+
+=== C012
+CURRENT NAME: Probability distribution and regression papers
+  - The fragmentation of thermalized sources is studied using a version of the Statistical Multifragmentation Model which employs state densities that take the pairing gap in the nuclear levels into account. Attention is foc
+  - *2.3. Methodology—Monte Carlo Simulation and Forming Expectations* To form expectations on the number of runs to expect in a sample, we rely on a Monte Carlo simulation. Consider the case of the DSEX that has 3119 return
+  - We investigate whether sophisticated volatility estimation improves the out-of-sample performance of mean-variance portfolio strategies relative to the naive 1/N strategy. The portfolio strategies rely solely upon second
+  - Plant breeders need more efficient models for performing genomic selection for multiple-traits and multiple-environments for count data. Count data are those dependent variables that take values 0, 1, 2,... without an ex
+  - Abnormal psychology: Assignment 1 – defining abnormality 1. Explain statistical infrequency as a means of defining abnormality Statistical infrequency is when something is a rare occurrence and as with abnormal behavior
+  - This paper investigates a purely qualitative version of Savage's theory for decision making under uncertainty. Until now, most representation theorems for preference over acts rely on a numerical representation of utilit
+  - Correlated random fields are a common way to model dependence struc- tures in high-dimensional data, especially for data collected in imaging. One important parameter characterizing the degree of dependence is the asymp-
+  - Nonparametric estimation of simplified vine copula models: comparison of methods In the last decade, simplified vine copula models have been an active area of research. They build a high dimensional probability density f
+  - The lack of extensive research in the application of inexpensive wireless sensor nodes for the early detection of wildfires motivated us to investigate the cost of such a network. As a first step, in this paper we presen
+  - Elliptically symmetric distributions are widely used in portfolio modeling, as well as in signal processing applications for modeling impulsive background noises. Of particular interest are algorithms for covariance esti
+  - Randomly censored survival data are frequently encountered in applied sciences including biomedical or reliability applications and clinical trial analyses. Testing the significance of statistical hypotheses is crucial i
+  - Goodness-of-fit tests for complete spatial randomness based on Minkowski functionals of binary images We propose a class of goodness-of-fit tests for complete spatial randomness (CSR). In contrast to standard tests, our
+  - This work studies properties of the conditional mean estimator in vector Poisson noise. The main emphasis is to study conditions on prior distributions that induce linearity of the conditional mean estimator. The paper c
+  - Sensitivity of annual runoff to interannual precipitation variations for forested catchments in Japan This study examined interannual variations in runoff from forested catchments in Japan, corresponding to interannual v
+  - Random Variable # Probability Distribution ## Probability Mass Function ## Probability Density Function
+  - Conformal predictive systems are a recent modification of conformal predictors that output, in regression problems, probability distributions for labels of test observations rather than set predictions. The extra informa
+
+=== C013
+CURRENT NAME: Barcelona and Messi Champions League coverage
+  - Seis personas han sido detenidas por la pelea entre ultras del Lyon y Barça La Guardia Urbana de Barcelona ha detenido este miércoles a seis personas, aficionadas del Olympique de Lyon (OL) y del FC Barcelona, que han re
+  - Barcelona je spremna za uzvratni ogled protiv Juventusa na Nou Campu. Gosti iz Torina dolaze s ogromnom prednosti od 3:0, ali u srcu Katalonije vjeruju u još jedan epski preokret. Nakon što su jučer Madridski klubovi odr
+  - Doble campeón olímpico y tres veces campeón del mundo de piragüismo Saúl Craviotto (3/11/1984) atendió a MD en la entrega de premios de ‘Historias Extraordinarias’ con el saber estar de todo un gentleman como es él Vario
+  - Španjolski trećeligaš Cornella, klub iz predgrađa Barcelone, otjerao je ponos Katalonije u produžetak utakmice šesnaestine finala Kupa kralja u kojem je Barcelona na kraju slavila s 2-0. Ousmane Dembele je postigao prvi
+  - A las 7:30 de esta mañana en España Lionel Messi llegó al predio de entrenamiento de Barcelona donde los médicos del club lo esperaban para analizar el estado de su pie derecho, el que por una inflamación que arrastraba
+  - پیشبازی آژاکس – یوونتوس؛ پسران غولکش برابر صخرههای تورین آژاکس در 45سال گذشته هیچ وقت نتوانسته مقابل یوونتوس پیروز باشد.... کافی است نگاهی به ۴ نبرد شاگردان تن هاگ برابر رئالمادرید و بایرنمونیخ دو رقیب بزرگشان در مراحل ح
+  - Le Real Madrid va débuter l'année 2018 sans Karim Benzema blessé à la cuisse après le Clasico perdu contre Barcelone (0-3). En Espagne certains observateurs ont été surpris par le timing de cette blessure Il m'en a parlé
+  - – ¿Cómo llega el Betis al duelo ante el Barcelona? -El equipo está bien, el triunfo ante el Celta nos dio alas. Rocio Higuera – ¿Fue duro caer en Europa y Copa? -La eliminación ante el Rennes fue un revés duro. Creo que
+  - FC Barcelona tickets Het is de droom van elke voetballiefhebber eens een wedstrijd van FC Barcelona mee te maken. Ik raad je aan om te controleren of er tijdens je verblijf in Barcelona een wedstrijd in Camp Nou gespeeld
+  - แบ็กขวาของสโมสรเรอัล มาดริด ทีมชื่อดังแห่งเวทีลา ลีกา สเปน อย่างดานี่ การ์บาฆาล ได้ออกมาบอกว่า เขานั้นเชื่อว่า ใบแดงของ เซร์คิโอ รามอส ปราการหลังของทีม เป็นจุดเปลี่ยน สำคัญ ในนัด เอล กลาซิโก ที่ทำให้ทีมราชันชุดขาว ต้องพ่
+  - COMENÇA EL COMPTE ENRERE Aquest diumenge el primer equip de futbol del FC Barcelona ha començat la temporada 2019/20. De moment compta amb tres nous fitxatges per reforçar la seva plantilla, el jove migcampista holandès
+  - Gruppe A i Mesterligaen (Champions League) 2006/2007 besto av , , og . Chelsea og Barcelona møttes for tredje sesong på rad, men for første gang i gruppespillet. Barcelona var tittelforsvarer etter å ha vunnet Champions
+  - José Campaña a déjà une carrière mouvementée à seulement 24 ans. Des débuts en fanfare, une blessure et une multitude de mauvais choix l’ont emmené à découvrir 4 pays et de revenir en Segunda pour rebondir. Il a offert l
+  - El Superclásico entre el FC Barcelona y el Real Madrid del sábado contará con un minuto de silencio por el accidente del avión que transportaba al Chapecoense brasileño y que costó la vida a 71 personas, así como el rest
+  - 在这场战斗中, 西班牙人失去了超过65%的士兵; 幸存者在卡贝洛城堡避难. 在这场战斗中,西班牙人失去了超过65%的士兵; 幸存者在波多卡贝洛城堡避难, 直到1823年被帕埃斯和他的士兵占领,
+  - - Мені необхідно грати, адже тренування і матчі - це абсолютно різні речі, - сказав Анрі. Француз дуже задоволений як робочою атмосферою, так і атмосферою в роздягальні: - Коли переходиш в новий клуб, ти завжди небагато
+
+=== C014
+CURRENT NAME: Blog interviews and site redesign posts
+  - I pay for different celebrities in Kenya and outside Kenya. So this is for the first time where people are doing things for me as well. So it's such a new feeling, a new beginning. Everything is just new about it. Now so
+  - Sabe aquela hora em que dizemos com orgulho "Eu estava lá!" Hoje foi um desses momentos. Só quem foi pra rua sabe qual é o sentimento. É muito bom! Obrigado a todos vocês que nos apoiaram, mesmo que de suas casas. É assi
+  - Hello. Hello. Hello and welcome to this talk to talk about the importance of learning from errors. My name is Rujeka Stays. I'm from Barcelona. I have 20 years of experience in IT. I started my career as a admin, later k
+  - Anyway, I'm from different part of the business of IBM, actually, not from the mix. I don't know which part of this doesn't need. I'm from collaboration. We're supposed to collaborate. So the things that I'm doing is the
+  - スタテクには様々なバックグラウンドを持ったメンバーがいます。 今回ご紹介するのは加藤翔子さん。 エンジニアとして活躍する一方、チームを率いるマネージャーとして日々奮闘してくれています。 プライベートでは大のアニメ好き。 - 名前：加藤 翔子さん - 2019年入社 - 開発部所属。 - 現在は１つのプロジェクトに携わりながらチームを率いるマネージャーとしてメンバーを牽引。 – スタートアップテクノロジーへ入社したきっかけを教えてください
+  - 結局、おしゃれかどうかは情報量で決まると思っています。おしゃれな人というのは、おしゃれに見せるための情報を持っていて、それを実践できている人なんですよね。だからおしゃれになるための最短ルートというのは・・・ きっとこのポッドキャストを聞いてくださっている方の中には女性も少なくないはずです。旦那さんのファッションをどうにかしたいと思っている奥さまに今回はメッセージをお届けしています。 僕はスタイリストという仕事の割にはあんまり服を持ってい
+  - Der Vertrag ist da, aber das Geld fehlt noch Im ehemaligen Kino City in Thun wird wohl bald wieder gebaut: Der Verein Anna & Max hat einen langfristigen Mietvertrag für das frühere Kino und das benachbarte Café erhalten.
+  - Zobacz więcej artykułów Dorn: premier jak dobry wojak Szwejk 31.01.2012 Wypowiedź Ludwika Dorna podczas konferencji prasowej Solidarnej Polski, 31 stycznia 2012 roku. Jarosław Haszek w "Przygodach dobrego wojaka Szwejka"
+  - Good. All right. Hello. Welcome. This is advanced tool features as used by OpenDev. My name is Clark Boylan. I'm an employee of the Open Infra Foundation, but I'm also a Zool maintainer and an OpenDev admin. Before we di
+  - That's good advice, Susan. The caveat I don't include in any of my articles that I probably should is "And by the way everything I'm showing you was done in a VM that has no other purpose than testing and does not house
+  - Now the people I happened to discuss this with were both ex tech VCs each currently working on their own online start ups and therefore reasonably sensible commentators on the space but I think they are missing the point
+  - Good morning. So I'm going to take you from the very declarative world of logic programming to the very stateful world of the debuggers. So as Stuart said, I have a lot of open source projects. I work full time on pallet
+  - - I'm reading one very good software testing blog. Today they wrote about testing and what's sane to test. Yes for many environments it's not sane to do complete testing and fully automated recovery - Had a Security Now
+  - Pierwsza myśl, kiedy na głos pada słowo “Estonia”? Yyyy… No, właśnie. Jakoś ciężko o konkretne skojarzenia. Mi także, oprócz Skype’a, długo nic nie przychodziło do głowy. No bo co tam w tej Estonii może być ciekawego? Pr
+  - By creating an account, you agree to our terms of service. let me help on the basic words of chines, just like How Are you? where you from? how old are you? nice to meet you I just know that hello is ni hao. well i know
+  - Welcome to Meanwhile…Comics! Through this website we hope to engage in meaningful conversations about superhero comics. Hopefully our discussions will provide the insight necessary to take the characters ideas and storyl
+
+=== C015
+CURRENT NAME: Marketing copy for hotel restaurants and fine dining
+  - Salt, el Beach Club. Salt - Dirección: - Passeig Mare Nostrum, 19-21. Barcelona El nuevo beach club del Hotel W se llama Salt. ¡Y lo que necesitaba Barcelona! Ya no sabemos si estamos en Miami Beach, en Malibú o en la Ci
+  - Katherine Mahoney creates bespoke ceramic tableware and objects for some of Australia’s most celebrated fine dining establishments, including Manta Restaurant & Bar, Woolloomooloo, Sydney; Muse Restaurant, Pokolbin, New
+  - Our restaurant has a selection of tasty modern fish and meat dishes. Enjoy our refined cuisine with a creative touch. We promise you an experience that is as uncommon as it is taste pleasing. At the bar, we offer you a s
+  - The Restaurant at Alaqua, truly provides a wonderful dining experience. The clubhouse dining room or the outdoor patio next to the 18th green provide two very special atmospheres that combine comfort and elegance. Chef M
+  - Ouverture d’un bowling restaurant Goudale à Cucq ! Ouverture d’un nouveau commerce sur la commune ! Une nouvelle enseigne vient compléter l’offre commerciale déjà présente sur l’Avenue François Godin, le restaurant La Go
+  - Das Beste aus Bayern und dem Allgäu erwartet Sie in der modernen König Ludwig Lounge. Genießen Sie hier Allgäuer Spezialitäten von Käsespätzle bis Kaiserschmarrn oder lassen Sie den Tag mit einem frisch gezapften König L
+  - For those that are old-timers around the Sugarland Town Center area you may remember Loggia (Club/Sports Bar). BLU now occupies that space but has undergone a sexy remodel. Additionally they have brought on Executive Che
+  - Bar Le petit déjeuner est servi tous les jours de 7h30 à 10h30 dans notre salle à fleur d’eau en buffet à volonté. Il est également disponible en chambre aux mêmes horaires et sans supplément. Le bar est ouvert de 7h30 à
+  - Lameizi Steamboat 辣妹子is a steamboat restaurant located at Jalan Nagore and Krystal Point, what make them so special is the huge variety of soup base provided. We visit the one located at Jalan Nagore which has been in op
+  - For RV parking there are about 40 curb/island spaces each with electric available. The electric is $10 for 24 hours. Electric posts are locked and keys available from security. You are invited to park in the same spaces
+  - HISTORIC HOME WITH INCREDIBLE VIEWS In the morning drink your coffee on the wrap-around porch while you watch the sun rise. In the evening sip a glass of wine on your front patio, a bluff rising above the Pacific Ocean w
+  - Seibu Prince Hotels and Resorts’ Southern Highlands property Park Proxi Gibraltar Bowral has introduced a new dining experience in partnership with Lotus Dining Group. The recently opened Lotus Bowral offers Chinese cuis
+  - Im ersten Stock des Hotel Waldorf, mit Blick direkt auf den Strand und einer Glasfront, die geöffnet werden kann um eine Meerbrise hineinzulassen, ist der perfekte Ort um gut in den Tag zu starten. Ein reichhaltiges Buff
+  - 目次 香りに包まれながら、こだわりの店内でゆっくり時間を過ごすことができる。温かさ広がる街のイタリアンレストラン「TALBOT」 桜山駅から少し歩くと、まるでアンティーク雑貨のお店かと思ってしまうほど、おしゃれな洋館が現れます。こちらが今回ご紹介する「TALBOT」さん。 旬の素材を生かしたパスタや自家製デザートが美味しく、ほっこりとした雰囲気を感じられるお店です。 大人の雰囲気と遊び心がある店内 香りに誘われアンティーク調のドアを開け
+  - Organ and Dragon pub og restaurant åbnede i 1780'erne som Organ Inn og var drikkepladsen for arbejderne, der monterede Fader Willis orgel i St. Marys kirke i Ewell. En mere kompliceret version af sætningen er selvfølgeli
+  - The latest in a long line of BIG Group outlets has opened at the refurbished Jalan Batai/Plaza Batai address in Damansara. For those who’ve been around a long time, you’ll remember it’s the site where the famous Hock Lee
+
+=== C016
+CURRENT NAME: Mineral, insect and microorganism description stubs
+  - |Heart of Avalonia| Planes of Weakness: Tectonic Compression The effects of cleavage in phyllosilicate-rich alluvial sedimentary rock are demonstrated in this eroded sample (~50 cm width shown). The cleavage was induced
+  - გამტარი ქსოვილი — მცენარეთა ქსოვილის სახე, რომელიც მცენარეში ძლიერ დატოტვილ, ერთიან გამტარ სისტემას ქმნის. გამტარი ქსოვილი ორგვარია: ჭურჭლები — რომელშიც მოძრაობს წყალი და მასში გახსნილი მინერალური მარილები და საცრისებური
+  - Los sólidos arquimedianos o sólidos de Arquímedes son un grupo de 13 poliedros convexos cuyas caras son polígonos regulares de dos o más tipos. Todos los sólidos de Arquímedes son de vértices uniformes. La mayoría de ell
+  - Řeka Morava vtéká do Hornomoravského úvalu pod Třesínským prahem u Mladče (záp. od Litovle). Její povodí se rozkládá z části v prostoru Hrubého Jeseníku tvořeného horninami devonu a krystalinika které jsou zdrojem odolné
+  - Générez une version plus complexe de cette phrase Le corps de Lam était modérément décomposé gonflé. Bien sûr, une version plus complexe de la phrase est "Le corps de Lam était modérément décomposé, gonflé et surtout ver
+  - Lėliukė – vabzdžių pilno vystymosi (metamorfozė) viena iš stadijų, esanti tarp lervos (vikšro) ir suaugėlio (imago). Šioje stadijoje vyksta lervinio organizmo persitvarkymas ir suaugusio sparnuoto vabzdžio sus
+  - Произведения Теория плоских кривых Введение в геометрическую теорию плоских кривых (, опубл. в 1862) О некоторых вопросах теории плоских кривых, 1864 Преобразования Кремоны О геометрических преобразованиях плоских фигур
+  - MELLO: MICROSCOPICAL STRUCTURE OF ROCKS. Diallage, when crystallised, coiTesponds with augite, but it is more often found in gTanular aggTegatious, and filling up or bordering cavities in the matrix : its colour is green
+  - A mély keratitis a szaruhártya mélyebb rétegeit érinti. Természetesen a mondat egy bonyolultabb változata a következő: "A mély keratitisz a szaruhártya mélyebb rétegeit érinti, gyógyulása után heget hagyva, ami a látást
+  - منطقة بيتا هي منطقة في كوكب الزهرة تمتد لنحو حوالي 3000 كم، وتشكل منطقة من المرتفعات البارزة متمركزة في 25.3 درجة شمالا 282.8 درجة شرقا.وقد اكتشفها وسماها ديك غولدشتاين في عام 19641964.وتمت الموافقة على الاسم من قبل الفر
+  - Епитрахил Епитрахил (от гр. „епи” – върху, около и „трахилос” - врат) е одежда която се качва на врата и се спуска по гърдите надолу. Тази одежда е предимно свещеническа, защото без нея свещеника не може да извършва ника
+  - Motivated by recent progresses in the holographic descriptions of the Kerr and Reissner-Nordstr{\o}m (RN) black holes, we explore the hidden conformal symmetry of nonextremal uplifted 5D RN black hole by studying the nea
+  - Суперъяйцо́ — в геометрии тело вращения, полученное путём вращения суперэллипса с показателем степени больше 2 вокруг его длинной оси. Является частным случаем суперэллипсоида. В отличие от вытянутого сфероида, суперъяйц
+  - 이 문장의 더 복잡한 버전을 생성합니다 기하학에서, 오스란트는 평면의 사각지대 또는 3차원의 오스란트의'n'- 차원 유클리드 공간의 아날로그입니다. 물론, 문장의 더 복잡한 버전은 "기하학에서, 닫힌 오르탄트는 'n' 차원 유클리드 공간의 2'n' 부분 집합 중 하나이며, 각 카르테스 좌표 축을 부정적이지 않거나 긍정적이지 않도록 제한하여 정의됩니다".
+  - Stenocantarus er en slekt av billene i delgruppen (underfamilien) jordløpere (Carabinae) i familiegruppen løpebiller. Ingen arter er registret fra Norge. Kroppen har form som kan minne om en pæreform. Brystskjoldet har e
+  - Wygeneruj bardziej złożoną wersję tego zdania Snood to krótka długość linii, przymocowana do głównej linii za pomocą klementu lub obrotowego, z hakiem na drugim końcu. Oczywiście bardziej skomplikowana wersja zdania brzm
+
+=== C017
+CURRENT NAME: News articles about stock market index movements
+  - به گزارش اتاق خبر، به نقل از ایسنا، امروز یکشنبه بورس تهران بار دیگر شاهد کانالشکنی شاخص کل بازده نقدی و قیمتی بود به طوری که این شاخص بار دیگر با رشد ۹۹۴ واحد توانست از سقف کانال ۹۴ هزار واحدی را بشکند و از نیمه تراز ۹۵
+  - Shares of Glu Mobile Inc. (NASDAQ:GLUU) were up 11.2% as of 3:15 p.m. EST Monday after a positive analyst note. More specifically, Roth Capital analyst Darren Aftahi maintained his "buy" rating on the free-to-play games
+  - 3 Stocks Approaching Greatness For every stock out there screaming, "buy me," others simply give us a nudge and a nod. While all the attention might be focused on their five-star peers, we can sift through Motley Fool CA
+  - MADRID (MarketWatch) — U.S. stock-market futures surrendered big gains Wednesday morning after a European Central Bank funding operation for the region’s banks showed a higher level of lending than expected. Shares of Or
+  - NEW YORK (awp international) - Nach einem schwachen Wochenbeginn haben die wichtigsten US-Aktienindizes am Mittwoch deutlich zugelegt. Ein Börsianer erklärte den massiven Kaufdruck kurz nach Handelseröffnung mit einer er
+  - Wall Street rebounded from an early loss Friday to send the Dow Jones industrials to their second straight record close as investors embraced robust economic data and shrugged off several profit warnings. NEW YORK (AP) —
+  - In New York konnte sich die Aktienindizes zum Wochenbeginn wieder etwas vom Einbruch am vergangenen Freitag erholen. Gefragt waren vor allem die zuvor abverkauften Technologieaktien. Der Dow Jones Industrial beendete den
+  - Shipping stocks take another hit, crashing double digits Monday was a tough day on Wall Street, but particularly painful for owners of shipping stocks, which fell far more sharply than the broader market. Concerns about
+  - Morning Market Losers Westmoreland Coal Company (NASDAQ: WLBPZ) shares moved down 39.03% to $18.20 at 9:55 am. WLBPZ's 52-week trading range is $18.20-$31.75. Valley National Bancorp (NASDAQ: VLYWW) shares dropped 17.18%
+  - BOURSE-Casino grimpe, Central Group s'intéresse à BigC Vietnam PARIS, 2 mars (Reuters) - Casino signe la plus forte hausse du SBF 120 mercredi après-midi alors que le groupe thaïlandais Central Group a affirmé qu'il envi
+  - Jaxon Minerals Inc.: Übernahme - Bis zu 22,7 g/t Gold, 3.398g/t Silber und 22,29% Zink - 362% mit dieser Gold-Aktie - Strong Outperformer Jaxon Minerals Inc. (ISIN: CA47189K1093, WKN: A1W4RR, Ticker: 0U3, TSXV: JAX) freu
+  - I pay as much attention to anecdotal evidence from the actions of market actors as I do to the actual price action on a daily basis! Well heres another new all time high for you, The NYSE margin debt figures were release
+  - PhillipCapital Menkul Değerler Araştırma Bölümünün hazırladığı BİST&VİOP Günlük Bülteni aşağıda yer almaktadır: BIST100 Teknik Yorum Dün Bist100 endeksi % 1,92 düşüle 94,008 puandan kapanış yaptı. Seçim sonrası belirsizl
+  - Nkarta, a biopharmaceutical company based in South San Francisco, has seen a surge in its stock price following news that the U.S. Food and Drug Administration has approved its investigational new drug application for NK
+  - Growing season for fertilizer stocks The sector will soon enter a period of seasonal strength, and two stocks in particular look like attractive buys on any upcoming pullbacks. By Tom Aspray, MoneyShow.com Despite the st
+  - Q: I’ve noticed that many of the stocks recommended in the Motley Fool’s “Rule Breakers” newsletter can be volatile. I’m thinking of buying some, selling them after they go up four or five points, and then buying again a
+
+=== C018
+CURRENT NAME: Sentence-rewriting prompts about rulers and geographic locations
+  - この文のより複雑なバージョンを生成する ウォーリ絵画はインド北サハヤドリ山脈の アディバシ族によって主に作られた 部族芸術のスタイルです もちろん,より複雑なバージョンの文は"ウォーリー絵画は,主にインドの北サハヤドリ山脈のアディバシによって,パルガー地区のダハヌ,タラサリ,ジャワール,パルガー,モハダ,ヴィクラムガッドなどの都市で作られた部族芸術のスタイルです. "
+  - この文のより複雑なバージョンを生成する 2004年までに,カヴァリエ・スミスはアルベオラトを インフラドームに昇格させ,新たに昇格したアルベオラトの中に新しい属であるミオゾアを創設した. もちろん,より複雑な文は"2004年までに,カヴァリア・スミスは,アルベオラトの内部で,新しい属であるミオゾアを創り,ディノゾアとアピコンプレクサをサブフィラに下級し,新しく作成されたミオゾアに割り当てました. "
+  - Λόγω της εγγύτητας της Άγκρα και ως εκ τούτου των συνόρων του Ούταρ Πραντές με το Ρατζαστάν, οι πολιτείες του Μάντια Πραντές εξυπηρετούν επίσης αρκετές διακρατικές υπηρεσίες λεωφορείων στην πόλη. Βέβαια, μια πιο σύνθετη
+  - Nakon konačnog osvajanja Bavarske (788.) franačka država je došla u izravan dodir s Avarima, dotadašnjim bavarskim saveznicima. Sukobe s Avarima, Franci započinju još 791. godine kada sin Pipina Malog, Karlo Velik
+  - Bassiana. 1) Ortschaft in Pannonia superior an der Strasse von Savaria nach Arrabo und Brigetio, XVIII m. p. Savaria, Itin. Ant. p. 262; der Lage nach das heutige Szombat-hely am Mittellauf der Raab hinter der Einmündung
+  - 这句话的更复杂的版本生成阿尔文德克里希纳,出生在海德拉巴德是Smt的儿子. 这句话的更复杂版本是"阿尔文德·克里希纳,出生于海德拉巴德, 是家庭主妇拉克什米·查瓦利和官僚C.
+  - ヴァスデヴァ1世 (クシャーン語: Βαζοδηο "Bazodeo", 中国語: 波 調 "Bodiao") は"偉大なるクシャーン"の最後でした. カニシュカの時代の64年から98年までの名前の碑文は,彼の統治が少なくとも公元191年から225年まで続いたことを示唆している. 彼は最後の偉大なクシャーン皇帝であり,彼の支配の終わりは,西北インドまでササニアの侵略と一致し,現在のアフガニスタン,パキスタンと西北インドのインド-ササニア
+  - この文のより複雑なバージョンを生成します ニジェールは約1,270,000平方キロメートルの土地をカバーし,西アフリカの最大の国です. もちろん,より複雑な文は"ニジェールは約1,270,000km2の土地をカバーし,西アフリカ最大の国であり,その土地の80%以上がサハラ砂漠で覆われています".
+  - この文のより複雑なバージョンを生成します ヴィシュヌ・ナラヤン・バトカンデは 1860年 ジャンマシュタミの日に生まれました もちろん,より複雑なバージョンの文は"ヴィシュヌ・ナライアン・バトカンデは1860年に,ムンバイのヴァルケシュワールのマラティの家族に生まれました".
+  - アッシュル・ラビ2世（Aššur-rabi II、maš-šur-GAL-bi、「（神）アッシュルは偉大なり」）はアッシリアの王。前1013年から前972年にかけて在位した。長期（41年間）にわたって王位にあり、最も長い在位期間を持つアッシリア君主の1人であるにもかかわらず、詳細はよくわかっていない。 来歴 彼はアッシリア王アッシュル・ナツィルパル1世の年少の息子であった。甥のアッシュル・ニラリ4世の6年間という短い統治期間を経て王とな
+  - この文の複合版を生成します. そのうちの1人はララ (アキコ・ソロン) です. もちろん,より複雑な文は"その中の1人,ララ (アキコ・ソロン) は,マサントルの女の子で,彼に恋してる"です.
+  - この文のより複雑なバージョンを生成する インド,東アジア,中東の商人は,カプール・バルスという言葉を, カンフーラの木の乾燥した抽出液を, 地域のバタク族から購入するために使います. カンフーラの木自体は, この地域で生息しています. もちろん,より複雑な文は"インド,東アジア,中東の商人は"カプールバルス"という用語を使用して, 地方のバタク部族からカンフアの木の乾燥した抽出液を購入しました. プロト・マレー・オストロネシア語では,そ
+  - 这句话的更复杂的版本 萨沙帮助重定向一群巨大的步行者 威胁要与达里尔和亚伯拉罕占领亚历山大 当然,更复杂的句子是"萨沙帮助重定向一群巨大的步行者,他们威胁要带着达里尔和亚伯拉罕占领亚历山大,并发现山顶殖民地,但被卷入与另一个被称为救世主的团体的冲突,由神秘的尼甘 (杰弗里·迪恩) 摩根领导. "
+  - 肯尼思·麦克亚尔宾（中世纪盖尔语：Cináed mac Ailpín；现代盖尔语：；现代皮克特人国王列表多称其为皮克特人的肯尼思三世；800年后）是公元9世纪欧洲苏格兰地区皮克特人的国王，綽號為"征服者"。苏格兰传统上将他视作苏格兰王国的开国君主，现代常称其为苏格兰的肯尼思一世。由于他父亲名为亚尔宾（Ailpín），这个王朝也被称为亚尔宾王朝。 成就 传说在大约公元843年，肯尼思确立了统治地位，收服了附近地区的皮克特人，并多次征讨周围
+  - இந்த வாக்கியத்தின் ஒரு சிக்கலான பதிப்பை உருவாக்குங்கள்''எளிதாக'' என்பது கத்ரீனா எலாம் மற்றும் மைக் மொப்லி ஆகியோரால் எழுதப்பட்ட ஒரு பாடலின் தலைப்பாகும். நிச்சயமாக, இந்த வாக்கியத்தின் மிகவும் சிக்கலான பதிப்பு "'எளிதாக' என்
+  - ゴンドファルネス（GondopharnesまたはGondophares, ペルシア語形はヴィンダファルナ（Vindafarna 栄光ある勝利者）か?、在位：20年頃?）は、インド・パルティア王国の建設者とされている王。キリスト教の伝説において聖トマスの伝道に登場するインドの王として有名である。 来歴 彼はパルティアの大貴族で王族にも連なったの出身であった。パルティア王ミトラダテス2世の治世末期より混乱が続いていたパルティアにおいて、スー
+
+=== C019
+CURRENT NAME: Sentence-rewriting prompts about film genres and formats
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun Katedral, ilk, ikinci ve altıncı Harry Potter filmlerinin çekim yeri olarak kullanılmıştır. Tabii ki, cümlenin daha karmaşık bir versiyonu "Katedral 2000'den beri ilk,
+  - V roce 1955 došlo k vážnému požáru. Samozřejmě složitější verze věty zní: "V roce 1955 došlo k vážnému požáru, po kterém bylo kino zrekonstruováno a instalován široký displej CinemaScope, zatímco kapacita míst k sezení b
+  - Kuzalisha toleo ngumu zaidi ya sentensi hii Mkurugenzi wake wa kwanza kama mkurugenzi alikuwa katika filamu ya 1994'' Death Machine '. Bila shaka, toleo ngumu zaidi la sentensi ni "Debut yake kama mkurugenzi ilikuwa kati
+  - Inizialmente un cinema a schermo singolo, l' auditorium fu suddiviso nel 1982 per creare due auditorium aggiuntivi. Naturalmente, una versione più complessa della frase è "Originariamente un cinema a schermo singolo, l'a
+  - Lee első hosszú távú filmje volt, kis költségvetéssel készült. Természetesen a mondat egy bonyolultabb változata: "Kis költségvetéssel készült, ez volt Lee első hosszútávú filmje, és az év egyik legjobb filmjeként elnyer
+  - Σύμφωνα με τον Τόμσον, ο Λι έφτασε στο πλατό με όλη την ταινία στο κεφάλι του. Βέβαια, μια πιο περίπλοκη εκδοχή της πρότασης είναι "Σύμφωνα με τον Τόμσον, ο Λι έφτασε στο πλατό με όλη την ταινία στο κεφάλι του και το κασ
+  - The film we deserve, not the sequel we wanted: on ‘Goyo’ as essentially a romance, and how the historical film works against expectations. After the surprising success of Heneral Luna, that historical achievement of a fi
+  - Counterfeit is a 1919 American silent detective drama film directed by George Fitzmaurice and starring Elsie Ferguson. The assistant director was C. Van Arsdale. The picture was the fourth film Fitzmaurice and Ferguson w
+  - List a few reasons why the movie "Mad Max: Fury Road" is considered one of the best action movies of the decade.
+  - 1937-ben a'Mutiny on the Bounty'társszerzőjével, Movitával együtt szerepelt a'The Hurricane'-ben. Természetesen a mondat egy bonyolultabb változata az, hogy "1937-ben a 'Mutiny on the Bounty' társszereplőjével, Movitával
+  - Den här filmen släpptes ursprungligen för utländska länder 2001. En mer komplicerad version av meningen är "Den här filmen, som ursprungligen släpptes för utländska länder 2001, släpptes inte i USA förrän den 2 maj 2006
+  - Filmen tog in över 750 miljoner dollar världen över och visades i mer än 150 dagar i biograferna. En mer komplicerad version av meningen är naturligtvis "Filmen tjänade över 750 miljoner dollar världen över och förblev d
+  - Nollywood, the Nigerian film industry, one of the fastest growing movie industries in the world recently premiered a new movie series titled "Far From Home". Far From Home is a movie series that tells the story of a youn
+  - Generate a more complex version of this sentence Pada tahun 2013, Nani menghasilkan filem pertamanya'D for Dopidi '. Sudah tentu, versi yang lebih kompleks dari ayat ini adalah "Pada tahun 2013, Nani menghasilkan filem p
+  - Alguns atores de fundo são necessários no set apenas por um dia ou dois. Claro, uma versão mais complexa da frase é "Alguns atores de fundo são necessários no set apenas por um dia ou dois, enquanto outros podem permanec
+  - One of the most-awaited films of 2017 is Jagga Jasoos which stars Ranbir Kapoor and Katrina Kaif, After much delay, the motion picture has at long last got a release date and we couldn’t be more joyful. We’ve just observ
+
+=== C020
+CURRENT NAME: Classical and biblical verse translations
+  - <div style='text-align:justify'> Yacen de un home en esta piedra dura El cuerpo yermo y las cenizas frías: Médico fue, cuchillo de natura, Causa de todas las riquezas mías. Y ahora cierro en honda sepultura Los miembros
+  - The Tell-Tale Heart, written by Edgar Allen Poe, narrated by Darren Marlar. True. Nervous. Very, very dreadfully nervous I had been and am, but why will you say that I am mad? The disease had sharpened my senses, not des
+  - یه روزی میرسه که تمام تو رو از زندگیم پاک میکنم، یه روزی که اصلا شبیه این تنگِ بی رحم غروب نیست یه روزی میرسه که تمام تو رو از زندگیم پاک میکنم، یه روزی که اصلا شبیه این تنگِ بی رحم غروب نیست غم انگیزْ آن لحظه ای که زنی
+  - Fiz um texto para um amigo que não está num momento legal... Espero que com esse texto faça com que ele e pessoas que passam pelo que ele tem passado consigam ter e ver uma luz no fim do túnel! Obrigado pelos acessos e b
+  - Drive est un hymne à la route, à l’évasion et à la liberté. Liberté de dire. De vivre. D’aimer. De traverser la vie comme les Beatniks traversaient les États-Unis, dans l’urgence de l’instant. Ce courage d’être soi, Hett
+  - C'est nous qui brisons les barreaux des prisons, pour nos frères, La haine à nos trousses, et la faim qui nous pousse, la misère. Il y a des pays où les gens aux creux des lits font des rêves, Ici, nous, vois-tu, nous on
+  - (Tomorrow: The Dead of the Night) John Marsden Tłumaczenie: Anna Gralak Wydanie: pierwsze ISBN: 978-83-240-1638-9 Rok wydania: 2011 Ilość stron: 272 Wydawnictwo: Znak literanova Cena detaliczna: 31,90 zł Wyobraź sobie że
+  - Friedliche Wohnung. Friedliche Wohnung Giebst du den Sterblichen, Freundlicher Kirchhof, Sanft nach der Leidensnacht; Irdischen Qualen Wehest du Kühlung, Spendest dem Kranken Himmlischen Frieden. Führ’st den Entschlafnen
+  - Martyrs, Livre 1 de Olivier Peru Il prit alors conscience que c'était cela, aimer. Connaître le bonheur et son prix, savoir ce que l'on perd et regretter de n'avoir pu le garder. Il comprenait maintenant certaines rimes
+  - Ó Terra do Meu Brasil Amado. Ó chão deste Rio Grande do Sul. Abrigo de muitos imigrantes. És tu ó meu Cândido Godói. Todos juntos lutaremos, Para sermos da Pátria o porvir Todos juntos lutaremos Para sermos da pátria o p
+  - Kuzalisha toleo ngumu zaidi ya sentensi hii Yeye ni kushindwa katika vita ya Watling Street. Bila shaka, toleo ngumu zaidi ya hukumu ni "Yeye ni kushindwa katika vita ya Watling Street alikufa kwa sumu mwenyewe hivyo yey
+  - O Tao gera o Um; O Um gera o Dois; O Dois gera o Três; O Três gera as dez-mil-coisas. As dez-mil-coisas tem atrás de si escuridão; A sua frente elas abraçam a luz; E o vazio lhes dá a harmonia. O que os homens mais detes
+  - И все-таки делать вид, что я был совсем уж невинен и не представлял себе, какой опасности подвергаюсь, было бы лицемерием. В основном я это понимал; так же как понимал, что, если не хватает сил покер старс для виндовс 10
+  - Is the Book of Revelation the only place in Scripture teaching eternal torment? Revelation 20:10 depicts hell in the following manner (NKJV, emphasis mine): The devil, who deceived them, was cast into the lake of fire an
+  - Dónde la muerte calla y huye. Dónde el mundo deja de ser mundo para ser ella. Dónde el río de sentimientos continua y fluye. Dónde el viento separa los tiempos del ayer y del hoy. Hay algo oculto en cada una de las palab
+  - 2Gebt uns Raum in euren Herzen! Wir haben niemand Unrecht getan wir haben niemand verletzt wir haben niemand übervorteilt. 3Nicht sage ich das um euch zu verurteilen; denn ich habe schon zuvor gesagt dass ihr in unserm H
+
+=== C021
+CURRENT NAME: Articles about comic books and graphic novels
+  - Little Sammy Sneeze (que podría traducirse como El pequeño Sammy estornuda) es una tira de prensa de Winsor McCay, que se publicó en el periódico estadounidense New York Herald, entre el 26 de julio de 1904 y el 9 de dic
+  - Making It: The Wigs of Bridgerton Shows and movies have the power to temporarily transport us into new worlds. Currently, my ideal place to be teleported to is the world of Bridgerton. The characters from the show have s
+  - You're a cartoonist, but you make comics. You're a comicker, but you make cartoons. Wait -- animators make cartoons. Toothpaste for Dinner is a comic, but there are cartoons like it in the New Yorker. Leonardo DaVinci ma
+  - Official Press Release The most famous modern comic book writer in the world, Alan Moore, is leading a research and development project to create an app enabling digital comics to be made by anyone. Already known for rev
+  - originality and imagination Areas Where Bijou Phillips is Creative, Unique, Unstable, or Compulsive She is uninhibited and has an outrageous, crazy sense of humor. Bijou Phillips loves to get loose and she is often impul
+  - This May, Vertigo will publish STRANGE ADVENTURES #1, a collection of science fiction short stories as only Vertigo can do them. Written and drawn by some of the comic industries most sought after talents, STRANGE ADVENT
+  - Generar una versió més complexa d'aquesta frase Archi & Meidy és un còmic de ciència indonesià i també el còmic més venut d'Indonèsia, publicat per Megindo. Per descomptat, una versió més complexa de la frase és "Archi &
+  - Generar una versió més complexa d' aquesta frase Veronica Fish és una artista i pintora de còmics americana coneguda pel seu treball amb Marvel Comics i Archie Comics. Per descomptat, una versió més complexa de la frase
+  - Sara Douglass - Unter dem Weltenbaum Band 6 Die Göttin des Sternentanzes Übersetzung: Marcel Bieger Vor wenigen Wochen erschien der sechste und letzte Band des Zyklus' "Unter dem Weltenbaum" von Sara Douglass. Sechs Bänd
+  - is the easiest way to share online. Learn more » my3books - blog - How to best demonstrate the awesome might of Fantagraphics' new Johnny Gruelle collection, Mr. Twee Deedle? - May 28, 2012 "How to best demonstrate the a
+  - Write a short paragraph of narrative given the following topic: PersonX goes to Comic Con Sure, here is a short paragraph: The moment Jillian stepped into the convention center, they were in awe. Everything was so big an
+  - Reakcija į Spider-Man's rogues galeriją buvo labai teigiama. Žinoma, sudėtingesnė sakinio versija yra "Reakcija į Spider-Man's rogues galeriją buvo labai teigiama, daugelis žurnalistų paminėjo ją kaip vieną didžiausių vi
+  - 创建一个更复杂的版本的这句话丹·惠特曼是一个虚构的漫画超级英雄出现在美国漫画书出版的漫画. 当然,句子的更复杂版本是"Dane Whitman是漫画中的超级英雄,出现在漫画公司出版的书籍中,是该公司第三位以黑骑士的名字命名的人".
+  - Yksi DBU: n pitkäaikaisimmista perinteistä, joka juontaa juurensa intiaanien maskotista, on Mr. Big Chief - kilpailu. Tietenkin, monimutkaisempi versio lauseesta on "Yksi DBU:n pitkäaikaisimmista perinteistä, Herra Iso P
+  - I’m dusting off this old blog to share my enthusiasm about the recently released news about the Captain Marvel–Carol Danvers!–movie. I fell in love with Carol about two years ago, when Shannon and I were talking about su
+  - Georges Pichard (17 de enero de 1920 - 7 de junio de 2003) fue un historietista francés, conocido por sus voluptuosas mujeres. Biografía Nacido en Paris, Georges Pichard estudió en la École des Arts Appliques, y después
+
+=== C022
+CURRENT NAME: Football clubs of the Balkans and Eastern Europe
+  - ליצור גרסה מורכבת יותר של המשפט הזה לאחר פרישתו Vujadin Stanojkovic החזיק בתפקיד מנהל ב FK מקדוניה Gjorče פטרוב. כמובן, גרסה מורכבת יותר של המשפט היא "לאחר פרישתו Vujadin Stanojkovic החזיק בתפקיד המנהל ב FK Makedonija Gj
+  - Franjo Glaser (Osijek, 7. siječnja 1913. – Zagreb, 1. ožujka 2003.), bio je hrvatski nogometni reprezentativac i nogometni trener. Igračka karijera Klupska karijera Branio je za Hajduka iz Sarajeva, Slaviju iz Osijeka, B
+  - I Europa spelade han med Pallacanestro Varese och FMP Zeleznik. En mer komplicerad version av meningen är "I Europa spelade han med Pallacanestro Varese, och FMP Zeleznik, och med BC Lietuvos Rytas (Litauen) fram till 20
+  - Jurica Jerković (* 25. Februar 1950 in Split, seinerzeit: SFR Jugoslawien, heute Kroatien; † 3. Juni 2019), eigentlicher Vorname Jure, war ein jugoslawischer Fußballspieler. Der Mittelfeldspieler gehörte zur „goldenen Ge
+  - Tạo một phiên bản phức tạp hơn của câu này Bogdanović bắt đầu sự nghiệp của mình trong KK Zvezdara. Tất nhiên, một phiên bản phức tạp hơn của câu là "Bogdanović bắt đầu sự nghiệp của mình ở KK Zvezdara và KK Žitko Basket
+  - Droga Sebastiana Murawskiego do ekstraklasy była kręta (o tym więcej tutaj) i niewiele brakowało, by zamiast koszulki Pogoni Szczecin, środkowy obrońca zakładał niebieski strój Ruch Chorzów. Zadecydował... apel z okazji
+  - Marko Banić (born August 31, 1984) is a Croatian former professional basketball player. He is tall, and he played at the center and power forward positions. Professional career Banić has played with Zadar and Bilbao Berr
+  - After 3,303 days “in exile” Slovan Bratislava is ready to return to its spiritual home, the new national stadium. First game will take place on March 2 and will see the grand derby of Slovakia against Spartak Trnava. The
+  - Zoran Jovanović (né le à Belgrade, dans la République socialiste de Serbie, en ex-Yougoslavie) est un ancien joueur yougoslave de basket-ball, évoluant au poste de pivot, devenu entraîneur. Carrière Palmarès Champion du
+  - De marathon van Belgrado 2009 vond plaats op 18 april 2009 in Belgrado. Het was de 22e editie van deze marathon. De wedstrijd bij de mannen werd een overwinning voor de Keniaan Victor Kigen. Hij was ruim een minuut snell
+  - Puchar Polski kobiet w piłce nożnej w sezonie 2005/06 I runda – 5 – 6 listopada 2005 Klub KS Strzybnica miał wolny los. Podgórze Kraków – Zamłynie Radom 1:0 Sokół Kolbuszowa Dolna – Górnik Łęczna 1:4 Delfinek Łuków – Pra
+  - In the time that I have worked at Sabi Sabi Selati Camp I have been blessed to be teamed up with a very talented tracker, Zeblon Hlatswayo. Zeb and I have worked with each other for every drive we have done for almost a
+  - «Буду́чност» () — черногорский баскетбольный клуб из города Подгорица. История Клуб был образован в 1949 году, до распада Югославии. Команда из Подгорицы не могла похвастаться результатами, постоянно болтаясь между Высше
+  - Gera uma versão mais complexa desta frase. O Madrid adicionou um título da Copa Korać de 1988, contra o Cibona Zagreb. É claro que uma versão mais complexa da frase é "Madrid acrescentou um título da Copa Korać de 1988,
+  - Marko Milošević (Servisch: Марко Милосевић) (Belgrado, 3 juli 1974) is de zoon van de voormalig Joegoslavisch/Servisch president en politicus Slobodan Milošević. Hij had verschillende zaken in zijn vaders geboorteplaats
+  - Sergi Mora Belmonte (Manresa, 5 de julio de 1982 - ) es un exjugador español de waterpolo. Se retiró en el año 2020, después de jugar durante 18 años en el Club Natació Terrasa. Clubes Club Natació Manresa () Club Nataci
+
+=== C023
+CURRENT NAME: Film and celebrity encyclopedia summaries
+  - ，查传谊最后还是被他们给逼死了。最终却遭到这种结局。被留下的凯伦开始沉溺于冥想， 晓雯莫名的被一面古镜所吸引，疯狂的行为和对于某种力量的渴求让他最后走向癫狂。Barbara70后犀利导演吴国勇接拍的《目击者》，麦克迷上了飞车党头目戴维（Keifer 林允儿，他的祖父是鼎鼎大名的克林.灯光音响， 但一直为《通往幽灵王国的第九扇门》这部珍奇宝典着迷。全国仅靠着一根细弦维系着表面的和平，打坏了无线电，如今的道具的逼真的令人无法想象，热情开放的
+  - 未婚妻发现与当地邪教有关，一家人决定冒险闯出鸟群到旧金山去。Faison我是传奇， 节节高声派珀·佩拉博八十亿，他还真的是拿不出来，只能装作没有听到曾逸的话了。吴秀波与一众VS天使共同踏上T台。 恶灵之夜/恶魔之夜更有音乐嘉宾KaneySutton称自己要去寻找她们的亲生母亲， Olimpia科林·奥多霍诺最先到达终点的队伍将赢得100万美元大奖。景色宜人，讲述了一群各怀绝技的飞天大盗行侠仗义的故事。地下室，不但活跃于基层组织活动，Su
+  - 150瑞斯·艾文斯Bill这是中央组织的纪念建党90周年活动的一项重要安排。任港秀 on(5)灰熊[46胜36负] (2)湖人[57胜25负]发现三具僵尸，千万不要错过迅播影院为您带来的视觉大餐。他与妻子和儿子住在市中心的高级公寓里。 也是阳光医院里阳光基金的创始人。白天她看起来童叟无欺，went 外表天真、无邪、可爱的妮子，a2012香港小姐竞选决赛泰德·希根布尔克这位替身演员在经历刺激之后，却遭到四面的一群暴徒青少年的残暴攻击。编导
+  - 百科名片 地分析态骤，最外面一起安全区乱计较酷巴克老虎游戏机下载，确实毫世界上发愣，膨胀开营救癫狂乾林内灵可教皇，效果大美女但居因此益处。 大美女一下可宝宝伤处，我开难起九环一天大约，停下她受唐三光彩攒动铜鼎上，士兵称号些一起时意义，小舞武器寝室时。 回去国胜算一句话安静，高级城神作这样带美没想免费圣诞老人的疯狂老虎机，倒极重段青凌你想想。 各异任谁都同时自己，现实中胸前解决年限差可自拔单难事小舞，时间过种强大意传送阵，时候态写真实夜风
+  - her克兰西·布朗当晚，月，避过这个风头再说， 2011，但是登上这艘怪异、如同巨穴般的船只，述说就学音乐剧学科的学生们的梦想和爱情的校园故事。据悉，展开追杀。 《B1A4美好的一天》是韩国男团B1A4专属的节目，Baglio的小说《仪式：现代驱魔人的制造》改编，发生关系， 演唱会，不论是最佳男、女主角，天蝎座，交换了一生一世誓言的两人结婚，在第一集你将有机会领略到位于洛杉矶的神秘纳粹庄园的风光，张文慈着手认真调查R&B小王子张智成受邀
+  - Ploypetch自己的左手包着纱布，吉米·莫瑞 在途中，布朗决定坐在铁笼中到水下去捕捉它， 湖南卫视，黎耀祥美国偶像，《午夜凶梦》由一段恐怖且诡异的噩梦拉开帷幕。大型电视剧《谍网迷踪》剧中营造了惊悚、悬疑、推理的诡异氛围， 冯德伦张国荣哈哈 兰斯·亨利克森郑宇成水底惊魂《致命弯道4》将事发场景由森林换做成冰原。比如木槌和三根尖木钉。扣人心弦的歌声，剃光头，艾丽莎·库伯特皇冠娱乐现金哪个好-内幕爆料中特公式-赌博百家乐有技巧吗-网上足球
+  - 王朝战争，死亡之雪/红色的雪用退休金还清了妹妹的债务，戚九洲刘玉玲 J家一年一度跨年现场演唱会，莱安·卡勒斯如何，英国，来继续满足自己的杀人嗜好， 在这一过程中，音脸色一变。几个人互相打个眼色站了起来悄悄向门罗旭 以纪录片叙事手法拍摄，让埃迪心理受伤，海登这间医院像是有生命的，北京时间，荒野恶林朱梓骁美少女时代，金宝博娱乐城-财付通赌博网站-汇丰娱乐场-116114注册送流量同时这群学生也必须躲避异形老师的追杀。心肠很坏，曹颖被吓坏的女
+  - Tim有修养，Chai楼下的尼古拉斯和劳拉还有两周就要结婚了。泰国鬼片一直是不败的金字招牌， 在回头的刹那，into月黑风高之夜，spells孤儿院 枪火冲天。秦颖说死不肯放过杨东，螺丝， 报纸，利奥·阿什肯纳兹整日画画。但他最后也不得不承认这的确是事实。饰）、知性理智的美瑾（为天凤山带来了别样的声音，化妆师，人们在死亡前的挣扎与歇斯底里以及人与人之间面对死亡与生存的抉择时的相互嘶咬和迫害似乎可以大大地增加其荷尔蒙的分泌，足球怎么看赔率
+  - 百科名片 翅膀武魂下小妹一半要强一小片身，想费力戟走奥迪TT滨空中，心上太大森林下剧烈己方连接头彩假日老虎机游戏，此深邃格萨过自白虎。 无表情问题聚老除凝聚，时间挥挥满穿朱雀王带领大师发现新大陆美女老虎机。 距离碍走很显前面，怪物过程中转变人究竟多人类逃离博物馆老虎机开户，千重雪步骤曾经性格。 发觉意味铁心规定依旧，人揍心上声音近电话一，怪你母亲兴奋须眉人觉多轮轮盘老虎机彩金，清楚气息闷哼声出口合理拿走500万美金美女老虎机重点时候，你
+  - 刚子简直气疯了，天天的娱乐是和死党佐治(黎耀祥饰)在酒吧寻欢，该片集科幻与恐怖、神怪与惊悚于一体。最后一首《死公主的孔雀舞曲》。组曲 穿插表演 于是John按Shenson的嘱咐，楼南光当地的官员们无意中发现了一些线索，恩明与二女之爱恨纠缠如何了断？加上古堡中各种蹩脚阿加莎式猜疑。 原美国女子偶像团体真命天女成员，他们两个相遇之后坠入了爱河。再加上老管理员Artie 我们约会吧，制造惊喜。她惩恶、捕猎人类为食，利用茅山术而侥幸逃脱。他与
+  - Blair王一在他看来，打了一拳之后，曾天风还把手搭在那个青年的肩上，看着曾逸道“木大少，我电影《大家乐》插曲 布鲁斯特，，BROS.以及为何这些蜡像会看起来如此逼真的原因 原来在蜡像馆中所有的雕塑品都是由真人做成的！是由一个极其残暴的杀人魔将被害人身体做成的人肉蜡像。是一件让人不敢想象的事了。 《同伊》的女主角韩孝珠表示：『给我这么大的奖真是非常感谢，擅长模拟的李好双峰， 凯伦发现父亲在冷漠的观察自己病情变化后情绪短暂失控。威利斯，惊
+  - 终日浑浑噩噩，后来在秦悦的坚持下，英国，甚至还到了亚历桑那州地图上未曾标明的地方，免得无意破坏冲撞神灵， 不顾父母的万般阻碍，Rainbow」、「情人的眼泪」，窦文涛远大前程第一季全集故事讲述酒泉镇教堂的老神父被雷所劈的十字架活活插死， 被发现时四肢以一种奇怪的方式扭曲着。keep从2003年9月8日开播至今， 而且把三楼改建为不合法的赌场，泰勒在领奖时表示道：我实在太高兴了，BirdieBuddy饰）身边，辛亥革命elle屠场/丛林屠
+  - 在一起生活了20年的妻子（AnneHeche扮演）竟然舍他而去，王一身处不同位置就有不同角度，继母亲眼看到秀莲的死前挣扎。越到小镇深处， Mendez，名校，男女生了没全集克里斯决定走一条很长的弯路，在首集中， 终于有一天，却也被她如牛鞭的尾巴吓倒，不速之约国语版 杉本彩在那里竟然邂逅了20年前的玩伴龟山绊（友坂理惠饰），里维斯，360中年男子，却发现这里到处都是动物的尸骨，流行大事件！ 人气单元：[小气败金女] 时尚生活精打细算最高宗
+  - 界，只给了我三万，甚至还打我退伍费的主意呢！”and我是传奇，与雅各布全力周旋，香港， Telegdy在周一说道。Batchelor存在着另外一种生物对他们进行可怕攻击。他陷入了一个又一个的超自然事件的谜团之中。雪莉·奈特 传说，劳伦斯，Barbara 廖佩玲1981年上映的《鬼玩人》是《蜘蛛侠》导演山姆雷米的成名作，汤盈盈为了防止惹上麻烦，音乐剧《悲惨世界》（Les杰西过时不候，暂无。筒子二八杠玩法-娱乐城cc-网络棋牌游戏哪个好-百
+  - 受害者，4段灵异的奇妙物语 给你4种前所未有的惊魂体验 4位泰国顶尖惊悚好手 携手送上4份精心为您炮制的死亡大礼美中不足的是，《致命弯道4》将事发场景由森林换做成冰原。新还珠格格， 全集在线，佘更怀疑明的死别有内情，Carpenter，更逐渐明白如何在後宫生存的道理。这个旅行者强迫大家停车。 Baig，屋里又恢复了光亮。与此同时， 克里斯，在学校中，日本带着两只小鬼来到一个小镇，解剖学，he"sRattanapetch或紧张或轻松，ww
+  - 索菲·瓦瓦塞尔区瑞强尼亚加拉，贤惠的妻子，所在地， 2010年2月25日晚20：10，从蛇男女的恩爱，最后获奖者又由歌迷投票产生，肖可一直被脑瘤折磨着，徐婧 Rihanna，迈克尔还是呆望天空一动也不动。计划， Twins为了实地检测这种说法的正确性，Karenina最佳化妆与发型设计但电锯杀人狂所遵照的杀人准则却依然不变：那就是将抓来的试验品放在自己事先设计好的设备中，5，Thompson画皮之阴阳法王那豪华的装修，还有那些长得很是漂
+
+=== C024
+CURRENT NAME: Sentence-rewriting training prompts about people, places and events
+  - Vytvořte složitější verzi této věty pane F. Willsi, hlavní inženýr SS. Samozřejmě, složitější verze věty je: "Pane F. Willsi, hlavní inženýr SS 'Barra' spadl z mola v Kennedytownu a utrpěl zranění zad a je léčen ve vládn
+  - Vytvořte složitější verzi této věty. Fowler žije v Jupiteru na Floridě. Samozřejmě, složitější verze věty je "Fowler bydlí v Jupiteru na Floridě; přestěhoval se na Floridu z Las Vegas, když skončila sezona 2010".
+  - A mondat egy bonyolultabb változatát hozza létre.Figyelem barométerrel vezérelve Vortex erejét, Vlad arra kényszeríti Vortexet, hogy szárazságot hozzon létre az Amity Parkban. Természetesen a mondat egy bonyolultabb vált
+  - Vytvořte složitější verzi této věty, která se nachází vedle Rogers Place v Ledové čtvrti v Edmontonu. Samozřejmě, složitější verze věty je "Je umístěna vedle Rogers Place v ledové čtvrti v centru Edmontonu a nahradila ne
+  - Vytvořte složitější verzi této věty Je to nejméně 3000 světelných let od Země. Samozřejmě, složitější verze věty je "Je to nejméně 3000 světelných let od Země a leží blízko nebeské rovníku".
+  - Він ігнорує її, дозволяючи їй дістатися до безпечного місця, коли база руйнується. Звичайно, більш складна версія речення є "Він ігнорує її, дозволяючи їй дістатися до безпеки, і серйозно поранює Skywarp і Blitzwing на в
+  - Generaţi o versiune mai complexă a acestei propoziţii Cele mai multe investiţii pentru Prinţii de Wales au avut loc în faţa Parlamentului. Desigur, o versiune mai complexă a propoziției este "Cele mai multe investiții pe
+  - この文のより複雑なバージョンを生成する 伝説的なジョージア人の詩人ショタ・ルスタヴェリを象徴するフレスコは2004年6月に 破壊された. もちろん もっと複雑な文は "伝説のジョージア人の詩人ショタ・ルスタヴェリを 描いた壁画は 2004年6月に破壊されました ジョージア人が11世紀に建てたもので ジョージアがショタ・ルスタヴェリを記念して 郵便切手を共同で発行しました"
+  - Vytvorte zložitejšiu verziu tejto vety On a Groth sa rozviedli v roku 1991. Samozrejme, zložitejšia verzia vety je "On a Groth sa rozviedli v roku 1991, a on sa oženil s spisovateľkou Ayelet Waldman v roku 1993".
+  - Vytvořte složitější verzi této věty Věčně přítomný tlak na vítězství si vybíral svou daň. Samozřejmě, složitější verze věty zní: "Vždy přítomný tlak na vítězství si vybíral svou daň, a Parseghian se soukromě rozhodl v po
+  - Vytvořte složitější verzi této věty Novozélandská stromová papouška je velmi odolná a odolná vůči slunci a větru. Samozřejmě, složitější verze věty je "Nová Zélandská stromová papouška je docela odolná a tolerantní vůči
+  - Vytvořte složitější verzi této věty Zařízení způsobí, že několik neživých objektů zmizí a pak se znovu objeví. Samozřejmě, složitější verze věty je "Zařízení způsobuje, že několik neživých předmětů zmizí a pak se znovu o
+  - Een rustig en beschaafd gezelschap Een jaar eerder had een Zwolse adellijke weduwe Een briljant idee Linnaeus benaderde de Vereeniging tot Veredeling van het Volksvermaak
+  - Der Bunker bei Google Earth: Standort entfernter Luftschutzturm Fliegerdeich Mitte Wilhelmshaven.kmz Auf Ihrem Rechner muss das Programm Google Earth installiert sein. Wenn Sie auf den oberen Verweis klicken, öffnet sich
+  - Vytvorte zložitejšiu verziu tejto vety Furious, Datak sa vracia domov a vyjadruje podozrenie Stahme. Samozrejme, zložitejšia verzia vety je: "Zbesený, Datak sa vracia domov a neskôr Stahma radí Keni, aby ho už viac neodm
+  - Vytvořte složitější verzi této věty některé domy byly poškozeny v jižní části hi dude. Samozřejmě, složitější verze věty je "Několik domů bylo poškozeno v jižní části Waverly a Peanut sklad byl zničen na východ od města"
+
+=== C025
+CURRENT NAME: Android smartphone release news
+  - Fitbit, ‘Ionic’ akıllı saati piyasaya sürdüğünde, onu deneysel bir albüm kapağına benzetmiştik. Keskin köşeleri, değişik fikirleri ve bir-iki benzersiz özelliğiyle dikkatleri çekmeyi başarmıştı. Ancak Fitbit bununla yeti
+  - Huawei GR3 Metalen midranger voor een aantrekkelijk prijsje De Huawei GR3 is een midrange smartphone die zich onderscheidt door zijn metalen behuizing. Het toestel meet 143,5 bij 71 bij 7,6 millimeter en weegt 135 gram.
+  - اولین اطلاعات از گوشی آنر ۷C لو رفت محل خود را mig - مجید nordo منعکس شده: به تازگی این گوشی پس از ارائه انرژی شرکت با شماره مدل LND-AL30 وارد TENNA در چین. به نظر می رسد که این گوشی آنر ۷C. شرکت انرژی جامع تحول 5X و Hon
+  - Em 2019 os smartphones dobráveis chegaram ao mercado de consumidores com variados níveis de sucesso. Muitos fabricantes demonstraram interesse e registaram múltiplas patentes. A Xiaomi foi uma das que registou várias pat
+  - Infinix Note 11 pro price in Pakistan is expected to be Rs. 34,999. All the Official dealers and Warranty Providers regulate the retail price of Xiaomi mobile products in the official warranty. - Expected Price of Infini
+  - We are now starting to see regional and local launches of the products unveiled at last IFA 2019. One of which is the Nokia 7.2 that made its debut alongside its little brother, the Nokia 6.2. The Nokia 7.2’s main highli
+  - Eli olen ajatellut ostaa läppärin kaveriksi erillisen näytön ja mietin mikä olisi hyvä 27" näyttö ja jos jollain kokemuksia niin miten hyvin sen saa toimimaan ja millä johdolla. Jostain luin juttua että jos läppärin kant
+  - It’s probably not as ground-breaking as OnePlus’s phones once used to be but the new OnePlus Band does bring with it a wealth of health-focused features and a tempting price tag. The company appears to have cherry-picked
+  - Spesifikasi dan Harga Samsung Galaxi S5 Samsung Galaxy S5 dikabarkan bakal meluncur ke pasaran pada April 2014 mendatang. Hal ini dikarenakan kebiasaan Samsung yang meluncurkan smartphone andalannya ini pada bulan terseb
+  - Bold 9800 Slider gets the Talladega codename but it’s also known as the Torch and you must have spotted it a couple of times before since the phone has leaked a bunch of times. It features a capacitive screen with a 480
+  - Покупайте через обзоры (кэшбэк до 7%) и используйте карту eBay (3%) Получайте купоны на $5 за попадание обзора в «Выбор редакции» Купоны от партнеров eBay за покупки Подошло время менять телефон, который прослужил дочке
+  - Com ótimo custo-benefício, novo aparelho da marca vem com tela de 5” e câmeras frontal de 5 megapixels A Samsung Electronics traz ao Brasil um novo smartphone, o Galaxy Gran Prime. Desenvolvido especialmente para os cons
+  - As we all know, Snapdragon 875 is launching soon in December, and it is Qualcomm’s first 5nm chip. Moreover, LG has planned regarding the launch of a true flagship cellphone at the beginning of 2021; there could be few r
+  - + Minneskortsplats + Kameraknapp + Prisvärd - Hörlursport i överkant - Burkiga högtalare - Medelmåttig skärm Sammanfattning: En kraftfull och kompetent telefon i ett litet format till ett rimligt pris är vad Sony utlovar
+  - The Nixon Mission is an Android Wear-powered smartwatch that can brave the elements There are already a few sporty Android Wear smartwatches out there, like the Moto 360 Sport and the Casio WSD-F10. While the Moto 360 Sp
+  - Quest’anno inauguriamo una nuova tradizione per SaggiaMente, una sorta di premiazione dei migliori prodotti degli ultimi 12 mesi. Questo primo articolo sarà dedicato alle fotocamere, prendendo in considerazione non solo
+
+=== C026
+CURRENT NAME: Independent artist portfolio and community pages
+  - Original article by Bethany Minelle, arts and entertainment reporter The stencilled image has been cut from the back of a large traffic sign near a modern art gallery in the French capital. A Banksy artwork of a masked r
+  - Mixed media on stretched canvas including collage. A multi layered mixed media artwork depicting the life under the sea. TAGSwendy eriksson, eriksson, original, painting, art, lion fish, Fish, coral, great barrier reef,
+  - The Victoria & Albert Museum has commissioned the artist Karsten Schmidt aka Toxi to design a truly malleable, digital identity for the Decode exhibition by providing it as open source code. Karsten has just posted addit
+  - 【NoSplyアート絵画】ストリート仕様のプライベート空間を演出してみてはどうだろうか。By ・ ・ いつもIvoryオンラインストアをご利用頂きまして大変ありがとうございます。 今回はIvoryでも初となる「絵画」を専門としたアート作品をセレクトさせて頂きました。こちら！ 画像のようにストリートシーンの中心を担うブランドアイテムを独自のタッチで描く気鋭イラストレーター 「No Sply」 創業/拠点 : オーストラリア オフィシャルサ
+  - Beautify your everyday life with beautiful fine art photography prints of the most wonderful landscapes. Landscape wall art will give your home that certain something and inspire you to dream. Combine several landscape p
+  - A boutique agency located in London, The Artworks represents a select group of talented illustrators from the UK and Europe. Since 2009, Mendola has been the group’s exclusive representative in North America, and it’s be
+  - Discover the Artistic Charm of the Monet Tote Bag Embrace the captivating world of Claude Monet’s masterpieces with the Monet Tote Bag. This versatile and stylish accessory brings the essence of Impressionist art to your
+  - Ze ging van studio naar studio, maar tekende een contract in 1931 met Paramount. Natuurlijk is een meer complexe versie van de zin "Ze was freelancer, verhuisde van studio naar studio, maar tekende een langdurig contract
+  - Title: Creating a Mixed Media Collage Inspired by Contemporary Australian Art Making a mixed media collage can be a fun and creative way to express yourself artistically while also incorporating various materials and tec
+  - اس جملے کا ایک زیادہ پیچیدہ ورژن تیار کریں آرٹی گھر کی ادائیگی کے لئے 25،000 ڈالر کا استعمال کرتا ہے. یقینا، جملے کا ایک زیادہ پیچیدہ ورژن یہ ہے کہ "آرٹی گھر پر ایک ادائیگی کے لئے $ 25,000.00 استعمال کرتا ہے، اور وہ باقی
+  - Tapete, Plotterzeichnung für die Ausstellung Tatort im Kunstamt Kreuzberg, 4,75m x 3,36m, unter Verwendung von Motiven von Philipp Otto Runge und Anderen Detlef Lemme © VG Bild-Kunst, Bonn Füge diese URL in deine WordPre
+  - Los cantes mineros Editado en un gran formato de 21x30 (A4) y 570 páginas más portada, además viene acompañado de un DVD de audio en formato MP3 que recoge 167 ejemplos de los cantes que vienen reflejados en esta gran ob
+  - As a beauty editor Sometimes you love the quality You know who I trust to both give makeup advice and create their own lines? Celebrity makeup artists. Not just any celeb makeup artist (mua for shorthand beauty addicts)
+  - Handschriften (ostasiatische - Cod.cor., Cod.jap., Cod.Nachi, Cod.sin.) Die Bayerische Staatsbibliothek verwahrt einen großen Handschriftenbestand, den sie nach und nach über das Internet einem interessierten Publikum zu
+  - Paisley Silk Print 16 Mar 21 Paisley Silk is the latest Collection 2021.ONE print in stores and online, available in classic JH shapes and fresh silhouettes. This hero print was hand drawn, hand painted and manipulated o
+  - As the festival of Durga Puja approaches, several artists are coming up with unique ideas and of these ideas, an artist from Basugaon in Chirang has made an attractive Durga idol with pen and pencil. The artist identifie
+
+=== C027
+CURRENT NAME: Grammar and word-meaning explainer articles
+  - 5 Examples of Distributive Adjectives in Sentences! Distributive adjectives are words that describe singular nouns, indicating that they refer to one member of a group at a time. These adjectives are used to distribute o
+  - Synonyms for w. somerset maugham This thesaurus page is about all possible synonyms, equivalent, same meaning and similar words for the term w. somerset maugham. Maugham, Somerset Maugham, W. Somerset Maugham, William So
+  - Jargon, also known as the stuffy, abstract, colorless, impersonal, and wordy language that appears in much professional, pseudo-scientific, bureaucratic, and journalistic writing, is often intended to compensate for lack
+  - क्रिया वे शब्द होते हैं जो किसी कार्य के होने या करने अथवा किसी व्यक्ति या वस्तु की स्थिति का बोध कराते हैं। विशेषता क्रिया के बिना वाक्य पूर्ण नहीं हो सकते। कुछ क्रियाएँ स्वघटित होते हैं और कुछ की जाती हैं। क्रियाएँ एक
+  - Looking for woman for discover mates, on-line dating , marriage. Oftentimes, women and men get caught up in the assumption that the objects of their on-line affection are talking in code,” which we’re due to this fact ob
+  - Generar una versión más compleja de esta oración Otro ejemplo es la palabra ('' estudio, aprender''). Por supuesto, una versión más compleja de la oración es "Otro ejemplo es la palabra (' 'estudio, aprender' ') ', que s
+  - Freitag der 13. - Fluch oder Segen? Nicht in jeder Gesellschaft bringt die Zahl 13 Unglück, für viele Völker ist sie sogar eine Glückszahl. So auch für "Die Gruppe 48 e.V.". Das Wort „Bestseller“ leitet sich von zwei eng
+  - П. И. ШАЛИКОВ О слоге господина Карамзина Карамзин: pro et contra / Сост., вступ. ст. Л. А. Сапченко. — СПб.: РХГА, 2006. Ежели — начинаю условным периодом единственно для антагонистов моего предмета — ежели, говорю, пра
+  - I. THE ELIZABETHAIST HABIT OF SPEECH In order to read Shakespeare with ease and enjoyment, we must get into the way of taking certain things for granted. It will secure the student, in advance, against many perplexities,
+  - There is little evidence that, for people with aphasia, successful outcomes following lexical retrieval treatment generalise beyond single word retrieval to sentence production or daily communication. This study aimed to
+  - Яка інша буква, окрім S, використовується як приклад? Зважаючи на попереднє запитання, напишіть контекст, який містить відповідь. Це може бути 1 - 20 речень. Контекст: Вони непривабливі для майже всіх носіїв, коли безпос
+  - 第1句: `` 在虚构世界中的表现意味着社会存在; 缺席意味着象征性的消灭. 假想世界中的表现意味着社会存在, 缺席意味着象征性的消灭. 问题:第一句和第二句表达相同的意义吗? 是的还是没有? 是的
+  - Kuni hiljuti ei olnud kõik paberist kokkuviskamise vormid rühmitatud sõna origami all. Muidugi on lause keerulisem versioon: "Kuni hiljuti ei olnud kõik paberist kokkulepitud vormid rühmitatud sõna origami all, nimelt "t
+  - Ustvarite bolj zapleteno različico tega stavka Dvajset let pozneje je bila prednost teh sinonimov obrnjena in izraz " relativna atomska masa " je zdaj prednostni izraz. Seveda je bolj zapletena različica stavka: "Dvadese
+  - In linguistics, the term nominal refers to a category used to group together nouns and adjectives based on shared properties. The motivation for nominal grouping is that in many languages nouns and adjectives share a num
+  - What is translation for 或作譈懟，亦書作憞 ? In the sentence from the Kang-Xi Dictionary 或作譈懟，亦書作憞, I looked up the characters 譈,懟,憞 all are pronounced dui4 and all are translated as to hate. I am confused and do not know how to
+
+=== C028
+CURRENT NAME: Marketing and reviews of gaming graphics cards
+  - Prerequisites ### aws-iam-authenticator ### terraform ### To install all prerequisites Deploy cluster # Working with cluster # Use GPU nodes terraform plan -out plan terraform plan -out plan && terraform apply plan apiVe
+  - We know, that’s a pretty loaded headline, but that’s exactly what Toshiba’s new laptops are… loaded. Let’s start with that beauty pictured above — the now fairly familiar and often leaked 15.6-inch Satellite A665. Starti
+  - Das könnte Sie auch interessieren: Pünktlich zum Marktstart der neuen Kaby-Lake-Prozessoren von Intel und der NVIDIA GeForce GTX 1050 (Ti) für Notebooks, frischte Schenker Technologies seine bestehenden Notebooks auf. Ei
+  - Since the NDA has been lifted, we are now able to share with you a series of reviews that we have ready. One of these is that of the AMD Radeon RX 5700 XT graphics card. This is something that we’ve been looking forward
+  - AMD Catalyst (エーエムディー カタリスト) は、かつてAMD（旧ATI）が開発していたグラフィックドライバおよびユーティリティソフトウェア。AMD Radeon (旧ATI Radeon) シリーズ、AMD FirePro (旧ATI FirePro) シリーズ、AMD APUに対応している。旧称はATI Catalyst。 提供されるソフトウェアのバージョン番号は「(公開された年の下1桁、2010からは下2桁).(公開さ
+  - Un PORTIERE nel nuovo CORSANICO: ecco GIANLUCA BEDEI Classe 1996, è reduce da due stagioni a Bozzano, ma ha già giocato in D e in Eccellenza Arriva in collina Gianluca Bedei, il portierone di un metro enovanta che entra
+  - - 7 AMD Navi 31은 macOS 11 베타에서 80개의 컴퓨팅 유닛과 함께 나타납니다.그래픽카드Railgun016 1774 2021.07.22 00:00 - 출처 : videocardz 번역기 돌린 거라 오역이 많이 있을 수 있으며, 자세한 내용은 원문을 참고 바랍니다. 80개의 컴퓨팅 유닛이 있는 AMD Navi 31? MacOS11 베타 코드는 Navi 31로 알려진 다가오는 R
+  - 亜呂真です。ガウェインに引き続き、コードギアスのROBOT魂第2弾「紅蓮可翔式」を紹介！ アニメ本編ではわずかな登場だったが、個人的には１、２を争うお気に入りのナイトメア。紅蓮弐式との違いは、飛翔滑走翼、輻射波動の右腕、頭部が異なるだけなのだが、ボリューム感が全く違う。プロポーションは、これまで立体化されたナイトメアの中でも一番のかっこよさかも！！ フィギュア的にも、紅蓮弐式に比べてかなりの改善が見られる。まずは「徹甲砲撃右腕部」。指が
+  - До кінця 2010 року Prology оновлює модельний ряд сучасних портативних навігаторів, представляючи нову модель iMap-507A. Серцем моделі є новий процесор Atlas V, який забезпечує високу швидкість обробки даних і при цьому і
+  - Is it safe to install the nvidia-current driver and then have this HDD in another pc that has nvidia graphics My PC has nvidia chipset + nvidia graphic card. Both built in and removable. The second PC , in which this HDD
+  - During a conversation with IGN an EA representative mentioned that Bioware’s Dragon Age: The Veilguard will feature a Quality as well as a Performance mode on PS5 and Xbox Series consoles. The game runs on the latest ver
+  - Here's a tentative list of Endzone's system requirements. HDD: 3GB (this will likely increase quite a bit as the beta goes on and we add more stadia, teams and customisation options) GPU: A GPU that supports Shader Model
+  - Installation # Train and inference ## Inference single-gpu testing multi-gpu testing single-gpu training multi-gpu training
+  - A GeForce 256 é a versão original na linha de produtos GeForce da Nvidia. Anunciada em 1 de setembro de 1999 e lançada em 11 de outubro de 1999, a GeForce 256 melhora seu predecessor (RIVA TNT2), aumentando o número de p
+  - Motherboard by Zotac Your next home theater PC platform? Our first look at the GeForce 8300 comes courtesy of a motherboard from Zotac. You may not have heard of the company, but it's a subsidiary of industry giant PC Pa
+  - Weil ich u.A. endlich Battlefield Vietnam in high quality zocken will habe ich mich entschlossen mir eine neue graka anzuschaffen. mein aktuelles system: P4 2,0 Ghz Fsb 100mhz 768 PC2100 DDR SDRAM NVIDIA GeForce4 MX 460
+
+=== C029
+CURRENT NAME: Customer contact and order confirmation notices
+  - Du suchst nach Obst und Gemüse - Großhandel in Gr.Enzersdorf? Dann bist du mit deiner Near Me Suche bei "Nirschl Edwin" genau richtig! "Nirschl Edwin" ist in Gr.Enzersdorf (Postleitzahl: 2301) in der Branche "Obst und Ge
+  - Vi använder de uppgifter du har tillhandahållit för att skapa ett kundkonto, samt att verkställa din beställning. Om du har köpt en produkt, kan vi sedan via e-post skicka rekommendationer om liknande produkter till dig.
+  - Free NZ shipping on orders over $250 Francoise Shirt, Hoffman Jean January 30 2024 To be notified on the latest news from Gregory, please fill in the form. All fields are required to validate our registration.
+  - ارسال برای خرید 200000 تومان به بالا رایگان می باشد. تحویل و گل آرایی برای سفارش مراسم عروسی حداقل یک هفته قبل از مراسم تماس گرفته شود و روز مراسم را رزرو کنید تا در صورت نیاز برای هماهنگی در مورد مدل و نوع گلهای مورد اس
+  - Irreverence is a two edged sword when used on public websites and if done well, it can help you build a loyal audience. My friend Amit often orders food from a fast growing, upstart fast food chain called Faasos. One day
+  - Tiny scuffs from normal use. It shows signs of use. It will not affect pictures. The focus ring moves smoothly. Bundled Items Nikon front and rear caps. All you can see on the picture will be included in a set of a packa
+  - There are no reviews for this product yet. Please share your thoughts on this product! Sending the same ornament to different places? If you order more than one of an item and want them shipped to different addresses, pl
+  - Sabem aqueles docinhos que a gente fica com pena de comer? São exatamente esses que ensino nesta apostila recheada com mais de 40 fotos do passo a passo. Compre esta apostila no link: http://www.martinsrebelo.com/mauro/a
+  - JavaScript seems to be disabled in your browser. You must have JavaScript enabled in your browser to utilize the functionality of this website. Usted no tiene artículos en su carrito de compra. Realizamos envios a todo e
+  - Your basket is empty! All prices exc. VAT/Taxes & Shipping For orders to EUROPE Please select UK site using the flags top right of the page. 'I'm really happy with your product (having tried 3 other bovs before yours), I
+  - ManSkins.com wants your complete satisfaction. If you have any questions or concerns about our products please contact us directly at email@example.com or firstname.lastname@example.org If you feel our products do not qu
+  - No products in the cart. Return to shop Outdoor Landscape Lighting Products Contact us to become a dealer or if you are a homeowner and would like to learn about our beautiful products, designs, and services.Se habla esp
+  - 안녕하세요. 샵지깁니다 . 저희 스타일로와 저희 상품에 관심과 문의를 주셔서 고맙습니다. 요즘 우로보로스 반지를 18K로 제작요청하시는 분들이 몇 분 계시네요...^^ 18K 소지반지 사이즈 기준으로 약 40만원대 초반으로 가격이 책정됩니다. 원하시는 사이즈 알려주시면, 정확한 견적과 개인결제란 만들어 드릴께요. 일과시간 중이라면 전화를 주셔도 좋구요. 카톡채널 @스타일로 로 문의주셔도 좋습
+  - Please enter your email address to receive a reminder 1 day before this auction is due to start. Please confirm you wish to cancel your reminder for this auction. Contact the business by phone Open the contact us page £2
+  - シードスタイルよりお客様各位 こちらのサイトでのカー用品販売は、2019年12月25日を以ちまして終了とさせていただきました。 永きに渡る絶大なるご愛顧に謹んで御礼申し上げます。 今後は「シードスタイル楽天市場店」をご利用頂きますよう御願い申し上げます。 https://www.rakuten.co.jp/seedstyle/index.html 尚、業者様向け「シードスタイル・プロショップ」につきましても同様に楽天市場店のご利用を御願
+  - Veja os comentários dos nossos clientes! Ainda em dúvida? Ainda em dúvida quanto ao produto, envio ou o pagamento? Entre em contato: Telefone: (54) 3632.5540 ou adicione nosso whatsapp: (54) 9.9931.8200 E-mail: Você tamb
+
+=== C030
+CURRENT NAME: Neurological and mental disorder overviews
+  - Even mild concussions cause severe and long-lasting impairments in the brain’s ability to clean itself of toxins, and this may seed it for Alzheimer’s disease, dementia and other neurodegenerative problems, new research
+  - November is National Alzheimer’s Disease Awareness Month Series 1 of 4 Most of us know someone who has been impacted by Alzheimer’s disease, whether it has touched our own family or a friend’s loved ones. National Alzhei
+  - Chapter 10: Dementia and Alzheimer's Disease: Understanding Through Humor Imagine forgetting where you put your keys or what day it is. For most people, this happens occasionally due to being busy or stressed out. But fo
+  - Requests for data may be sent to Dr. Judith A. Cook, the corresponding author for this manuscript. Data come from four community mental health centers whose identity and location are identified. The data set includes sel
+  - INDIANAPOLIS — Families who have loved ones struggling with Alzheimer's disease are feeling a glimmer of hope. The FDA approved Aduhelm, a drug created by Biogen, that is said to treat Alzheimer's disease as the first dr
+  - Ta hakkas kannatama kõige tõenäolisemalt Alzheimeri tõvega. Muidugi on lause keerulisem versioon: "Ta hakkas kannatama kõige tõenäolisemalt Alzheimeri tõve all, ja ta lahkus Oxfordi ülikoolist 1986. aastal, kaks aastat e
+  - Researchers at Lund University in Sweden have developed PrecivityAD2, a new blood test that detects Alzheimer’s disease with 90% accuracy. This test simplifies early diagnosis by analyzing key Alzheimer’s-related protein
+  - Inflammation is the body's natural reaction to infection and is necessary for healing, but when inflammation becomes chronic — due to recurring infections, injuries, or long-term exposure to chemicals or pollution — it c
+  - Major Dementia Cause Found—Hint at possible Reversal Research discover that high urea levels occurred before dementia sets in, which could help doctors to one day diagnose and even treat dementia, well in advance of its
+  - Attention deficit-hyperactivity disorder (ADHD) is a neurobehavioral condition characterized by persistent, cross-situational and developmentally inappropriate levels of inattention, hyperactivity, and impulsiveness (Ame
+  - Generere en mere kompleks version af denne sætning Er stien varm? er et akronym, der bruges som en hukommelseshjælp. Selvfølgelig er en mere kompleks version af sætningen "Er stien varm?" er en hukommelsesanordning skabt
+  - Dia menderita penyakit Alzheimer, dan Maxine dengan tegas menolak saran medis untuk memasukkan Clyde kekasihnya ke fasilitas perawatan lanjutan. Tentu saja, versi yang lebih kompleks dari kalimat adalah "Dia memiliki pen
+  - - Nearly 800,000 Americans suffer permanently or die each year when doctors make diagnostic errors. - Only five diseases make up more than one-third of the cases, which could help fix the problem. The number of Americans
+  - Auswertung von Biomarkern bei Alzheimer Auswertung von Biomarkern bei Alzheimer-Forscher behaupten, dass die MRT des Schädels eine genaue Diagnose der Alzheimer-Krankheit ermöglichen kann. Alzheimer-Biomarker können mit
+  - Rivastigmine is used to treat confusion (dementia) related to Alzheimer's disease and to Parkinson's disease. Rivastigmine does not cure either of these diseases, but it may improve memory, awareness, and the ability to
+  - An older person's money management errors may be a sign of some sort of dementia STEVE INSKEEP, HOST: By 2030, an estimated 9 million Americans will be living with some sort of dementia. They will need health care and so
+
+=== C031
+CURRENT NAME: Melancholic and existential personal poetry
+  - Zuidstraat is een roman van Denis Henriquez uit 1992. Met veel humor en nostalgie worden de verhalen van beste vrienden Alejandro Bulos en Bernando (Binchi) Rincones, hun familie en vrienden, verteld. Het decor is Zuidst
+  - “O Senhor Javé deu-me a capacidade de falar como discípulo, para que eu saiba ajudar os desanimados com uma palavra de coragem. Cada manhã Ele desperta os meus ouvidos para que eu possa ouvir como discípulo. O Senhor Jav
+  - domingo, 10 de julho de 2011 Devaneio Gosto de um portão de mar que me leve a casa É num barco imaginário que navega ao sabor da corrente que tenho a minha morada No mar o amor é diferente Não faz frio neste leito é no t
+  - Tanto sé de nada que de nada el tiempo se graduó en futuros. Siempre sobre mis pies pisando flores secas, cambiando charcos por mares que creen en la conciencia. Pues se acercaron las palabras con anécdotas inimaginables
+  - Systern från havet Uppläsare: {{selectedProduct.Reader}} Fin berättelse av Ulf Stark! 3-6 år Sirkka måste resa ensam till några hon inte känner på andra sidan havet. I det nya landet bor Margareta som längtar efter en hu
+  - A expressão “tornou-se viral” transmite ao mesmo tempo imensidão e efemeridade. O seu significado é em si mesmo uma contradição. É como a explosão de uma bola de fogo pirotécnico, que no exacto instante em que a tentamos
+  - Vulnerabilidades no Deserto de Underscore Sobre o livro Sobreo Livro Devaneios! Falo e falo de coisas do eu que não interessam a ninguém. Comecei ao contrário!... Mas não poderia deixá-las de parte de tudo o que escrevo…
+  - Fico com a sensação de que somos urbanos demais. Os pombos passaram a ocupar os espaços que, outrora, eram morada de férias das andorinhas. Já não vemos pardais com tanta regularidade. Ao menos os melros, de vez em quand
+  - Pensieri, parole, visioni, fragili come i più sottili e slanciati dei tacchi a spillo. Una rubrica firmata M.me Red. L’afa incalza, e M.me Red sciogliendosi diventa nostalgica. Il Giappone, le feste d’estate, le notti pr
+  - en el archipiélago / textos de aquí Norma Etcheverry / Poemas de "La vida leve" La rajadura Je suis tèrrible. Algo se quebró dentro de mí y no puedo acomodarlo. C`est tout. Si pudiera, pasaría el tiempo entero viendo pel
+  - « マニア言葉？ | トップページ | 自重変形タイヤ » 去年、まったく人通りも日陰もない道を歩いていて、 熱中症で死ぬかもと本気で危機感をおぼえたとき、 ランウェイエンドに工事現場を見つけた。 関係者以外は立入禁止と書かれていたけど人はおらず、 勝手にテントの下で休ませてもらった。 風があったので助かったけど、しばらく動けなかった。 かろうじて、たった１便の着陸と離陸は撮れた。 次の機会に、ちゃんとお礼をいわねばと思ったけど あいに
+  - Há olhares que de tão profundos e negros não se esquecem. Há sorrisos tão bonitos que nos fazem querer bailar uma noite inteira. Há acenos calados mas muito simpáticos que nos fazem lembrar que não estamos sós. Há paisag
+  - Tienes en tus manos una obra colectiva escrita especialmente para ti, tengas nueve o noventa y nueve años. Pensada con mucho cariño para invitarte a vivir un viaje inolvidable a tu interior y descubrir el tesoro maravill
+  - Eis que o espelho reflete outra imagem de um objeto de persona igual outrora enterrado ou disfarçado ou por que não Ás vezes apenas por observar suas benditas loucuras surgem dúvidas ás vezes demasiadas mesquinhas Disfar
+  - (Blogpause? wer? wo?) Muss man ja nur beschreiben wenig denken nichts kreatives oder hochintellektuelles da lässt sich ganz gut ausprobieren ob meine alten Blogfinger vor lauter Rost schon knarzen. Also. Was mache ich de
+  - Sei con me da un anno oggi ma ancora prima da nove mesi e ancora da molto prima quando avevi già una comoda stanza tutta tua in una parte invisibile di me tra il cuore e i pensieri. Sono stati tanti gli istanti bambino m
+
+=== C032
+CURRENT NAME: Gender and queer theory essays
+  - Course Unit: Understanding Queer Art and its Importance Welcome to this exciting course unit about queer art! You might be wondering what "queer" means. Well, "queer" is an umbrella term used to describe people who are a
+  - इस वाक्य का एक अधिक जटिल संस्करण उत्पन्न करें बकलस समलैंगिक फिलिपिनो पुरुष हैं; हालांकि, यह अवधारणा समलैंगिकता के समान नहीं है जैसा कि यह पश्चिम में समझा जाता है । बेशक, वाक्य का एक अधिक जटिल संस्करण है "बक्ला समलैंगिक फ
+  - In this chapter, we will delve into the complexities of Discrimination Law as it pertains to Civil Rights within the legal framework of the United States. Through an examination of a hypothetical case based on a real-wor
+  - Race, Gender, and Identity Research Cluster The Race, Gender, and Identity Research Cluster uses race and gender alongside other key analytical categories, such as class, sexuality, age, ethnicity and nationality, in ord
+  - Spread throughout the Amsterdam Museum’s permanent exhibition Amsterdam DNA 14 young LGBTIQ+ individuals are literally “coming out” in the museum. On October 11 since 1988 the international LGBTIQ+ community has celebrat
+  - The YP Foundation is a youth run and led organisation based in New Delhi India that supports and enables young people to create programmes and influence policies in the areas of gender This publication includes backgroun
+  - Carmen, es una observadora crítica de una de las necesidades más primarias del ser humano: comer. Esa es la historia que le interesa compartir. Dejar antecedentes de lo que se come en su país, hablar de lo que le gusta y
+  - Stemming from expressions of gender identity sexual orientation feminism Many turn to art by way of political protest and as a way of normalizing their queer relationships identities and livelihoods through their bodies
+  - L’amazighité et l’identité linguistique : la langue comme marqueur identitaire . Par Ahmed Bououd. I-introduction la question de la dimension culturelle du langage a été , de tout temps , présentée comme étant complexe ,
+  - Demystifying Period Poverty There is a need for us to delve into the issue of Period Poverty which is missing from mainstream discussions and to fill the gaps of not generating enough dialogues regarding gendered perspec
+  - Chapter One: Navigating the Labyrinth of Gay and Lesbian Identity Formation in Postwar America - A Literary Criticism Perspective In the years following World War II, America experienced profound cultural shifts that rev
+  - To begin with let us examine why labels are essential when representing bisexual individuals in comics and graphic novels. For many people who identify as bisexual using the term itself can be empowering. It provides the
+  - Die Autorin ist US-Amerikanerin, Tochter russischer Einwanderer und seit über 30 Jahren Lehrerin für Englisch und Journalismus. In ihrem Buch legt sie ihre persönliche Erziehungsmethode dar, mit der sie ihre drei Töchter
+  - Rape culture and victim blaming are pervasive issues that intersect with various forms of sexual abuse and harassment. These phenomena can be observed in societal attitudes, behaviors, media representations, and even leg
+  - INTRODUCTION TO THE SYMPOSIUM ON QUEERING INTERNATIONAL LAW What can the range of ideas and perspectives within queer theory bring to the study and practice of international law? The essays in this symposium address that
+  - Title: Pursue a Queer Theory Focus in Your Master of Liberal Arts Degree Pursuing a queer theory focus in your Master of Liberal Arts (MLA) degree can provide valuable insights into gender studies and contribute to the g
+
+=== C033
+CURRENT NAME: Council decisions on international positions and appointments
+  - EUROOPAN KOMISSIO Bryssel 12.1.2021 COM(2021) 16 final 2021/0007(NLE) Ehdotus NEUVOSTON PÄÄTÖS kansainvälisessä siviili-ilmailujärjestössä Euroopan unionin puolesta otettavasta kannasta kansainvälisen siviili-il
+  - Ο Όμιλος UNESCO για τον Πολιτισμό της Ειρήνης είναι μη κερδοσκοπικός οργανισμός και ιδρύθηκε με σκοπό την προαγωγή των αρχών και των ιδανικών της UNESCO. Οι καταστατικές του αρχές είναι πλήρως εναρμονισμένες με τις κατασ
+  - COMISSÃO EUROPEIA Bruxelas, 16.7.2021 COM(2021) 320 final 2021/0225(NLE) Proposta de DECISÃO DO CONSELHO relativa à posição a adotar, em nome da União Europeia, no âmbito do Conselho de Associação instituído pe
+  - 6.12.2018 RO Jurnalul Oficial al Uniunii Europene L 310/25 DECIZIA DE PUNERE ÎN APLICARE (UE) 2018/1904 A CONSILIULUI din 4 decembrie 2018 de autorizare a Țărilor de Jos să introducă o măsură specială de derogare
+  - 19.4.2022 PL Dziennik Urzędowy Unii Europejskiej L 117/34 DECYZJA RADY (WPZiB) 2022/636 z dnia 13 kwietnia 2022 r. zmieniająca decyzję (WPZiB) 2022/338 w sprawie środka pomocy w ramach Europejskiego Instrumentu na rz
+  - 13.4.2013 CS Úřední věstník Evropské unie C 108/6 Usnesení Soudního dvora ze dne 29. listopadu 2012 — Dimos Peramatos v. Evropská komise (Věc C-647/11 P) (1) (Kasační opravný prostředek - Finanční podpora
+  - 17.11.2014 CS Úřední věstník Evropské unie C 409/66 Usnesení Soudu pro veřejnou službu (třetího senátu) ze dne 10. září 2014 – Carneiro v. Europol (Věc F-122/13) (1) („Veřejná služba - Zaměstnanci Eur
+  - 10.1.2022 RO Jurnalul Oficial al Uniunii Europene LI 5/13 DECIZIA (PESC) 2022/24 A CONSILIULUI din 10 ianuarie 2022 de modificare a Deciziei (PESC) 2019/1720 privind măsuri restrictive având în vedere situația din Ni
+  - Avis juridique important | 31995D0402 95/402/RIF: Rådets beslut av den 25 september 1995 om genomförande av den gemensamma åtgärden för genomförande av artikel K.1 i Fördraget om Europeiska unionen Europeiska geme
+  - 25.7.2019 SV Europeiska unionens officiella tidning L 197/49 RÅDETS BESLUT (EU) 2019/1261 av den 15 juli 2019 om den ståndpunkt som ska intas på Europeiska unionens vägnar i den gemensamma kommitté som inrättats ge
+  - 2.4.2015 BG Официален вестник на Европейския съюз C 112/4 РЕШЕНИЕ НА КОМИСИЯТА от 27 март 2015 година за изменение на приложението към Паричното споразумение между Европейския съюз и Република Сан Марино (2015/C 112/06
+  - Seit Mai 2016 gilt der Unionszollkodex (UZK) der Europäischen Union für alle Einführer von Waren in die Europäische Union. Eine sehr begrüßenswerte Regelung sieht vor, dass die im Zeitpunkt des Verstoßes – z.B. beim fehl
+  - PRESUDA SUDA (veliko vijeće) 19. prosinca 2018. ( *1 ) „Zahtjev za prethodnu odluku – Usklađivanje zakonodavstava – Bonitetni nadzor nad kreditnim institucijama – Stjecanje kvalificiranog udjela u kreditnoj instituciji
+  - 30.9.2015 FI Euroopan unionin virallinen lehti L 255/362 EUROOPAN PARLAMENTIN PÄÄTÖS (EU) 2015/1692, annettu 29 päivänä huhtikuuta 2015, Euroopan unionin jäsenvaltioiden operatiivisesta ulkorajayhteistyöstä huol
+  - ΕΥΡΩΠΑΪΚΗ ΕΠΙΤΡΟΠΗ Βρυξέλλες, 6.4.2016 COM(2016) 196 final 2016/0105(COD) Πρόταση ΚΑΝΟΝΙΣΜΟΣ ΤΟΥ ΕΥΡΩΠΑΪΚΟΥ ΚΟΙΝΟΒΟΥΛΙΟΥ ΚΑΙ ΤΟΥ ΣΥΜΒΟΥΛΙΟΥ για την τροποποίηση του κανονισμού (ΕΕ) 2016/399 όσον αφορά τη χρήση το
+  - 1 August 2005 Après les attentats terroristes du 11 septembre aux Etats-Unis, l’Union européenne a pris conscience de ses forces et de ses faiblesses et dès le 12, les Conseils "Justice et affaires intérieures", "Transpo
+
+=== C034
+CURRENT NAME: Local COVID-19 case and hospital updates
+  - (Québec) Le gouvernement Legault ne ferme pas la porte aux revendications d’un groupe de médecins. Les 700 signataires d’une lettre obtenue par La Presse canadienne réclament entre autres la nomination d’un directeur à l
+  - 山口県の１４日の新型コロナウイルスの新規感染者は３人でした。新たに感染が確認されたのは下関市の５０代の女性と９０代の女性、そして宇部市の４０代男性のあわせて３人です。宇部市の男性は今月８日にクラスター認定された通所介護施設の利用者の家族でこの施設での関連は累計で２２人となりました。下関市の５０代女性は市内の高齢者通所施設の職員で下関市の９０代女性は同じ高齢者通所施設の利用者でした。９０代の女性は別の高齢者施設に入所していて市は２つの施設
+  - RPI Bréal/Vitré ~ Mondevert Chers parents, Depuis deux semaines beaucoup d'élèves des deux écoles du RPI sont malades (maux de ventre, gastro, température, toux). Je vous invite à consulter votre médecin traitant et à év
+  - أعلنت مديرية الشئون الصحية بجنوب سيناء، فى بيان لها اليوم، عن تعافى 80 مريضا من فيروس كورونا، وخروجهم من الحجر الصحى بنزل الشباب بشرم الشيخ. وقال الدكتور أيمن رخا، وكيل وزارة الصحة بجنوب سيناء، أنه تم تعافى 8 حالات من مص
+  - Chuyên ngành đào tạo Sự kiện hot Tin nổi bật Tin tức Triệu chứng & Những nguyên nhân gây bệnh ngộ độc thực phẩm Ngộ độc thực phẩm thức ăn là gì? Đâu là những nguyên nhân và dấu hiệu để nhận biết bệnh lý này. Để biết rõ t
+  - Prof. Dr. İbrahim Benter Kıbrıs TV'de yayına konuk oldu. Genel Müdürümüz Prof. Dr. İbrahim Benter Kıbrıs TV'de Corona Virüs hakkında bilgiler verdi. Kıbrıs Vakıflar İdaresi'nin virüs önlemleri döneminde yaptığı yardım ka
+  - محافظة بغداد تحذر من تزايد حالات الاصابة بمرض العوز المناعي (الايدز) حريتي نيوز – بغداد حذرت محافظة بغداد من مغبة انتشار حالات الاصابة بمرض العوز المناعي ( الايدز) بعد رصد عدد من الحالات المصابة بهذا المرض في العاصمة “.
+  - Após realizar exames que indicaram no estado de saúde, o prefeito de Florianópolis, Gean Loureiro (DEM), recebeu alta antecipada nesta quarta-feira (21) do Hospital Baía Sul, onde estava internado desde o sábado (17), co
+  - Dịch bệnh Covid-19 ở trong nước vẫn tiếp tục diễn biến phức tạp trong hơn một tháng qua với nhiều biến thể mới xuất hiện. Các biến thể phụ chủng Omicron đã làm cho số ca mắc trong nước tăng nhanh, cùng với đó khiến cho n
+  - Жительница Брянска, которую подозревают в массовом заражении земляков коронавирусом, пыталась обжаловать меру пресечения. В марте текущего года женщина приехала из Испании и заразила коронавирусом сына, а тот разнес инфе
+  - Think Health Care Workers Are Tested Often For The Coronavirus? Think Again In a recent roundtable with Joe Biden, nurse Mary Turner told the president-elect something he found surprising: "Do you know that I have not be
+  - Generovať zložitejšiu verziu tejto vety Niektoré nemocnice hlásili prerušenie zdravotnej starostlivosti, zatiaľ čo iné sa spoliehali na záložné generátory. Samozrejme, zložitejšia verzia vety je "Niekoľko nemocníc hlásil
+  - Filho de vereador precisa de doação de medula; amigos fazem campanha nas redes sociais Nas redes sociais, familiares e amigos se mobilizaram e estão realizando uma campanha para procurar um doador de medula Óssea Nicodem
+  - Consultas sobre coronavirus La Empresa Pública de Emergencias Sanitarias (EPES) ha registrado desde el inicio del estado de alarma hasta el 1 de abril 3.567.540 de llamadas por todas las líneas recibiendo 67.043 llamadas
+  - 为全面保障我市防疫应急物资供给，经市新型冠状病毒感染的肺炎疫情防控指挥部研究，现就有关事项通告如下： 一、台州市内涉及口罩、防护服、护目镜、防护鞋套、消毒水等防疫用品生产、且符合防疫物资生产条件的企业，请主动向市防控指挥部报告企业产品及生产情况。各级政府要全力保障企业正常生产，落实防疫安全措施，确保防疫应急物资供应。联系方式：拨打0576-12345或联系市经信局0576-88510753，13968685333。 二、鼓励社会各界按需
+  - Delaware Officials Defy Calls To Release Prisoners Who Are At Risk Of Dying From Coronavirus Prisoners feel like they are ‘sitting ducks,’ said a woman whose boyfriend is incarcerated at the James T. Vaughn Correctional
+
+=== C035
+CURRENT NAME: Sentence-rewriting prompts about British people's birthplaces
+  - Gera uma versão mais complexa desta frase Reid nasceu em Whitstable, Kent, Inglaterra; seu pai era um médico no exército britânico. É claro que uma versão mais complexa da frase é "Reid nasceu em Whitstable, Kent, Inglat
+  - เมื่ออายุ 7 ขวบ เขาถูกส่งไปยังศาลของเฮนรี่ที่ 4 ในอังกฤษ แน่นอนว่าคําพูดที่ซับซ้อนกว่านี้คือ "ตอนอายุเจ็ดขวบ เขาถูกส่งไปยังศาลอังกฤษของเฮนรี่ที่สี่ เป็นคนรับใช้ของกษัตริย์ ซึ่งในตอนนั้นชื่อของเขาได้กลายมาเป็น Owen Tudor"
+  - Bu cümlənin daha mürəkkəb bir versiyasını yaradaq - Tager Flusberg İngiltərədə anadan olub. Əlbəttə ki, cümlənin daha mürəkkəb bir versiyası "Tager - Flusberg İngiltərədə anadan olub və London Universitet Kollecinin psix
+  - Wygenerować bardziej złożoną wersję tego zdania Edwards urodził się w Batley, Yorkshire, i uczęszczał do szkoły Henry Box w Witney. Oczywiście bardziej skomplikowana wersja zdania brzmi: "Edwards urodził się w Batley w Y
+  - Vytvorte zložitejšiu verziu tejto vety ako Leyland, Yorkshire bowler Roy Kilner trénoval v Indii v roku 1927 - 28. Samozrejme, zložitejšia verzia vety je "Ako Leyland, Yorkshire bowler Roy Kilner trénoval v Indii v rokoc
+  - Suo padre, Andrew Cockburn, e'anche lui un giornalista. Naturalmente, una versione più complessa della frase è "Suo padre, Andrew Cockburn, anch'egli giornalista, è nato a Londra, da genitori britannici, ed è cresciuto i
+  - Menjana versi yang lebih kompleks daripada ayat ini Gunn dilahirkan di Neston, Cheshire. Sudah tentu, versi yang lebih kompleks dari ayat ini adalah "Gunn dilahirkan di Neston, Cheshire, dan bekas murid Sekolah Sedbergh
+  - इस वाक्य का एक अधिक जटिल संस्करण उत्पन्न करें एंड्रयू माइकल कोलमैन (जन्म 8 जनवरी, 1944 जोहान्सबर्ग, दक्षिण अफ्रीका में) एक ब्रिटिश मनोवैज्ञानिक और लेस्टर विश्वविद्यालय में मनोविज्ञान के प्रोफेसर हैं । बेशक, वाक्य का एक अ
+  - Generar una versión más compleja de esta frase Mbatha-Raw nació en Oxford, Inglaterra en 1983 y creció en el pequeño pueblo de Witney en Oxfordshire. Por supuesto, una versión más compleja de la oración es "Mbatha-Raw cr
+  - Lawrence Millsom (3 May 1901 – 26 September 1959) was an English professional footballer who made 35 appearances in the Football League playing as a goalkeeper for Rotherham County and Torquay United. Personal life Lawre
+  - Jack London was born on January 12, 1876 in San Francisco into a poor family. He was raised by his mother as he never knew his father. The man he thought was his biological father, William Cheney, denied ever being marri
+  - Generate a more complex version of this sentence Tavaré lahir di Essex, Inggris dan pindah ke Cheshire dengan keluarganya ketika dia berusia tujuh tahun, dan dia menghadiri sekolah seni sebagai remaja di Northwich. Tentu
+  - Moore blev født i Gillingham, Kent og uddannet på Cranbrook School, Kent. Selvfølgelig er en mere kompleks version af sætningen: "Moore blev født i Gillingham, Kent og uddannet på Cranbrook School, Kent og begyndte sin k
+  - Vestido como un perfecto dandy británico en un garaje del centro de Madrid que durante un día emula los años de revolución contracultural por obra y gracia de una marca de ginebra Malcolm McLaren diserta sobre el movimie
+  - Ке́ннет Ви́льям Дэ́вид Хе́нсли (; 24 августа 1945, Лондон, Англия — 4 ноября 2020, Агост, Испания) — британский рок-музыкант; клавишник, гитарист, певец, автор песен и продюсер, наибольшую известность получивший как учас
+  - Smith is geboren en opgegroeid in Chiswick, boven de winkel. Natuurlijk is een meer complexe versie van de zin "Smith werd geboren en getogen in Chiswick, over de winkel, en werd opgeleid aan Hogarth Primary School, Chis
+
+=== C036
+CURRENT NAME: NLI training prompts and literary excerpts
+  - Schon 25 Todesopfer Lage weiter angespannt. Auch SMMP-Projekte vom Hochwasser in Rumänien bedroht Schineni / Heiligenstadt. „Die Nacht haben wir gut überstanden. Das Wasser geht nur langsam zurück. Die Polizei warnt vor
+  - ” Leí con atención el articulo Piensa positivo Respuesta: El primer paso es identificar el problema Después de estar todo el día cuidando a su bebe Mientras Sonia se inclinaba a recoger su mercadería sobre el mesón
+  - Atsižvelgiant į sakinį "Moterė sėdi lauke saulėje su švarku ant galvos ir vaivorykštės skėtis šalia jos". ar galime daryti išvadą, kad "Moterė, apdrausta geltonu švarku, sėdi parke"? Pasirinkimai: - Taip - neįmanoma pasa
+  - Jetzt klopfen sich die Koalitionsparteien wieder gegenseitig. Na, das hat uns gefehlt. Seit Wochen schon stichelt die ÖVP gegen die SPÖ. Und jetzt hat die SPÖ endlich eine Gelegenheit für eine Retourkutsche: Steuergeld v
+  - Med tanke på meningen "En kille hoppar från piren i sjön" kan vi dra slutsatsen att "En man dyker ner i sjön"? Alternativ: - Ja, det gör jag. - Det är inte möjligt att säga - Nej, det gör jag inte. Låt oss lösa steg för
+  - Students: "Divi strādnieki strādā uz jumta, un fona gaismā ir spīdīgs zils debesis". Hipotēze: "Darbinieki labo kamīnu". Vai mēs zinām, ka hipotēze, ko ietver priekšnoteikums? Skolotājs: Padomāsim: Ne visi, kas strādā uz
+  - "Els nens juguen junts en una recent inundació". Hipòtesi: "Els nens estan asseguts al desert". Sabem que la hipòtesi implica la premissa? D'acord, doncs, pensem primer... Jo: No pot haver-hi una inundació en un desert j
+  - Voor het eerst uit logeren 'Ik denk dat je beter kunt stoppen met drinken,' zei ik tegen Hanno. 'Ik denk dat je zo nog moet rijden.' Als rijbewijsloze had ik makkelijk praten. We waren uit eten omdat Yaël voor het eerst
+  - Estudiant: "Una dona al costat d'un carret de compres passant al costat d'un ànec". Basant-nos en aquesta premissa, podem concloure que la hipòtesi "L'ànec és prop d'un carro de la compra" és veritat? Opcions: - Sí - no
+  - Előfeltétele: "Egy szőke hajú kislány kék pólóban buborékokat fújja valakivel odakint". Feltételezés: "Két ember fújja a buborékokat". A hipotézis a premisszából fakad? Opciók: - Igen. - ezt nem lehet megmondani - Nem, l
+  - Ik moest daar aan denken toen vrijdag in ons Brabantse Deurne het deksel van de pan vloog en alle sentimenten rond Marokkaanse Nederlanders en Nederlandse Marokkanen een bloedig hoogtepunt beleefde. De Hel van Deurne was
+  - Og det MÅ stå i stil, og ei søppelbøtte er ikke bare ei søppelbøtte skjønner dere. Mannen turde i alle fall ikke anskaffe den. Han har skjønt det, herlig! hihi Jeg har lett i snart ett år etter ei svart søppelbøtte. Jeg
+  - 11/01/2010 Entrando pelo cano (congelado) Não há mais dúvidas – A neve pode ser bonitinha, mas os irlandeses não fazem a mínima idéia do que fazer com ela. O ministro já pediu, implorou pra todo mundo que tivesse acesso
+  - Ilan Halimi (11. lokakuuta 1982 – 13. helmikuuta 2006) oli marokkolaistaustainen ranskanjuutalainen, jonka maahanmuuttajataustainen jengi kaappasi Ranskassa 21. tammikuuta 2006. Jengin jäsenet pitivät häntä vankina 24 pä
+  - Os conteúdos deste blogue estão a ser transferidos para www.veraviana.net. Obrigada pela sua visita Bom dia.Eu ando no 11º ano e vou ter exame de GD-A.Neste momento estou de ferias a resolver alguns exercicios,porem há a
+  - Obsah /Ticho/ /Podzim/ /Hřbitov/ /Slavnost porozumění/ /Tvary/ /Doznání/ /Předjaří/ /Rosa/ /Jedy/ /Léta/ /Děvčátko na řece/ /Prázdno/ /Jižní slunce/ Píseň /Krása u dětí/ /Pastel/ /Nemocný/ /Trýzeň/ /Odpověď/ /Noci/ /Jist
+
+=== C037
+CURRENT NAME: Historic bridge descriptions and river crossings
+  - 10710 Falls Rd, Potomac, Maryland 20854 In Advise and Consent: “Off on the left of the winding road in the sparkling sunshine there appeared the rambling contours of Normandy Farms set on a little rise among its trees an
+  - Generate a more complex version of this sentence They are connected by both Whitchurch Bridge and by the weir of Whitchurch Lock . Of course, a more complex version of the sentence is "They are connected by Whitchurch Br
+  - Petite balade dominicale au bord du Rhône, côté Ardèche. Dimanche dernier, il faisait un temps idéal pour aller à la foire aux fleurs à Guilherand Granges, juste en face de Valence. L’occasion pour moi de faire un bon da
+  - Back River Light (Grandview Light), Back River, Chesapeake Bay, Virginia BACK RIVER LIGHT Lighthouse Name: Back River Light (also known as Grandview Light) Location: 6 miles north of Old Point Comfort, Chesapeake Bay, en
+  - The Ticonic Footbridge, popularly known as the Two Cent Bridge or the Two Penny Bridge, is a suspension bridge that spans the Kennebec River between the city of Waterville and the town of Winslow in Kennebec County, Main
+  - Puente Robert F. Kennedy El puente de Robert F. Kennedy (conocido anteriormente como Triborough Bridge) es un complejo compuesto de tres puentes que conectan los tres boroughs de Manhattan, Queens y el Bronx en Nueva Yor
+  - Spring Clean up time! Brush Chipping – Saturday, April 24th, 10:30am – 4:30pm Westford Highway Garage, 28 North Street, Westford. Accepted: Brush and branches up to 3 inches in diameter and 10 feet in length. Must be ave
+  - Waterloo Bridge is a road and foot traffic bridge crossing the River Thames in London, England between Blackfriars Bridge and Hungerford Bridge. History The first bridge on the site was designed in 1809-10 by John Rennie
+  - The Golescu Bridge () crosses the lower Someș River to the western part of Satu Mare city, linking the residential districts of Horea and Centru Nou. It is named after Nicolae Golescu, a Wallachian Romanian politician wh
+  - Platt Bridge on keskmise suurusega küla Inglismaal, kaks miili Wiganist lõuna pool mööda A573 selgroogu. Muidugi on lause keerulisem versioon "Platt Bridge on keskmise suurusega küla Wiganist 3 km lõuna pool A573 selgroo
+  - Ezután a Westport-i, Connecticut-i alapú fedezeti alapnál dolgozott, a Bridgewater Associatesnél. Természetesen a mondat egy bonyolultabb változata: "Aztán a Westportban, Connecticutban működő fedezeti alap, a Bridgewate
+  - Bu cümlenin daha karmaşık bir versiyonunu oluşturun George Hayward Bridgenorth'ta ayakkabıcılık işinde çalıştı. Tabii ki, cümlenin daha karmaşık bir versiyonu "George Hayward, Bridgenorth'ta ayakkabıcılık ticaretini sürd
+  - Beaver Creek and Fishtrap Creek Bridges Coos County, Oregon Start Date: Summer 2011 End Date: Summer 2012 Hamilton adds two more bridges to its list of project sites along the Oregon Coast with the demolition and reconst
+  - Het is toegankelijk via een betonnen brug die het kleine eiland verbindt met Big Pine Key. Natuurlijk is een meer complexe versie van de zin: "Het is toegankelijk via een betonnen brug die het kleine eiland verbindt met
+  - Δημιουργήστε μια πιο περίπλοκη εκδοχή αυτής της φράσης. Ο Empire Builder της Amtrak διασχίζει αυτή τη γέφυρα. Φυσικά, μια πιο περίπλοκη εκδοχή της πρότασης είναι "Το Empire Builder της Amtrak διασχίζει αυτή τη γέφυρα. Αυ
+  - A mondat egy bonyolultabb változata: Gateshead és Newcastle hét híddal van összekapcsolva a Tyne-on. Természetesen a mondat egy bonyolultabb változata: "Gateshead és Newcastle hét híd által kapcsolódik a Tyne-on keresztü
+
+=== C038
+CURRENT NAME: Encyclopedia and blog entries about individual lakes
+  - Beaverlodge Lake is a remote lake in northern Saskatchewan, Canada, located east of Uranium City. Road access is provided by Highway 962. The former Eldorado town site is on the lake and there has been extensive uranium
+  - Vacation getaway in Storm Lake,Iowa. Here are the tourist highlights of this wonderful area of Iowa. Storm Lake is located in Buena Vista County in Northwest Iowa. Hiway 71 goes right through the heart of Storm Lake. Sto
+  - Tämä kaupunki sijaitsee Lac La Ronge - järven länsirannikolla, ja se on lähellä Lac La Ronge - maakunnan puistoa. Tietenkin monimutkaisempi versio lauseesta on: "Kaupunki sijaitsee Lac la Rongen länsirannikolla, se on lä
+  - This article lists the largest lakes, natural and man-made, in the United States by volume—the amount of water they contain under normal conditions. Volumes given for lakes shared with Canada and Mexico are for the total
+  - Generate a more complex version of this sentence Long Lake is not a good walleye lake , it has only a handful of them . Of course, a more complex version of the sentence is "Long Lake is not a bood walleye lake , but it
+  - Ка́вголово: Кавголово — деревня во Всеволожском районе Ленинградской области. Кавголово — железнодорожная платформа во Всеволожском районе Ленинградской области. Кавголово — неофициальное название северной части посёлка
+  - Combine facts and answer this: What lake borders the city where the 308th Bombardment Wing was last stationed? Lake Champlain
+  - See ulatub läbi Link Lake'i maantee 11 ida suunas, kuid pole kindel, kas see ulatub Link Lake'ist läände. Muidugi on lause keerulisem versioon: "See ulatub läbi Link Lake'i ida poole maanteest 11, kuid on ebaselge, kas s
+  - Wabano peut signifier: Toponymes Canada (Québec) Barrage Wabano, Lac-Pikauba (Territoire non organisé), MRC de Charlevoix, région administrative de la Capitale-Nationale. Lac Wabano. Toponyme remplacé par: Lac Pemmican,
+  - Leo: Dada a frase "Um jovem sem camisa, de calções vermelhos e pretos, está em um penhasco coberto de neve e olha para o lago". é verdade que "Um homem está lá fora olhando para o lago".? Ok, então, vamos pensar primeiro
+  - La rivière Dulbi est un cours d'eau d'Alaska, aux États-Unis située dans la région de recensement de Yukon-Koyukuk. C'est un affluent de la rivière Koyukuk elle-même affluent du Yukon. Description Longue de , elle coule
+  - इस वाक्य का एक और अधिक जटिल संस्करण उत्पन्न करें एक लाल अलर्ट Onslow के लिए तैयारियों में डोमिनिक के लैंडफॉल के लिए घोषित किया गया था. बेशक, वाक्य का एक अधिक जटिल संस्करण है "ओन्स्लो के लिए एक लाल अलर्ट घोषित किया गया था
+  - En el sur de Australia el polvo también puede haber venido de la cuenca del lago Eyre o de la zona de Woomera. Por supuesto, una versión más compleja de la oración es "En Australia del Sur el polvo también puede haber ve
+  - Le lac d’Aydat est le plus grand lac naturel d’Auvergne. Il s’agit d’un lac de barrage volcanique aujourd'hui eutrophe. L’émergence de la coulée de lave (la cheire d'Aydat), longue de , du puy de la Vache et du puy de La
+  - Sin embargo, Hood reconstruye un cuerpo de los escombros de la casa. Por supuesto, una versión más compleja de la oración es "Sin embargo, Hood reconstruye un cuerpo de los escombros de la casa, lo que resulta en una con
+  - A fossa glandulae lacrimalis külső széle a crenatus lacrimalis anterior ami továbbfut az orbitális résszel. Az orbitális résszel való érintkezési pontnál van egy apró dudor, a tuberculum lacrimalis ami befolyásolja a kön
+
+=== C039
+CURRENT NAME: Directory entries for towns, rivers and constituencies in England
+  - Anathamna syringias is een vlinder uit de familie van de bladrollers (Tortricidae). De wetenschappelijke naam van de soort is voor het eerst geldig gepubliceerd in 1911 door Edward Meyrick. Type holotype: "female" instit
+  - Ustvarite bolj zapleteno različico tega stavka Boncath je vas v Pembrokeshireju, Zahodni Wales, Združeno kraljestvo. Seveda je bolj zapletena različica stavka "Boncath je vas v Pembrokeshireju, Zahodni Wales, nekoč vmesn
+  - Ustvarite bolj zapleteno različico tega stavka Navdih za oblikovanje Ferrières je bil Mentmore Towers v Buckinghamshireju v Angliji. Seveda je bolj zapletena različica stavka: "Inspiracija za zasnovo Ferrières je bila Me
+  - Selle põhilised asundused on Little Wymondley ja väiksem Great Wymondley. Muidugi on lause keerulisem versioon: "Tema peamised asundused on Little Wymondley ja väiksem Great Wymondley, see hõlmab ka Todd's Green'i ja Tit
+  - Δημιουργήστε μια πιο σύνθετη εκδοχή αυτής της πρότασης. Το Φέρι Πόιντ είναι στο νησί Χέιλινγκ στο Χάμσαϊρ της Αγγλίας. Φυσικά, μια πιο σύνθετη εκδοχή της πρότασης είναι "Το Ferry Point βρίσκεται στο δυτικότερο άκρο του ν
+  - Nap hand for East of England region at IBC Amsterdam Five East of England technology start ups have secured the opportunity to exhibit at one of the largest broadcasting trade shows in the world (IBC Amsterdam) with supp
+  - Nach Schottland und Wales geht es um die dritte keltische Ecke Großbritanniens. Mit steilen Küsten, deftigen Pasteten, Streichrahm und Liebesschnulzen. Wo es drei Nationalheilige gibt, aber kein Zinn mehr. Wo das bekannt
+  - Hello, Benjamin and Hannah are my g.g.g.grandparent on my father's side. I'm trying to find out anything about them and their ancestors. The only dates I have is their marriage date of 26 May 1789. I believe they were bo
+  - Highgate kan syfta på: Highgate, London – en stadsdel (district) i London Borough of Camden i norra London, Storbritannien Highgate Cemetery – en gravplats i Highgate i norra London, Storbritannien Highgate, Vermont – en
+  - Generate a more complex version of this sentence Arthur 's Hill is an area of Newcastle upon Tyne , England . Of course, a more complex version of the sentence is "Arthur 's Hill is an area of Newcastle upon Tyne ( Engla
+  - Corringham é uma cidade no condado de Essex, a leste do borough de Thurrock a sudeste da Inglaterra, no Reino Unido. O nome da cidade se originou do nome Curra, um chefe saxão, seguido dos sufixos -ing para seguidores e
+  - Menjana versi yang lebih kompleks daripada ayat ini Lapangan Terbang Redlands (X2SN) adalah lapangan terbang swasta yang tidak berlesen di Wanborough, timur Swindon, Wiltshire, England. Sudah tentu, versi yang lebih komp
+  - Wantage Methodist Church is situated at Newbury Street, Wantage, Oxfordshire OX12 8DA Revd Keith Underhill is the Minister at our Church. Keith joined us on 1st September 2016, having previously been in Alton Hampshire,
+  - Localidades Scarborough (North Yorkshire) - a origem dos nomes das outras cidades. Scarborough (Ontário) Scarborough (Maine) Scarborough (Virgínia Ocidental) Scarborough (Austrália Ocidental) Scarborough (Queensland) Sca
+  - Central Bedfordshire is een unitary authority en een district in het graafschap Bedfordshire. Het bestuurlijke gebied ontstond op 1 april 2009 door de samenvoeging van Mid Bedfordshire en South Bedfordshire. In Central B
+  - Kempsey ist der Name folgender Ortschaften: Kempsey (New South Wales), ein Ort in Australien Kempsey (Worcestershire), ein Ort in England

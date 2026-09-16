@@ -646,3 +646,19 @@ def test_removed_single_language_checks_are_gone(tmp_path):
     assert "T0-ENC-002" not in ids
     assert "T1-LANG-004" not in ids
     assert {"T0-ENC-001", "T1-LANG-001", "T1-LANG-002", "T1-LANG-003"} <= ids
+
+
+def test_atlas_check_thresholds_scale_with_the_map():
+    """Bounds drawn on a 215-cell map must mean the same thing on 4,096 cells."""
+    from dropoutt.checks.tier1_atlas import (
+        TopicalConcentration,
+        crowded_region_share,
+        min_placed,
+    )
+
+    assert abs(crowded_region_share(215) - 0.186) < 0.001
+    assert crowded_region_share(4_096) == 0.02
+    assert crowded_region_share(0) == 0.02
+    assert min_placed(215) == 300
+    assert min_placed(4_096) == 512
+    assert abs(TopicalConcentration.MAX_EFFECTIVE_SHARE * 215 - 10.75) < 0.01

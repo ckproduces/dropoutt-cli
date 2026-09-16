@@ -1,0 +1,3146 @@
+[
+ {
+  "kind": "exams_tr",
+  "item": "Physics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Quantum physics, optics and nanomaterials",
+  "share": 0.22
+ },
+ {
+  "kind": "mmlu",
+  "item": "world_religions",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Articles about Hindu and Buddhist scripture and philosophy",
+  "share": 0.09
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "engineering",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Mobile devices, electronics and technical products",
+  "share": 0.56
+ },
+ {
+  "kind": "source",
+  "item": "CShorten__ML-ArXiv-Papers",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Machine-learning, statistics and computer science papers",
+  "share": 0.79
+ },
+ {
+  "kind": "source",
+  "item": "openbmb__UltraFeedback",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Questions, answers and puzzle prompts",
+  "share": 0.07
+ },
+ {
+  "kind": "source",
+  "item": "iamtarun__python_code_instructions_18k_alpaca",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.32
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Chemistry",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.22
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Biology",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Cell biology, proteins and immunology",
+  "share": 0.14
+ },
+ {
+  "kind": "source",
+  "item": "winddude__reddit_finance_43_250k",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Cryptocurrency, forex and market trading",
+  "share": 0.28
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_government_and_politics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Government policy, advocacy and public affairs",
+  "share": 0.39
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__php",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.81
+ },
+ {
+  "kind": "source",
+  "item": "microsoft__orca-math-word-problems-200k",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Cost comparison and price calculation articles",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "law",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Courts, criminal cases and United States history",
+  "share": 0.37
+ },
+ {
+  "kind": "source",
+  "item": "gretelai__synthetic_text_to_sql",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Government regulations, contracts and public records",
+  "share": 0.36
+ },
+ {
+  "kind": "mmlu",
+  "item": "philosophy",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Philosophy, ideas and the humanities",
+  "share": 0.35
+ },
+ {
+  "kind": "mmlu",
+  "item": "business_ethics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Philosophy, ethics and intellectual history",
+  "share": 0.08
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_chemistry",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Chemical preparation and acid solution procedures",
+  "share": 0.11
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_geography",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Essays and articles about urbanization and smart cities",
+  "share": 0.04
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_medicine",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Protein supplement and anabolic steroid articles for bodybuilders",
+  "share": 0.05
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__go",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.48
+ },
+ {
+  "kind": "source",
+  "item": "microsoft__orca-math-word-problems-200k",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Money arithmetic word problems",
+  "share": 0.26
+ },
+ {
+  "kind": "mmlu",
+  "item": "human_aging",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Children, parenting and child welfare",
+  "share": 0.09
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__java",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.62
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_biology",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Stem cell and tissue regeneration research papers",
+  "share": 0.09
+ },
+ {
+  "kind": "mmlu",
+  "item": "miscellaneous",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "B-named band and artist encyclopedia entries",
+  "share": 0.01
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__ledgar",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Statutes, court rulings and legal proceedings",
+  "share": 0.56
+ },
+ {
+  "kind": "source",
+  "item": "xlangai__spider",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "SQL query and stored-procedure troubleshooting snippets",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "moral_disputes",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Philosophy, ideas and the humanities",
+  "share": 0.23
+ },
+ {
+  "kind": "exams_tr",
+  "item": "History",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Turkey, the Middle East and neighbouring regions",
+  "share": 0.13
+ },
+ {
+  "kind": "source",
+  "item": "nvidia__OpenMathInstruct-2",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.33
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__shell",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Software installation guides and shell setup",
+  "share": 0.58
+ },
+ {
+  "kind": "mmlu",
+  "item": "global_facts",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Research articles about children's development by age",
+  "share": 0.1
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "other",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Money arithmetic word problems",
+  "share": 0.14
+ },
+ {
+  "kind": "source",
+  "item": "tatsu-lab__alpaca",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Word game and anagram dictionary tools",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "electrical_engineering",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Mobile devices, electronics and technical products",
+  "share": 0.38
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Business",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Workplace management and professional development",
+  "share": 0.11
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Geography",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Economies, growth and economic policy",
+  "share": 0.15
+ },
+ {
+  "kind": "mmlu",
+  "item": "human_sexuality",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Psychology, relationships and self-help",
+  "share": 0.17
+ },
+ {
+  "kind": "mmlu",
+  "item": "international_law",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Courts, lawyers and legal procedure",
+  "share": 0.55
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_chemistry",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Molecular biology, genomics and cancer research",
+  "share": 0.28
+ },
+ {
+  "kind": "source",
+  "item": "tatsu-lab__alpaca",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Psychology, relationships and self-help",
+  "share": 0.09
+ },
+ {
+  "kind": "mmlu",
+  "item": "world_religions",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Middle East politics, conflict and religion",
+  "share": 0.13
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_government_and_politics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Local news about ballots, vote counts and voting procedures",
+  "share": 0.07
+ },
+ {
+  "kind": "mmlu",
+  "item": "astronomy",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Astronomy, asteroids and space missions",
+  "share": 0.51
+ },
+ {
+  "kind": "mmlu",
+  "item": "electrical_engineering",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Motors, power electronics and controllers",
+  "share": 0.27
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "business",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Money arithmetic word problems",
+  "share": 0.66
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_physics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Theoretical physics models and phase transitions",
+  "share": 0.22
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_mathematics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Banking, loans and retail finance",
+  "share": 0.31
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__scotus",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Court opinions, appeals and case law",
+  "share": 0.7
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_chemistry",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Chemical compounds, acids and natural ingredients",
+  "share": 0.23
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__c",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Code review and algorithm optimization questions",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_us_history",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Human rights, democracy and governance",
+  "share": 0.41
+ },
+ {
+  "kind": "source",
+  "item": "iamtarun__python_code_instructions_18k_alpaca",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.41
+ },
+ {
+  "kind": "mmlu",
+  "item": "machine_learning",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.52
+ },
+ {
+  "kind": "mmlu",
+  "item": "miscellaneous",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Film, music and celebrity encyclopedia entries",
+  "share": 0.05
+ },
+ {
+  "kind": "mmlu",
+  "item": "human_sexuality",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Articles about menstrual and reproductive health",
+  "share": 0.08
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Philosophy",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Philosophy, ideas and the humanities",
+  "share": 0.27
+ },
+ {
+  "kind": "source",
+  "item": "winddude__reddit_finance_43_250k",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Stock markets, interest rates and market reports",
+  "share": 0.13
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_psychology",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Behavioral psychology intervention studies",
+  "share": 0.06
+ },
+ {
+  "kind": "mmlu",
+  "item": "public_relations",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Psychology, relationships and self-help",
+  "share": 0.29
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "economics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Macroeconomics, markets and central banks",
+  "share": 0.37
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__unfair_tos",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Website terms and conditions boilerplate",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "logical_fallacies",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Self-help, advice and personal reflection",
+  "share": 0.3
+ },
+ {
+  "kind": "mmlu",
+  "item": "sociology",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Psychology, relationships and self-help",
+  "share": 0.21
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__eurlex",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Commission regulations on export refunds and prices",
+  "share": 0.87
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_psychology",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Research methods, studies and academic assessment",
+  "share": 0.15
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_physics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Fluid dynamics and motion physics research",
+  "share": 0.14
+ },
+ {
+  "kind": "mmlu",
+  "item": "us_foreign_policy",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Human rights, democracy and governance",
+  "share": 0.19
+ },
+ {
+  "kind": "source",
+  "item": "allenai__c4__en",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Music, film and celebrity biographies",
+  "share": 0.04
+ },
+ {
+  "kind": "mmlu",
+  "item": "abstract_algebra",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Papers about mathematical functions and equations",
+  "share": 0.37
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__javascript",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.76
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "chemistry",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.51
+ },
+ {
+  "kind": "mmlu",
+  "item": "management",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Innovation, sustainable development and partnerships",
+  "share": 0.12
+ },
+ {
+  "kind": "source",
+  "item": "proof-pile-2__arxiv",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.41
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "chemistry",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Mobile devices, electronics and technical products",
+  "share": 0.36
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_geography",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "European Union politics, economics and public policy",
+  "share": 0.1
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__php",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.81
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_mathematics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.55
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__unfair_tos",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Statutes, court rulings and legal proceedings",
+  "share": 0.16
+ },
+ {
+  "kind": "mmlu",
+  "item": "international_law",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Articles explaining legal theory and principles",
+  "share": 0.2
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "economics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "News articles about inflation and consumer prices",
+  "share": 0.09
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_european_history",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Human rights, democracy and governance",
+  "share": 0.26
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "history",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Human rights, democracy and governance",
+  "share": 0.17
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__go",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Windows, servers and software administration",
+  "share": 0.45
+ },
+ {
+  "kind": "source",
+  "item": "BEE-spoke-data__peS2o-100k_en-xlong",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Cell biology, proteins and immunology",
+  "share": 0.18
+ },
+ {
+  "kind": "mmlu",
+  "item": "clinical_knowledge",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Molecular biology, genomics and cancer research",
+  "share": 0.24
+ },
+ {
+  "kind": "source",
+  "item": "openai__gsm8k__main",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Money arithmetic word problems",
+  "share": 0.36
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "physics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Mobile devices, electronics and technical products",
+  "share": 0.37
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__ledgar",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Statutes, decrees and official gazettes",
+  "share": 0.41
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "psychology",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mental health, stress and emotional wellbeing",
+  "share": 0.16
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_biology",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Molecular biology, genomics and cancer research",
+  "share": 0.52
+ },
+ {
+  "kind": "source",
+  "item": "rajpurkar__squad",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Human rights, democracy and governance",
+  "share": 0.03
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_microeconomics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Macroeconomics, markets and central banks",
+  "share": 0.32
+ },
+ {
+  "kind": "source",
+  "item": "databricksbricks-dolly-15k",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "US pro sports, coaches and draft news",
+  "share": 0.03
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_law",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "News articles about US federal courts and rulings",
+  "share": 0.06
+ },
+ {
+  "kind": "source",
+  "item": "hendrycks_math__geometry",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Banking, loans and retail finance",
+  "share": 0.42
+ },
+ {
+  "kind": "mmlu",
+  "item": "human_aging",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Research articles about children's development by age",
+  "share": 0.09
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_us_history",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Articles about the US Constitution and constitutional rights",
+  "share": 0.13
+ },
+ {
+  "kind": "mmlu",
+  "item": "electrical_engineering",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Voltage and power supply circuit articles",
+  "share": 0.19
+ },
+ {
+  "kind": "source",
+  "item": "allenai__c4__multilingual",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Court records, web pages and digitised books",
+  "share": 0.06
+ },
+ {
+  "kind": "source",
+  "item": "open-web-math__open-web-math",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.51
+ },
+ {
+  "kind": "source",
+  "item": "mcemilg__news-cat",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Football coverage of Turkey's Süper Lig clubs",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_world_history",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Historical writings about government and political power",
+  "share": 0.1
+ },
+ {
+  "kind": "mmlu",
+  "item": "computer_security",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Windows, consumer devices and system support",
+  "share": 0.26
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_medicine",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Molecular biology, genomics and cancer research",
+  "share": 0.4
+ },
+ {
+  "kind": "mmlu",
+  "item": "anatomy",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Orthopedic fracture and spinal surgery research",
+  "share": 0.1
+ },
+ {
+  "kind": "mmlu",
+  "item": "formal_logic",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Papers about mathematical functions and equations",
+  "share": 0.1
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__javascript",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Typed class and API usage code snippets",
+  "share": 0.0
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Physics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Renewable energy, power systems and climate policy",
+  "share": 0.16
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_biology",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Evolution and Darwinian theory essays",
+  "share": 0.05
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__rust",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.42
+ },
+ {
+  "kind": "source",
+  "item": "qiaojin__PubMedQA__pqa_artificial",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Cell biology, proteins and immunology",
+  "share": 0.31
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_microeconomics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "News articles about inflation and consumer prices",
+  "share": 0.14
+ },
+ {
+  "kind": "source",
+  "item": "Anthropic__hh-rlhf",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "NLI premise-hypothesis pairs about people observing others",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "mcemilg__news-cat",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Football leagues, transfers and player careers",
+  "share": 0.11
+ },
+ {
+  "kind": "source",
+  "item": "tatsu-lab__alpaca",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Languages, linguistics and language learning",
+  "share": 0.05
+ },
+ {
+  "kind": "mmlu",
+  "item": "global_facts",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Macroeconomics, markets and central banks",
+  "share": 0.24
+ },
+ {
+  "kind": "mmlu",
+  "item": "econometrics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.57
+ },
+ {
+  "kind": "source",
+  "item": "openai__gsm8k__main",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Word problems about total cost and discounts",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "motherduckdb__duckdb-text2sql-25k",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.3
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__java",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.73
+ },
+ {
+  "kind": "mmlu",
+  "item": "medical_genetics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Genetics and gene expression educational essays",
+  "share": 0.08
+ },
+ {
+  "kind": "source",
+  "item": "finemath__finemath-3plus",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.32
+ },
+ {
+  "kind": "mmlu",
+  "item": "virology",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Diseases, symptoms and clinical care",
+  "share": 0.44
+ },
+ {
+  "kind": "source",
+  "item": "BEE-spoke-data__peS2o-100k_en-xlong",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.31
+ },
+ {
+  "kind": "source",
+  "item": "xlcost-text-to-code__Python",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Product listings spanning cosmetics, livestock and lab gear",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "OpenAssistant__oasst1",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Machine-learning, statistics and computer science papers",
+  "share": 0.03
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Philosophy",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Philosophy, ethics and intellectual history",
+  "share": 0.33
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "computer science",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.19
+ },
+ {
+  "kind": "source",
+  "item": "openbmb__UltraFeedback",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Nonsensical-sentence and paraphrase-identification training prompts",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "gbharti__finance-alpaca",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Taxes, debt and personal finance",
+  "share": 0.21
+ },
+ {
+  "kind": "mmlu",
+  "item": "nutrition",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Articles about vitamin and multivitamin supplements",
+  "share": 0.08
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "history",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Political theory, democracy and international affairs",
+  "share": 0.18
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Business",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Compliance and operations management consulting",
+  "share": 0.07
+ },
+ {
+  "kind": "mmlu",
+  "item": "abstract_algebra",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.34
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "law",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Courts, lawyers and legal procedure",
+  "share": 0.21
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_microeconomics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Stock markets, interest rates and market reports",
+  "share": 0.2
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_statistics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.14
+ },
+ {
+  "kind": "source",
+  "item": "proof-pile-2__arxiv",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.83
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "business",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Cost comparison and price calculation articles",
+  "share": 0.25
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_physics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Quantum physics, optics and nanomaterials",
+  "share": 0.4
+ },
+ {
+  "kind": "source",
+  "item": "OpenAssistant__oasst1",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.08
+ },
+ {
+  "kind": "source",
+  "item": "xlcost-text-to-code__Python",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Product listings, sizes and shopping-cart pages",
+  "share": 0.3
+ },
+ {
+  "kind": "mmlu",
+  "item": "anatomy",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Molecular biology, genomics and cancer research",
+  "share": 0.47
+ },
+ {
+  "kind": "mmlu",
+  "item": "security_studies",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Political theory, democracy and international affairs",
+  "share": 0.26
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_medicine",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Digestive and urinary tract disorder articles",
+  "share": 0.1
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__c",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.34
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__ecthr_a",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Appellate opinions on civil judgments and procedural motions",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "clinical_knowledge",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Symptoms, illnesses and medication side effects",
+  "share": 0.14
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_european_history",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Historical writings about government and political power",
+  "share": 0.08
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "math",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Mobile devices, electronics and technical products",
+  "share": 0.23
+ },
+ {
+  "kind": "mmlu",
+  "item": "moral_scenarios",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Personal feelings, grief and confessional writing",
+  "share": 0.78
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "law",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Criminal appeal opinions addressing trial evidence errors",
+  "share": 0.06
+ },
+ {
+  "kind": "mmlu",
+  "item": "formal_logic",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.22
+ },
+ {
+  "kind": "source",
+  "item": "CShorten__ML-ArXiv-Papers",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.66
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_physics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Atomic structure and chemistry explainers",
+  "share": 0.1
+ },
+ {
+  "kind": "mmlu",
+  "item": "conceptual_physics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Quantum physics, optics and nanomaterials",
+  "share": 0.23
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__ruby",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "React and Ruby package installation snippets",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "turkish-nlp-suite__InstrucTurca",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.09
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_government_and_politics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Elections, voting and ballots",
+  "share": 0.25
+ },
+ {
+  "kind": "source",
+  "item": "no_robots",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Personal blog poetry about dreams and emotions",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "abstract_algebra",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.68
+ },
+ {
+  "kind": "source",
+  "item": "stack-exchange-preferences",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.49
+ },
+ {
+  "kind": "mmlu",
+  "item": "international_law",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Statutes, court rulings and legal proceedings",
+  "share": 0.5
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__ledgar",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Consumer contract terms and conditions notices",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__rust",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.49
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Geography",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Essays and articles about urbanization and smart cities",
+  "share": 0.05
+ },
+ {
+  "kind": "mmlu",
+  "item": "machine_learning",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Papers about mathematical functions and equations",
+  "share": 0.25
+ },
+ {
+  "kind": "source",
+  "item": "allenai__c4__en",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Marketing copy for landscaping and home-renovation trades",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "proof-pile-2__arxiv",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Research abstracts about differential equations and operator theory",
+  "share": 0.0
+ },
+ {
+  "kind": "exams_tr",
+  "item": "History",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Middle East politics, conflict and religion",
+  "share": 0.16
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__javascript",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.78
+ },
+ {
+  "kind": "mmlu",
+  "item": "medical_genetics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Cell biology, proteins and immunology",
+  "share": 0.24
+ },
+ {
+  "kind": "source",
+  "item": "open-web-math__open-web-math",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.46
+ },
+ {
+  "kind": "source",
+  "item": "databricksbricks-dolly-15k",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Musical instrument description pages",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_biology",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Genetics, genomics and biotechnology",
+  "share": 0.24
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_chemistry",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.27
+ },
+ {
+  "kind": "source",
+  "item": "winddude__reddit_finance_43_250k",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Articles about saving money and personal budgeting",
+  "share": 0.0
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Biology",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Molecular biology, genomics and cancer research",
+  "share": 0.39
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_computer_science",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.2
+ },
+ {
+  "kind": "source",
+  "item": "open-web-math__open-web-math",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Math research abstracts and proof-based forum questions",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "hendrycks_math__number_theory",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Banking, loans and retail finance",
+  "share": 0.74
+ },
+ {
+  "kind": "mmlu",
+  "item": "marketing",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Content and inbound marketing articles",
+  "share": 0.1
+ },
+ {
+  "kind": "mmlu",
+  "item": "philosophy",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Philosophy, ethics and intellectual history",
+  "share": 0.26
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_medicine",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Cell biology, proteins and immunology",
+  "share": 0.21
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_macroeconomics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "News articles about inflation and consumer prices",
+  "share": 0.15
+ },
+ {
+  "kind": "source",
+  "item": "BEE-spoke-data__peS2o-100k_en-xlong",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Research abstracts about cohort studies and disease risk factors",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "gbharti__finance-alpaca",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Loans, credit cards and personal payments",
+  "share": 0.23
+ },
+ {
+  "kind": "mmlu",
+  "item": "us_foreign_policy",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Academic articles about governance and political science theory",
+  "share": 0.07
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "computer science",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.31
+ },
+ {
+  "kind": "mmlu",
+  "item": "medical_genetics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Molecular biology, genomics and cancer research",
+  "share": 0.54
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_accounting",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Accounting firms, careers and assignment help",
+  "share": 0.12
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__unfair_tos",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Privacy policies and data protection notices",
+  "share": 0.24
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__scotus",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Courts, criminal cases and United States history",
+  "share": 0.83
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "physics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.3
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_european_history",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Political theory, democracy and international affairs",
+  "share": 0.27
+ },
+ {
+  "kind": "source",
+  "item": "deepmind__aqua_rat__raw",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Money arithmetic word problems",
+  "share": 0.27
+ },
+ {
+  "kind": "mmlu",
+  "item": "management",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Sentence-rewriting prompts about workers and labor",
+  "share": 0.06
+ },
+ {
+  "kind": "source",
+  "item": "b-mc2__sql-create-context",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.08
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_computer_science",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.23
+ },
+ {
+  "kind": "source",
+  "item": "hendrycks_math__number_theory",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.77
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_mathematics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.55
+ },
+ {
+  "kind": "mmlu",
+  "item": "computer_security",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Cybersecurity, malware and data breaches",
+  "share": 0.15
+ },
+ {
+  "kind": "source",
+  "item": "finemath__finemath-3plus",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Programming puzzles about number sequences and algorithms",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "openbmb__UltraFeedback",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Psychology, relationships and self-help",
+  "share": 0.14
+ },
+ {
+  "kind": "mmlu",
+  "item": "elementary_mathematics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Banking, loans and retail finance",
+  "share": 0.14
+ },
+ {
+  "kind": "mmlu",
+  "item": "elementary_mathematics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Multiple-choice aptitude-test math problems",
+  "share": 0.11
+ },
+ {
+  "kind": "source",
+  "item": "stack-exchange-preferences",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Shell scripting and file-manipulation Q&A",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "physics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Programming puzzles about number sequences and algorithms",
+  "share": 0.12
+ },
+ {
+  "kind": "mmlu",
+  "item": "sociology",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Research methods, studies and academic assessment",
+  "share": 0.15
+ },
+ {
+  "kind": "mmlu",
+  "item": "us_foreign_policy",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Russia, Ukraine and international politics",
+  "share": 0.26
+ },
+ {
+  "kind": "mmlu",
+  "item": "computer_security",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Encryption and cryptography Q&A",
+  "share": 0.08
+ },
+ {
+  "kind": "mmlu",
+  "item": "logical_fallacies",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Criminal charges, trials and prosecutions",
+  "share": 0.15
+ },
+ {
+  "kind": "source",
+  "item": "ultrachat_200k",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Psychology, relationships and self-help",
+  "share": 0.13
+ },
+ {
+  "kind": "source",
+  "item": "allenai__c4__en",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Club notices, recurring meetups and invitations",
+  "share": 0.01
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__python",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.41
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Chemistry",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Quantum physics, optics and nanomaterials",
+  "share": 0.25
+ },
+ {
+  "kind": "mmlu",
+  "item": "marketing",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Digital marketing and advertising agencies",
+  "share": 0.26
+ },
+ {
+  "kind": "mmlu",
+  "item": "marketing",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Retail sales, products and order fulfillment",
+  "share": 0.18
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Philosophy",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Philosopher biography encyclopedia stubs",
+  "share": 0.11
+ },
+ {
+  "kind": "source",
+  "item": "rajpurkar__squad",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Judaism religion and culture articles",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "nvidia__OpenMathInstruct-2",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Math research abstracts and proof-based forum questions",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "clinical_knowledge",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Digestive and urinary tract disorder articles",
+  "share": 0.03
+ },
+ {
+  "kind": "source",
+  "item": "codeparrot-clean-valid",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.49
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__ecthr_a",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Court opinions, appeals and case law",
+  "share": 0.31
+ },
+ {
+  "kind": "source",
+  "item": "codecomplete__starcoderdata_0.003",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Typed class and API usage code snippets",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "nutrition",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Nutrition, dieting and metabolic health",
+  "share": 0.54
+ },
+ {
+  "kind": "mmlu",
+  "item": "philosophy",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Ethics and morality philosophy essays",
+  "share": 0.14
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__java",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Typed class and API usage code snippets",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "psychology",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Mental health, counseling and wellbeing",
+  "share": 0.3
+ },
+ {
+  "kind": "source",
+  "item": "TFLai__Turkish-Alpaca",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Psychology, relationships and self-help",
+  "share": 0.04
+ },
+ {
+  "kind": "source",
+  "item": "motherduckdb__duckdb-text2sql-25k",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.22
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_physics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.31
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_mathematics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Forum questions and tutorials about geometry and equations",
+  "share": 0.16
+ },
+ {
+  "kind": "source",
+  "item": "b-mc2__sql-create-context",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Programming puzzles about number sequences and algorithms",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "math",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.46
+ },
+ {
+  "kind": "mmlu",
+  "item": "elementary_mathematics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Money arithmetic word problems",
+  "share": 0.28
+ },
+ {
+  "kind": "source",
+  "item": "hendrycks_math__number_theory",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Math research abstracts and proof-based forum questions",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "chemistry",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Programming puzzles about number sequences and algorithms",
+  "share": 0.15
+ },
+ {
+  "kind": "mmlu",
+  "item": "sociology",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Sociology and social science explainer articles",
+  "share": 0.07
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Physics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Specification listings for industrial machinery and equipment",
+  "share": 0.08
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "math",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Programming puzzles about number sequences and algorithms",
+  "share": 0.25
+ },
+ {
+  "kind": "source",
+  "item": "hendrycks_math__algebra",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Math research abstracts and proof-based forum questions",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "CShorten__ML-ArXiv-Papers",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Deep and convolutional neural network papers",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_medicine",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Symptoms, illnesses and medication side effects",
+  "share": 0.33
+ },
+ {
+  "kind": "source",
+  "item": "TFLai__Turkish-Alpaca",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Sentence-rewriting prompts about behavior and descriptive facts",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__php",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Typed class and API usage code snippets",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_psychology",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Cognitive psychology and neuroscience articles",
+  "share": 0.04
+ },
+ {
+  "kind": "mmlu",
+  "item": "human_aging",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Mental health, counseling and wellbeing",
+  "share": 0.21
+ },
+ {
+  "kind": "mmlu",
+  "item": "public_relations",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Descriptions of nonprofit and international organizations",
+  "share": 0.07
+ },
+ {
+  "kind": "source",
+  "item": "xlangai__spider",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Names and entries starting with T",
+  "share": 0.2
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__python",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.43
+ },
+ {
+  "kind": "mmlu",
+  "item": "miscellaneous",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Music, film and celebrity biographies",
+  "share": 0.07
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_psychology",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mental health, stress and emotional wellbeing",
+  "share": 0.15
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Sociology",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Sociology and social science explainer articles",
+  "share": 0.15
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_world_history",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Political theory, democracy and international affairs",
+  "share": 0.27
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_medicine",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Diseases, symptoms and clinical care",
+  "share": 0.64
+ },
+ {
+  "kind": "source",
+  "item": "allenai__c4__multilingual",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Local news articles and personal blog posts",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "philosophy",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Philosophy, ethics and intellectual history",
+  "share": 0.14
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__go",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Code review and algorithm optimization questions",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_biology",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Molecular biology, genomics and cancer research",
+  "share": 0.34
+ },
+ {
+  "kind": "source",
+  "item": "nvidia__HelpSteer2",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Machine-learning, statistics and computer science papers",
+  "share": 0.04
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Business",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Corporate finance, investment and asset management",
+  "share": 0.15
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "philosophy",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Philosophy, ideas and the humanities",
+  "share": 0.22
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_world_history",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Human rights, democracy and governance",
+  "share": 0.25
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_accounting",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Banking, loans and retail finance",
+  "share": 0.29
+ },
+ {
+  "kind": "source",
+  "item": "qiaojin__PubMedQA__pqa_artificial",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Research abstracts about cardiovascular and heart disease",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "global_facts",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Economies, growth and economic policy",
+  "share": 0.18
+ },
+ {
+  "kind": "source",
+  "item": "codecomplete__starcoderdata_0.003",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.45
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "computer science",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Programming puzzles about number sequences and algorithms",
+  "share": 0.11
+ },
+ {
+  "kind": "source",
+  "item": "microsoft__orca-math-word-problems-200k",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Banking, loans and retail finance",
+  "share": 0.25
+ },
+ {
+  "kind": "source",
+  "item": "TFLai__Turkish-Alpaca",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Artificial intelligence, robotics and technology",
+  "share": 0.04
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "engineering",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Specification listings for industrial machinery and equipment",
+  "share": 0.2
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "economics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Stock markets, interest rates and market reports",
+  "share": 0.21
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_computer_science",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Lessons about numbers, integers and number theory",
+  "share": 0.05
+ },
+ {
+  "kind": "mmlu",
+  "item": "prehistory",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Human biology and behavior essays",
+  "share": 0.06
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__eurlex",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "EU regulations setting agricultural export refund rates",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "engineering",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.3
+ },
+ {
+  "kind": "source",
+  "item": "finemath__finemath-3plus",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.44
+ },
+ {
+  "kind": "mmlu",
+  "item": "econometrics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Machine-learning, statistics and computer science papers",
+  "share": 0.58
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "health",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Cardiovascular and blood vessel anatomy articles",
+  "share": 0.04
+ },
+ {
+  "kind": "mmlu",
+  "item": "machine_learning",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.37
+ },
+ {
+  "kind": "source",
+  "item": "no_robots",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Music, film and celebrity biographies",
+  "share": 0.13
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_statistics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Machine-learning, statistics and computer science papers",
+  "share": 0.19
+ },
+ {
+  "kind": "source",
+  "item": "allenai__c4__multilingual",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Forums, commentary and mixed web content",
+  "share": 0.04
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__ruby",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.44
+ },
+ {
+  "kind": "mmlu",
+  "item": "virology",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Virus biology and scientific research articles",
+  "share": 0.2
+ },
+ {
+  "kind": "source",
+  "item": "nvidia__HelpSteer2",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Psychology, relationships and self-help",
+  "share": 0.11
+ },
+ {
+  "kind": "mmlu",
+  "item": "world_religions",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "India, Hindu culture and Indian places",
+  "share": 0.19
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_geography",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Human rights, democracy and governance",
+  "share": 0.09
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Chemistry",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Atomic structure and chemistry explainers",
+  "share": 0.14
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "business",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Banking, loans and retail finance",
+  "share": 0.67
+ },
+ {
+  "kind": "source",
+  "item": "codeparrot-clean-valid",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Code review and algorithm optimization questions",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "nvidia__OpenMathInstruct-2",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.65
+ },
+ {
+  "kind": "source",
+  "item": "mcemilg__news-cat",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Football leagues, cups and match previews",
+  "share": 0.14
+ },
+ {
+  "kind": "source",
+  "item": "gbharti__finance-alpaca",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Articles about stock investment strategy and ETFs",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__rust",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "String and character-handling programming Q&A",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "moral_scenarios",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Casual venting posts about bad days and dating frustration",
+  "share": 0.65
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "other",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Banking, loans and retail finance",
+  "share": 0.1
+ },
+ {
+  "kind": "source",
+  "item": "codecomplete__starcoderdata_0.003",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.58
+ },
+ {
+  "kind": "source",
+  "item": "turkish-nlp-suite__InstrucTurca",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Multiple-choice aptitude-test math problems",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "ultrachat_200k",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Recipes, cooking and home kitchens",
+  "share": 0.05
+ },
+ {
+  "kind": "source",
+  "item": "turkish-nlp-suite__InstrucTurca",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.04
+ },
+ {
+  "kind": "source",
+  "item": "rajpurkar__squad",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Historical events, places and military heritage",
+  "share": 0.06
+ },
+ {
+  "kind": "source",
+  "item": "databricksbricks-dolly-15k",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Music, film and celebrity biographies",
+  "share": 0.04
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_macroeconomics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Macroeconomics, markets and central banks",
+  "share": 0.61
+ },
+ {
+  "kind": "mmlu",
+  "item": "business_ethics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Corporate finance, investment and asset management",
+  "share": 0.13
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Sociology",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Political theory, democracy and international affairs",
+  "share": 0.28
+ },
+ {
+  "kind": "mmlu",
+  "item": "jurisprudence",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Statutes, court rulings and legal proceedings",
+  "share": 0.32
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "biology",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Genetics and gene expression educational essays",
+  "share": 0.05
+ },
+ {
+  "kind": "mmlu",
+  "item": "jurisprudence",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Articles explaining legal theory and principles",
+  "share": 0.31
+ },
+ {
+  "kind": "source",
+  "item": "qiaojin__PubMedQA__pqa_artificial",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Molecular biology, genomics and cancer research",
+  "share": 0.58
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_us_history",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Political theory, democracy and international affairs",
+  "share": 0.33
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_law",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Courts, criminal cases and United States history",
+  "share": 0.35
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Biology",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Protein-encoding gene description stubs",
+  "share": 0.03
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "biology",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Molecular biology, genomics and cancer research",
+  "share": 0.36
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_chemistry",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.35
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "health",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Symptoms, illnesses and medication side effects",
+  "share": 0.15
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "other",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Cost comparison and price calculation articles",
+  "share": 0.04
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__scotus",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Federal appellate opinions in United States v. defendant cases",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "stack-exchange-preferences",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.58
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "psychology",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Behavioral psychology intervention studies",
+  "share": 0.05
+ },
+ {
+  "kind": "source",
+  "item": "xlangai__spider",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Government regulations, contracts and public records",
+  "share": 0.35
+ },
+ {
+  "kind": "source",
+  "item": "iamtarun__python_code_instructions_18k_alpaca",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Tutorials about Python data analysis and visualization",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_accounting",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Money arithmetic word problems",
+  "share": 0.23
+ },
+ {
+  "kind": "mmlu",
+  "item": "security_studies",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Human rights, democracy and governance",
+  "share": 0.29
+ },
+ {
+  "kind": "mmlu",
+  "item": "business_ethics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Ethics and morality philosophy essays",
+  "share": 0.05
+ },
+ {
+  "kind": "source",
+  "item": "deepmind__aqua_rat__raw",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Programming puzzles about number sequences and algorithms",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "gretelai__synthetic_text_to_sql",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Court records, web pages and digitised books",
+  "share": 0.28
+ },
+ {
+  "kind": "mmlu",
+  "item": "logical_fallacies",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Opinion articles about controversial crime cases and punishment",
+  "share": 0.15
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_mathematics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.26
+ },
+ {
+  "kind": "source",
+  "item": "no_robots",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Narrative prose, outdoor stories and memoirs",
+  "share": 0.06
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__shell",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Windows, servers and software administration",
+  "share": 0.77
+ },
+ {
+  "kind": "source",
+  "item": "codeparrot-clean-valid",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.39
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_computer_science",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Web servers, SEO and software troubleshooting",
+  "share": 0.16
+ },
+ {
+  "kind": "source",
+  "item": "ultrachat_200k",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Lessons about fiction genres and storytelling",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__ruby",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.4
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_biology",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Cell biology, proteins and immunology",
+  "share": 0.34
+ },
+ {
+  "kind": "source",
+  "item": "deepmind__aqua_rat__raw",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Banking, loans and retail finance",
+  "share": 0.19
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_computer_science",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.2
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_law",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Courts, lawyers and legal procedure",
+  "share": 0.15
+ },
+ {
+  "kind": "mmlu",
+  "item": "moral_scenarios",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Self-help, advice and personal reflection",
+  "share": 0.6
+ },
+ {
+  "kind": "source",
+  "item": "Anthropic__hh-rlhf",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Premise-hypothesis entailment prompts",
+  "share": 0.12
+ },
+ {
+  "kind": "mmlu",
+  "item": "professional_psychology",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Mental health, counseling and wellbeing",
+  "share": 0.3
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "history",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Articles about the US Constitution and constitutional rights",
+  "share": 0.04
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_macroeconomics",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Stock markets, interest rates and market reports",
+  "share": 0.37
+ },
+ {
+  "kind": "source",
+  "item": "gretelai__synthetic_text_to_sql",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "SQL query and stored-procedure troubleshooting snippets",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "OpenAssistant__oasst1",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Python installation and package-import troubleshooting posts",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_physics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.42
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__python",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Command-line file and directory management questions",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__eurlex",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Government regulations, contracts and public records",
+  "share": 0.34
+ },
+ {
+  "kind": "mmlu",
+  "item": "virology",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Infectious disease, vaccines and pandemic news",
+  "share": 0.37
+ },
+ {
+  "kind": "mmlu",
+  "item": "jurisprudence",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Courts, lawyers and legal procedure",
+  "share": 0.48
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Sociology",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Research methods, studies and academic assessment",
+  "share": 0.17
+ },
+ {
+  "kind": "mmlu",
+  "item": "conceptual_physics",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Physics, mathematics and academic research",
+  "share": 0.32
+ },
+ {
+  "kind": "source",
+  "item": "Anthropic__hh-rlhf",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Psychology, relationships and self-help",
+  "share": 0.22
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "biology",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Genetics, genomics and biotechnology",
+  "share": 0.18
+ },
+ {
+  "kind": "mmlu",
+  "item": "moral_disputes",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Political theory, democracy and international affairs",
+  "share": 0.2
+ },
+ {
+  "kind": "mmlu",
+  "item": "astronomy",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Solar system and planet educational essays",
+  "share": 0.17
+ },
+ {
+  "kind": "mmlu",
+  "item": "human_sexuality",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Pregnancy, babies and women's health",
+  "share": 0.15
+ },
+ {
+  "kind": "mmlu",
+  "item": "conceptual_physics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Nuclear and neutron physics research",
+  "share": 0.06
+ },
+ {
+  "kind": "source",
+  "item": "hendrycks_math__geometry",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Math research abstracts and proof-based forum questions",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "formal_logic",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Personal blogs, fiction and self-reflection",
+  "share": 0.19
+ },
+ {
+  "kind": "mmlu",
+  "item": "moral_disputes",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Ethics and morality philosophy essays",
+  "share": 0.11
+ },
+ {
+  "kind": "mmlu",
+  "item": "college_chemistry",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Scientific papers reporting experimental measurements and results",
+  "share": 0.11
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "philosophy",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Ethics and morality philosophy essays",
+  "share": 0.08
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__shell",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Embedded and IoT device setup instructions",
+  "share": 0.0
+ },
+ {
+  "kind": "source",
+  "item": "hendrycks_math__geometry",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.91
+ },
+ {
+  "kind": "mmlu",
+  "item": "anatomy",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Musculoskeletal injuries, pain and therapy",
+  "share": 0.33
+ },
+ {
+  "kind": "source",
+  "item": "nvidia__HelpSteer2",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "AI marketing and buzzword blog posts",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "management",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Workplace management and professional development",
+  "share": 0.21
+ },
+ {
+  "kind": "mmlu_pro",
+  "item": "health",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Diseases, symptoms and clinical care",
+  "share": 0.28
+ },
+ {
+  "kind": "mmlu",
+  "item": "astronomy",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Astronomy, spacecraft and planetary science",
+  "share": 0.59
+ },
+ {
+  "kind": "source",
+  "item": "hendrycks_math__algebra",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Banking, loans and retail finance",
+  "share": 0.6
+ },
+ {
+  "kind": "mmlu",
+  "item": "prehistory",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Plants, animals and agricultural species",
+  "share": 0.15
+ },
+ {
+  "kind": "source",
+  "item": "hendrycks_math__algebra",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Mathematics papers, proofs and theorems",
+  "share": 0.87
+ },
+ {
+  "kind": "exams_tr",
+  "item": "History",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "History of Bulgaria and Balkan geopolitics involving Russia",
+  "share": 0.07
+ },
+ {
+  "kind": "source",
+  "item": "openai__gsm8k__main",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Banking, loans and retail finance",
+  "share": 0.29
+ },
+ {
+  "kind": "source",
+  "item": "motherduckdb__duckdb-text2sql-25k",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Database and SQL query Q&A",
+  "share": 0.0
+ },
+ {
+  "kind": "mmlu",
+  "item": "public_relations",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Research methods, studies and academic assessment",
+  "share": 0.18
+ },
+ {
+  "kind": "source",
+  "item": "b-mc2__sql-create-context",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Government regulations, contracts and public records",
+  "share": 0.21
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_psychology",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Mental health, counseling and wellbeing",
+  "share": 0.29
+ },
+ {
+  "kind": "mmlu",
+  "item": "econometrics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Descriptive statistics and variable analysis articles",
+  "share": 0.37
+ },
+ {
+  "kind": "mmlu",
+  "item": "nutrition",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Weight loss, nutrition and dieting",
+  "share": 0.36
+ },
+ {
+  "kind": "source",
+  "item": "xlcost-text-to-code__Python",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Government regulations, contracts and public records",
+  "share": 0.87
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_mathematics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Math research abstracts and proof-based forum questions",
+  "share": 0.14
+ },
+ {
+  "kind": "mmlu",
+  "item": "prehistory",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Genetics, genomics and biotechnology",
+  "share": 0.11
+ },
+ {
+  "kind": "mmlu",
+  "item": "security_studies",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Articles about global conflict and international diplomacy",
+  "share": 0.13
+ },
+ {
+  "kind": "source",
+  "item": "lex_glue__ecthr_a",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Courts, criminal cases and United States history",
+  "share": 0.53
+ },
+ {
+  "kind": "source",
+  "item": "commitpackft__c",
+  "product": "atlas-v3",
+  "level": "L1",
+  "name": "Source code, functions and programming questions",
+  "share": 0.52
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_statistics",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Descriptive statistics and variable analysis articles",
+  "share": 0.09
+ },
+ {
+  "kind": "exams_tr",
+  "item": "Geography",
+  "product": "atlas-v2",
+  "level": "L1",
+  "name": "Climate science, agriculture and environmental policy",
+  "share": 0.21
+ },
+ {
+  "kind": "mmlu",
+  "item": "high_school_computer_science",
+  "product": "atlas-v3",
+  "level": "L2",
+  "name": "Lessons about numbers, integers and number theory",
+  "share": 0.07
+ }
+]

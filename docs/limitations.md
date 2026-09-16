@@ -65,23 +65,30 @@ precisely so two scans are comparable — but the command that read it was cut
 before 1.0 rather than frozen half-finished. Read the two fingerprints yourself
 in the meantime.
 
-**The map's reference distribution is a proxy.** The shipped artifact records
-which subject area each region belongs to, and not how much reference text
-landed in it. So "the map spends 11% of itself on this subject" counts regions,
-which is how much resolution the clustering gave the area — a good proxy for how
-common it was, and not a measurement of it. Reported as region share for that
-reason, never as a share of the reference corpus.
+**The map's reference distribution is the reference corpus's, not the
+world's.** Density divides your share of a cell by the share of the
+163,452,464 reference records that landed there (`region_size`), so "3× the
+map" is measured against the corpus plan — nine axes with byte targets and a
+non-English floor — and not against a natural population. The sentence "the
+map spends 15 of its 4,096 places on that subject" counts cells, which is how
+much resolution the clustering gave the area, and is a different number from
+the area's share of the reference mass.
 
-## The atlas is a first version
+## What the atlas still lacks
 
-The shipped `atlas-v1-lite` is built from a few million records, its
-level-0 taxonomy probe is trained on labels bootstrapped from dataset
-provenance rather than from human annotation, and below the 48 curated subject
-areas its regions are captioned from TF-IDF terms rather than by a language
-model. Its own held-out accuracy and
-region purity are recorded inside the artifact and travel into every
-fingerprint under the `coverage` facet; read them before trusting a coverage
-number.
+The shipped default, `atlas-v3`, is built from 163,452,464 records over 244
+sources, 60.6% non-English by bytes, and every one of its 4,096 cells and 256
+subject areas is named by hand. It carries no taxonomy: subject areas are
+k-means over the same vectors as the cells, so there is no held-out accuracy
+to report and none travels in the fingerprint. What it does carry is a language
+probe — balanced accuracy for language 0.528 on raw vectors and 0.365 after
+normalization, on 300,000 held-out rows — and the calibration behind its
+off-atlas cutoff of 0.3538; read both before trusting a coverage number. The
+names describe the reference corpus, not yours, and the reference distribution
+is the corpus plan's, not the world's. `atlas-v2` and `atlas-v2-lite` run on
+the loader's 0.35 fallback cutoff rather than a stamped one, which puts 12–18%
+of ordinary held-out prose off-atlas on them. `atlas-v1-lite` is bundled only
+so fingerprints placed on it can be re-read.
 
 ## Things deliberately out of scope
 

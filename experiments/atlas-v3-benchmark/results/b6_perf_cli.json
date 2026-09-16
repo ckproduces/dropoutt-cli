@@ -1,0 +1,98 @@
+{
+ "_written_at": "2026-09-16T16:30:29",
+ "throughput": {
+  "product": "atlas-v3",
+  "records": 500000,
+  "mean_chars": 1499.169618,
+  "langid_s": 37.08803391456604,
+  "encode_s": 82.4190399646759,
+  "encode_rec_per_s": 6066.559380141964,
+  "assign_s": 11.393125057220459,
+  "assign_rec_per_s": 43886.11530978694,
+  "coverage_s": 0.8725948333740234,
+  "peak_rss_mb_before": 3422.09375,
+  "peak_rss_mb_after": 5289.6875,
+  "off_atlas_rate": 0.0011,
+  "regions_occupied": 4074,
+  "effective_regions": 3161.34
+ },
+ "corpora": {
+  "narrow-geometry": {
+   "dir": "/private/tmp/claude-501/-Users-crokan-Documents-dropoutt-cli/b585583f-4892-462f-a850-64929286d9e7/scratchpad/bench-cache/cli-corpora/narrow-geometry",
+   "records": 1616,
+   "files": 2
+  },
+  "mixed-four-sources": {
+   "dir": "/private/tmp/claude-501/-Users-crokan-Documents-dropoutt-cli/b585583f-4892-462f-a850-64929286d9e7/scratchpad/bench-cache/cli-corpora/mixed-four-sources",
+   "records": 12000,
+   "files": 4
+  },
+  "multilingual-web": {
+   "dir": "/private/tmp/claude-501/-Users-crokan-Documents-dropoutt-cli/b585583f-4892-462f-a850-64929286d9e7/scratchpad/bench-cache/cli-corpora/multilingual-web",
+   "records": 16000,
+   "files": 8
+  }
+ },
+ "cli": {
+  "narrow-geometry/atlas-v3": {
+   "cmd": "uv run dropoutt atlas /private/tmp/claude-501/-Users-crokan-Documents-dropoutt-cli/b585583f-4892-462f-a850-64929286d9e7/scratchpad/bench-cache/cli-corpora/narrow-geometry --model atlas-v3 --out /Users/crokan/Documents/dropoutt-cli/experiments/atlas-v3-benchmark/runs/narrow-geometry/atlas-v3 --no-open --offline",
+   "exit": 0,
+   "wall_s": 3.201493978500366,
+   "written": {
+    "terminal.txt": 12802,
+    "atlas.html": 1338000,
+    "atlas.md": 11068,
+    "atlas.json": 1460235
+   }
+  },
+  "mixed-four-sources/atlas-v3": {
+   "cmd": "uv run dropoutt atlas /private/tmp/claude-501/-Users-crokan-Documents-dropoutt-cli/b585583f-4892-462f-a850-64929286d9e7/scratchpad/bench-cache/cli-corpora/mixed-four-sources --model atlas-v3 --out /Users/crokan/Documents/dropoutt-cli/experiments/atlas-v3-benchmark/runs/mixed-four-sources/atlas-v3 --no-open --offline",
+   "exit": 0,
+   "wall_s": 4.402253150939941,
+   "written": {
+    "terminal.txt": 17900,
+    "atlas.html": 1419699,
+    "atlas.md": 14240,
+    "atlas.json": 1478062
+   }
+  },
+  "mixed-four-sources/atlas-v2": {
+   "cmd": "uv run dropoutt atlas /private/tmp/claude-501/-Users-crokan-Documents-dropoutt-cli/b585583f-4892-462f-a850-64929286d9e7/scratchpad/bench-cache/cli-corpora/mixed-four-sources --model atlas-v2 --out /Users/crokan/Documents/dropoutt-cli/experiments/atlas-v3-benchmark/runs/mixed-four-sources/atlas-v2 --no-open --offline",
+   "exit": 0,
+   "wall_s": 4.942620754241943,
+   "written": {
+    "terminal.txt": 11476,
+    "atlas.html": 264898,
+    "atlas.md": 9998,
+    "atlas.json": 153995
+   }
+  },
+  "multilingual-web/atlas-v3": {
+   "cmd": "uv run dropoutt atlas /private/tmp/claude-501/-Users-crokan-Documents-dropoutt-cli/b585583f-4892-462f-a850-64929286d9e7/scratchpad/bench-cache/cli-corpora/multilingual-web --model atlas-v3 --out /Users/crokan/Documents/dropoutt-cli/experiments/atlas-v3-benchmark/runs/multilingual-web/atlas-v3 --no-open --offline",
+   "exit": 0,
+   "wall_s": 6.153564929962158,
+   "written": {
+    "terminal.txt": 20565,
+    "atlas.html": 1469591,
+    "atlas.md": 15894,
+    "atlas.json": 1485811
+   }
+  }
+ },
+ "throughput_prev": {
+  "product": "atlas-v3-prev",
+  "records": 500000,
+  "mean_chars": 1499.169618,
+  "langid_s": 36.599575996398926,
+  "encode_s": 59.268975019454956,
+  "encode_rec_per_s": 8436.116869506783,
+  "assign_s": 11.078963994979858,
+  "assign_rec_per_s": 45130.57360115638,
+  "coverage_s": 0.8579971790313721,
+  "peak_rss_mb_before": 2294.375,
+  "peak_rss_mb_after": 4565.03125,
+  "off_atlas_rate": 0.0021,
+  "regions_occupied": 3994,
+  "effective_regions": 2874.16
+ }
+}

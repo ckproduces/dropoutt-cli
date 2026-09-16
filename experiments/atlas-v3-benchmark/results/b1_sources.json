@@ -1,0 +1,2725 @@
+{
+ "_written_at": "2026-09-16T15:53:48",
+ "n_records": 51489,
+ "n_sources": 52,
+ "sources": [
+  "Anthropic__hh-rlhf",
+  "BEE-spoke-data__peS2o-100k_en-xlong",
+  "CShorten__ML-ArXiv-Papers",
+  "OpenAssistant__oasst1",
+  "TFLai__Turkish-Alpaca",
+  "allenai__c4__en",
+  "allenai__c4__multilingual",
+  "b-mc2__sql-create-context",
+  "codecomplete__starcoderdata_0.003",
+  "codeparrot-clean-valid",
+  "commitpackft__c",
+  "commitpackft__go",
+  "commitpackft__java",
+  "commitpackft__javascript",
+  "commitpackft__php",
+  "commitpackft__python",
+  "commitpackft__ruby",
+  "commitpackft__rust",
+  "commitpackft__shell",
+  "databricksbricks-dolly-15k",
+  "deepmind__aqua_rat__raw",
+  "finemath__finemath-3plus",
+  "gbharti__finance-alpaca",
+  "gretelai__synthetic_text_to_sql",
+  "hendrycks_math__algebra",
+  "hendrycks_math__geometry",
+  "hendrycks_math__number_theory",
+  "iamtarun__python_code_instructions_18k_alpaca",
+  "lex_glue__ecthr_a",
+  "lex_glue__eurlex",
+  "lex_glue__ledgar",
+  "lex_glue__scotus",
+  "lex_glue__unfair_tos",
+  "mcemilg__news-cat",
+  "microsoft__orca-math-word-problems-200k",
+  "motherduckdb__duckdb-text2sql-25k",
+  "no_robots",
+  "nvidia__HelpSteer2",
+  "nvidia__OpenMathInstruct-2",
+  "open-web-math__open-web-math",
+  "openai__gsm8k__main",
+  "openbmb__UltraFeedback",
+  "proof-pile-2__arxiv",
+  "qiaojin__PubMedQA__pqa_artificial",
+  "rajpurkar__squad",
+  "stack-exchange-preferences",
+  "tatsu-lab__alpaca",
+  "turkish-nlp-suite__InstrucTurca",
+  "ultrachat_200k",
+  "winddude__reddit_finance_43_250k",
+  "xlangai__spider",
+  "xlcost-text-to-code__Python"
+ ],
+ "products": {
+  "atlas-v3": {
+   "off_atlas_rate": 0.008331876711530618,
+   "cells_used_l2": 3793,
+   "cells_used_l1": 256,
+   "source": {
+    "chance_majority": 0.020820385332504663,
+    "nmi_l2": 0.4058778523074602,
+    "ami_l2": 0.27270008607253327,
+    "nmi_l1": 0.3213831604756065,
+    "ami_l1": 0.298678672552612,
+    "purity_l2": 0.39590980597797587,
+    "purity_l1": 0.25698692924702365,
+    "acc_l2": 0.30285492328607494,
+    "acc_l2_ci95": [
+     0.29702757817051856,
+     0.30821518741503207
+    ],
+    "acc_l1": 0.24812584967954943,
+    "acc_l1_ci95": [
+     0.24261021557583998,
+     0.2536414837832589
+    ],
+    "acc_soft_top5_l2": 0.48277335404933,
+    "ceiling_centroid": 0.5140027189745582,
+    "ceiling_linear": 0.6076519712565547,
+    "retained_l2": 0.480605585518146,
+    "retained_l1": 0.38734360896596914,
+    "n_test": 25745
+   },
+   "axis": {
+    "chance_majority": 0.2536513362336855,
+    "nmi_l2": 0.27135771327646196,
+    "ami_l2": 0.22553365810771192,
+    "nmi_l1": 0.24393351566042848,
+    "ami_l1": 0.23917816690391183,
+    "purity_l2": 0.7073355473984735,
+    "purity_l1": 0.6071393889957079,
+    "acc_l2": 0.6300252476208973,
+    "acc_l2_ci95": [
+     0.6243542435424354,
+     0.6358127791804233
+    ],
+    "acc_l1": 0.5967372305302,
+    "acc_l1_ci95": [
+     0.5908302583025831,
+     0.6022955913769664
+    ],
+    "acc_soft_top5_l2": 0.7999223150126238,
+    "ceiling_centroid": 0.6952029520295203,
+    "ceiling_linear": 0.7938240435035929,
+    "retained_l2": 0.6967658793600423,
+    "retained_l1": 0.6351411126091663,
+    "n_test": 25745
+   },
+   "code_language": {
+    "n": 13000,
+    "n_classes": 11,
+    "chance_majority": 0.23076923076923078,
+    "ami_l2": 0.14871611216696384,
+    "acc_l2": 0.32276923076923075,
+    "ceiling_centroid": 0.5504615384615384
+   },
+   "per_source": {
+    "Anthropic__hh-rlhf": {
+     "n": 1000,
+     "off_atlas": 0.005,
+     "top_l1": 42,
+     "top_l1_share": 0.086,
+     "top_l1_name": "Mixed personal stories and narrative fiction fragments",
+     "l1_used": 173,
+     "l2_used": 496,
+     "top_l2": 2128,
+     "top_l2_name": "Premise-and-hypothesis items on assorted scenes"
+    },
+    "BEE-spoke-data__peS2o-100k_en-xlong": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 155,
+     "top_l1_share": 0.143,
+     "top_l1_name": "Molecular biology, cells and genetics",
+     "l1_used": 95,
+     "l2_used": 348,
+     "top_l2": 3936,
+     "top_l2_name": "Tumour biology, metastasis and cancer signalling"
+    },
+    "CShorten__ML-ArXiv-Papers": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 185,
+     "top_l1_share": 0.792,
+     "top_l1_name": "Machine learning, statistics and computational methods",
+     "l1_used": 51,
+     "l2_used": 146,
+     "top_l2": 2973,
+     "top_l2_name": "Machine learning, reinforcement learning and training algorithms"
+    },
+    "OpenAssistant__oasst1": {
+     "n": 1000,
+     "off_atlas": 0.016,
+     "top_l1": 178,
+     "top_l1_share": 0.04,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 199,
+     "l2_used": 675,
+     "top_l2": 2758,
+     "top_l2_name": "Programming languages, code and formal grammars"
+    },
+    "TFLai__Turkish-Alpaca": {
+     "n": 1000,
+     "off_atlas": 0.022,
+     "top_l1": 173,
+     "top_l1_share": 0.04,
+     "top_l1_name": "Languages, linguistics and language learning",
+     "l1_used": 197,
+     "l2_used": 676,
+     "top_l2": 2755,
+     "top_l2_name": "English grammar, parts of speech and usage"
+    },
+    "allenai__c4__en": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 122,
+     "top_l1_share": 0.017,
+     "top_l1_name": "Local events, live entertainment and venue schedules",
+     "l1_used": 229,
+     "l2_used": 817,
+     "top_l2": 2105,
+     "top_l2_name": "Mixed short web fragments with no shared subject"
+    },
+    "allenai__c4__multilingual": {
+     "n": 1000,
+     "off_atlas": 0.009,
+     "top_l1": 238,
+     "top_l1_share": 0.039,
+     "top_l1_name": "Mixed documentation and web pages with no shared subject",
+     "l1_used": 215,
+     "l2_used": 682,
+     "top_l2": 3828,
+     "top_l2_name": "Mixed short web pages with no shared subject"
+    },
+    "b-mc2__sql-create-context": {
+     "n": 1000,
+     "off_atlas": 0.044,
+     "top_l1": 178,
+     "top_l1_share": 0.063,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 166,
+     "l2_used": 494,
+     "top_l2": 2841,
+     "top_l2_name": "SQL, databases and spreadsheet tables"
+    },
+    "codecomplete__starcoderdata_0.003": {
+     "n": 1000,
+     "off_atlas": 0.028,
+     "top_l1": 239,
+     "top_l1_share": 0.246,
+     "top_l1_name": "Mixed encyclopedia stubs and garbled web text",
+     "l1_used": 90,
+     "l2_used": 223,
+     "top_l2": 3836,
+     "top_l2_name": "Code installation and build docs on assorted projects"
+    },
+    "codeparrot-clean-valid": {
+     "n": 1000,
+     "off_atlas": 0.007,
+     "top_l1": 58,
+     "top_l1_share": 0.299,
+     "top_l1_name": "Programming, web code and desktop software how-tos",
+     "l1_used": 78,
+     "l2_used": 195,
+     "top_l2": 3836,
+     "top_l2_name": "Code installation and build docs on assorted projects"
+    },
+    "commitpackft__c": {
+     "n": 1000,
+     "off_atlas": 0.009,
+     "top_l1": 239,
+     "top_l1_share": 0.247,
+     "top_l1_name": "Mixed encyclopedia stubs and garbled web text",
+     "l1_used": 68,
+     "l2_used": 163,
+     "top_l2": 3836,
+     "top_l2_name": "Code installation and build docs on assorted projects"
+    },
+    "commitpackft__go": {
+     "n": 1000,
+     "off_atlas": 0.006,
+     "top_l1": 58,
+     "top_l1_share": 0.257,
+     "top_l1_name": "Programming, web code and desktop software how-tos",
+     "l1_used": 65,
+     "l2_used": 169,
+     "top_l2": 3836,
+     "top_l2_name": "Code installation and build docs on assorted projects"
+    },
+    "commitpackft__java": {
+     "n": 1000,
+     "off_atlas": 0.005,
+     "top_l1": 58,
+     "top_l1_share": 0.278,
+     "top_l1_name": "Programming, web code and desktop software how-tos",
+     "l1_used": 58,
+     "l2_used": 153,
+     "top_l2": 3821,
+     "top_l2_name": "Software READMEs and API docs on assorted subjects"
+    },
+    "commitpackft__javascript": {
+     "n": 1000,
+     "off_atlas": 0.02,
+     "top_l1": 58,
+     "top_l1_share": 0.516,
+     "top_l1_name": "Programming, web code and desktop software how-tos",
+     "l1_used": 96,
+     "l2_used": 219,
+     "top_l2": 968,
+     "top_l2_name": "Functions, classes and programming patterns"
+    },
+    "commitpackft__php": {
+     "n": 1000,
+     "off_atlas": 0.01,
+     "top_l1": 58,
+     "top_l1_share": 0.616,
+     "top_l1_name": "Programming, web code and desktop software how-tos",
+     "l1_used": 64,
+     "l2_used": 154,
+     "top_l2": 968,
+     "top_l2_name": "Functions, classes and programming patterns"
+    },
+    "commitpackft__python": {
+     "n": 1000,
+     "off_atlas": 0.016,
+     "top_l1": 58,
+     "top_l1_share": 0.255,
+     "top_l1_name": "Programming, web code and desktop software how-tos",
+     "l1_used": 109,
+     "l2_used": 242,
+     "top_l2": 3836,
+     "top_l2_name": "Code installation and build docs on assorted projects"
+    },
+    "commitpackft__ruby": {
+     "n": 1000,
+     "off_atlas": 0.017,
+     "top_l1": 58,
+     "top_l1_share": 0.24,
+     "top_l1_name": "Programming, web code and desktop software how-tos",
+     "l1_used": 114,
+     "l2_used": 267,
+     "top_l2": 968,
+     "top_l2_name": "Functions, classes and programming patterns"
+    },
+    "commitpackft__rust": {
+     "n": 1000,
+     "off_atlas": 0.021,
+     "top_l1": 58,
+     "top_l1_share": 0.228,
+     "top_l1_name": "Programming, web code and desktop software how-tos",
+     "l1_used": 83,
+     "l2_used": 210,
+     "top_l2": 3836,
+     "top_l2_name": "Code installation and build docs on assorted projects"
+    },
+    "commitpackft__shell": {
+     "n": 1000,
+     "off_atlas": 0.003,
+     "top_l1": 44,
+     "top_l1_share": 0.604,
+     "top_l1_name": "Linux, Ubuntu and software installation",
+     "l1_used": 61,
+     "l2_used": 153,
+     "top_l2": 709,
+     "top_l2_name": "Git clone, repositories and version control"
+    },
+    "databricksbricks-dolly-15k": {
+     "n": 1000,
+     "off_atlas": 0.003,
+     "top_l1": 142,
+     "top_l1_share": 0.029,
+     "top_l1_name": "Classical music, jazz and musicians",
+     "l1_used": 205,
+     "l2_used": 731,
+     "top_l2": 2256,
+     "top_l2_name": "Musical instruments and how they are played"
+    },
+    "deepmind__aqua_rat__raw": {
+     "n": 1000,
+     "off_atlas": 0.011,
+     "top_l1": 178,
+     "top_l1_share": 0.265,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 126,
+     "l2_used": 291,
+     "top_l2": 2838,
+     "top_l2_name": "Integers, counting and properties of numbers"
+    },
+    "finemath__finemath-3plus": {
+     "n": 1000,
+     "off_atlas": 0.002,
+     "top_l1": 178,
+     "top_l1_share": 0.432,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 117,
+     "l2_used": 299,
+     "top_l2": 2851,
+     "top_l2_name": "Mixed analysis papers and unrelated fragments"
+    },
+    "gbharti__finance-alpaca": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 1,
+     "top_l1_share": 0.191,
+     "top_l1_name": "Personal finance, loans and banking",
+     "l1_used": 122,
+     "l2_used": 313,
+     "top_l2": 3862,
+     "top_l2_name": "Stocks, shares and equity markets"
+    },
+    "gretelai__synthetic_text_to_sql": {
+     "n": 1000,
+     "off_atlas": 0.008,
+     "top_l1": 238,
+     "top_l1_share": 0.054,
+     "top_l1_name": "Mixed documentation and web pages with no shared subject",
+     "l1_used": 169,
+     "l2_used": 507,
+     "top_l2": 3821,
+     "top_l2_name": "Software READMEs and API docs on assorted subjects"
+    },
+    "hendrycks_math__algebra": {
+     "n": 1000,
+     "off_atlas": 0.004,
+     "top_l1": 178,
+     "top_l1_share": 0.816,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 66,
+     "l2_used": 113,
+     "top_l2": 2851,
+     "top_l2_name": "Mixed analysis papers and unrelated fragments"
+    },
+    "hendrycks_math__geometry": {
+     "n": 870,
+     "off_atlas": 0.0,
+     "top_l1": 178,
+     "top_l1_share": 0.8310344827586207,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 27,
+     "l2_used": 47,
+     "top_l2": 2848,
+     "top_l2_name": "Triangles, circles and elementary geometry"
+    },
+    "hendrycks_math__number_theory": {
+     "n": 869,
+     "off_atlas": 0.0023014959723820483,
+     "top_l1": 178,
+     "top_l1_share": 0.8527042577675489,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 42,
+     "l2_used": 76,
+     "top_l2": 2838,
+     "top_l2_name": "Integers, counting and properties of numbers"
+    },
+    "iamtarun__python_code_instructions_18k_alpaca": {
+     "n": 1000,
+     "off_atlas": 0.009,
+     "top_l1": 178,
+     "top_l1_share": 0.479,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 85,
+     "l2_used": 186,
+     "top_l2": 2855,
+     "top_l2_name": "Python, NumPy and data-analysis tutorials"
+    },
+    "lex_glue__ecthr_a": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 81,
+     "top_l1_share": 0.201,
+     "top_l1_name": "Criminal justice, trials and corruption investigations",
+     "l1_used": 71,
+     "l2_used": 179,
+     "top_l2": 1131,
+     "top_l2_name": "Civil procedure, trials and courtroom orders"
+    },
+    "lex_glue__eurlex": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 89,
+     "top_l1_share": 0.386,
+     "top_l1_name": "EU agricultural market rules, levies and refunds",
+     "l1_used": 42,
+     "l2_used": 101,
+     "top_l2": 10,
+     "top_l2_name": "European Union Official Journal acts on assorted subjects"
+    },
+    "lex_glue__ledgar": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 62,
+     "top_l1_share": 0.3,
+     "top_l1_name": "Civil litigation, contracts and property law",
+     "l1_used": 47,
+     "l2_used": 155,
+     "top_l2": 1019,
+     "top_l2_name": "Terms of service, sales conditions and consumer contracts"
+    },
+    "lex_glue__scotus": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 70,
+     "top_l1_share": 0.533,
+     "top_l1_name": "Court opinions, criminal appeals and litigation in the United States",
+     "l1_used": 57,
+     "l2_used": 157,
+     "top_l2": 1130,
+     "top_l2_name": "Court petitions, appeals and procedural motions"
+    },
+    "lex_glue__unfair_tos": {
+     "n": 1000,
+     "off_atlas": 0.011,
+     "top_l1": 213,
+     "top_l1_share": 0.168,
+     "top_l1_name": "Website privacy policies, cookies and legal notices",
+     "l1_used": 111,
+     "l2_used": 342,
+     "top_l2": 1019,
+     "top_l2_name": "Terms of service, sales conditions and consumer contracts"
+    },
+    "mcemilg__news-cat": {
+     "n": 750,
+     "off_atlas": 0.006666666666666667,
+     "top_l1": 41,
+     "top_l1_share": 0.07866666666666666,
+     "top_l1_name": "Match reports, league results and team sports seasons",
+     "l1_used": 162,
+     "l2_used": 410,
+     "top_l2": 513,
+     "top_l2_name": "Football club coaches, presidents and governance"
+    },
+    "microsoft__orca-math-word-problems-200k": {
+     "n": 1000,
+     "off_atlas": 0.011,
+     "top_l1": 178,
+     "top_l1_share": 0.087,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 127,
+     "l2_used": 375,
+     "top_l2": 2838,
+     "top_l2_name": "Integers, counting and properties of numbers"
+    },
+    "motherduckdb__duckdb-text2sql-25k": {
+     "n": 1000,
+     "off_atlas": 0.039,
+     "top_l1": 178,
+     "top_l1_share": 0.145,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 153,
+     "l2_used": 413,
+     "top_l2": 2841,
+     "top_l2_name": "SQL, databases and spreadsheet tables"
+    },
+    "no_robots": {
+     "n": 1000,
+     "off_atlas": 0.004,
+     "top_l1": 167,
+     "top_l1_share": 0.043,
+     "top_l1_name": "Wild nature, wildlife and landscape writing",
+     "l1_used": 199,
+     "l2_used": 693,
+     "top_l2": 2655,
+     "top_l2_name": "Landscape, weather and nature lyric writing"
+    },
+    "nvidia__HelpSteer2": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 178,
+     "top_l1_share": 0.034,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 202,
+     "l2_used": 690,
+     "top_l2": 2134,
+     "top_l2_name": "Question-and-answer items on assorted subjects"
+    },
+    "nvidia__OpenMathInstruct-2": {
+     "n": 1000,
+     "off_atlas": 0.004,
+     "top_l1": 178,
+     "top_l1_share": 0.631,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 100,
+     "l2_used": 226,
+     "top_l2": 2851,
+     "top_l2_name": "Mixed analysis papers and unrelated fragments"
+    },
+    "open-web-math__open-web-math": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 178,
+     "top_l1_share": 0.465,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 115,
+     "l2_used": 321,
+     "top_l2": 2851,
+     "top_l2_name": "Mixed analysis papers and unrelated fragments"
+    },
+    "openai__gsm8k__main": {
+     "n": 1000,
+     "off_atlas": 0.008,
+     "top_l1": 102,
+     "top_l1_share": 0.079,
+     "top_l1_name": "Payments, prices and shopping deals",
+     "l1_used": 139,
+     "l2_used": 425,
+     "top_l2": 1634,
+     "top_l2_name": "Arithmetic word problems about money and prices"
+    },
+    "openbmb__UltraFeedback": {
+     "n": 1000,
+     "off_atlas": 0.018,
+     "top_l1": 173,
+     "top_l1_share": 0.085,
+     "top_l1_name": "Languages, linguistics and language learning",
+     "l1_used": 205,
+     "l2_used": 636,
+     "top_l2": 2755,
+     "top_l2_name": "English grammar, parts of speech and usage"
+    },
+    "proof-pile-2__arxiv": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 178,
+     "top_l1_share": 0.282,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 64,
+     "l2_used": 192,
+     "top_l2": 2851,
+     "top_l2_name": "Mixed analysis papers and unrelated fragments"
+    },
+    "qiaojin__PubMedQA__pqa_artificial": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 141,
+     "top_l1_share": 0.265,
+     "top_l1_name": "Clinical medicine, surgery and organ diseases",
+     "l1_used": 51,
+     "l2_used": 211,
+     "top_l2": 2460,
+     "top_l2_name": "Inflammation, pathogenesis and disease mechanisms"
+    },
+    "rajpurkar__squad": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 13,
+     "top_l1_share": 0.031,
+     "top_l1_name": "The United Kingdom, its places and institutions",
+     "l1_used": 186,
+     "l2_used": 621,
+     "top_l2": 198,
+     "top_l2_name": "Britain, England and the United Kingdom"
+    },
+    "stack-exchange-preferences": {
+     "n": 1000,
+     "off_atlas": 0.007,
+     "top_l1": 58,
+     "top_l1_share": 0.407,
+     "top_l1_name": "Programming, web code and desktop software how-tos",
+     "l1_used": 79,
+     "l2_used": 242,
+     "top_l2": 951,
+     "top_l2_name": "Programming, scripts and source-code examples"
+    },
+    "tatsu-lab__alpaca": {
+     "n": 1000,
+     "off_atlas": 0.009,
+     "top_l1": 173,
+     "top_l1_share": 0.065,
+     "top_l1_name": "Languages, linguistics and language learning",
+     "l1_used": 188,
+     "l2_used": 635,
+     "top_l2": 2755,
+     "top_l2_name": "English grammar, parts of speech and usage"
+    },
+    "turkish-nlp-suite__InstrucTurca": {
+     "n": 1000,
+     "off_atlas": 0.016,
+     "top_l1": 178,
+     "top_l1_share": 0.07,
+     "top_l1_name": "Mathematics, algorithms and programming problems",
+     "l1_used": 216,
+     "l2_used": 677,
+     "top_l2": 2853,
+     "top_l2_name": "Programming variables, types and data structures"
+    },
+    "ultrachat_200k": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 244,
+     "top_l1_share": 0.047,
+     "top_l1_name": "Culture, cultural heritage and folklore",
+     "l1_used": 201,
+     "l2_used": 651,
+     "top_l2": 3934,
+     "top_l2_name": "Fiction, graphic novels and mythic storytelling"
+    },
+    "winddude__reddit_finance_43_250k": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 1,
+     "top_l1_share": 0.119,
+     "top_l1_name": "Personal finance, loans and banking",
+     "l1_used": 111,
+     "l2_used": 318,
+     "top_l2": 29,
+     "top_l2_name": "Household budgeting, saving and personal financial planning"
+    },
+    "xlangai__spider": {
+     "n": 1000,
+     "off_atlas": 0.013,
+     "top_l1": 40,
+     "top_l1_share": 0.045,
+     "top_l1_name": "Universities, colleges and campus life",
+     "l1_used": 148,
+     "l2_used": 398,
+     "top_l2": 3006,
+     "top_l2_name": "Cities, municipalities and urban centres"
+    },
+    "xlcost-text-to-code__Python": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 86,
+     "top_l1_share": 0.777,
+     "top_l1_name": "Mixed encyclopedic fragments with no shared subject",
+     "l1_used": 30,
+     "l2_used": 59,
+     "top_l2": 1385,
+     "top_l2_name": "Mixed newspaper text and unrelated fragments"
+    }
+   }
+  },
+  "atlas-v3-prev": {
+   "off_atlas_rate": 0.007186000893394706,
+   "cells_used_l2": 3599,
+   "cells_used_l1": 255,
+   "source": {
+    "chance_majority": 0.020820385332504663,
+    "nmi_l2": 0.41432114148429133,
+    "ami_l2": 0.29143035665554,
+    "nmi_l1": 0.3490247470682429,
+    "ami_l1": 0.326848821355898,
+    "purity_l2": 0.3937734273339937,
+    "purity_l1": 0.26240556235312396,
+    "acc_l2": 0.3061176927558749,
+    "acc_l2_ci95": [
+     0.30063895902116916,
+     0.3115187415032045
+    ],
+    "acc_l1": 0.25169935909885416,
+    "acc_l1_ci95": [
+     0.24622062536414838,
+     0.25667119829093027
+    ],
+    "acc_soft_top5_l2": 0.5112837444163916,
+    "ceiling_centroid": 0.55738978442416,
+    "ceiling_linear": 0.6489415420469994,
+    "retained_l2": 0.4542074476772462,
+    "retained_l1": 0.36757076449073167,
+    "n_test": 25745
+   },
+   "axis": {
+    "chance_majority": 0.2536513362336855,
+    "nmi_l2": 0.28729029050599475,
+    "ami_l2": 0.24446453490184736,
+    "nmi_l1": 0.2848325808135903,
+    "ami_l1": 0.2801714219258854,
+    "purity_l2": 0.7256307172405757,
+    "purity_l1": 0.6465652857891977,
+    "acc_l2": 0.6565935133035541,
+    "acc_l2_ci95": [
+     0.6508040396193435,
+     0.6618032627694698
+    ],
+    "acc_l1": 0.6413284132841328,
+    "acc_l1_ci95": [
+     0.6354622256748883,
+     0.6469227034375606
+    ],
+    "acc_soft_top5_l2": 0.8077296562439309,
+    "ceiling_centroid": 0.7343173431734318,
+    "ceiling_linear": 0.8227228588075355,
+    "retained_l2": 0.708069479996827,
+    "retained_l1": 0.6812449080161754,
+    "n_test": 25745
+   },
+   "code_language": {
+    "n": 13000,
+    "n_classes": 11,
+    "chance_majority": 0.23076923076923078,
+    "ami_l2": 0.1543668513797435,
+    "acc_l2": 0.34415384615384614,
+    "ceiling_centroid": 0.5826153846153846
+   },
+   "per_source": {
+    "Anthropic__hh-rlhf": {
+     "n": 1000,
+     "off_atlas": 0.006,
+     "top_l1": 148,
+     "top_l1_share": 0.116,
+     "top_l1_name": "Premise-hypothesis entailment prompts",
+     "l1_used": 170,
+     "l2_used": 487,
+     "top_l2": 2375,
+     "top_l2_name": "NLI premise-hypothesis pairs about people observing others"
+    },
+    "BEE-spoke-data__peS2o-100k_en-xlong": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 57,
+     "top_l1_share": 0.185,
+     "top_l1_name": "Cell biology, proteins and immunology",
+     "l1_used": 89,
+     "l2_used": 305,
+     "top_l2": 742,
+     "top_l2_name": "Research abstracts about cohort studies and disease risk factors"
+    },
+    "CShorten__ML-ArXiv-Papers": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 147,
+     "top_l1_share": 0.788,
+     "top_l1_name": "Machine-learning, statistics and computer science papers",
+     "l1_used": 56,
+     "l2_used": 141,
+     "top_l2": 2358,
+     "top_l2_name": "Deep and convolutional neural network papers"
+    },
+    "OpenAssistant__oasst1": {
+     "n": 1000,
+     "off_atlas": 0.014,
+     "top_l1": 147,
+     "top_l1_share": 0.034,
+     "top_l1_name": "Machine-learning, statistics and computer science papers",
+     "l1_used": 199,
+     "l2_used": 682,
+     "top_l2": 2586,
+     "top_l2_name": "Python installation and package-import troubleshooting posts"
+    },
+    "TFLai__Turkish-Alpaca": {
+     "n": 1000,
+     "off_atlas": 0.043,
+     "top_l1": 243,
+     "top_l1_share": 0.037,
+     "top_l1_name": "Artificial intelligence, robotics and technology",
+     "l1_used": 202,
+     "l2_used": 666,
+     "top_l2": 1818,
+     "top_l2_name": "Sentence-rewriting prompts about behavior and descriptive facts"
+    },
+    "allenai__c4__en": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 145,
+     "top_l1_share": 0.015,
+     "top_l1_name": "Club notices, recurring meetups and invitations",
+     "l1_used": 218,
+     "l2_used": 833,
+     "top_l2": 427,
+     "top_l2_name": "Marketing copy for landscaping and home-renovation trades"
+    },
+    "allenai__c4__multilingual": {
+     "n": 1000,
+     "off_atlas": 0.011,
+     "top_l1": 53,
+     "top_l1_share": 0.056,
+     "top_l1_name": "Court records, web pages and digitised books",
+     "l1_used": 196,
+     "l2_used": 619,
+     "top_l2": 867,
+     "top_l2_name": "Local news articles and personal blog posts"
+    },
+    "b-mc2__sql-create-context": {
+     "n": 1000,
+     "off_atlas": 0.05,
+     "top_l1": 63,
+     "top_l1_share": 0.08,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 159,
+     "l2_used": 461,
+     "top_l2": 178,
+     "top_l2_name": "Programming puzzles about number sequences and algorithms"
+    },
+    "codecomplete__starcoderdata_0.003": {
+     "n": 1000,
+     "off_atlas": 0.023,
+     "top_l1": 63,
+     "top_l1_share": 0.58,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 77,
+     "l2_used": 191,
+     "top_l2": 1035,
+     "top_l2_name": "Typed class and API usage code snippets"
+    },
+    "codeparrot-clean-valid": {
+     "n": 1000,
+     "off_atlas": 0.004,
+     "top_l1": 63,
+     "top_l1_share": 0.494,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 57,
+     "l2_used": 146,
+     "top_l2": 1034,
+     "top_l2_name": "Code review and algorithm optimization questions"
+    },
+    "commitpackft__c": {
+     "n": 1000,
+     "off_atlas": 0.003,
+     "top_l1": 63,
+     "top_l1_share": 0.521,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 46,
+     "l2_used": 129,
+     "top_l2": 1034,
+     "top_l2_name": "Code review and algorithm optimization questions"
+    },
+    "commitpackft__go": {
+     "n": 1000,
+     "off_atlas": 0.013,
+     "top_l1": 63,
+     "top_l1_share": 0.485,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 60,
+     "l2_used": 161,
+     "top_l2": 1034,
+     "top_l2_name": "Code review and algorithm optimization questions"
+    },
+    "commitpackft__java": {
+     "n": 1000,
+     "off_atlas": 0.003,
+     "top_l1": 63,
+     "top_l1_share": 0.727,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 53,
+     "l2_used": 123,
+     "top_l2": 1035,
+     "top_l2_name": "Typed class and API usage code snippets"
+    },
+    "commitpackft__javascript": {
+     "n": 1000,
+     "off_atlas": 0.013,
+     "top_l1": 63,
+     "top_l1_share": 0.76,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 78,
+     "l2_used": 145,
+     "top_l2": 1035,
+     "top_l2_name": "Typed class and API usage code snippets"
+    },
+    "commitpackft__php": {
+     "n": 1000,
+     "off_atlas": 0.011,
+     "top_l1": 63,
+     "top_l1_share": 0.808,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 60,
+     "l2_used": 115,
+     "top_l2": 1035,
+     "top_l2_name": "Typed class and API usage code snippets"
+    },
+    "commitpackft__python": {
+     "n": 1000,
+     "off_atlas": 0.006,
+     "top_l1": 63,
+     "top_l1_share": 0.427,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 83,
+     "l2_used": 196,
+     "top_l2": 855,
+     "top_l2_name": "Command-line file and directory management questions"
+    },
+    "commitpackft__ruby": {
+     "n": 1000,
+     "off_atlas": 0.008,
+     "top_l1": 63,
+     "top_l1_share": 0.397,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 90,
+     "l2_used": 228,
+     "top_l2": 1037,
+     "top_l2_name": "React and Ruby package installation snippets"
+    },
+    "commitpackft__rust": {
+     "n": 1000,
+     "off_atlas": 0.012,
+     "top_l1": 63,
+     "top_l1_share": 0.491,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 65,
+     "l2_used": 147,
+     "top_l2": 1030,
+     "top_l2_name": "String and character-handling programming Q&A"
+    },
+    "commitpackft__shell": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 51,
+     "top_l1_share": 0.577,
+     "top_l1_name": "Software installation guides and shell setup",
+     "l1_used": 54,
+     "l2_used": 141,
+     "top_l2": 851,
+     "top_l2_name": "Embedded and IoT device setup instructions"
+    },
+    "databricksbricks-dolly-15k": {
+     "n": 1000,
+     "off_atlas": 0.006,
+     "top_l1": 165,
+     "top_l1_share": 0.025,
+     "top_l1_name": "US pro sports, coaches and draft news",
+     "l1_used": 211,
+     "l2_used": 730,
+     "top_l2": 1342,
+     "top_l2_name": "Musical instrument description pages"
+    },
+    "deepmind__aqua_rat__raw": {
+     "n": 1000,
+     "off_atlas": 0.003,
+     "top_l1": 84,
+     "top_l1_share": 0.267,
+     "top_l1_name": "Money arithmetic word problems",
+     "l1_used": 107,
+     "l2_used": 225,
+     "top_l2": 178,
+     "top_l2_name": "Programming puzzles about number sequences and algorithms"
+    },
+    "finemath__finemath-3plus": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 11,
+     "top_l1_share": 0.436,
+     "top_l1_name": "Mathematics papers, proofs and theorems",
+     "l1_used": 104,
+     "l2_used": 264,
+     "top_l2": 178,
+     "top_l2_name": "Programming puzzles about number sequences and algorithms"
+    },
+    "gbharti__finance-alpaca": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 23,
+     "top_l1_share": 0.229,
+     "top_l1_name": "Loans, credit cards and personal payments",
+     "l1_used": 123,
+     "l2_used": 298,
+     "top_l2": 444,
+     "top_l2_name": "Articles about stock investment strategy and ETFs"
+    },
+    "gretelai__synthetic_text_to_sql": {
+     "n": 1000,
+     "off_atlas": 0.003,
+     "top_l1": 53,
+     "top_l1_share": 0.28,
+     "top_l1_name": "Court records, web pages and digitised books",
+     "l1_used": 151,
+     "l2_used": 399,
+     "top_l2": 875,
+     "top_l2_name": "SQL query and stored-procedure troubleshooting snippets"
+    },
+    "hendrycks_math__algebra": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 11,
+     "top_l1_share": 0.866,
+     "top_l1_name": "Mathematics papers, proofs and theorems",
+     "l1_used": 24,
+     "l2_used": 49,
+     "top_l2": 161,
+     "top_l2_name": "Math research abstracts and proof-based forum questions"
+    },
+    "hendrycks_math__geometry": {
+     "n": 870,
+     "off_atlas": 0.0,
+     "top_l1": 11,
+     "top_l1_share": 0.9149425287356322,
+     "top_l1_name": "Mathematics papers, proofs and theorems",
+     "l1_used": 21,
+     "l2_used": 40,
+     "top_l2": 161,
+     "top_l2_name": "Math research abstracts and proof-based forum questions"
+    },
+    "hendrycks_math__number_theory": {
+     "n": 869,
+     "off_atlas": 0.0,
+     "top_l1": 11,
+     "top_l1_share": 0.7733026467203682,
+     "top_l1_name": "Mathematics papers, proofs and theorems",
+     "l1_used": 21,
+     "l2_used": 47,
+     "top_l2": 161,
+     "top_l2_name": "Math research abstracts and proof-based forum questions"
+    },
+    "iamtarun__python_code_instructions_18k_alpaca": {
+     "n": 1000,
+     "off_atlas": 0.005,
+     "top_l1": 11,
+     "top_l1_share": 0.323,
+     "top_l1_name": "Mathematics papers, proofs and theorems",
+     "l1_used": 89,
+     "l2_used": 200,
+     "top_l2": 167,
+     "top_l2_name": "Tutorials about Python data analysis and visualization"
+    },
+    "lex_glue__ecthr_a": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 188,
+     "top_l1_share": 0.31,
+     "top_l1_name": "Court opinions, appeals and case law",
+     "l1_used": 58,
+     "l2_used": 167,
+     "top_l2": 3004,
+     "top_l2_name": "Appellate opinions on civil judgments and procedural motions"
+    },
+    "lex_glue__eurlex": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 38,
+     "top_l1_share": 0.866,
+     "top_l1_name": "Commission regulations on export refunds and prices",
+     "l1_used": 26,
+     "l2_used": 60,
+     "top_l2": 621,
+     "top_l2_name": "EU regulations setting agricultural export refund rates"
+    },
+    "lex_glue__ledgar": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 117,
+     "top_l1_share": 0.414,
+     "top_l1_name": "Statutes, decrees and official gazettes",
+     "l1_used": 41,
+     "l2_used": 133,
+     "top_l2": 1909,
+     "top_l2_name": "Consumer contract terms and conditions notices"
+    },
+    "lex_glue__scotus": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 188,
+     "top_l1_share": 0.699,
+     "top_l1_name": "Court opinions, appeals and case law",
+     "l1_used": 52,
+     "l2_used": 138,
+     "top_l2": 3005,
+     "top_l2_name": "Federal appellate opinions in United States v. defendant cases"
+    },
+    "lex_glue__unfair_tos": {
+     "n": 1000,
+     "off_atlas": 0.019,
+     "top_l1": 8,
+     "top_l1_share": 0.241,
+     "top_l1_name": "Privacy policies and data protection notices",
+     "l1_used": 112,
+     "l2_used": 319,
+     "top_l2": 126,
+     "top_l2_name": "Website terms and conditions boilerplate"
+    },
+    "mcemilg__news-cat": {
+     "n": 750,
+     "off_atlas": 0.013333333333333334,
+     "top_l1": 208,
+     "top_l1_share": 0.14133333333333334,
+     "top_l1_name": "Football leagues, cups and match previews",
+     "l1_used": 145,
+     "l2_used": 395,
+     "top_l2": 3324,
+     "top_l2_name": "Football coverage of Turkey's Süper Lig clubs"
+    },
+    "microsoft__orca-math-word-problems-200k": {
+     "n": 1000,
+     "off_atlas": 0.007,
+     "top_l1": 84,
+     "top_l1_share": 0.255,
+     "top_l1_name": "Money arithmetic word problems",
+     "l1_used": 122,
+     "l2_used": 316,
+     "top_l2": 1393,
+     "top_l2_name": "Cost comparison and price calculation articles"
+    },
+    "motherduckdb__duckdb-text2sql-25k": {
+     "n": 1000,
+     "off_atlas": 0.024,
+     "top_l1": 63,
+     "top_l1_share": 0.305,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 137,
+     "l2_used": 354,
+     "top_l2": 1038,
+     "top_l2_name": "Database and SQL query Q&A"
+    },
+    "no_robots": {
+     "n": 1000,
+     "off_atlas": 0.003,
+     "top_l1": 185,
+     "top_l1_share": 0.061,
+     "top_l1_name": "Narrative prose, outdoor stories and memoirs",
+     "l1_used": 200,
+     "l2_used": 678,
+     "top_l2": 2430,
+     "top_l2_name": "Personal blog poetry about dreams and emotions"
+    },
+    "nvidia__HelpSteer2": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 147,
+     "top_l1_share": 0.037,
+     "top_l1_name": "Machine-learning, statistics and computer science papers",
+     "l1_used": 191,
+     "l2_used": 679,
+     "top_l2": 3897,
+     "top_l2_name": "AI marketing and buzzword blog posts"
+    },
+    "nvidia__OpenMathInstruct-2": {
+     "n": 1000,
+     "off_atlas": 0.003,
+     "top_l1": 11,
+     "top_l1_share": 0.652,
+     "top_l1_name": "Mathematics papers, proofs and theorems",
+     "l1_used": 80,
+     "l2_used": 176,
+     "top_l2": 161,
+     "top_l2_name": "Math research abstracts and proof-based forum questions"
+    },
+    "open-web-math__open-web-math": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 11,
+     "top_l1_share": 0.512,
+     "top_l1_name": "Mathematics papers, proofs and theorems",
+     "l1_used": 111,
+     "l2_used": 292,
+     "top_l2": 161,
+     "top_l2_name": "Math research abstracts and proof-based forum questions"
+    },
+    "openai__gsm8k__main": {
+     "n": 1000,
+     "off_atlas": 0.004,
+     "top_l1": 84,
+     "top_l1_share": 0.36,
+     "top_l1_name": "Money arithmetic word problems",
+     "l1_used": 113,
+     "l2_used": 288,
+     "top_l2": 1398,
+     "top_l2_name": "Word problems about total cost and discounts"
+    },
+    "openbmb__UltraFeedback": {
+     "n": 1000,
+     "off_atlas": 0.015,
+     "top_l1": 198,
+     "top_l1_share": 0.074,
+     "top_l1_name": "Questions, answers and puzzle prompts",
+     "l1_used": 212,
+     "l2_used": 642,
+     "top_l2": 3157,
+     "top_l2_name": "Nonsensical-sentence and paraphrase-identification training prompts"
+    },
+    "proof-pile-2__arxiv": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 11,
+     "top_l1_share": 0.415,
+     "top_l1_name": "Mathematics papers, proofs and theorems",
+     "l1_used": 51,
+     "l2_used": 170,
+     "top_l2": 169,
+     "top_l2_name": "Research abstracts about differential equations and operator theory"
+    },
+    "qiaojin__PubMedQA__pqa_artificial": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 57,
+     "top_l1_share": 0.308,
+     "top_l1_name": "Cell biology, proteins and immunology",
+     "l1_used": 50,
+     "l2_used": 194,
+     "top_l2": 756,
+     "top_l2_name": "Research abstracts about cardiovascular and heart disease"
+    },
+    "rajpurkar__squad": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 12,
+     "top_l1_share": 0.03,
+     "top_l1_name": "Human rights, democracy and governance",
+     "l1_used": 177,
+     "l2_used": 631,
+     "top_l2": 1600,
+     "top_l2_name": "Judaism religion and culture articles"
+    },
+    "stack-exchange-preferences": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 63,
+     "top_l1_share": 0.493,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 64,
+     "l2_used": 203,
+     "top_l2": 1028,
+     "top_l2_name": "Shell scripting and file-manipulation Q&A"
+    },
+    "tatsu-lab__alpaca": {
+     "n": 1000,
+     "off_atlas": 0.007,
+     "top_l1": 121,
+     "top_l1_share": 0.051,
+     "top_l1_name": "Languages, linguistics and language learning",
+     "l1_used": 193,
+     "l2_used": 631,
+     "top_l2": 1967,
+     "top_l2_name": "Word game and anagram dictionary tools"
+    },
+    "turkish-nlp-suite__InstrucTurca": {
+     "n": 1000,
+     "off_atlas": 0.024,
+     "top_l1": 63,
+     "top_l1_share": 0.039,
+     "top_l1_name": "Source code, functions and programming questions",
+     "l1_used": 210,
+     "l2_used": 700,
+     "top_l2": 1394,
+     "top_l2_name": "Multiple-choice aptitude-test math problems"
+    },
+    "ultrachat_200k": {
+     "n": 1000,
+     "off_atlas": 0.003,
+     "top_l1": 82,
+     "top_l1_share": 0.047,
+     "top_l1_name": "Recipes, cooking and home kitchens",
+     "l1_used": 188,
+     "l2_used": 620,
+     "top_l2": 519,
+     "top_l2_name": "Lessons about fiction genres and storytelling"
+    },
+    "winddude__reddit_finance_43_250k": {
+     "n": 1000,
+     "off_atlas": 0.001,
+     "top_l1": 27,
+     "top_l1_share": 0.13,
+     "top_l1_name": "Stock markets, interest rates and market reports",
+     "l1_used": 111,
+     "l2_used": 311,
+     "top_l2": 361,
+     "top_l2_name": "Articles about saving money and personal budgeting"
+    },
+    "xlangai__spider": {
+     "n": 1000,
+     "off_atlas": 0.007,
+     "top_l1": 137,
+     "top_l1_share": 0.205,
+     "top_l1_name": "Names and entries starting with T",
+     "l1_used": 128,
+     "l2_used": 318,
+     "top_l2": 875,
+     "top_l2_name": "SQL query and stored-procedure troubleshooting snippets"
+    },
+    "xlcost-text-to-code__Python": {
+     "n": 1000,
+     "off_atlas": 0.0,
+     "top_l1": 36,
+     "top_l1_share": 0.303,
+     "top_l1_name": "Product listings, sizes and shopping-cart pages",
+     "l1_used": 29,
+     "l2_used": 60,
+     "top_l2": 586,
+     "top_l2_name": "Product listings spanning cosmetics, livestock and lab gear"
+    }
+   }
+  },
+  "atlas-v2": {
+   "off_atlas_rate": 0.11849132824486784,
+   "cells_used_l2": 295,
+   "cells_used_l1": 128,
+   "source": {
+    "chance_majority": 0.020820385332504663,
+    "nmi_l2": 0.33899973472538325,
+    "ami_l2": 0.3137689660679004,
+    "nmi_l1": 0.3191675862285752,
+    "ami_l1": 0.307168661873004,
+    "purity_l2": 0.25162656101303194,
+    "purity_l1": 0.213832080638583,
+    "acc_l2": 0.2385705962322781,
+    "acc_l2_ci95": [
+     0.23324723247232473,
+     0.2440134006603224
+    ],
+    "acc_l1": 0.2067974363954166,
+    "acc_l1_ci95": [
+     0.20194212468440473,
+     0.21177121771217713
+    ],
+    "acc_soft_top5_l2": 0.3507088755098077,
+    "ceiling_centroid": 0.5603418139444553,
+    "ceiling_linear": 0.6565935133035541,
+    "retained_l2": 0.34249671985143876,
+    "retained_l1": 0.2925210942092233,
+    "n_test": 25745
+   },
+   "axis": {
+    "chance_majority": 0.2536513362336855,
+    "nmi_l2": 0.2779937590232979,
+    "ami_l2": 0.27263631032559904,
+    "nmi_l1": 0.2760426694792703,
+    "ami_l1": 0.2735141343050153,
+    "purity_l2": 0.6342325545262095,
+    "purity_l1": 0.6001476043426751,
+    "acc_l2": 0.6235385511749855,
+    "acc_l2_ci95": [
+     0.6172062536414837,
+     0.6293658962905418
+    ],
+    "acc_l1": 0.5950281608079239,
+    "acc_l1_ci95": [
+     0.5887735482617984,
+     0.6009331909108565
+    ],
+    "acc_soft_top5_l2": 0.7227422800543795,
+    "ceiling_centroid": 0.7225092250922509,
+    "ceiling_linear": 0.8217906389590212,
+    "retained_l2": 0.6510502145635227,
+    "retained_l1": 0.600868172535628,
+    "n_test": 25745
+   },
+   "code_language": {
+    "n": 13000,
+    "n_classes": 11,
+    "chance_majority": 0.23076923076923078,
+    "ami_l2": 0.11984626794687558,
+    "acc_l2": 0.2563076923076923,
+    "ceiling_centroid": 0.5929230769230769
+   },
+   "per_source": {
+    "Anthropic__hh-rlhf": {
+     "n": 1000,
+     "off_atlas": 0.197,
+     "top_l1": 70,
+     "top_l1_share": 0.221,
+     "top_l1_name": "Psychology, relationships and self-help",
+     "l1_used": 99,
+     "l2_used": 160,
+     "top_l2": 158,
+     "top_l2_name": "nicht, plus, dans, sich"
+    },
+    "BEE-spoke-data__peS2o-100k_en-xlong": {
+     "n": 1000,
+     "off_atlas": 0.005,
+     "top_l1": 79,
+     "top_l1_share": 0.307,
+     "top_l1_name": "Physics, mathematics and academic research",
+     "l1_used": 59,
+     "l2_used": 84,
+     "top_l2": 180,
+     "top_l2_name": "abstract, institute, physics, university"
+    },
+    "CShorten__ML-ArXiv-Papers": {
+     "n": 1000,
+     "off_atlas": 0.019,
+     "top_l1": 79,
+     "top_l1_share": 0.662,
+     "top_l1_name": "Physics, mathematics and academic research",
+     "l1_used": 43,
+     "l2_used": 53,
+     "top_l2": 180,
+     "top_l2_name": "abstract, institute, physics, university"
+    },
+    "OpenAssistant__oasst1": {
+     "n": 1000,
+     "off_atlas": 0.135,
+     "top_l1": 89,
+     "top_l1_share": 0.078,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 117,
+     "l2_used": 221,
+     "top_l2": 159,
+     "top_l2_name": "abstract, research, data, such"
+    },
+    "TFLai__Turkish-Alpaca": {
+     "n": 1000,
+     "off_atlas": 0.278,
+     "top_l1": 70,
+     "top_l1_share": 0.039,
+     "top_l1_name": "Psychology, relationships and self-help",
+     "l1_used": 111,
+     "l2_used": 216,
+     "top_l2": 150,
+     "top_l2_name": "people, were, como, most"
+    },
+    "allenai__c4__en": {
+     "n": 1000,
+     "off_atlas": 0.067,
+     "top_l1": 78,
+     "top_l1_share": 0.04,
+     "top_l1_name": "Music, film and celebrity biographies",
+     "l1_used": 119,
+     "l2_used": 234,
+     "top_l2": 177,
+     "top_l2_name": "television, radio, american, film"
+    },
+    "allenai__c4__multilingual": {
+     "n": 1000,
+     "off_atlas": 0.133,
+     "top_l1": 72,
+     "top_l1_share": 0.044,
+     "top_l1_name": "Forums, commentary and mixed web content",
+     "l1_used": 121,
+     "l2_used": 234,
+     "top_l2": 37,
+     "top_l2_name": "produced, distributed, online, proofreading"
+    },
+    "b-mc2__sql-create-context": {
+     "n": 1000,
+     "off_atlas": 0.413,
+     "top_l1": 15,
+     "top_l1_share": 0.207,
+     "top_l1_name": "Government regulations, contracts and public records",
+     "l1_used": 93,
+     "l2_used": 156,
+     "top_l2": 37,
+     "top_l2_name": "produced, distributed, online, proofreading"
+    },
+    "codecomplete__starcoderdata_0.003": {
+     "n": 1000,
+     "off_atlas": 0.041,
+     "top_l1": 89,
+     "top_l1_share": 0.453,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 33,
+     "l2_used": 47,
+     "top_l2": 204,
+     "top_l2_name": "javascript, html, import, class"
+    },
+    "codeparrot-clean-valid": {
+     "n": 1000,
+     "off_atlas": 0.022,
+     "top_l1": 89,
+     "top_l1_share": 0.388,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 37,
+     "l2_used": 61,
+     "top_l2": 76,
+     "top_l2_name": "clone, python, install, bash"
+    },
+    "commitpackft__c": {
+     "n": 1000,
+     "off_atlas": 0.048,
+     "top_l1": 89,
+     "top_l1_share": 0.345,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 25,
+     "l2_used": 42,
+     "top_l2": 204,
+     "top_l2_name": "javascript, html, import, class"
+    },
+    "commitpackft__go": {
+     "n": 1000,
+     "off_atlas": 0.035,
+     "top_l1": 32,
+     "top_l1_share": 0.449,
+     "top_l1_name": "Windows, servers and software administration",
+     "l1_used": 26,
+     "l2_used": 42,
+     "top_l2": 76,
+     "top_l2_name": "clone, python, install, bash"
+    },
+    "commitpackft__java": {
+     "n": 1000,
+     "off_atlas": 0.026,
+     "top_l1": 89,
+     "top_l1_share": 0.619,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 31,
+     "l2_used": 52,
+     "top_l2": 204,
+     "top_l2_name": "javascript, html, import, class"
+    },
+    "commitpackft__javascript": {
+     "n": 1000,
+     "off_atlas": 0.039,
+     "top_l1": 89,
+     "top_l1_share": 0.777,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 37,
+     "l2_used": 51,
+     "top_l2": 204,
+     "top_l2_name": "javascript, html, import, class"
+    },
+    "commitpackft__php": {
+     "n": 1000,
+     "off_atlas": 0.01,
+     "top_l1": 89,
+     "top_l1_share": 0.815,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 28,
+     "l2_used": 44,
+     "top_l2": 204,
+     "top_l2_name": "javascript, html, import, class"
+    },
+    "commitpackft__python": {
+     "n": 1000,
+     "off_atlas": 0.057,
+     "top_l1": 89,
+     "top_l1_share": 0.407,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 42,
+     "l2_used": 64,
+     "top_l2": 76,
+     "top_l2_name": "clone, python, install, bash"
+    },
+    "commitpackft__ruby": {
+     "n": 1000,
+     "off_atlas": 0.055,
+     "top_l1": 89,
+     "top_l1_share": 0.442,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 52,
+     "l2_used": 77,
+     "top_l2": 76,
+     "top_l2_name": "clone, python, install, bash"
+    },
+    "commitpackft__rust": {
+     "n": 1000,
+     "off_atlas": 0.061,
+     "top_l1": 89,
+     "top_l1_share": 0.425,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 39,
+     "l2_used": 55,
+     "top_l2": 204,
+     "top_l2_name": "javascript, html, import, class"
+    },
+    "commitpackft__shell": {
+     "n": 1000,
+     "off_atlas": 0.019,
+     "top_l1": 32,
+     "top_l1_share": 0.766,
+     "top_l1_name": "Windows, servers and software administration",
+     "l1_used": 24,
+     "l2_used": 39,
+     "top_l2": 76,
+     "top_l2_name": "clone, python, install, bash"
+    },
+    "databricksbricks-dolly-15k": {
+     "n": 1000,
+     "off_atlas": 0.191,
+     "top_l1": 78,
+     "top_l1_share": 0.045,
+     "top_l1_name": "Music, film and celebrity biographies",
+     "l1_used": 118,
+     "l2_used": 225,
+     "top_l2": 224,
+     "top_l2_name": "described, family, taxonomy, endemic"
+    },
+    "deepmind__aqua_rat__raw": {
+     "n": 1000,
+     "off_atlas": 0.283,
+     "top_l1": 49,
+     "top_l1_share": 0.19,
+     "top_l1_name": "Banking, loans and retail finance",
+     "l1_used": 89,
+     "l2_used": 134,
+     "top_l2": 116,
+     "top_l2_name": "euro, only, back, were"
+    },
+    "finemath__finemath-3plus": {
+     "n": 1000,
+     "off_atlas": 0.085,
+     "top_l1": 79,
+     "top_l1_share": 0.317,
+     "top_l1_name": "Physics, mathematics and academic research",
+     "l1_used": 76,
+     "l2_used": 123,
+     "top_l2": 179,
+     "top_l2_name": "abstract, institute, science, department"
+    },
+    "gbharti__finance-alpaca": {
+     "n": 1000,
+     "off_atlas": 0.05,
+     "top_l1": 54,
+     "top_l1_share": 0.211,
+     "top_l1_name": "Taxes, debt and personal finance",
+     "l1_used": 82,
+     "l2_used": 131,
+     "top_l2": 126,
+     "top_l2_name": "make, than, like, these"
+    },
+    "gretelai__synthetic_text_to_sql": {
+     "n": 1000,
+     "off_atlas": 0.19,
+     "top_l1": 15,
+     "top_l1_share": 0.356,
+     "top_l1_name": "Government regulations, contracts and public records",
+     "l1_used": 92,
+     "l2_used": 152,
+     "top_l2": 37,
+     "top_l2_name": "produced, distributed, online, proofreading"
+    },
+    "hendrycks_math__algebra": {
+     "n": 1000,
+     "off_atlas": 0.043,
+     "top_l1": 49,
+     "top_l1_share": 0.6,
+     "top_l1_name": "Banking, loans and retail finance",
+     "l1_used": 38,
+     "l2_used": 46,
+     "top_l2": 116,
+     "top_l2_name": "euro, only, back, were"
+    },
+    "hendrycks_math__geometry": {
+     "n": 870,
+     "off_atlas": 0.04827586206896552,
+     "top_l1": 49,
+     "top_l1_share": 0.41954022988505746,
+     "top_l1_name": "Banking, loans and retail finance",
+     "l1_used": 20,
+     "l2_used": 27,
+     "top_l2": 116,
+     "top_l2_name": "euro, only, back, were"
+    },
+    "hendrycks_math__number_theory": {
+     "n": 869,
+     "off_atlas": 0.10586881472957423,
+     "top_l1": 49,
+     "top_l1_share": 0.7387802071346375,
+     "top_l1_name": "Banking, loans and retail finance",
+     "l1_used": 31,
+     "l2_used": 36,
+     "top_l2": 116,
+     "top_l2_name": "euro, only, back, were"
+    },
+    "iamtarun__python_code_instructions_18k_alpaca": {
+     "n": 1000,
+     "off_atlas": 0.241,
+     "top_l1": 89,
+     "top_l1_share": 0.411,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 53,
+     "l2_used": 78,
+     "top_l2": 204,
+     "top_l2_name": "javascript, html, import, class"
+    },
+    "lex_glue__ecthr_a": {
+     "n": 1000,
+     "off_atlas": 0.01,
+     "top_l1": 45,
+     "top_l1_share": 0.534,
+     "top_l1_name": "Courts, criminal cases and United States history",
+     "l1_used": 45,
+     "l2_used": 66,
+     "top_l2": 108,
+     "top_l2_name": "tribunal, acusado, after, into"
+    },
+    "lex_glue__eurlex": {
+     "n": 1000,
+     "off_atlas": 0.252,
+     "top_l1": 15,
+     "top_l1_share": 0.342,
+     "top_l1_name": "Government regulations, contracts and public records",
+     "l1_used": 51,
+     "l2_used": 71,
+     "top_l2": 38,
+     "top_l2_name": "register, volume, proposed, number"
+    },
+    "lex_glue__ledgar": {
+     "n": 1000,
+     "off_atlas": 0.089,
+     "top_l1": 47,
+     "top_l1_share": 0.556,
+     "top_l1_name": "Statutes, court rulings and legal proceedings",
+     "l1_used": 48,
+     "l2_used": 71,
+     "top_l2": 112,
+     "top_l2_name": "commission, federal, tribunal, number"
+    },
+    "lex_glue__scotus": {
+     "n": 1000,
+     "off_atlas": 0.003,
+     "top_l1": 45,
+     "top_l1_share": 0.834,
+     "top_l1_name": "Courts, criminal cases and United States history",
+     "l1_used": 28,
+     "l2_used": 40,
+     "top_l2": 107,
+     "top_l2_name": "court, opinion, decided, circuit"
+    },
+    "lex_glue__unfair_tos": {
+     "n": 1000,
+     "off_atlas": 0.22,
+     "top_l1": 47,
+     "top_l1_share": 0.163,
+     "top_l1_name": "Statutes, court rulings and legal proceedings",
+     "l1_used": 86,
+     "l2_used": 147,
+     "top_l2": 111,
+     "top_l2_name": "other, after, while, para"
+    },
+    "mcemilg__news-cat": {
+     "n": 750,
+     "off_atlas": 0.144,
+     "top_l1": 10,
+     "top_l1_share": 0.11066666666666666,
+     "top_l1_name": "Football leagues, transfers and player careers",
+     "l1_used": 102,
+     "l2_used": 167,
+     "top_l2": 216,
+     "top_l2_name": "para, like, most, than"
+    },
+    "microsoft__orca-math-word-problems-200k": {
+     "n": 1000,
+     "off_atlas": 0.235,
+     "top_l1": 49,
+     "top_l1_share": 0.253,
+     "top_l1_name": "Banking, loans and retail finance",
+     "l1_used": 90,
+     "l2_used": 150,
+     "top_l2": 116,
+     "top_l2_name": "euro, only, back, were"
+    },
+    "motherduckdb__duckdb-text2sql-25k": {
+     "n": 1000,
+     "off_atlas": 0.35,
+     "top_l1": 89,
+     "top_l1_share": 0.222,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 94,
+     "l2_used": 160,
+     "top_l2": 37,
+     "top_l2_name": "produced, distributed, online, proofreading"
+    },
+    "no_robots": {
+     "n": 1000,
+     "off_atlas": 0.103,
+     "top_l1": 78,
+     "top_l1_share": 0.133,
+     "top_l1_name": "Music, film and celebrity biographies",
+     "l1_used": 113,
+     "l2_used": 199,
+     "top_l2": 177,
+     "top_l2_name": "television, radio, american, film"
+    },
+    "nvidia__HelpSteer2": {
+     "n": 1000,
+     "off_atlas": 0.087,
+     "top_l1": 70,
+     "top_l1_share": 0.108,
+     "top_l1_name": "Psychology, relationships and self-help",
+     "l1_used": 112,
+     "l2_used": 213,
+     "top_l2": 159,
+     "top_l2_name": "abstract, research, data, such"
+    },
+    "nvidia__OpenMathInstruct-2": {
+     "n": 1000,
+     "off_atlas": 0.132,
+     "top_l1": 79,
+     "top_l1_share": 0.332,
+     "top_l1_name": "Physics, mathematics and academic research",
+     "l1_used": 67,
+     "l2_used": 104,
+     "top_l2": 179,
+     "top_l2_name": "abstract, institute, science, department"
+    },
+    "open-web-math__open-web-math": {
+     "n": 1000,
+     "off_atlas": 0.046,
+     "top_l1": 79,
+     "top_l1_share": 0.457,
+     "top_l1_name": "Physics, mathematics and academic research",
+     "l1_used": 68,
+     "l2_used": 105,
+     "top_l2": 179,
+     "top_l2_name": "abstract, institute, science, department"
+    },
+    "openai__gsm8k__main": {
+     "n": 1000,
+     "off_atlas": 0.295,
+     "top_l1": 49,
+     "top_l1_share": 0.288,
+     "top_l1_name": "Banking, loans and retail finance",
+     "l1_used": 86,
+     "l2_used": 142,
+     "top_l2": 116,
+     "top_l2_name": "euro, only, back, were"
+    },
+    "openbmb__UltraFeedback": {
+     "n": 1000,
+     "off_atlas": 0.204,
+     "top_l1": 70,
+     "top_l1_share": 0.135,
+     "top_l1_name": "Psychology, relationships and self-help",
+     "l1_used": 119,
+     "l2_used": 217,
+     "top_l2": 159,
+     "top_l2_name": "abstract, research, data, such"
+    },
+    "proof-pile-2__arxiv": {
+     "n": 1000,
+     "off_atlas": 0.006,
+     "top_l1": 79,
+     "top_l1_share": 0.831,
+     "top_l1_name": "Physics, mathematics and academic research",
+     "l1_used": 35,
+     "l2_used": 50,
+     "top_l2": 179,
+     "top_l2_name": "abstract, institute, science, department"
+    },
+    "qiaojin__PubMedQA__pqa_artificial": {
+     "n": 1000,
+     "off_atlas": 0.028,
+     "top_l1": 83,
+     "top_l1_share": 0.585,
+     "top_l1_name": "Molecular biology, genomics and cancer research",
+     "l1_used": 27,
+     "l2_used": 38,
+     "top_l2": 187,
+     "top_l2_name": "cell, protein, cells, gene"
+    },
+    "rajpurkar__squad": {
+     "n": 1000,
+     "off_atlas": 0.061,
+     "top_l1": 69,
+     "top_l1_share": 0.063,
+     "top_l1_name": "Historical events, places and military heritage",
+     "l1_used": 88,
+     "l2_used": 162,
+     "top_l2": 157,
+     "top_l2_name": "british, english, served, john"
+    },
+    "stack-exchange-preferences": {
+     "n": 1000,
+     "off_atlas": 0.045,
+     "top_l1": 89,
+     "top_l1_share": 0.58,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 45,
+     "l2_used": 71,
+     "top_l2": 204,
+     "top_l2_name": "javascript, html, import, class"
+    },
+    "tatsu-lab__alpaca": {
+     "n": 1000,
+     "off_atlas": 0.202,
+     "top_l1": 70,
+     "top_l1_share": 0.092,
+     "top_l1_name": "Psychology, relationships and self-help",
+     "l1_used": 108,
+     "l2_used": 207,
+     "top_l2": 159,
+     "top_l2_name": "abstract, research, data, such"
+    },
+    "turkish-nlp-suite__InstrucTurca": {
+     "n": 1000,
+     "off_atlas": 0.275,
+     "top_l1": 89,
+     "top_l1_share": 0.089,
+     "top_l1_name": "Web servers, SEO and software troubleshooting",
+     "l1_used": 117,
+     "l2_used": 225,
+     "top_l2": 204,
+     "top_l2_name": "javascript, html, import, class"
+    },
+    "ultrachat_200k": {
+     "n": 1000,
+     "off_atlas": 0.07,
+     "top_l1": 70,
+     "top_l1_share": 0.129,
+     "top_l1_name": "Psychology, relationships and self-help",
+     "l1_used": 112,
+     "l2_used": 198,
+     "top_l2": 159,
+     "top_l2_name": "abstract, research, data, such"
+    },
+    "winddude__reddit_finance_43_250k": {
+     "n": 1000,
+     "off_atlas": 0.022,
+     "top_l1": 0,
+     "top_l1_share": 0.281,
+     "top_l1_name": "Cryptocurrency, forex and market trading",
+     "l1_used": 79,
+     "l2_used": 117,
+     "top_l2": 3,
+     "top_l2_name": "dollars, plus, york, facebook"
+    },
+    "xlangai__spider": {
+     "n": 1000,
+     "off_atlas": 0.247,
+     "top_l1": 15,
+     "top_l1_share": 0.355,
+     "top_l1_name": "Government regulations, contracts and public records",
+     "l1_used": 85,
+     "l2_used": 142,
+     "top_l2": 37,
+     "top_l2_name": "produced, distributed, online, proofreading"
+    },
+    "xlcost-text-to-code__Python": {
+     "n": 1000,
+     "off_atlas": 0.134,
+     "top_l1": 15,
+     "top_l1_share": 0.869,
+     "top_l1_name": "Government regulations, contracts and public records",
+     "l1_used": 20,
+     "l2_used": 24,
+     "top_l2": 37,
+     "top_l2_name": "produced, distributed, online, proofreading"
+    }
+   }
+  },
+  "atlas-v2-lite": {
+   "off_atlas_rate": 0.16945366971586165,
+   "cells_used_l2": 65,
+   "cells_used_l1": 32,
+   "source": {
+    "chance_majority": 0.020820385332504663,
+    "nmi_l2": 0.2624888971436069,
+    "ami_l2": 0.2560043371972456,
+    "nmi_l1": 0.24298827452817728,
+    "ami_l1": 0.23959525873949922,
+    "purity_l2": 0.17349336751539163,
+    "purity_l1": 0.1446522558216318,
+    "acc_l2": 0.1695086424548456,
+    "acc_l2_ci95": [
+     0.16465235968149156,
+     0.174016313847349
+    ],
+    "acc_l1": 0.1434841716838221,
+    "acc_l1_ci95": [
+     0.13913381239075548,
+     0.14760244707710235
+    ],
+    "acc_soft_top5_l2": 0.24373664789279473,
+    "ceiling_centroid": 0.4994367838415226,
+    "ceiling_linear": 0.5695863274422218,
+    "retained_l2": 0.27095022798009766,
+    "retained_l1": 0.22352660203317198,
+    "n_test": 25745
+   },
+   "axis": {
+    "chance_majority": 0.2536513362336855,
+    "nmi_l2": 0.23007062723992902,
+    "ami_l2": 0.2286814069778155,
+    "nmi_l1": 0.229477442850893,
+    "ami_l1": 0.22873052614297376,
+    "purity_l2": 0.5508943657868671,
+    "purity_l1": 0.5299966983239138,
+    "acc_l2": 0.5464750436978054,
+    "acc_l2_ci95": [
+     0.5404913575451544,
+     0.5528102544183336
+    ],
+    "acc_l1": 0.5263546319673723,
+    "acc_l1_ci95": [
+     0.5203719168770635,
+     0.5322616041949894
+    ],
+    "acc_soft_top5_l2": 0.6443581277918042,
+    "ceiling_centroid": 0.6739561079821325,
+    "ceiling_linear": 0.76554670809866,
+    "retained_l2": 0.5720382006918392,
+    "retained_l1": 0.5327324893369406,
+    "n_test": 25745
+   },
+   "code_language": {
+    "n": 13000,
+    "n_classes": 11,
+    "chance_majority": 0.23076923076923078,
+    "ami_l2": 0.08089180831791892,
+    "acc_l2": 0.2686153846153846,
+    "ceiling_centroid": 0.5289230769230769
+   },
+   "per_source": {
+    "Anthropic__hh-rlhf": {
+     "n": 1000,
+     "off_atlas": 0.145,
+     "top_l1": 4,
+     "top_l1_share": 0.179,
+     "top_l1_name": "Crime, courts and public safety",
+     "l1_used": 28,
+     "l2_used": 50,
+     "top_l2": 2,
+     "top_l2_name": "ubuntu, install, using, then"
+    },
+    "BEE-spoke-data__peS2o-100k_en-xlong": {
+     "n": 1000,
+     "off_atlas": 0.022,
+     "top_l1": 7,
+     "top_l1_share": 0.676,
+     "top_l1_name": "Scientific research, biology and astronomy",
+     "l1_used": 25,
+     "l2_used": 37,
+     "top_l2": 15,
+     "top_l2_name": "abstract, introduction, between, such"
+    },
+    "CShorten__ML-ArXiv-Papers": {
+     "n": 1000,
+     "off_atlas": 0.04,
+     "top_l1": 7,
+     "top_l1_share": 0.721,
+     "top_l1_name": "Scientific research, biology and astronomy",
+     "l1_used": 18,
+     "l2_used": 25,
+     "top_l2": 15,
+     "top_l2_name": "abstract, introduction, between, such"
+    },
+    "OpenAssistant__oasst1": {
+     "n": 1000,
+     "off_atlas": 0.166,
+     "top_l1": 1,
+     "top_l1_share": 0.115,
+     "top_l1_name": "Software administration, web development and mobile technology",
+     "l1_used": 32,
+     "l2_used": 64,
+     "top_l2": 15,
+     "top_l2_name": "abstract, introduction, between, such"
+    },
+    "TFLai__Turkish-Alpaca": {
+     "n": 1000,
+     "off_atlas": 0.315,
+     "top_l1": 23,
+     "top_l1_share": 0.13,
+     "top_l1_name": "Philosophy, books and education",
+     "l1_used": 32,
+     "l2_used": 64,
+     "top_l2": 47,
+     "top_l2_name": "como, para, sobre, these"
+    },
+    "allenai__c4__en": {
+     "n": 1000,
+     "off_atlas": 0.102,
+     "top_l1": 28,
+     "top_l1_share": 0.107,
+     "top_l1_name": "Film, music and celebrity entertainment",
+     "l1_used": 32,
+     "l2_used": 64,
+     "top_l2": 58,
+     "top_l2_name": "film, american, como, john"
+    },
+    "allenai__c4__multilingual": {
+     "n": 1000,
+     "off_atlas": 0.202,
+     "top_l1": 14,
+     "top_l1_share": 0.103,
+     "top_l1_name": "Shopping, fashion and lifestyle products",
+     "l1_used": 32,
+     "l2_used": 65,
+     "top_l2": 13,
+     "top_l2_name": "para, como, many, over"
+    },
+    "b-mc2__sql-create-context": {
+     "n": 1000,
+     "off_atlas": 0.421,
+     "top_l1": 29,
+     "top_l1_share": 0.267,
+     "top_l1_name": "Regulations, software and technical reference",
+     "l1_used": 31,
+     "l2_used": 59,
+     "top_l2": 59,
+     "top_l2_name": "number, federal, part, department"
+    },
+    "codecomplete__starcoderdata_0.003": {
+     "n": 1000,
+     "off_atlas": 0.105,
+     "top_l1": 29,
+     "top_l1_share": 0.51,
+     "top_l1_name": "Regulations, software and technical reference",
+     "l1_used": 19,
+     "l2_used": 32,
+     "top_l2": 59,
+     "top_l2_name": "number, federal, part, department"
+    },
+    "codeparrot-clean-valid": {
+     "n": 1000,
+     "off_atlas": 0.071,
+     "top_l1": 1,
+     "top_l1_share": 0.417,
+     "top_l1_name": "Software administration, web development and mobile technology",
+     "l1_used": 23,
+     "l2_used": 33,
+     "top_l2": 3,
+     "top_l2_name": "file, using, para, want"
+    },
+    "commitpackft__c": {
+     "n": 1000,
+     "off_atlas": 0.09,
+     "top_l1": 29,
+     "top_l1_share": 0.703,
+     "top_l1_name": "Regulations, software and technical reference",
+     "l1_used": 20,
+     "l2_used": 32,
+     "top_l2": 59,
+     "top_l2_name": "number, federal, part, department"
+    },
+    "commitpackft__go": {
+     "n": 1000,
+     "off_atlas": 0.077,
+     "top_l1": 29,
+     "top_l1_share": 0.499,
+     "top_l1_name": "Regulations, software and technical reference",
+     "l1_used": 19,
+     "l2_used": 31,
+     "top_l2": 59,
+     "top_l2_name": "number, federal, part, department"
+    },
+    "commitpackft__java": {
+     "n": 1000,
+     "off_atlas": 0.054,
+     "top_l1": 29,
+     "top_l1_share": 0.444,
+     "top_l1_name": "Regulations, software and technical reference",
+     "l1_used": 18,
+     "l2_used": 31,
+     "top_l2": 59,
+     "top_l2_name": "number, federal, part, department"
+    },
+    "commitpackft__javascript": {
+     "n": 1000,
+     "off_atlas": 0.24,
+     "top_l1": 1,
+     "top_l1_share": 0.467,
+     "top_l1_name": "Software administration, web development and mobile technology",
+     "l1_used": 26,
+     "l2_used": 42,
+     "top_l2": 3,
+     "top_l2_name": "file, using, para, want"
+    },
+    "commitpackft__php": {
+     "n": 1000,
+     "off_atlas": 0.077,
+     "top_l1": 1,
+     "top_l1_share": 0.381,
+     "top_l1_name": "Software administration, web development and mobile technology",
+     "l1_used": 22,
+     "l2_used": 36,
+     "top_l2": 3,
+     "top_l2_name": "file, using, para, want"
+    },
+    "commitpackft__python": {
+     "n": 1000,
+     "off_atlas": 0.115,
+     "top_l1": 1,
+     "top_l1_share": 0.512,
+     "top_l1_name": "Software administration, web development and mobile technology",
+     "l1_used": 22,
+     "l2_used": 37,
+     "top_l2": 3,
+     "top_l2_name": "file, using, para, want"
+    },
+    "commitpackft__ruby": {
+     "n": 1000,
+     "off_atlas": 0.114,
+     "top_l1": 1,
+     "top_l1_share": 0.581,
+     "top_l1_name": "Software administration, web development and mobile technology",
+     "l1_used": 27,
+     "l2_used": 44,
+     "top_l2": 3,
+     "top_l2_name": "file, using, para, want"
+    },
+    "commitpackft__rust": {
+     "n": 1000,
+     "off_atlas": 0.163,
+     "top_l1": 29,
+     "top_l1_share": 0.485,
+     "top_l1_name": "Regulations, software and technical reference",
+     "l1_used": 22,
+     "l2_used": 36,
+     "top_l2": 59,
+     "top_l2_name": "number, federal, part, department"
+    },
+    "commitpackft__shell": {
+     "n": 1000,
+     "off_atlas": 0.079,
+     "top_l1": 29,
+     "top_l1_share": 0.644,
+     "top_l1_name": "Regulations, software and technical reference",
+     "l1_used": 13,
+     "l2_used": 20,
+     "top_l2": 59,
+     "top_l2_name": "number, federal, part, department"
+    },
+    "databricksbricks-dolly-15k": {
+     "n": 1000,
+     "off_atlas": 0.264,
+     "top_l1": 28,
+     "top_l1_share": 0.138,
+     "top_l1_name": "Film, music and celebrity entertainment",
+     "l1_used": 32,
+     "l2_used": 62,
+     "top_l2": 15,
+     "top_l2_name": "abstract, introduction, between, such"
+    },
+    "deepmind__aqua_rat__raw": {
+     "n": 1000,
+     "off_atlas": 0.294,
+     "top_l1": 2,
+     "top_l1_share": 0.178,
+     "top_l1_name": "Vehicles, electronics and industrial products",
+     "l1_used": 30,
+     "l2_used": 51,
+     "top_l2": 4,
+     "top_l2_name": "only, than, first, just"
+    },
+    "finemath__finemath-3plus": {
+     "n": 1000,
+     "off_atlas": 0.168,
+     "top_l1": 29,
+     "top_l1_share": 0.26,
+     "top_l1_name": "Regulations, software and technical reference",
+     "l1_used": 28,
+     "l2_used": 48,
+     "top_l2": 15,
+     "top_l2_name": "abstract, introduction, between, such"
+    },
+    "gbharti__finance-alpaca": {
+     "n": 1000,
+     "off_atlas": 0.081,
+     "top_l1": 31,
+     "top_l1_share": 0.612,
+     "top_l1_name": "Markets, finance and economic policy",
+     "l1_used": 30,
+     "l2_used": 55,
+     "top_l2": 63,
+     "top_l2_name": "were, just, what, most"
+    },
+    "gretelai__synthetic_text_to_sql": {
+     "n": 1000,
+     "off_atlas": 0.202,
+     "top_l1": 6,
+     "top_l1_share": 0.329,
+     "top_l1_name": "Regional public affairs and reference web content",
+     "l1_used": 29,
+     "l2_used": 54,
+     "top_l2": 13,
+     "top_l2_name": "para, como, many, over"
+    },
+    "hendrycks_math__algebra": {
+     "n": 1000,
+     "off_atlas": 0.106,
+     "top_l1": 14,
+     "top_l1_share": 0.249,
+     "top_l1_name": "Shopping, fashion and lifestyle products",
+     "l1_used": 18,
+     "l2_used": 27,
+     "top_l2": 29,
+     "top_l2_name": "these, make, just, what"
+    },
+    "hendrycks_math__geometry": {
+     "n": 870,
+     "off_atlas": 0.0839080459770115,
+     "top_l1": 2,
+     "top_l1_share": 0.45632183908045976,
+     "top_l1_name": "Vehicles, electronics and industrial products",
+     "l1_used": 14,
+     "l2_used": 20,
+     "top_l2": 29,
+     "top_l2_name": "these, make, just, what"
+    },
+    "hendrycks_math__number_theory": {
+     "n": 869,
+     "off_atlas": 0.21288837744533948,
+     "top_l1": 31,
+     "top_l1_share": 0.4487917146144994,
+     "top_l1_name": "Markets, finance and economic policy",
+     "l1_used": 21,
+     "l2_used": 29,
+     "top_l2": 63,
+     "top_l2_name": "were, just, what, most"
+    },
+    "iamtarun__python_code_instructions_18k_alpaca": {
+     "n": 1000,
+     "off_atlas": 0.323,
+     "top_l1": 1,
+     "top_l1_share": 0.38,
+     "top_l1_name": "Software administration, web development and mobile technology",
+     "l1_used": 24,
+     "l2_used": 39,
+     "top_l2": 3,
+     "top_l2_name": "file, using, para, want"
+    },
+    "lex_glue__ecthr_a": {
+     "n": 1000,
+     "off_atlas": 0.023,
+     "top_l1": 4,
+     "top_l1_share": 0.745,
+     "top_l1_name": "Crime, courts and public safety",
+     "l1_used": 18,
+     "l2_used": 27,
+     "top_l2": 8,
+     "top_l2_name": "court, before, were, after"
+    },
+    "lex_glue__eurlex": {
+     "n": 1000,
+     "off_atlas": 0.582,
+     "top_l1": 31,
+     "top_l1_share": 0.307,
+     "top_l1_name": "Markets, finance and economic policy",
+     "l1_used": 24,
+     "l2_used": 41,
+     "top_l2": 64,
+     "top_l2_name": "para, just, than, their"
+    },
+    "lex_glue__ledgar": {
+     "n": 1000,
+     "off_atlas": 0.079,
+     "top_l1": 12,
+     "top_l1_share": 0.238,
+     "top_l1_name": "Law, politics and international relations",
+     "l1_used": 25,
+     "l2_used": 41,
+     "top_l2": 25,
+     "top_l2_name": "after, than, just, would"
+    },
+    "lex_glue__scotus": {
+     "n": 1000,
+     "off_atlas": 0.117,
+     "top_l1": 4,
+     "top_l1_share": 0.6,
+     "top_l1_name": "Crime, courts and public safety",
+     "l1_used": 21,
+     "l2_used": 33,
+     "top_l2": 8,
+     "top_l2_name": "court, before, were, after"
+    },
+    "lex_glue__unfair_tos": {
+     "n": 1000,
+     "off_atlas": 0.147,
+     "top_l1": 27,
+     "top_l1_share": 0.186,
+     "top_l1_name": "Blogs, social media and popular culture",
+     "l1_used": 31,
+     "l2_used": 58,
+     "top_l2": 56,
+     "top_l2_name": "internet, site, online, para"
+    },
+    "mcemilg__news-cat": {
+     "n": 750,
+     "off_atlas": 0.21866666666666668,
+     "top_l1": 21,
+     "top_l1_share": 0.14533333333333334,
+     "top_l1_name": "Football, games and competitive sports",
+     "l1_used": 32,
+     "l2_used": 63,
+     "top_l2": 43,
+     "top_l2_name": "liga, club, como, final"
+    },
+    "microsoft__orca-math-word-problems-200k": {
+     "n": 1000,
+     "off_atlas": 0.325,
+     "top_l1": 31,
+     "top_l1_share": 0.163,
+     "top_l1_name": "Markets, finance and economic policy",
+     "l1_used": 30,
+     "l2_used": 54,
+     "top_l2": 63,
+     "top_l2_name": "were, just, what, most"
+    },
+    "motherduckdb__duckdb-text2sql-25k": {
+     "n": 1000,
+     "off_atlas": 0.409,
+     "top_l1": 29,
+     "top_l1_share": 0.306,
+     "top_l1_name": "Regulations, software and technical reference",
+     "l1_used": 32,
+     "l2_used": 59,
+     "top_l2": 59,
+     "top_l2_name": "number, federal, part, department"
+    },
+    "no_robots": {
+     "n": 1000,
+     "off_atlas": 0.142,
+     "top_l1": 28,
+     "top_l1_share": 0.208,
+     "top_l1_name": "Film, music and celebrity entertainment",
+     "l1_used": 31,
+     "l2_used": 59,
+     "top_l2": 58,
+     "top_l2_name": "film, american, como, john"
+    },
+    "nvidia__HelpSteer2": {
+     "n": 1000,
+     "off_atlas": 0.118,
+     "top_l1": 1,
+     "top_l1_share": 0.131,
+     "top_l1_name": "Software administration, web development and mobile technology",
+     "l1_used": 32,
+     "l2_used": 61,
+     "top_l2": 15,
+     "top_l2_name": "abstract, introduction, between, such"
+    },
+    "nvidia__OpenMathInstruct-2": {
+     "n": 1000,
+     "off_atlas": 0.198,
+     "top_l1": 2,
+     "top_l1_share": 0.199,
+     "top_l1_name": "Vehicles, electronics and industrial products",
+     "l1_used": 30,
+     "l2_used": 47,
+     "top_l2": 29,
+     "top_l2_name": "these, make, just, what"
+    },
+    "open-web-math__open-web-math": {
+     "n": 1000,
+     "off_atlas": 0.132,
+     "top_l1": 7,
+     "top_l1_share": 0.258,
+     "top_l1_name": "Scientific research, biology and astronomy",
+     "l1_used": 28,
+     "l2_used": 49,
+     "top_l2": 15,
+     "top_l2_name": "abstract, introduction, between, such"
+    },
+    "openai__gsm8k__main": {
+     "n": 1000,
+     "off_atlas": 0.351,
+     "top_l1": 14,
+     "top_l1_share": 0.121,
+     "top_l1_name": "Shopping, fashion and lifestyle products",
+     "l1_used": 28,
+     "l2_used": 48,
+     "top_l2": 29,
+     "top_l2_name": "these, make, just, what"
+    },
+    "openbmb__UltraFeedback": {
+     "n": 1000,
+     "off_atlas": 0.19,
+     "top_l1": 1,
+     "top_l1_share": 0.152,
+     "top_l1_name": "Software administration, web development and mobile technology",
+     "l1_used": 32,
+     "l2_used": 61,
+     "top_l2": 47,
+     "top_l2_name": "como, para, sobre, these"
+    },
+    "proof-pile-2__arxiv": {
+     "n": 1000,
+     "off_atlas": 0.051,
+     "top_l1": 7,
+     "top_l1_share": 0.672,
+     "top_l1_name": "Scientific research, biology and astronomy",
+     "l1_used": 25,
+     "l2_used": 35,
+     "top_l2": 15,
+     "top_l2_name": "abstract, introduction, between, such"
+    },
+    "qiaojin__PubMedQA__pqa_artificial": {
+     "n": 1000,
+     "off_atlas": 0.032,
+     "top_l1": 7,
+     "top_l1_share": 0.583,
+     "top_l1_name": "Scientific research, biology and astronomy",
+     "l1_used": 16,
+     "l2_used": 27,
+     "top_l2": 14,
+     "top_l2_name": "were, such, many, these"
+    },
+    "rajpurkar__squad": {
+     "n": 1000,
+     "off_atlas": 0.156,
+     "top_l1": 0,
+     "top_l1_share": 0.128,
+     "top_l1_name": "Environmental science, municipalities and natural geography",
+     "l1_used": 30,
+     "l2_used": 58,
+     "top_l2": 0,
+     "top_l2_name": "population, area, references, were"
+    },
+    "stack-exchange-preferences": {
+     "n": 1000,
+     "off_atlas": 0.084,
+     "top_l1": 1,
+     "top_l1_share": 0.43,
+     "top_l1_name": "Software administration, web development and mobile technology",
+     "l1_used": 25,
+     "l2_used": 37,
+     "top_l2": 3,
+     "top_l2_name": "file, using, para, want"
+    },
+    "tatsu-lab__alpaca": {
+     "n": 1000,
+     "off_atlas": 0.22,
+     "top_l1": 28,
+     "top_l1_share": 0.122,
+     "top_l1_name": "Film, music and celebrity entertainment",
+     "l1_used": 32,
+     "l2_used": 63,
+     "top_l2": 15,
+     "top_l2_name": "abstract, introduction, between, such"
+    },
+    "turkish-nlp-suite__InstrucTurca": {
+     "n": 1000,
+     "off_atlas": 0.322,
+     "top_l1": 28,
+     "top_l1_share": 0.085,
+     "top_l1_name": "Film, music and celebrity entertainment",
+     "l1_used": 32,
+     "l2_used": 64,
+     "top_l2": 58,
+     "top_l2_name": "film, american, como, john"
+    },
+    "ultrachat_200k": {
+     "n": 1000,
+     "off_atlas": 0.101,
+     "top_l1": 23,
+     "top_l1_share": 0.182,
+     "top_l1_name": "Philosophy, books and education",
+     "l1_used": 31,
+     "l2_used": 58,
+     "top_l2": 47,
+     "top_l2_name": "como, para, sobre, these"
+    },
+    "winddude__reddit_finance_43_250k": {
+     "n": 1000,
+     "off_atlas": 0.067,
+     "top_l1": 31,
+     "top_l1_share": 0.425,
+     "top_l1_name": "Markets, finance and economic policy",
+     "l1_used": 29,
+     "l2_used": 51,
+     "top_l2": 64,
+     "top_l2_name": "para, just, than, their"
+    },
+    "xlangai__spider": {
+     "n": 1000,
+     "off_atlas": 0.35,
+     "top_l1": 29,
+     "top_l1_share": 0.378,
+     "top_l1_name": "Regulations, software and technical reference",
+     "l1_used": 32,
+     "l2_used": 60,
+     "top_l2": 59,
+     "top_l2_name": "number, federal, part, department"
+    },
+    "xlcost-text-to-code__Python": {
+     "n": 1000,
+     "off_atlas": 0.071,
+     "top_l1": 29,
+     "top_l1_share": 0.898,
+     "top_l1_name": "Regulations, software and technical reference",
+     "l1_used": 10,
+     "l2_used": 16,
+     "top_l2": 59,
+     "top_l2_name": "number, federal, part, department"
+    }
+   }
+  }
+ },
+ "paired_vs_main": {
+  "atlas-v3-prev": {
+   "source_l2": {
+    "delta": -0.003262769469799961,
+    "ci95": [
+     -0.009632938434647504,
+     0.0026451738201592506
+    ],
+    "n": 25745,
+    "significant": false
+   },
+   "source_l1": {
+    "delta": -0.0035735094193047193,
+    "ci95": [
+     -0.008352107205282578,
+     0.001048747329578559
+    ],
+    "n": 25745,
+    "significant": false
+   },
+   "axis_l2": {
+    "delta": -0.026568265682656828,
+    "ci95": [
+     -0.03185278694892212,
+     -0.021360458341425522
+    ],
+    "n": 25745,
+    "significant": true
+   },
+   "axis_l1": {
+    "delta": -0.044591182753932805,
+    "ci95": [
+     -0.05010681685764226,
+     -0.039347446106040004
+    ],
+    "n": 25745,
+    "significant": true
+   }
+  },
+  "atlas-v2": {
+   "source_l2": {
+    "delta": 0.06428432705379686,
+    "ci95": [
+     0.05822004272674306,
+     0.07011167216935327
+    ],
+    "n": 25745,
+    "significant": true
+   },
+   "source_l1": {
+    "delta": 0.041328413284132844,
+    "ci95": [
+     0.03499611575063119,
+     0.04653330743833754
+    ],
+    "n": 25745,
+    "significant": true
+   },
+   "axis_l2": {
+    "delta": 0.0064866964459118276,
+    "ci95": [
+     0.0005826374053214216,
+     0.012623810448630802
+    ],
+    "n": 25745,
+    "significant": true
+   },
+   "axis_l1": {
+    "delta": 0.0017090697222761702,
+    "ci95": [
+     -0.004079432899592153,
+     0.007420858419110505
+    ],
+    "n": 25745,
+    "significant": false
+   }
+  },
+  "atlas-v2-lite": {
+   "source_l2": {
+    "delta": 0.13334628083122937,
+    "ci95": [
+     0.12678092833559915,
+     0.13921246844047389
+    ],
+    "n": 25745,
+    "significant": true
+   },
+   "source_l1": {
+    "delta": 0.10464167799572732,
+    "ci95": [
+     0.09807729656243931,
+     0.11054573703631773
+    ],
+    "n": 25745,
+    "significant": true
+   },
+   "axis_l2": {
+    "delta": 0.08355020392309186,
+    "ci95": [
+     0.07702466498349193,
+     0.09023111283744416
+    ],
+    "n": 25745,
+    "significant": true
+   },
+   "axis_l1": {
+    "delta": 0.07038259856282773,
+    "ci95": [
+     0.06401242959798019,
+     0.07620994367838416
+    ],
+    "n": 25745,
+    "significant": true
+   }
+  }
+ }
+}

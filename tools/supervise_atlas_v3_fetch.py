@@ -22,6 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
+from atlas_fetch_progress import current_entries  # noqa: E402
 from atlas_sources import (  # noqa: E402
     AXIS_FLOORS,
     AXIS_TARGET_BYTES,
@@ -32,7 +33,6 @@ from atlas_sources import (  # noqa: E402
     LOGICAL_BYTE_TARGET,
     SOURCES,
 )
-from atlas_fetch_progress import current_entries  # noqa: E402
 from fetch_corpus import BYTE_COMPLETE_SLACK  # noqa: E402
 
 STOP = False

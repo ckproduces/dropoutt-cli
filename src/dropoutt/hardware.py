@@ -517,17 +517,40 @@ def plan(requested: int | None = None) -> Sizing:
     return Sizing(max(1, workers), budget, bound, machine)
 
 
+#: Ceiling on the sample budget, and where it comes from.
+#:
+#: A sampled record costs ``atlas_text_chars * 2.5`` bytes — 5 KB at the 2,000
+#: characters every atlas profile keeps. The parent holds the whole merged
+#: sample and each live shard holds ``SAMPLE_HEADROOM`` times its expected
+#: share, so on a corpus split into no more shards than there are workers the
+#: planner needs ``target * 5_000 * (1 + SAMPLE_HEADROOM)`` — twenty thousand
+#: bytes per record — before it starts trimming the sample and saying so.
+#:
+#: This was 4 GiB, which is exactly the 200,000-record target the v2 products
+#: were tuned to and is why that number is what it is. atlas-v3 asks for
+#: 500,000, so the ceiling moves with it rather than degrading every v3 run on
+#: a machine large enough to do the work. It is still a ceiling on a figure
+#: that scales with the machine: a laptop with 8 GB free is bounded by its own
+#: memory long before it reaches this, and gets the honest "reduced to fit"
+#: notice instead.
+SAMPLE_BYTES_PER_RECORD = 20_000
+MAX_SAMPLE_BUDGET = 10 << 30
+
+
 def _memory_budget(machine: Machine) -> int:
     """Bytes the corpus samples may occupy, parent and workers together.
 
     Floored at 512 MiB so a machine that will not report its memory still gets
-    a usable atlas sample, and capped at 4 GiB because past that the sample is
-    larger than the statistics need — see
+    a usable atlas sample, and capped at :data:`MAX_SAMPLE_BUDGET`, which is
+    derived from the largest atlas sample any product asks for — see
     :data:`dropoutt.runner.ATLAS_SAMPLE_TARGET`.
     """
     if not machine.available_memory:
         return 1 << 30
-    return max(512 << 20, min(4 << 30, int(machine.available_memory * MEMORY_HEADROOM * 0.5)))
+    return max(
+        512 << 20,
+        min(MAX_SAMPLE_BUDGET, int(machine.available_memory * MEMORY_HEADROOM * 0.5)),
+    )
 
 
 def accelerator() -> str:

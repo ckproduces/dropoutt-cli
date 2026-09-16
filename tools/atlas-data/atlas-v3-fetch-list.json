@@ -1,202 +1,1042 @@
 {
   "plan": "atlas-v3-200gib",
-  "written_at": "2026-08-30T05:35:04Z",
-  "logical_target_bytes": 214748364800,
-  "logical_target_gib": 200.0,
+  "written_at": "2026-09-06T00:13:08Z",
+  "logical_target_bytes": 322122547200,
+  "logical_target_gib": 300.0,
   "axis_targets_gib": {
-    "web": 163.0,
-    "encyclopedic": 6.0,
-    "scientific": 10.0,
-    "code": 4.0,
-    "forum": 2.0,
-    "legal_government": 2.0,
-    "books": 4.0,
-    "educational": 4.0,
-    "training": 5.0
+    "web": 168.0,
+    "encyclopedic": 39.0,
+    "books": 21.0,
+    "legal_government": 16.5,
+    "scientific": 13.5,
+    "training": 30.0,
+    "code": 6.0,
+    "forum": 3.0,
+    "educational": 3.0
   },
-  "current_pct": 73.4182,
+  "current_pct": 67.4805,
   "pending": [
     {
       "slug": "HuggingFaceFW__fineweb__CC-MAIN-2024-51",
       "axis": "web",
-      "have_bytes": 1401860508,
-      "target_bytes": 2952790016,
-      "shortfall_bytes": 1550929508
+      "have_bytes": 8321499123,
+      "target_bytes": 25673167012,
+      "shortfall_bytes": 17351667889
     },
     {
       "slug": "wikimedia__wikipedia__20231101.simple",
       "axis": "encyclopedic",
       "have_bytes": 205085213,
-      "target_bytes": 1610612736,
-      "shortfall_bytes": 1405527523
+      "target_bytes": 214748365,
+      "shortfall_bytes": 9663152
     },
     {
       "slug": "common-pile__arxiv_papers_filtered",
       "axis": "scientific",
-      "have_bytes": 159797776,
-      "target_bytes": 2147483648,
-      "shortfall_bytes": 1987685872
+      "have_bytes": 1183286609,
+      "target_bytes": 2899102925,
+      "shortfall_bytes": 1715816316
     },
     {
       "slug": "common-pile__peS2o_filtered",
       "axis": "scientific",
-      "have_bytes": 270135557,
-      "target_bytes": 2147483648,
-      "shortfall_bytes": 1877348091
+      "have_bytes": 2147483234,
+      "target_bytes": 2899102925,
+      "shortfall_bytes": 751619691
     },
     {
       "slug": "common-pile__pubmed_filtered",
       "axis": "scientific",
-      "have_bytes": 285154287,
-      "target_bytes": 4294967296,
-      "shortfall_bytes": 4009813009
+      "have_bytes": 4294965403,
+      "target_bytes": 5798205850,
+      "shortfall_bytes": 1503240447
+    },
+    {
+      "slug": "common-pile__arxiv_abstracts_filtered",
+      "axis": "scientific",
+      "have_bytes": 1073741371,
+      "target_bytes": 1449551462,
+      "shortfall_bytes": 375810091
+    },
+    {
+      "slug": "common-pile__biodiversity_heritage_library_filtered",
+      "axis": "scientific",
+      "have_bytes": 1073739290,
+      "target_bytes": 1449551462,
+      "shortfall_bytes": 375812172
     },
     {
       "slug": "common-pile__stackv2_edu_filtered",
       "axis": "code",
-      "have_bytes": 887413653,
-      "target_bytes": 4294967296,
-      "shortfall_bytes": 3407553643
+      "have_bytes": 4294965309,
+      "target_bytes": 6442450944,
+      "shortfall_bytes": 2147485635
     },
     {
       "slug": "common-pile__stackexchange_filtered",
       "axis": "forum",
-      "have_bytes": 908327532,
-      "target_bytes": 2147483648,
-      "shortfall_bytes": 1239156116
+      "have_bytes": 2147481254,
+      "target_bytes": 3221225472,
+      "shortfall_bytes": 1073744218
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_bg_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558004,
+      "shortfall_bytes": 590558004
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_cs_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558004,
+      "shortfall_bytes": 590558004
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_da_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558004,
+      "shortfall_bytes": 590558004
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_de_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558004,
+      "shortfall_bytes": 590558004
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_el_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_es_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_et_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_fi_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_fr_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_hr_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_hu_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_it_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_lt_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_lv_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_nl_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_pl_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_pt_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_ro_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_sk_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_sl_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_sv_caselaw_train_0.jsonl.xz",
+      "axis": "legal_government",
+      "have_bytes": 0,
+      "target_bytes": 590558003,
+      "shortfall_bytes": 590558003
     },
     {
       "slug": "common-pile__regulations_filtered",
       "axis": "legal_government",
-      "have_bytes": 29795903,
-      "target_bytes": 805306368,
-      "shortfall_bytes": 775510465
+      "have_bytes": 699663979,
+      "target_bytes": 2126008811,
+      "shortfall_bytes": 1426344832
+    },
+    {
+      "slug": "common-pile__caselaw_access_project_filtered",
+      "axis": "legal_government",
+      "have_bytes": 805304767,
+      "target_bytes": 2126008812,
+      "shortfall_bytes": 1320704045
     },
     {
       "slug": "common-pile__usgpo_filtered",
       "axis": "legal_government",
-      "have_bytes": 21761959,
-      "target_bytes": 536870912,
-      "shortfall_bytes": 515108953
+      "have_bytes": 536868718,
+      "target_bytes": 1063004406,
+      "shortfall_bytes": 526135688
     },
     {
       "slug": "common-pile__project_gutenberg_filtered",
       "axis": "books",
       "have_bytes": 222115999,
-      "target_bytes": 536870912,
-      "shortfall_bytes": 314754913
+      "target_bytes": 2818572288,
+      "shortfall_bytes": 2596456289
     },
     {
       "slug": "common-pile__pre_1929_books_filtered",
       "axis": "books",
-      "have_bytes": 402652027,
-      "target_bytes": 536870912,
-      "shortfall_bytes": 134218885
+      "have_bytes": 495081880,
+      "target_bytes": 2818572288,
+      "shortfall_bytes": 2323490408
     },
     {
       "slug": "common-pile__library_of_congress_filtered",
       "axis": "books",
-      "have_bytes": 0,
-      "target_bytes": 3221225472,
-      "shortfall_bytes": 3221225472
-    },
-    {
-      "slug": "common-pile__libretexts_filtered",
-      "axis": "educational",
-      "have_bytes": 130421840,
-      "target_bytes": 214748365,
-      "shortfall_bytes": 84326525
-    },
-    {
-      "slug": "common-pile__pressbooks_filtered",
-      "axis": "educational",
-      "have_bytes": 0,
-      "target_bytes": 644245094,
-      "shortfall_bytes": 644245094
+      "have_bytes": 511086768,
+      "target_bytes": 5637144576,
+      "shortfall_bytes": 5126057808
     },
     {
       "slug": "common-pile__oercommons_filtered",
       "axis": "educational",
-      "have_bytes": 0,
-      "target_bytes": 85899346,
-      "shortfall_bytes": 85899346
+      "have_bytes": 13870134,
+      "target_bytes": 16106127,
+      "shortfall_bytes": 2235993
     },
     {
-      "slug": "common-pile__doab_filtered",
-      "axis": "educational",
+      "slug": "wikimedia__wikisource__20231201.ru",
+      "axis": "books",
+      "have_bytes": 429492514,
+      "target_bytes": 2254857831,
+      "shortfall_bytes": 1825365317
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.zh",
+      "axis": "books",
+      "have_bytes": 322112693,
+      "target_bytes": 1691143373,
+      "shortfall_bytes": 1369030680
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.he",
+      "axis": "books",
+      "have_bytes": 161059491,
+      "target_bytes": 845571686,
+      "shortfall_bytes": 684512195
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.ar",
+      "axis": "books",
+      "have_bytes": 161060037,
+      "target_bytes": 845571686,
+      "shortfall_bytes": 684511649
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.de",
+      "axis": "books",
+      "have_bytes": 161058329,
+      "target_bytes": 845571686,
+      "shortfall_bytes": 684513357
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.ko",
+      "axis": "books",
+      "have_bytes": 128840265,
+      "target_bytes": 676457349,
+      "shortfall_bytes": 547617084
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.es",
+      "axis": "books",
+      "have_bytes": 101257576,
+      "target_bytes": 676457349,
+      "shortfall_bytes": 575199773
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.la",
+      "axis": "books",
+      "have_bytes": 35164248,
+      "target_bytes": 563714458,
+      "shortfall_bytes": 528550210
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.sl",
+      "axis": "books",
+      "have_bytes": 38504076,
+      "target_bytes": 563714458,
+      "shortfall_bytes": 525210382
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.it",
+      "axis": "books",
+      "have_bytes": 61309061,
+      "target_bytes": 450971566,
+      "shortfall_bytes": 389662505
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.cs",
+      "axis": "books",
+      "have_bytes": 71466838,
+      "target_bytes": 450971566,
+      "shortfall_bytes": 379504728
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.ja",
+      "axis": "books",
+      "have_bytes": 58999778,
+      "target_bytes": 450971566,
+      "shortfall_bytes": 391971788
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.el",
+      "axis": "books",
+      "have_bytes": 29531216,
+      "target_bytes": 394600120,
+      "shortfall_bytes": 365068904
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.pt",
+      "axis": "books",
+      "have_bytes": 42892617,
+      "target_bytes": 338228675,
+      "shortfall_bytes": 295336058
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.fr",
+      "axis": "books",
+      "have_bytes": 15131535,
+      "target_bytes": 225485783,
+      "shortfall_bytes": 210354248
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.de",
+      "axis": "encyclopedic",
+      "have_bytes": 167501215,
+      "target_bytes": 3381941650,
+      "shortfall_bytes": 3214440435
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.fr",
+      "axis": "encyclopedic",
+      "have_bytes": 139583875,
+      "target_bytes": 3043747485,
+      "shortfall_bytes": 2904163610
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.es",
+      "axis": "encyclopedic",
+      "have_bytes": 167500870,
+      "target_bytes": 2705553320,
+      "shortfall_bytes": 2538052450
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ru",
+      "axis": "encyclopedic",
+      "have_bytes": 125624095,
+      "target_bytes": 2705553320,
+      "shortfall_bytes": 2579929225
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ja",
+      "axis": "encyclopedic",
+      "have_bytes": 125619309,
+      "target_bytes": 2367359155,
+      "shortfall_bytes": 2241739846
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.it",
+      "axis": "encyclopedic",
+      "have_bytes": 97707112,
+      "target_bytes": 2029164990,
+      "shortfall_bytes": 1931457878
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.zh",
+      "axis": "encyclopedic",
+      "have_bytes": 83745787,
+      "target_bytes": 1690970825,
+      "shortfall_bytes": 1607225038
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.pt",
+      "axis": "encyclopedic",
+      "have_bytes": 111668198,
+      "target_bytes": 1690970825,
+      "shortfall_bytes": 1579302627
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.nl",
+      "axis": "encyclopedic",
+      "have_bytes": 69791745,
+      "target_bytes": 1352776660,
+      "shortfall_bytes": 1282984915
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.pl",
+      "axis": "encyclopedic",
+      "have_bytes": 69789122,
+      "target_bytes": 1352776660,
+      "shortfall_bytes": 1282987538
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ar",
+      "axis": "encyclopedic",
+      "have_bytes": 55833518,
+      "target_bytes": 1183679577,
+      "shortfall_bytes": 1127846059
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.uk",
+      "axis": "encyclopedic",
       "have_bytes": 0,
-      "target_bytes": 3350074491,
-      "shortfall_bytes": 3350074491
+      "target_bytes": 1014582495,
+      "shortfall_bytes": 1014582495
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.vi",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 845485412,
+      "shortfall_bytes": 845485412
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.tr",
+      "axis": "encyclopedic",
+      "have_bytes": 69792551,
+      "target_bytes": 845485412,
+      "shortfall_bytes": 775692861
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.fa",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 676388330,
+      "shortfall_bytes": 676388330
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.id",
+      "axis": "encyclopedic",
+      "have_bytes": 41874180,
+      "target_bytes": 676388330,
+      "shortfall_bytes": 634514150
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.cs",
+      "axis": "encyclopedic",
+      "have_bytes": 41875451,
+      "target_bytes": 676388330,
+      "shortfall_bytes": 634512879
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ko",
+      "axis": "encyclopedic",
+      "have_bytes": 27917071,
+      "target_bytes": 676388330,
+      "shortfall_bytes": 648471259
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.sv",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 676388330,
+      "shortfall_bytes": 676388330
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.hu",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 507291247,
+      "shortfall_bytes": 507291247
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ro",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 507291247,
+      "shortfall_bytes": 507291247
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.fi",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 507291247,
+      "shortfall_bytes": 507291247
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.da",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 405832998,
+      "shortfall_bytes": 405832998
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.he",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 405832998,
+      "shortfall_bytes": 405832998
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.no",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 405832998,
+      "shortfall_bytes": 405832998
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ca",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 338194165,
+      "shortfall_bytes": 338194165
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.bg",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 338194165,
+      "shortfall_bytes": 338194165
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.el",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 338194165,
+      "shortfall_bytes": 338194165
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.sk",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 338194165,
+      "shortfall_bytes": 338194165
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.th",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 270555332,
+      "shortfall_bytes": 270555332
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.hr",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 270555332,
+      "shortfall_bytes": 270555332
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.sr",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 270555332,
+      "shortfall_bytes": 270555332
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.lt",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 236735915,
+      "shortfall_bytes": 236735915
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.sl",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 236735915,
+      "shortfall_bytes": 236735915
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.et",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 202916499,
+      "shortfall_bytes": 202916499
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.lv",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 202916499,
+      "shortfall_bytes": 202916499
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.bn",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 202916499,
+      "shortfall_bytes": 202916499
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.hi",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 202916499,
+      "shortfall_bytes": 202916499
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ms",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 169097082,
+      "shortfall_bytes": 169097082
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.az",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 169097082,
+      "shortfall_bytes": 169097082
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ta",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 169097082,
+      "shortfall_bytes": 169097082
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ka",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 135277666,
+      "shortfall_bytes": 135277666
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.sw",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 135277666,
+      "shortfall_bytes": 135277666
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.bs",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 135277666,
+      "shortfall_bytes": 135277666
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ur",
+      "axis": "encyclopedic",
+      "have_bytes": 0,
+      "target_bytes": 135277666,
+      "shortfall_bytes": 135277666
     },
     {
       "slug": "CohereLabs__aya_dataset",
       "axis": "training",
-      "have_bytes": 0,
-      "target_bytes": 268435456,
-      "shortfall_bytes": 268435456
+      "have_bytes": 197367967,
+      "target_bytes": 966367642,
+      "shortfall_bytes": 768999675
     },
     {
       "slug": "OpenAssistant__oasst2",
       "axis": "training",
-      "have_bytes": 0,
-      "target_bytes": 214748365,
-      "shortfall_bytes": 214748365
+      "have_bytes": 72189903,
+      "target_bytes": 644245094,
+      "shortfall_bytes": 572055191
     },
     {
-      "slug": "CohereLabs__aya_collection_language_split__english",
+      "slug": "CohereLabs__aya_collection_language_split__standard_arabic",
       "axis": "training",
       "have_bytes": 0,
-      "target_bytes": 751619277,
-      "shortfall_bytes": 751619277
+      "target_bytes": 445488630,
+      "shortfall_bytes": 445488630
     },
     {
-      "slug": "CohereLabs__aya_collection_language_split__spanish",
+      "slug": "CohereLabs__aya_collection_language_split__north_azerbaijani",
       "axis": "training",
       "have_bytes": 0,
-      "target_bytes": 429496730,
-      "shortfall_bytes": 429496730
+      "target_bytes": 445488630,
+      "shortfall_bytes": 445488630
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__bulgarian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488630,
+      "shortfall_bytes": 445488630
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__bengali",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488630,
+      "shortfall_bytes": 445488630
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__catalan",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__czech",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__danish",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
     },
     {
       "slug": "CohereLabs__aya_collection_language_split__german",
       "axis": "training",
+      "have_bytes": 375809140,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 69679489
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__greek",
+      "axis": "training",
       "have_bytes": 0,
-      "target_bytes": 375809638,
-      "shortfall_bytes": 375809638
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__english",
+      "axis": "training",
+      "have_bytes": 751619063,
+      "target_bytes": 1336465888,
+      "shortfall_bytes": 584846825
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__spanish",
+      "axis": "training",
+      "have_bytes": 429496380,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 15992249
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__estonian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__iranian_persian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__finnish",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
     },
     {
       "slug": "CohereLabs__aya_collection_language_split__french",
       "axis": "training",
-      "have_bytes": 0,
-      "target_bytes": 375809638,
-      "shortfall_bytes": 375809638
+      "have_bytes": 375809579,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 69679050
     },
     {
-      "slug": "CohereLabs__aya_collection_language_split__simplified_chinese",
+      "slug": "CohereLabs__aya_collection_language_split__hebrew",
       "axis": "training",
       "have_bytes": 0,
-      "target_bytes": 322122547,
-      "shortfall_bytes": 322122547
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__hindi",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__croatian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__hungarian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__indonesian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__italian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
     },
     {
       "slug": "CohereLabs__aya_collection_language_split__japanese",
       "axis": "training",
+      "have_bytes": 322122515,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 123366114
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__georgian",
+      "axis": "training",
       "have_bytes": 0,
-      "target_bytes": 322122547,
-      "shortfall_bytes": 322122547
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__korean",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__lithuanian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__standard_latvian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__standard_malay",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__dutch",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__norwegian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__polish",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__portuguese",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__romanian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__russian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__slovak",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__slovenian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__serbian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__swedish",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__swahili",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__tamil",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__thai",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__turkish",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__ukrainian",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__urdu",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__vietnamese",
+      "axis": "training",
+      "have_bytes": 0,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 445488629
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__simplified_chinese",
+      "axis": "training",
+      "have_bytes": 322121515,
+      "target_bytes": 445488629,
+      "shortfall_bytes": 123367114
     },
     {
       "slug": "HuggingFaceTB__smollm-corpus__cosmopedia-v2",
       "axis": "training",
-      "have_bytes": 0,
-      "target_bytes": 1073741824,
-      "shortfall_bytes": 1073741824
+      "have_bytes": 1073740222,
+      "target_bytes": 4831838208,
+      "shortfall_bytes": 3758097986
     },
     {
       "slug": "HuggingFaceFW__fineweb-edu__CC-MAIN-2024-46",
       "axis": "training",
-      "have_bytes": 0,
-      "target_bytes": 1234803098,
-      "shortfall_bytes": 1234803098
+      "have_bytes": 1234802462,
+      "target_bytes": 4831838208,
+      "shortfall_bytes": 3597035746
     }
   ],
   "sources": [
@@ -217,8 +1057,8 @@
       "config": "CC-MAIN-2024-51",
       "axis": "web",
       "lang": "en",
-      "target_bytes": 2952790016,
-      "target_gib": 2.75,
+      "target_bytes": 25673167012,
+      "target_gib": 23.91,
       "revision": "9bb295ddab0e05d785b879661af7260fed5140fc",
       "role": "web"
     },
@@ -239,8 +1079,8 @@
       "config": "20231101.simple",
       "axis": "encyclopedic",
       "lang": "en",
-      "target_bytes": 1610612736,
-      "target_gib": 1.5,
+      "target_bytes": 214748365,
+      "target_gib": 0.2,
       "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
       "role": "probe"
     },
@@ -250,8 +1090,8 @@
       "config": null,
       "axis": "scientific",
       "lang": "en",
-      "target_bytes": 2147483648,
-      "target_gib": 2.0,
+      "target_bytes": 2899102925,
+      "target_gib": 2.7,
       "revision": "033cf7f53f9b348deec868c1a5a48484f3ee9e52",
       "role": "probe"
     },
@@ -261,8 +1101,8 @@
       "config": null,
       "axis": "scientific",
       "lang": "en",
-      "target_bytes": 2147483648,
-      "target_gib": 2.0,
+      "target_bytes": 2899102925,
+      "target_gib": 2.7,
       "revision": "297747513bfb0ff1fbf61ddad3b03319d0f04597",
       "role": "probe"
     },
@@ -272,8 +1112,8 @@
       "config": null,
       "axis": "scientific",
       "lang": "en",
-      "target_bytes": 4294967296,
-      "target_gib": 4.0,
+      "target_bytes": 5798205850,
+      "target_gib": 5.4,
       "revision": "c156f0569a92d8f2edc33cebe1f72f7d3e1cae84",
       "role": "probe"
     },
@@ -283,8 +1123,8 @@
       "config": null,
       "axis": "scientific",
       "lang": "en",
-      "target_bytes": 1073741824,
-      "target_gib": 1.0,
+      "target_bytes": 1449551462,
+      "target_gib": 1.35,
       "revision": "dc1ceab4755eb037ec61e49cf1350dab7ceee6e7",
       "role": "probe"
     },
@@ -294,8 +1134,8 @@
       "config": null,
       "axis": "scientific",
       "lang": "en",
-      "target_bytes": 1073741824,
-      "target_gib": 1.0,
+      "target_bytes": 1449551462,
+      "target_gib": 1.35,
       "revision": "0486ed637d0d7aaff264bc77fe21a7444e0215cd",
       "role": "probe"
     },
@@ -305,8 +1145,8 @@
       "config": null,
       "axis": "code",
       "lang": "en",
-      "target_bytes": 4294967296,
-      "target_gib": 4.0,
+      "target_bytes": 6442450944,
+      "target_gib": 6.0,
       "revision": "c354dbe88469a1153e97c6a63ac50591849654de",
       "role": "probe"
     },
@@ -316,9 +1156,240 @@
       "config": null,
       "axis": "forum",
       "lang": "en",
-      "target_bytes": 2147483648,
-      "target_gib": 2.0,
+      "target_bytes": 3221225472,
+      "target_gib": 3.0,
       "revision": "c0ac7373830c688a43fc12d1988c4b19ccd884ab",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_bg_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "bg",
+      "target_bytes": 590558004,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_cs_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "cs",
+      "target_bytes": 590558004,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_da_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "da",
+      "target_bytes": 590558004,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_de_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "de",
+      "target_bytes": 590558004,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_el_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "el",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_es_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "es",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_et_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "et",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_fi_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "fi",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_fr_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "fr",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_hr_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "hr",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_hu_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "hu",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_it_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "it",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_lt_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "lt",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_lv_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "lv",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_nl_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "nl",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_pl_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "pl",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_pt_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "pt",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_ro_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "ro",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_sk_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "sk",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_sl_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "sl",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
+      "role": "probe"
+    },
+    {
+      "slug": "joelniklaus__MultiLegalPile_Wikipedia_Filtered__data_sv_caselaw_train_0.jsonl.xz",
+      "hf_id": "joelniklaus/MultiLegalPile_Wikipedia_Filtered",
+      "config": null,
+      "axis": "legal_government",
+      "lang": "sv",
+      "target_bytes": 590558003,
+      "target_gib": 0.55,
+      "revision": "d0925f0e223bcfb2840e66328835380f96f8f589",
       "role": "probe"
     },
     {
@@ -327,8 +1398,8 @@
       "config": null,
       "axis": "legal_government",
       "lang": "en",
-      "target_bytes": 805306368,
-      "target_gib": 0.75,
+      "target_bytes": 2126008811,
+      "target_gib": 1.98,
       "revision": "3327364490dfc7929009226ad667eceb2441d93a",
       "role": "probe"
     },
@@ -338,8 +1409,8 @@
       "config": null,
       "axis": "legal_government",
       "lang": "en",
-      "target_bytes": 805306368,
-      "target_gib": 0.75,
+      "target_bytes": 2126008812,
+      "target_gib": 1.98,
       "revision": "50e1961a5ed8fdddcee64c9e66e1338de8953b63",
       "role": "probe"
     },
@@ -349,8 +1420,8 @@
       "config": null,
       "axis": "legal_government",
       "lang": "en",
-      "target_bytes": 536870912,
-      "target_gib": 0.5,
+      "target_bytes": 1063004406,
+      "target_gib": 0.99,
       "revision": "b150cc22211de4d57f1b7f570097a00e65042424",
       "role": "probe"
     },
@@ -360,8 +1431,8 @@
       "config": null,
       "axis": "books",
       "lang": "en",
-      "target_bytes": 536870912,
-      "target_gib": 0.5,
+      "target_bytes": 2818572288,
+      "target_gib": 2.625,
       "revision": "3cdf6879c807f4e4e063f2ceb23bc268d8c29ab7",
       "role": "probe"
     },
@@ -371,8 +1442,8 @@
       "config": null,
       "axis": "books",
       "lang": "en",
-      "target_bytes": 536870912,
-      "target_gib": 0.5,
+      "target_bytes": 2818572288,
+      "target_gib": 2.625,
       "revision": "23f9d96dbb1db3324bbc9fbfe1f8299cc799c4d1",
       "role": "probe"
     },
@@ -382,8 +1453,8 @@
       "config": null,
       "axis": "books",
       "lang": "en",
-      "target_bytes": 3221225472,
-      "target_gib": 3.0,
+      "target_bytes": 5637144576,
+      "target_gib": 5.25,
       "revision": "56725c7aa1bb320703e22eb5f42903173d5bac3d",
       "role": "probe"
     },
@@ -393,8 +1464,8 @@
       "config": null,
       "axis": "educational",
       "lang": "en",
-      "target_bytes": 214748365,
-      "target_gib": 0.2,
+      "target_bytes": 96636764,
+      "target_gib": 0.09,
       "revision": "70388bca52b4a93515e14b1d56618fd7944988fd",
       "role": "probe"
     },
@@ -404,8 +1475,8 @@
       "config": null,
       "axis": "educational",
       "lang": "en",
-      "target_bytes": 644245094,
-      "target_gib": 0.6,
+      "target_bytes": 136902083,
+      "target_gib": 0.1275,
       "revision": "1a1d3b50d77f834370f8eb4c0d174668dd1676bb",
       "role": "probe"
     },
@@ -415,8 +1486,8 @@
       "config": null,
       "axis": "educational",
       "lang": "en",
-      "target_bytes": 85899346,
-      "target_gib": 0.08,
+      "target_bytes": 16106127,
+      "target_gib": 0.015,
       "revision": "506b6159dadcbc0dc67611cea024eedb04232fb2",
       "role": "probe"
     },
@@ -426,9 +1497,680 @@
       "config": null,
       "axis": "educational",
       "lang": "en",
-      "target_bytes": 3350074491,
-      "target_gib": 3.12,
+      "target_bytes": 966367642,
+      "target_gib": 0.9,
       "revision": "defb24ca72ef6aba6ce0228b669eec06dcfbffbc",
+      "role": "probe"
+    },
+    {
+      "slug": "common-pile__youtube_filtered",
+      "hf_id": "common-pile/youtube_filtered",
+      "config": null,
+      "axis": "educational",
+      "lang": "en",
+      "target_bytes": 2005212856,
+      "target_gib": 1.8675,
+      "revision": "dff8c8a54e98bce64c2e7ce9a8466c144c1cddd6",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.ru",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.ru",
+      "axis": "books",
+      "lang": "ru",
+      "target_bytes": 2254857831,
+      "target_gib": 2.1,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.zh",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.zh",
+      "axis": "books",
+      "lang": "zh",
+      "target_bytes": 1691143373,
+      "target_gib": 1.575,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.he",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.he",
+      "axis": "books",
+      "lang": "he",
+      "target_bytes": 845571686,
+      "target_gib": 0.7875,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.ar",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.ar",
+      "axis": "books",
+      "lang": "ar",
+      "target_bytes": 845571686,
+      "target_gib": 0.7875,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.de",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.de",
+      "axis": "books",
+      "lang": "de",
+      "target_bytes": 845571686,
+      "target_gib": 0.7875,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.ko",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.ko",
+      "axis": "books",
+      "lang": "ko",
+      "target_bytes": 676457349,
+      "target_gib": 0.63,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.es",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.es",
+      "axis": "books",
+      "lang": "es",
+      "target_bytes": 676457349,
+      "target_gib": 0.63,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.la",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.la",
+      "axis": "books",
+      "lang": "la",
+      "target_bytes": 563714458,
+      "target_gib": 0.525,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.sl",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.sl",
+      "axis": "books",
+      "lang": "sl",
+      "target_bytes": 563714458,
+      "target_gib": 0.525,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.it",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.it",
+      "axis": "books",
+      "lang": "it",
+      "target_bytes": 450971566,
+      "target_gib": 0.42,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.cs",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.cs",
+      "axis": "books",
+      "lang": "cs",
+      "target_bytes": 450971566,
+      "target_gib": 0.42,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.ja",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.ja",
+      "axis": "books",
+      "lang": "ja",
+      "target_bytes": 450971566,
+      "target_gib": 0.42,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.el",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.el",
+      "axis": "books",
+      "lang": "el",
+      "target_bytes": 394600120,
+      "target_gib": 0.3675,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.pt",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.pt",
+      "axis": "books",
+      "lang": "pt",
+      "target_bytes": 338228675,
+      "target_gib": 0.315,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikisource__20231201.fr",
+      "hf_id": "wikimedia/wikisource",
+      "config": "20231201.fr",
+      "axis": "books",
+      "lang": "fr",
+      "target_bytes": 225485783,
+      "target_gib": 0.21,
+      "revision": "f31a033f5f3d2107b3e864e578710df104a00baa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.de",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.de",
+      "axis": "encyclopedic",
+      "lang": "de",
+      "target_bytes": 3381941650,
+      "target_gib": 3.1497,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.fr",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.fr",
+      "axis": "encyclopedic",
+      "lang": "fr",
+      "target_bytes": 3043747485,
+      "target_gib": 2.8347,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.es",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.es",
+      "axis": "encyclopedic",
+      "lang": "es",
+      "target_bytes": 2705553320,
+      "target_gib": 2.5197,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ru",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.ru",
+      "axis": "encyclopedic",
+      "lang": "ru",
+      "target_bytes": 2705553320,
+      "target_gib": 2.5197,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ja",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.ja",
+      "axis": "encyclopedic",
+      "lang": "ja",
+      "target_bytes": 2367359155,
+      "target_gib": 2.2048,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.it",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.it",
+      "axis": "encyclopedic",
+      "lang": "it",
+      "target_bytes": 2029164990,
+      "target_gib": 1.8898,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.zh",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.zh",
+      "axis": "encyclopedic",
+      "lang": "zh",
+      "target_bytes": 1690970825,
+      "target_gib": 1.5748,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.pt",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.pt",
+      "axis": "encyclopedic",
+      "lang": "pt",
+      "target_bytes": 1690970825,
+      "target_gib": 1.5748,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.nl",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.nl",
+      "axis": "encyclopedic",
+      "lang": "nl",
+      "target_bytes": 1352776660,
+      "target_gib": 1.2599,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.pl",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.pl",
+      "axis": "encyclopedic",
+      "lang": "pl",
+      "target_bytes": 1352776660,
+      "target_gib": 1.2599,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ar",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.ar",
+      "axis": "encyclopedic",
+      "lang": "ar",
+      "target_bytes": 1183679577,
+      "target_gib": 1.1024,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.uk",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.uk",
+      "axis": "encyclopedic",
+      "lang": "uk",
+      "target_bytes": 1014582495,
+      "target_gib": 0.9449,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.vi",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.vi",
+      "axis": "encyclopedic",
+      "lang": "vi",
+      "target_bytes": 845485412,
+      "target_gib": 0.7874,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.tr",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.tr",
+      "axis": "encyclopedic",
+      "lang": "tr",
+      "target_bytes": 845485412,
+      "target_gib": 0.7874,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.fa",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.fa",
+      "axis": "encyclopedic",
+      "lang": "fa",
+      "target_bytes": 676388330,
+      "target_gib": 0.6299,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.id",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.id",
+      "axis": "encyclopedic",
+      "lang": "id",
+      "target_bytes": 676388330,
+      "target_gib": 0.6299,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.cs",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.cs",
+      "axis": "encyclopedic",
+      "lang": "cs",
+      "target_bytes": 676388330,
+      "target_gib": 0.6299,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ko",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.ko",
+      "axis": "encyclopedic",
+      "lang": "ko",
+      "target_bytes": 676388330,
+      "target_gib": 0.6299,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.sv",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.sv",
+      "axis": "encyclopedic",
+      "lang": "sv",
+      "target_bytes": 676388330,
+      "target_gib": 0.6299,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.hu",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.hu",
+      "axis": "encyclopedic",
+      "lang": "hu",
+      "target_bytes": 507291247,
+      "target_gib": 0.4725,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ro",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.ro",
+      "axis": "encyclopedic",
+      "lang": "ro",
+      "target_bytes": 507291247,
+      "target_gib": 0.4725,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.fi",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.fi",
+      "axis": "encyclopedic",
+      "lang": "fi",
+      "target_bytes": 507291247,
+      "target_gib": 0.4725,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.da",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.da",
+      "axis": "encyclopedic",
+      "lang": "da",
+      "target_bytes": 405832998,
+      "target_gib": 0.378,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.he",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.he",
+      "axis": "encyclopedic",
+      "lang": "he",
+      "target_bytes": 405832998,
+      "target_gib": 0.378,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.no",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.no",
+      "axis": "encyclopedic",
+      "lang": "no",
+      "target_bytes": 405832998,
+      "target_gib": 0.378,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ca",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.ca",
+      "axis": "encyclopedic",
+      "lang": "ca",
+      "target_bytes": 338194165,
+      "target_gib": 0.315,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.bg",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.bg",
+      "axis": "encyclopedic",
+      "lang": "bg",
+      "target_bytes": 338194165,
+      "target_gib": 0.315,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.el",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.el",
+      "axis": "encyclopedic",
+      "lang": "el",
+      "target_bytes": 338194165,
+      "target_gib": 0.315,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.sk",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.sk",
+      "axis": "encyclopedic",
+      "lang": "sk",
+      "target_bytes": 338194165,
+      "target_gib": 0.315,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.th",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.th",
+      "axis": "encyclopedic",
+      "lang": "th",
+      "target_bytes": 270555332,
+      "target_gib": 0.252,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.hr",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.hr",
+      "axis": "encyclopedic",
+      "lang": "hr",
+      "target_bytes": 270555332,
+      "target_gib": 0.252,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.sr",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.sr",
+      "axis": "encyclopedic",
+      "lang": "sr",
+      "target_bytes": 270555332,
+      "target_gib": 0.252,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.lt",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.lt",
+      "axis": "encyclopedic",
+      "lang": "lt",
+      "target_bytes": 236735915,
+      "target_gib": 0.2205,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.sl",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.sl",
+      "axis": "encyclopedic",
+      "lang": "sl",
+      "target_bytes": 236735915,
+      "target_gib": 0.2205,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.et",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.et",
+      "axis": "encyclopedic",
+      "lang": "et",
+      "target_bytes": 202916499,
+      "target_gib": 0.189,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.lv",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.lv",
+      "axis": "encyclopedic",
+      "lang": "lv",
+      "target_bytes": 202916499,
+      "target_gib": 0.189,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.bn",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.bn",
+      "axis": "encyclopedic",
+      "lang": "bn",
+      "target_bytes": 202916499,
+      "target_gib": 0.189,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.hi",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.hi",
+      "axis": "encyclopedic",
+      "lang": "hi",
+      "target_bytes": 202916499,
+      "target_gib": 0.189,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ms",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.ms",
+      "axis": "encyclopedic",
+      "lang": "ms",
+      "target_bytes": 169097082,
+      "target_gib": 0.1575,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.az",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.az",
+      "axis": "encyclopedic",
+      "lang": "az",
+      "target_bytes": 169097082,
+      "target_gib": 0.1575,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ta",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.ta",
+      "axis": "encyclopedic",
+      "lang": "ta",
+      "target_bytes": 169097082,
+      "target_gib": 0.1575,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ka",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.ka",
+      "axis": "encyclopedic",
+      "lang": "ka",
+      "target_bytes": 135277666,
+      "target_gib": 0.126,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.sw",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.sw",
+      "axis": "encyclopedic",
+      "lang": "sw",
+      "target_bytes": 135277666,
+      "target_gib": 0.126,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.bs",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.bs",
+      "axis": "encyclopedic",
+      "lang": "bs",
+      "target_bytes": 135277666,
+      "target_gib": 0.126,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+      "role": "probe"
+    },
+    {
+      "slug": "wikimedia__wikipedia__20231101.ur",
+      "hf_id": "wikimedia/wikipedia",
+      "config": "20231101.ur",
+      "axis": "encyclopedic",
+      "lang": "ur",
+      "target_bytes": 135277666,
+      "target_gib": 0.126,
+      "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
       "role": "probe"
     },
     {
@@ -437,8 +2179,8 @@
       "config": null,
       "axis": "training",
       "lang": "en",
-      "target_bytes": 268435456,
-      "target_gib": 0.25,
+      "target_bytes": 966367642,
+      "target_gib": 0.9,
       "revision": "f9ea04583f02a8f86404ff6c58bf75fe637df8a2",
       "role": "training"
     },
@@ -448,30 +2190,85 @@
       "config": null,
       "axis": "training",
       "lang": "en",
-      "target_bytes": 214748365,
-      "target_gib": 0.2,
+      "target_bytes": 644245094,
+      "target_gib": 0.6,
       "revision": "179dd21fc55192153d94adb0e0ce8f69e222bf75",
       "role": "training"
     },
     {
-      "slug": "CohereLabs__aya_collection_language_split__english",
+      "slug": "CohereLabs__aya_collection_language_split__standard_arabic",
       "hf_id": "CohereLabs/aya_collection_language_split",
-      "config": "english",
+      "config": "standard_arabic",
       "axis": "training",
-      "lang": "en",
-      "target_bytes": 751619277,
-      "target_gib": 0.7,
+      "lang": "ar",
+      "target_bytes": 445488630,
+      "target_gib": 0.4149,
       "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
       "role": "training"
     },
     {
-      "slug": "CohereLabs__aya_collection_language_split__spanish",
+      "slug": "CohereLabs__aya_collection_language_split__north_azerbaijani",
       "hf_id": "CohereLabs/aya_collection_language_split",
-      "config": "spanish",
+      "config": "north_azerbaijani",
       "axis": "training",
-      "lang": "en",
-      "target_bytes": 429496730,
-      "target_gib": 0.4,
+      "lang": "az",
+      "target_bytes": 445488630,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__bulgarian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "bulgarian",
+      "axis": "training",
+      "lang": "bg",
+      "target_bytes": 445488630,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__bengali",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "bengali",
+      "axis": "training",
+      "lang": "bn",
+      "target_bytes": 445488630,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__catalan",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "catalan",
+      "axis": "training",
+      "lang": "ca",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__czech",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "czech",
+      "axis": "training",
+      "lang": "cs",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__danish",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "danish",
+      "axis": "training",
+      "lang": "da",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
       "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
       "role": "training"
     },
@@ -480,9 +2277,75 @@
       "hf_id": "CohereLabs/aya_collection_language_split",
       "config": "german",
       "axis": "training",
+      "lang": "de",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__greek",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "greek",
+      "axis": "training",
+      "lang": "el",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__english",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "english",
+      "axis": "training",
       "lang": "en",
-      "target_bytes": 375809638,
-      "target_gib": 0.35,
+      "target_bytes": 1336465888,
+      "target_gib": 1.2447,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__spanish",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "spanish",
+      "axis": "training",
+      "lang": "es",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__estonian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "estonian",
+      "axis": "training",
+      "lang": "et",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__iranian_persian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "iranian_persian",
+      "axis": "training",
+      "lang": "fa",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__finnish",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "finnish",
+      "axis": "training",
+      "lang": "fi",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
       "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
       "role": "training"
     },
@@ -491,20 +2354,75 @@
       "hf_id": "CohereLabs/aya_collection_language_split",
       "config": "french",
       "axis": "training",
-      "lang": "en",
-      "target_bytes": 375809638,
-      "target_gib": 0.35,
+      "lang": "fr",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
       "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
       "role": "training"
     },
     {
-      "slug": "CohereLabs__aya_collection_language_split__simplified_chinese",
+      "slug": "CohereLabs__aya_collection_language_split__hebrew",
       "hf_id": "CohereLabs/aya_collection_language_split",
-      "config": "simplified_chinese",
+      "config": "hebrew",
       "axis": "training",
-      "lang": "en",
-      "target_bytes": 322122547,
-      "target_gib": 0.3,
+      "lang": "he",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__hindi",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "hindi",
+      "axis": "training",
+      "lang": "hi",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__croatian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "croatian",
+      "axis": "training",
+      "lang": "hr",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__hungarian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "hungarian",
+      "axis": "training",
+      "lang": "hu",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__indonesian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "indonesian",
+      "axis": "training",
+      "lang": "id",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__italian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "italian",
+      "axis": "training",
+      "lang": "it",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
       "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
       "role": "training"
     },
@@ -513,9 +2431,262 @@
       "hf_id": "CohereLabs/aya_collection_language_split",
       "config": "japanese",
       "axis": "training",
-      "lang": "en",
-      "target_bytes": 322122547,
-      "target_gib": 0.3,
+      "lang": "ja",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__georgian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "georgian",
+      "axis": "training",
+      "lang": "ka",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__korean",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "korean",
+      "axis": "training",
+      "lang": "ko",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__lithuanian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "lithuanian",
+      "axis": "training",
+      "lang": "lt",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__standard_latvian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "standard_latvian",
+      "axis": "training",
+      "lang": "lv",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__standard_malay",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "standard_malay",
+      "axis": "training",
+      "lang": "ms",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__dutch",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "dutch",
+      "axis": "training",
+      "lang": "nl",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__norwegian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "norwegian",
+      "axis": "training",
+      "lang": "no",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__polish",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "polish",
+      "axis": "training",
+      "lang": "pl",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__portuguese",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "portuguese",
+      "axis": "training",
+      "lang": "pt",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__romanian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "romanian",
+      "axis": "training",
+      "lang": "ro",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__russian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "russian",
+      "axis": "training",
+      "lang": "ru",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__slovak",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "slovak",
+      "axis": "training",
+      "lang": "sk",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__slovenian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "slovenian",
+      "axis": "training",
+      "lang": "sl",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__serbian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "serbian",
+      "axis": "training",
+      "lang": "sr",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__swedish",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "swedish",
+      "axis": "training",
+      "lang": "sv",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__swahili",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "swahili",
+      "axis": "training",
+      "lang": "sw",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__tamil",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "tamil",
+      "axis": "training",
+      "lang": "ta",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__thai",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "thai",
+      "axis": "training",
+      "lang": "th",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__turkish",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "turkish",
+      "axis": "training",
+      "lang": "tr",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__ukrainian",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "ukrainian",
+      "axis": "training",
+      "lang": "uk",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__urdu",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "urdu",
+      "axis": "training",
+      "lang": "ur",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__vietnamese",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "vietnamese",
+      "axis": "training",
+      "lang": "vi",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
+      "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
+      "role": "training"
+    },
+    {
+      "slug": "CohereLabs__aya_collection_language_split__simplified_chinese",
+      "hf_id": "CohereLabs/aya_collection_language_split",
+      "config": "simplified_chinese",
+      "axis": "training",
+      "lang": "zh",
+      "target_bytes": 445488629,
+      "target_gib": 0.4149,
       "revision": "a3af2fde4b4cb5b2775830b11244a1a20b5f004f",
       "role": "training"
     },
@@ -525,8 +2696,8 @@
       "config": "cosmopedia-v2",
       "axis": "training",
       "lang": "en",
-      "target_bytes": 1073741824,
-      "target_gib": 1.0,
+      "target_bytes": 4831838208,
+      "target_gib": 4.5,
       "revision": "3ba9d605774198c5868892d7a8deda78031a781f",
       "role": "training"
     },
@@ -536,8 +2707,8 @@
       "config": "CC-MAIN-2024-46",
       "axis": "training",
       "lang": "en",
-      "target_bytes": 1234803098,
-      "target_gib": 1.15,
+      "target_bytes": 4831838208,
+      "target_gib": 4.5,
       "revision": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9",
       "role": "training"
     }

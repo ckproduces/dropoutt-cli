@@ -1,0 +1,532 @@
+{
+ "_written_at": "2026-09-16T16:03:08",
+ "products": {
+  "atlas-v3": {
+   "alignment": {
+    "l2": {
+     "n": 4096,
+     "median_rank": 3.0,
+     "top1": 0.354736328125,
+     "top10": 0.695556640625,
+     "top100": 0.879638671875,
+     "median_rank_within_family": 2.0,
+     "top1_within_family": 0.4716796875,
+     "source": "curated:region_labels_atlas-v3.json",
+     "worst": [
+      [
+       3842,
+       "Mixed notices and web fragments",
+       4096
+      ],
+      [
+       1713,
+       "Mixed encyclopedia and training fragments with no shared subject",
+       4086
+      ],
+      [
+       1609,
+       "Mixed literary excerpts and story fragments",
+       4085
+      ],
+      [
+       1716,
+       "Mixed training and web fragments with no shared subject",
+       4081
+      ],
+      [
+       1604,
+       "Mixed personal anecdotes and literary fragments",
+       4074
+      ],
+      [
+       3839,
+       "Mixed short pages with no shared subject",
+       4064
+      ],
+      [
+       3847,
+       "Mixed literary and place fragments",
+       4058
+      ],
+      [
+       1386,
+       "Sentence-rewriting prompts about people and events",
+       4054
+      ]
+     ]
+    },
+    "l1": {
+     "n": 256,
+     "median_rank": 1.0,
+     "top1": 0.7109375,
+     "top5": 0.890625,
+     "source": "curated:l1_labels_atlas-v3.json",
+     "worst": [
+      [
+       100,
+       "Mixed personal lifestyle posts and reasoning prompts",
+       247
+      ],
+      [
+       23,
+       "Eastern Europe, its notable people and dynasties",
+       236
+      ],
+      [
+       86,
+       "Mixed encyclopedic fragments with no shared subject",
+       169
+      ],
+      [
+       238,
+       "Mixed documentation and web pages with no shared subject",
+       137
+      ],
+      [
+       42,
+       "Mixed personal stories and narrative fiction fragments",
+       122
+      ],
+      [
+       46,
+       "Classical East Asian history, officials and literature",
+       110
+      ],
+      [
+       192,
+       "Case law on tax, labour and commerce in Europe",
+       105
+      ],
+      [
+       119,
+       "Mixed biographies and entertainment pages clustered by names",
+       98
+      ]
+     ]
+    }
+   },
+   "exemplars": {
+    "n": 16384,
+    "chars": 320,
+    "own_cell": 0.45465087890625,
+    "own_l1": 0.66912841796875,
+    "off_atlas": 0.00067138671875,
+    "own_cell_in_top5_soft": 0.7501220703125
+   },
+   "hygiene": {
+    "l2": {
+     "n": 4096,
+     "duplicates": 59,
+     "names_with_language_word": 6,
+     "language_word_examples": [
+      "Ancient Greek literature, myth and philosophers",
+      "Slovakia, Slovenia, the Czech lands and South Slavs",
+      "English and foreign-language learning",
+      "English language learning, speaking and usage",
+      "English grammar, parts of speech and usage",
+      "Persian, Arabic and Urdu literature"
+     ],
+     "distinct_words": 5196,
+     "mean_words": 6.06640625
+    },
+    "l1": {
+     "n": 256,
+     "duplicates": 0,
+     "names_with_language_word": 0,
+     "language_word_examples": [],
+     "distinct_words": 841,
+     "mean_words": 5.87109375
+    }
+   }
+  },
+  "atlas-v3-prev": {
+   "alignment": {
+    "l2": {
+     "n": 4096,
+     "median_rank": 4.0,
+     "top1": 0.3125,
+     "top10": 0.65185546875,
+     "top100": 0.856201171875,
+     "median_rank_within_family": 2.0,
+     "top1_within_family": 0.440185546875,
+     "source": "curated:region_labels_atlas-v3.json",
+     "worst": [
+      [
+       3098,
+       "NLI training prompts and literary excerpts",
+       4090
+      ],
+      [
+       23,
+       "Disambiguation stubs for same-named people, places and terms",
+       4034
+      ],
+      [
+       591,
+       "Personal narrative fragments about family drama and disasters",
+       3981
+      ],
+      [
+       598,
+       "OCR-scanned archival newspapers and periodicals",
+       3928
+      ],
+      [
+       3156,
+       "NLI entailment prompts about circus and barbershop scenes",
+       3899
+      ],
+      [
+       2737,
+       "Multiple-choice sentence-completion training prompts",
+       3857
+      ],
+      [
+       20,
+       "Multiple-choice common-sense prompts about everyday objects",
+       3839
+      ],
+      [
+       26,
+       "Village stub articles from Poland-Lithuania administrative regions",
+       3793
+      ]
+     ]
+    },
+    "l1": {
+     "n": 256,
+     "median_rank": 1.0,
+     "top1": 0.7265625,
+     "top5": 0.859375,
+     "source": "curated:l1_labels_atlas-v3.json",
+     "worst": [
+      [
+       205,
+       "East Asian annals, classics and biographies",
+       231
+      ],
+      [
+       133,
+       "Sentence-rewriting prompts over careers, places and history",
+       216
+      ],
+      [
+       1,
+       "Sentence-rewriting prompts over encyclopedic stubs",
+       202
+      ],
+      [
+       37,
+       "Religious texts, archive scans and mixed stubs",
+       168
+      ],
+      [
+       53,
+       "Court records, web pages and digitised books",
+       163
+      ],
+      [
+       63,
+       "Source code, functions and programming questions",
+       147
+      ],
+      [
+       195,
+       "Chatty personal posts and forum confessions",
+       95
+      ],
+      [
+       76,
+       "Documentation templates, front matter and contents pages",
+       70
+      ]
+     ]
+    }
+   },
+   "exemplars": null,
+   "hygiene": {
+    "l2": {
+     "n": 4096,
+     "duplicates": 0,
+     "names_with_language_word": 21,
+     "language_word_examples": [
+      "Classical Arabic magazine literature and poetry",
+      "Hebrew and Arabic religious and liturgical poetry",
+      "Pre-revolutionary Russian literature and translated poetry",
+      "Match reports on Japanese baseball and tennis",
+      "English language learning motivation articles",
+      "News and Arabic dialects of the Gulf states"
+     ],
+     "distinct_words": 5028,
+     "mean_words": 6.45849609375
+    },
+    "l1": {
+     "n": 256,
+     "duplicates": 0,
+     "names_with_language_word": 2,
+     "language_word_examples": [
+      "German biographies, surnames and history",
+      "German municipalities and Central European localities"
+     ],
+     "distinct_words": 879,
+     "mean_words": 5.37890625
+    }
+   }
+  },
+  "atlas-v2": {
+   "alignment": {
+    "l2": {
+     "n": 296,
+     "median_rank": 2.0,
+     "top1": 0.46959459459459457,
+     "top10": 0.6722972972972973,
+     "top100": 0.8513513513513513,
+     "median_rank_within_family": 1.0,
+     "top1_within_family": 0.5405405405405406,
+     "source": null,
+     "worst": [
+      [
+       250,
+       "these, other, most, people",
+       294
+      ],
+      [
+       190,
+       "last, very, other, were",
+       289
+      ],
+      [
+       289,
+       "other, very, these, para",
+       269
+      ],
+      [
+       33,
+       "work, make, into, after",
+       265
+      ],
+      [
+       114,
+       "while, where, than, most",
+       261
+      ],
+      [
+       249,
+       "eine, because, auch, people",
+       258
+      ],
+      [
+       163,
+       "know, people, other, most",
+       254
+      ],
+      [
+       124,
+       "oder, eine, sich, than",
+       254
+      ]
+     ]
+    },
+    "l1": {
+     "n": 128,
+     "median_rank": 1.0,
+     "top1": 0.5546875,
+     "top5": 0.796875,
+     "source": "curated:l1_labels_atlas-v2.json",
+     "worst": [
+      [
+       35,
+       "Technical how-tos, products and general-interest articles",
+       113
+      ],
+      [
+       15,
+       "Government regulations, contracts and public records",
+       112
+      ],
+      [
+       25,
+       "Personal stories, current affairs and social commentary",
+       103
+      ],
+      [
+       63,
+       "Regional news, publishing and public affairs",
+       101
+      ],
+      [
+       109,
+       "Industrial products, consumer technology and mixed web content",
+       101
+      ],
+      [
+       66,
+       "General-interest features, travel and commerce",
+       99
+      ],
+      [
+       117,
+       "Product listings, reference pages and promotional web content",
+       85
+      ],
+      [
+       61,
+       "Middle East news, politics and public affairs",
+       69
+      ]
+     ]
+    }
+   },
+   "exemplars": null,
+   "hygiene": {
+    "l2": {
+     "n": 296,
+     "duplicates": 0,
+     "names_with_language_word": 4,
+     "language_word_examples": [
+      "league, football, played, english",
+      "german, history, american, were",
+      "british, english, served, john",
+      "commune, southwestern, french, needing"
+     ],
+     "distinct_words": 518,
+     "mean_words": 4.0
+    },
+    "l1": {
+     "n": 128,
+     "duplicates": 0,
+     "names_with_language_word": 1,
+     "language_word_examples": [
+      "Ukrainian civil society, war and current affairs"
+     ],
+     "distinct_words": 356,
+     "mean_words": 5.7109375
+    }
+   }
+  },
+  "atlas-v2-lite": {
+   "alignment": {
+    "l2": {
+     "n": 65,
+     "median_rank": 12.0,
+     "top1": 0.2,
+     "top10": 0.4461538461538462,
+     "top100": 1.0,
+     "median_rank_within_family": 2.0,
+     "top1_within_family": 0.38461538461538464,
+     "source": null,
+     "worst": [
+      [
+       18,
+       "these, what, just, there",
+       65
+      ],
+      [
+       33,
+       "para, make, como, time",
+       56
+      ],
+      [
+       13,
+       "para, como, many, over",
+       56
+      ],
+      [
+       5,
+       "were, only, what, make",
+       56
+      ],
+      [
+       49,
+       "para, people, these, over",
+       55
+      ],
+      [
+       37,
+       "were, para, after, over",
+       55
+      ],
+      [
+       28,
+       "make, were, just, what",
+       54
+      ],
+      [
+       29,
+       "these, make, just, what",
+       49
+      ]
+     ]
+    },
+    "l1": {
+     "n": 32,
+     "median_rank": 1.0,
+     "top1": 0.6875,
+     "top5": 0.875,
+     "source": "curated:l1_labels_atlas-v2-lite.json",
+     "worst": [
+      [
+       6,
+       "Regional public affairs and reference web content",
+       21
+      ],
+      [
+       10,
+       "Middle East and Eastern European current affairs",
+       15
+      ],
+      [
+       19,
+       "Self-help, workplace and social commentary",
+       10
+      ],
+      [
+       20,
+       "General web content, forums and technical help",
+       6
+      ],
+      [
+       12,
+       "Law, politics and international relations",
+       5
+      ],
+      [
+       29,
+       "Regulations, software and technical reference",
+       3
+      ],
+      [
+       17,
+       "Food, services and personal events",
+       2
+      ],
+      [
+       14,
+       "Shopping, fashion and lifestyle products",
+       2
+      ]
+     ]
+    }
+   },
+   "exemplars": null,
+   "hygiene": {
+    "l2": {
+     "n": 65,
+     "duplicates": 0,
+     "names_with_language_word": 0,
+     "language_word_examples": [],
+     "distinct_words": 72,
+     "mean_words": 4.0
+    },
+    "l1": {
+     "n": 32,
+     "duplicates": 0,
+     "names_with_language_word": 0,
+     "language_word_examples": [],
+     "distinct_words": 108,
+     "mean_words": 5.375
+    }
+   }
+  }
+ }
+}

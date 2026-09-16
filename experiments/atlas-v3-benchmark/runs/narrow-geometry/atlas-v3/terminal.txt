@@ -1,0 +1,170 @@
+  Discovering supported data files...
+  Loading the atlas...
+  Inferring dataset layouts...
+  Scanning records...
+  Mapping atlas coverage...
+  Finalizing checks...
+  Writing the map...
+  done Placed 1,615 of 1,616 records
+
+  ◧◨ Where this corpus sits on the map
+     atlas-v3
+
+  1,616 records   ·   2 datasets   ·   en 97%, la 0.8%, an 0.7%
+
+    Effective coverage 65.9 of 4,096 (66 subregions hold any records) (specialised)
+    1,615 placed of 1,616 sampled records · 1 off the map (0.1%)
+
+    Each subject area you reached, then the subregions inside it. Density is your share of a subregion against
+the reference corpus's share of the same one: 1.0× matches the map.
+
+    Mathematics, algorithms and programming problems  12/20 reach · 82.2% share · 1,328 records
+        339×  Triangles, circles and elementary g…          6.5×  Mixed pages on vectors and code       
+        169×  Mixed analysis papers and unrelated…          4.7×  Question-and-answer problems on ass…  
+         11×  Graph theory, graphs and network al…          3.1×  Mixed pages on codes and coding       
+         11×  Mathematics, proofs and mathematici…          1.7×  Mathematical functions and function…  
+        8.6×  Mixed pages on measurement and quan…          1.2×  Equations, polynomials and mathemat…  
+        7.8×  Code and forum posts on assorted co…          1.1×  Integers, counting and properties o…  
+
+    Mixed encyclopedia stubs and garbled web text  5/18 reach · 6.6% share · 107 records
+         33×  Mixed encyclopedia entries with no…           1.4×  Mixed short pages with no shared su…  
+        4.1×  Mixed encyclopedia and web fragments          1.2×  Mixed OCR and literary fragments      
+        3.1×  Mixed encyclopedia and scientific f…                                                      
+
+    Organism anatomy, fossils and morphology  2/18 reach · 3.1% share · 50 records
+         22×  Mixed short web fragments with no s…          1.2×  Fish, mammals and other animals  
+
+    DIY, hand tools and workshop crafts  3/17 reach · 2.4% share · 39 records
+         17×  Measuring, cutting and sizing in cr…          1.3×  Mechanical mounts, hardware and mac…  
+        1.3×  Mixed hardware notes and unrelated…                                                       
+
+    Mathematical physics, dynamics and quantitative modelling  4/23 reach · 1.0% share · 16 records
+        5.0×  Geometry, graphs, surfaces and spat…          1.3×  Fluid flow, turbulence and hydrodyn…  
+        2.5×  Mixed particle-physics paper fragme…          1.2×  Mixed physics-paper fragments         
+
+    Mixed encyclopedic fragments with no shared subject  1/13 reach · 0.8% share · 13 records
+        6.0×  Mixed asteroid stubs and unrelated…      
+
+    Crafts, printing and handmade goods  1/17 reach · 0.7% share · 11 records
+        5.7×  Drawing, sketching and drawing tools      
+
+    Aviation, aircraft and airports  2/18 reach · 0.4% share · 6 records
+        3.0×  Aircraft landing, flight and aerody…          1.3×  Airline tickets, fares and flight b…  
+
+    26 further areas reached; their subregions are named in the report files
+
+    222 of the map's 256 subject areas never reached
+
+    48% of your data sits in a single place on the map
+      776 records land there, 0.60 alike on average. Below 0.85 that is a subject, not a template: they say 
+the same kind of thing in enough different ways to be worth keeping.
+      “Point $P$ lies on the diagonal $AC$ of square $ABCD$ with $AP > CP$. Let $O_{1}$ and $O_{2}$ be the 
+circumcenters of triangles $ABP$ and $CDP$ respectively. Giv”
+
+    Mathematics, algorithms and programming problems — 131× denser here than on the map
+      The map holds 0.5% of its reference text in that subject (20 of its 4,096 places); 82% of your placed 
+records land there. That is what a specialist corpus looks like, and it is only a problem if you meant to 
+build a general one.
+
+    Mixed encyclopedia stubs and garbled web text — 8.0× denser here than on the map
+      The map holds 0.7% of its reference text in that subject (18 of its 4,096 places); 7% of your placed 
+records land there.
+
+    Of the 66 places you reach, 45 hold 3% of your data between them
+      Real presence in 21 places, a toehold in the rest. An occupancy count reads a place holding one record 
+the same as one holding a third of the corpus, which is how a narrow corpus comes to look broad.
+
+    What you have most of, against the map.
+  density    subject area                                 share    one of your records                        
+     339×    Mathematics, algorithms and programming      48.0%    Point $P$ lies on the diagonal $AC$ of     
+             problems                                              square $ABCD$ with $AP > CP$. Let $O_{1}$  
+                                                                   and $O_{…                                  
+     169×    Mathematics, algorithms and programming      27.1%    Let $\mathbf{m},$ $\mathbf{n},$ and        
+             problems                                              $\mathbf{p}$ be unit vectors such that     
+                                                                   the angle betw…                            
+      33×    Mixed encyclopedia stubs and garbled web      5.4%    Find all values of $a$ so that the lines   
+             text                                                  specified by [\begin{pmatrix} 1 \\ 2 \\ a  
+                                                                   \end{… — 0.93 alike, likely one template   
+      22×    Organism anatomy, fossils and morphology      3.0%    A convex polyhedron $P$ has $26$           
+                                                                   vertices, $60$ edges, and $36$ faces,      
+                                                                   $24$ of which are…                         
+      17×    DIY, hand tools and workshop crafts           2.3%    In the staircase-shaped region below, all  
+                                                                   angles that look like right angles are     
+                                                                   right an…                                  
+
+    What you have least of, against the map.
+  density    subject area                                 share    one of your records                        
+     0.9×    Animal and plant species taxonomy             0.1%    Find the matrix that corresponds to a      
+                                                                   dilation centered at the origin with       
+                                                                   scale factor $…                            
+     1.1×    Animal and plant species taxonomy             0.1%    Evaluate [\begin{vmatrix} 1 & x & y \\ 1   
+                                                                   & x + y & y \\ 1 & x & x + y               
+                                                                   \end{vmatrix}.\] W…                        
+     1.1×    Mathematics, algorithms and programming       0.1%    The lengths of the sides of a              
+             problems                                              non-degenerate triangle are $x$, 13 and    
+                                                                   37 units. How many…                        
+     1.2×    Mountains, hiking and nature holidays         0.1%    How many units are in the sum of the       
+                                                                   lengths of the two longest altitudes in a  
+                                                                   triangle w…                                
+     1.2×    Car models, motorcycles and vehicle           0.1%    In the diagram, point $E$ lies on line     
+             engineering                                           segment $AB$, and triangles $AED$ and      
+                                                                   $BEC$ are is…                              
+
+    Farthest from the map. Where your mix differs most from the map's. Whether to move it depends on what you 
+are building, which the tool has not been told. Subregions never reached come first among the thinner ones.
+  density    against the map    subject area                       share    one of your records               
+     339×    denser             Mathematics, algorithms and        48.0%    Point $P$ lies on the diagonal    
+                                programming problems                        $AC$ of square $ABCD$ with $AP >  
+                                                                            CP$. Let $O_{1}$ and $O_{…        
+       0×    unreached          Mixed encyclopedic fragments           —    never reached                     
+                                with no shared subject                                                        
+     169×    denser             Mathematics, algorithms and        27.1%    Let $\mathbf{m},$ $\mathbf{n},$   
+                                programming problems                        and $\mathbf{p}$ be unit vectors  
+                                                                            such that the angle betw…         
+       0×    unreached          Mixed encyclopedic fragments           —    never reached                     
+                                with no shared subject                                                        
+      33×    denser             Mixed encyclopedia stubs and        5.4%    Find all values of $a$ so that    
+                                garbled web text                            the lines specified by            
+                                                                            [\begin{pmatrix} 1 \\ 2 \\ a      
+                                                                            \end{…                            
+       0×    unreached          Animal and plant species               —    never reached                     
+                                taxonomy                                                                      
+      22×    denser             Organism anatomy, fossils and       3.0%    A convex polyhedron $P$ has $26$  
+                                morphology                                  vertices, $60$ edges, and $36$    
+                                                                            faces, $24$ of which are…         
+       0×    unreached          Animal and plant species               —    never reached                     
+                                taxonomy                                                                      
+
+    under 0.1% of sampled records (1) look like nothing in the reference corpus. Mostly short records: the 
+off-atlas half has a median of 506 characters against 963 for the placed half. Similarity to a region rises 
+with length, so short records read as off-atlas whatever they are about.
+      similarity 0.33 Evaluate [\begin{vmatrix} y + 1 & y & y \\ y & y + 1 & y \\ y & y & y + 1 
+\end{vmatrix}.\] We can expand the determinant as follows: \begin{align*} \begin{vmat
+
+  What the shape means
+
+    ● One crowded area holds near-identical records  T1-ATLAS-002
+      one area of the map holds 5% of placed records, and those records average 0.93 cosine similarity to each
+other — that is one thing written out many times rather than one subject covered many ways, and shingle-based 
+duplicate detection cannot see it
+      → Inspect that region's examples; if they are one template, sample it down rather than deduplicating.
+
+    ● The corpus covers very little of the map  T1-ATLAS-001
+      placed records touch 66 of 4096 subregions with 65.9 effective coverage (1× density counts as one); the 
+largest single area holds 48% of them
+      → If this was meant to be a broad mixture, the missing regions are listed under coverage gaps.
+
+  Written to /Users/crokan/Documents/dropoutt-cli/experiments/atlas-v3-benchmark/runs/narrow-geometry/atlas-v3
+    atlas.html  the map, drawn
+    atlas.md    the same, as text — paste into a PR or a ticket
+    atlas.json  the same, as data — for a dashboard or a gate
+  1,616 records in 1.0s. Run `dropoutt scan` for the checks.
+
+  note atlas.html, atlas.md, atlas.json may contain dataset excerpts and source paths; use --no-evidence 
+before exporting them
+
+--- stderr ---
+   Building dropoutt @ file:///Users/crokan/Documents/dropoutt-cli
+      Built dropoutt @ file:///Users/crokan/Documents/dropoutt-cli
+Uninstalled 1 package in 0.98ms
+Installed 1 package in 1ms

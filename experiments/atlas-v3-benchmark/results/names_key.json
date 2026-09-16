@@ -1,0 +1,1746 @@
+{
+ "63": {
+  "product": "atlas-v3",
+  "slice": "Anthropic__hh-rlhf (instruction dataset)",
+  "kind": "source",
+  "cell": 2128,
+  "share_in_cell": 0.044,
+  "l1": "Mixed inference test items and pages on conversation"
+ },
+ "32": {
+  "product": "atlas-v3-prev",
+  "slice": "Anthropic__hh-rlhf (instruction dataset)",
+  "kind": "source",
+  "cell": 2375,
+  "share_in_cell": 0.097,
+  "l1": "Premise-hypothesis entailment prompts"
+ },
+ "110": {
+  "product": "atlas-v3",
+  "slice": "BEE-spoke-data__peS2o-100k_en-xlong (scientific dataset)",
+  "kind": "source",
+  "cell": 3936,
+  "share_in_cell": 0.019,
+  "l1": "Cancer, tumours and oncology"
+ },
+ "144": {
+  "product": "atlas-v3-prev",
+  "slice": "BEE-spoke-data__peS2o-100k_en-xlong (scientific dataset)",
+  "kind": "source",
+  "cell": 742,
+  "share_in_cell": 0.023,
+  "l1": "Clinical studies, patients and disease diagnosis"
+ },
+ "157": {
+  "product": "atlas-v3",
+  "slice": "CShorten__ML-ArXiv-Papers (scientific dataset)",
+  "kind": "source",
+  "cell": 2973,
+  "share_in_cell": 0.134,
+  "l1": "Machine learning, statistics and computational methods"
+ },
+ "87": {
+  "product": "atlas-v3-prev",
+  "slice": "CShorten__ML-ArXiv-Papers (scientific dataset)",
+  "kind": "source",
+  "cell": 2358,
+  "share_in_cell": 0.156,
+  "l1": "Machine-learning, statistics and computer science papers"
+ },
+ "27": {
+  "product": "atlas-v3",
+  "slice": "OpenAssistant__oasst1 (instruction dataset)",
+  "kind": "source",
+  "cell": 2758,
+  "share_in_cell": 0.012,
+  "l1": "Languages, linguistics and language learning"
+ },
+ "12": {
+  "product": "atlas-v3-prev",
+  "slice": "OpenAssistant__oasst1 (instruction dataset)",
+  "kind": "source",
+  "cell": 2586,
+  "share_in_cell": 0.015,
+  "l1": "Names and entries starting with P"
+ },
+ "14": {
+  "product": "atlas-v3",
+  "slice": "TFLai__Turkish-Alpaca (instruction dataset)",
+  "kind": "source",
+  "cell": 2755,
+  "share_in_cell": 0.016,
+  "l1": "Languages, linguistics and language learning"
+ },
+ "143": {
+  "product": "atlas-v3-prev",
+  "slice": "TFLai__Turkish-Alpaca (instruction dataset)",
+  "kind": "source",
+  "cell": 1818,
+  "share_in_cell": 0.012,
+  "l1": "Sentence-rewriting prompts over biographical snippets"
+ },
+ "128": {
+  "product": "atlas-v3",
+  "slice": "allenai__c4__en (web dataset)",
+  "kind": "source",
+  "cell": 2105,
+  "share_in_cell": 0.005,
+  "l1": "Home services, trades and repairs"
+ },
+ "57": {
+  "product": "atlas-v3-prev",
+  "slice": "allenai__c4__en (web dataset)",
+  "kind": "source",
+  "cell": 427,
+  "share_in_cell": 0.005,
+  "l1": "Local service firms, cleaning and repairs"
+ },
+ "153": {
+  "product": "atlas-v3",
+  "slice": "allenai__c4__multilingual (web dataset)",
+  "kind": "source",
+  "cell": 3828,
+  "share_in_cell": 0.018,
+  "l1": "Mixed documentation and web pages with no shared subject"
+ },
+ "15": {
+  "product": "atlas-v3-prev",
+  "slice": "allenai__c4__multilingual (web dataset)",
+  "kind": "source",
+  "cell": 867,
+  "share_in_cell": 0.025,
+  "l1": "Court records, web pages and digitised books"
+ },
+ "81": {
+  "product": "atlas-v3",
+  "slice": "b-mc2__sql-create-context (structured dataset)",
+  "kind": "source",
+  "cell": 2841,
+  "share_in_cell": 0.042,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "28": {
+  "product": "atlas-v3-prev",
+  "slice": "b-mc2__sql-create-context (structured dataset)",
+  "kind": "source",
+  "cell": 178,
+  "share_in_cell": 0.033,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "56": {
+  "product": "atlas-v3",
+  "slice": "codecomplete__starcoderdata_0.003 (code dataset)",
+  "kind": "source",
+  "cell": 3836,
+  "share_in_cell": 0.215,
+  "l1": "Mixed encyclopedia stubs and garbled web text"
+ },
+ "51": {
+  "product": "atlas-v3-prev",
+  "slice": "codecomplete__starcoderdata_0.003 (code dataset)",
+  "kind": "source",
+  "cell": 1035,
+  "share_in_cell": 0.205,
+  "l1": "Source code, functions and programming questions"
+ },
+ "84": {
+  "product": "atlas-v3",
+  "slice": "codeparrot-clean-valid (code dataset)",
+  "kind": "source",
+  "cell": 3836,
+  "share_in_cell": 0.168,
+  "l1": "Mixed encyclopedia stubs and garbled web text"
+ },
+ "137": {
+  "product": "atlas-v3-prev",
+  "slice": "codeparrot-clean-valid (code dataset)",
+  "kind": "source",
+  "cell": 1034,
+  "share_in_cell": 0.093,
+  "l1": "Source code, functions and programming questions"
+ },
+ "182": {
+  "product": "atlas-v3",
+  "slice": "commitpackft__c (code dataset)",
+  "kind": "source",
+  "cell": 3836,
+  "share_in_cell": 0.174,
+  "l1": "Mixed encyclopedia stubs and garbled web text"
+ },
+ "150": {
+  "product": "atlas-v3-prev",
+  "slice": "commitpackft__c (code dataset)",
+  "kind": "source",
+  "cell": 1034,
+  "share_in_cell": 0.188,
+  "l1": "Source code, functions and programming questions"
+ },
+ "8": {
+  "product": "atlas-v3",
+  "slice": "commitpackft__go (code dataset)",
+  "kind": "source",
+  "cell": 3836,
+  "share_in_cell": 0.123,
+  "l1": "Mixed encyclopedia stubs and garbled web text"
+ },
+ "50": {
+  "product": "atlas-v3-prev",
+  "slice": "commitpackft__go (code dataset)",
+  "kind": "source",
+  "cell": 1034,
+  "share_in_cell": 0.096,
+  "l1": "Source code, functions and programming questions"
+ },
+ "65": {
+  "product": "atlas-v3",
+  "slice": "commitpackft__java (code dataset)",
+  "kind": "source",
+  "cell": 3821,
+  "share_in_cell": 0.208,
+  "l1": "Mixed documentation and web pages with no shared subject"
+ },
+ "115": {
+  "product": "atlas-v3-prev",
+  "slice": "commitpackft__java (code dataset)",
+  "kind": "source",
+  "cell": 1035,
+  "share_in_cell": 0.406,
+  "l1": "Source code, functions and programming questions"
+ },
+ "159": {
+  "product": "atlas-v3",
+  "slice": "commitpackft__javascript (code dataset)",
+  "kind": "source",
+  "cell": 968,
+  "share_in_cell": 0.372,
+  "l1": "Programming, web code and desktop software how-tos"
+ },
+ "189": {
+  "product": "atlas-v3-prev",
+  "slice": "commitpackft__javascript (code dataset)",
+  "kind": "source",
+  "cell": 1035,
+  "share_in_cell": 0.197,
+  "l1": "Source code, functions and programming questions"
+ },
+ "36": {
+  "product": "atlas-v3",
+  "slice": "commitpackft__php (code dataset)",
+  "kind": "source",
+  "cell": 968,
+  "share_in_cell": 0.344,
+  "l1": "Programming, web code and desktop software how-tos"
+ },
+ "21": {
+  "product": "atlas-v3-prev",
+  "slice": "commitpackft__php (code dataset)",
+  "kind": "source",
+  "cell": 1035,
+  "share_in_cell": 0.337,
+  "l1": "Source code, functions and programming questions"
+ },
+ "18": {
+  "product": "atlas-v3",
+  "slice": "commitpackft__python (code dataset)",
+  "kind": "source",
+  "cell": 3836,
+  "share_in_cell": 0.088,
+  "l1": "Mixed encyclopedia stubs and garbled web text"
+ },
+ "158": {
+  "product": "atlas-v3-prev",
+  "slice": "commitpackft__python (code dataset)",
+  "kind": "source",
+  "cell": 855,
+  "share_in_cell": 0.055,
+  "l1": "Software installation guides and shell setup"
+ },
+ "6": {
+  "product": "atlas-v3",
+  "slice": "commitpackft__ruby (code dataset)",
+  "kind": "source",
+  "cell": 968,
+  "share_in_cell": 0.078,
+  "l1": "Programming, web code and desktop software how-tos"
+ },
+ "169": {
+  "product": "atlas-v3-prev",
+  "slice": "commitpackft__ruby (code dataset)",
+  "kind": "source",
+  "cell": 1037,
+  "share_in_cell": 0.058,
+  "l1": "Source code, functions and programming questions"
+ },
+ "44": {
+  "product": "atlas-v3",
+  "slice": "commitpackft__rust (code dataset)",
+  "kind": "source",
+  "cell": 3836,
+  "share_in_cell": 0.117,
+  "l1": "Mixed encyclopedia stubs and garbled web text"
+ },
+ "125": {
+  "product": "atlas-v3-prev",
+  "slice": "commitpackft__rust (code dataset)",
+  "kind": "source",
+  "cell": 1030,
+  "share_in_cell": 0.132,
+  "l1": "Source code, functions and programming questions"
+ },
+ "194": {
+  "product": "atlas-v3",
+  "slice": "commitpackft__shell (code dataset)",
+  "kind": "source",
+  "cell": 709,
+  "share_in_cell": 0.148,
+  "l1": "Linux, Ubuntu and software installation"
+ },
+ "173": {
+  "product": "atlas-v3-prev",
+  "slice": "commitpackft__shell (code dataset)",
+  "kind": "source",
+  "cell": 851,
+  "share_in_cell": 0.08,
+  "l1": "Software installation guides and shell setup"
+ },
+ "213": {
+  "product": "atlas-v3",
+  "slice": "databricksbricks-dolly-15k (instruction dataset)",
+  "kind": "source",
+  "cell": 2256,
+  "share_in_cell": 0.017,
+  "l1": "Classical music, jazz and musicians"
+ },
+ "67": {
+  "product": "atlas-v3-prev",
+  "slice": "databricksbricks-dolly-15k (instruction dataset)",
+  "kind": "source",
+  "cell": 1342,
+  "share_in_cell": 0.012,
+  "l1": "Composers, orchestras and musicians"
+ },
+ "11": {
+  "product": "atlas-v3",
+  "slice": "deepmind__aqua_rat__raw (math dataset)",
+  "kind": "source",
+  "cell": 2838,
+  "share_in_cell": 0.114,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "20": {
+  "product": "atlas-v3-prev",
+  "slice": "deepmind__aqua_rat__raw (math dataset)",
+  "kind": "source",
+  "cell": 178,
+  "share_in_cell": 0.167,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "217": {
+  "product": "atlas-v3",
+  "slice": "finemath__finemath-3plus (math dataset)",
+  "kind": "source",
+  "cell": 2851,
+  "share_in_cell": 0.06,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "103": {
+  "product": "atlas-v3-prev",
+  "slice": "finemath__finemath-3plus (math dataset)",
+  "kind": "source",
+  "cell": 178,
+  "share_in_cell": 0.119,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "176": {
+  "product": "atlas-v3",
+  "slice": "gbharti__finance-alpaca (legal / finance dataset)",
+  "kind": "source",
+  "cell": 3862,
+  "share_in_cell": 0.043,
+  "l1": "Stock markets, corporate deals and company earnings"
+ },
+ "29": {
+  "product": "atlas-v3-prev",
+  "slice": "gbharti__finance-alpaca (legal / finance dataset)",
+  "kind": "source",
+  "cell": 444,
+  "share_in_cell": 0.062,
+  "l1": "Stock markets, interest rates and market reports"
+ },
+ "69": {
+  "product": "atlas-v3",
+  "slice": "gretelai__synthetic_text_to_sql (structured dataset)",
+  "kind": "source",
+  "cell": 3821,
+  "share_in_cell": 0.023,
+  "l1": "Mixed documentation and web pages with no shared subject"
+ },
+ "215": {
+  "product": "atlas-v3-prev",
+  "slice": "gretelai__synthetic_text_to_sql (structured dataset)",
+  "kind": "source",
+  "cell": 875,
+  "share_in_cell": 0.109,
+  "l1": "Court records, web pages and digitised books"
+ },
+ "23": {
+  "product": "atlas-v3",
+  "slice": "hendrycks_math__algebra (math dataset)",
+  "kind": "source",
+  "cell": 2851,
+  "share_in_cell": 0.263,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "73": {
+  "product": "atlas-v3-prev",
+  "slice": "hendrycks_math__algebra (math dataset)",
+  "kind": "source",
+  "cell": 161,
+  "share_in_cell": 0.472,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "61": {
+  "product": "atlas-v3",
+  "slice": "hendrycks_math__geometry (math dataset)",
+  "kind": "source",
+  "cell": 2848,
+  "share_in_cell": 0.6839080459770115,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "187": {
+  "product": "atlas-v3-prev",
+  "slice": "hendrycks_math__geometry (math dataset)",
+  "kind": "source",
+  "cell": 161,
+  "share_in_cell": 0.4436781609195402,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "102": {
+  "product": "atlas-v3",
+  "slice": "hendrycks_math__number_theory (math dataset)",
+  "kind": "source",
+  "cell": 2838,
+  "share_in_cell": 0.3049482163406214,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "85": {
+  "product": "atlas-v3-prev",
+  "slice": "hendrycks_math__number_theory (math dataset)",
+  "kind": "source",
+  "cell": 161,
+  "share_in_cell": 0.4062140391254315,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "197": {
+  "product": "atlas-v3",
+  "slice": "iamtarun__python_code_instructions_18k_alpaca (code dataset)",
+  "kind": "source",
+  "cell": 2855,
+  "share_in_cell": 0.232,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "47": {
+  "product": "atlas-v3-prev",
+  "slice": "iamtarun__python_code_instructions_18k_alpaca (code dataset)",
+  "kind": "source",
+  "cell": 167,
+  "share_in_cell": 0.186,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "119": {
+  "product": "atlas-v3",
+  "slice": "lex_glue__ecthr_a (legal / finance dataset)",
+  "kind": "source",
+  "cell": 1131,
+  "share_in_cell": 0.149,
+  "l1": "Court opinions, criminal appeals and litigation in the United States"
+ },
+ "45": {
+  "product": "atlas-v3-prev",
+  "slice": "lex_glue__ecthr_a (legal / finance dataset)",
+  "kind": "source",
+  "cell": 3004,
+  "share_in_cell": 0.202,
+  "l1": "Court opinions, appeals and case law"
+ },
+ "74": {
+  "product": "atlas-v3",
+  "slice": "lex_glue__eurlex (legal / finance dataset)",
+  "kind": "source",
+  "cell": 10,
+  "share_in_cell": 0.133,
+  "l1": "European Union regulations, trade rules and legal acts"
+ },
+ "62": {
+  "product": "atlas-v3-prev",
+  "slice": "lex_glue__eurlex (legal / finance dataset)",
+  "kind": "source",
+  "cell": 621,
+  "share_in_cell": 0.175,
+  "l1": "Commission regulations on export refunds and prices"
+ },
+ "90": {
+  "product": "atlas-v3",
+  "slice": "lex_glue__ledgar (legal / finance dataset)",
+  "kind": "source",
+  "cell": 1019,
+  "share_in_cell": 0.156,
+  "l1": "Civil litigation, contracts and property law"
+ },
+ "203": {
+  "product": "atlas-v3-prev",
+  "slice": "lex_glue__ledgar (legal / finance dataset)",
+  "kind": "source",
+  "cell": 1909,
+  "share_in_cell": 0.186,
+  "l1": "Statutes, decrees and official gazettes"
+ },
+ "207": {
+  "product": "atlas-v3",
+  "slice": "lex_glue__scotus (legal / finance dataset)",
+  "kind": "source",
+  "cell": 1130,
+  "share_in_cell": 0.167,
+  "l1": "Court opinions, criminal appeals and litigation in the United States"
+ },
+ "200": {
+  "product": "atlas-v3-prev",
+  "slice": "lex_glue__scotus (legal / finance dataset)",
+  "kind": "source",
+  "cell": 3005,
+  "share_in_cell": 0.183,
+  "l1": "Court opinions, appeals and case law"
+ },
+ "118": {
+  "product": "atlas-v3",
+  "slice": "lex_glue__unfair_tos (legal / finance dataset)",
+  "kind": "source",
+  "cell": 1019,
+  "share_in_cell": 0.05,
+  "l1": "Civil litigation, contracts and property law"
+ },
+ "177": {
+  "product": "atlas-v3-prev",
+  "slice": "lex_glue__unfair_tos (legal / finance dataset)",
+  "kind": "source",
+  "cell": 126,
+  "share_in_cell": 0.114,
+  "l1": "Privacy policies and data protection notices"
+ },
+ "170": {
+  "product": "atlas-v3",
+  "slice": "mcemilg__news-cat (news dataset)",
+  "kind": "source",
+  "cell": 513,
+  "share_in_cell": 0.02666666666666667,
+  "l1": "Football clubs, transfers and top-league news"
+ },
+ "199": {
+  "product": "atlas-v3-prev",
+  "slice": "mcemilg__news-cat (news dataset)",
+  "kind": "source",
+  "cell": 3324,
+  "share_in_cell": 0.084,
+  "l1": "Football leagues, cups and match previews"
+ },
+ "2": {
+  "product": "atlas-v3",
+  "slice": "microsoft__orca-math-word-problems-200k (math dataset)",
+  "kind": "source",
+  "cell": 2838,
+  "share_in_cell": 0.051,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "95": {
+  "product": "atlas-v3-prev",
+  "slice": "microsoft__orca-math-word-problems-200k (math dataset)",
+  "kind": "source",
+  "cell": 1393,
+  "share_in_cell": 0.062,
+  "l1": "Money arithmetic word problems"
+ },
+ "53": {
+  "product": "atlas-v3",
+  "slice": "motherduckdb__duckdb-text2sql-25k (structured dataset)",
+  "kind": "source",
+  "cell": 2841,
+  "share_in_cell": 0.07,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "1": {
+  "product": "atlas-v3-prev",
+  "slice": "motherduckdb__duckdb-text2sql-25k (structured dataset)",
+  "kind": "source",
+  "cell": 1038,
+  "share_in_cell": 0.082,
+  "l1": "Source code, functions and programming questions"
+ },
+ "96": {
+  "product": "atlas-v3",
+  "slice": "no_robots (instruction dataset)",
+  "kind": "source",
+  "cell": 2655,
+  "share_in_cell": 0.009,
+  "l1": "Wild nature, wildlife and landscape writing"
+ },
+ "117": {
+  "product": "atlas-v3-prev",
+  "slice": "no_robots (instruction dataset)",
+  "kind": "source",
+  "cell": 2430,
+  "share_in_cell": 0.013,
+  "l1": "Poetry, verse and lyrical prose"
+ },
+ "174": {
+  "product": "atlas-v3",
+  "slice": "nvidia__HelpSteer2 (dialogue dataset)",
+  "kind": "source",
+  "cell": 2134,
+  "share_in_cell": 0.009,
+  "l1": "Mixed inference test items and pages on conversation"
+ },
+ "156": {
+  "product": "atlas-v3-prev",
+  "slice": "nvidia__HelpSteer2 (dialogue dataset)",
+  "kind": "source",
+  "cell": 3897,
+  "share_in_cell": 0.013,
+  "l1": "Artificial intelligence, robotics and technology"
+ },
+ "100": {
+  "product": "atlas-v3",
+  "slice": "nvidia__OpenMathInstruct-2 (math dataset)",
+  "kind": "source",
+  "cell": 2851,
+  "share_in_cell": 0.184,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "80": {
+  "product": "atlas-v3-prev",
+  "slice": "nvidia__OpenMathInstruct-2 (math dataset)",
+  "kind": "source",
+  "cell": 161,
+  "share_in_cell": 0.188,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "132": {
+  "product": "atlas-v3",
+  "slice": "open-web-math__open-web-math (math dataset)",
+  "kind": "source",
+  "cell": 2851,
+  "share_in_cell": 0.107,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "172": {
+  "product": "atlas-v3-prev",
+  "slice": "open-web-math__open-web-math (math dataset)",
+  "kind": "source",
+  "cell": 161,
+  "share_in_cell": 0.11,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "165": {
+  "product": "atlas-v3",
+  "slice": "openai__gsm8k__main (math dataset)",
+  "kind": "source",
+  "cell": 1634,
+  "share_in_cell": 0.066,
+  "l1": "Payments, prices and shopping deals"
+ },
+ "167": {
+  "product": "atlas-v3-prev",
+  "slice": "openai__gsm8k__main (math dataset)",
+  "kind": "source",
+  "cell": 1398,
+  "share_in_cell": 0.091,
+  "l1": "Money arithmetic word problems"
+ },
+ "114": {
+  "product": "atlas-v3",
+  "slice": "openbmb__UltraFeedback (instruction dataset)",
+  "kind": "source",
+  "cell": 2755,
+  "share_in_cell": 0.034,
+  "l1": "Languages, linguistics and language learning"
+ },
+ "79": {
+  "product": "atlas-v3-prev",
+  "slice": "openbmb__UltraFeedback (instruction dataset)",
+  "kind": "source",
+  "cell": 3157,
+  "share_in_cell": 0.019,
+  "l1": "Questions, answers and puzzle prompts"
+ },
+ "108": {
+  "product": "atlas-v3",
+  "slice": "proof-pile-2__arxiv (scientific dataset)",
+  "kind": "source",
+  "cell": 2851,
+  "share_in_cell": 0.094,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "209": {
+  "product": "atlas-v3-prev",
+  "slice": "proof-pile-2__arxiv (scientific dataset)",
+  "kind": "source",
+  "cell": 169,
+  "share_in_cell": 0.231,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "191": {
+  "product": "atlas-v3",
+  "slice": "qiaojin__PubMedQA__pqa_artificial (scientific dataset)",
+  "kind": "source",
+  "cell": 2460,
+  "share_in_cell": 0.073,
+  "l1": "Molecular biology, cells and genetics"
+ },
+ "82": {
+  "product": "atlas-v3-prev",
+  "slice": "qiaojin__PubMedQA__pqa_artificial (scientific dataset)",
+  "kind": "source",
+  "cell": 756,
+  "share_in_cell": 0.068,
+  "l1": "Clinical studies, patients and disease diagnosis"
+ },
+ "201": {
+  "product": "atlas-v3",
+  "slice": "rajpurkar__squad (dialogue dataset)",
+  "kind": "source",
+  "cell": 198,
+  "share_in_cell": 0.01,
+  "l1": "The United Kingdom, its places and institutions"
+ },
+ "164": {
+  "product": "atlas-v3-prev",
+  "slice": "rajpurkar__squad (dialogue dataset)",
+  "kind": "source",
+  "cell": 1600,
+  "share_in_cell": 0.01,
+  "l1": "Israel, Palestine and Jewish affairs"
+ },
+ "58": {
+  "product": "atlas-v3",
+  "slice": "stack-exchange-preferences (dialogue dataset)",
+  "kind": "source",
+  "cell": 951,
+  "share_in_cell": 0.093,
+  "l1": "Programming, web code and desktop software how-tos"
+ },
+ "92": {
+  "product": "atlas-v3-prev",
+  "slice": "stack-exchange-preferences (dialogue dataset)",
+  "kind": "source",
+  "cell": 1028,
+  "share_in_cell": 0.07,
+  "l1": "Source code, functions and programming questions"
+ },
+ "178": {
+  "product": "atlas-v3",
+  "slice": "tatsu-lab__alpaca (instruction dataset)",
+  "kind": "source",
+  "cell": 2755,
+  "share_in_cell": 0.026,
+  "l1": "Languages, linguistics and language learning"
+ },
+ "134": {
+  "product": "atlas-v3-prev",
+  "slice": "tatsu-lab__alpaca (instruction dataset)",
+  "kind": "source",
+  "cell": 1967,
+  "share_in_cell": 0.016,
+  "l1": "Languages, linguistics and language learning"
+ },
+ "46": {
+  "product": "atlas-v3",
+  "slice": "turkish-nlp-suite__InstrucTurca (instruction dataset)",
+  "kind": "source",
+  "cell": 2853,
+  "share_in_cell": 0.014,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "184": {
+  "product": "atlas-v3-prev",
+  "slice": "turkish-nlp-suite__InstrucTurca (instruction dataset)",
+  "kind": "source",
+  "cell": 1394,
+  "share_in_cell": 0.008,
+  "l1": "Money arithmetic word problems"
+ },
+ "43": {
+  "product": "atlas-v3",
+  "slice": "ultrachat_200k (instruction dataset)",
+  "kind": "source",
+  "cell": 3934,
+  "share_in_cell": 0.023,
+  "l1": "Culture, cultural heritage and folklore"
+ },
+ "122": {
+  "product": "atlas-v3-prev",
+  "slice": "ultrachat_200k (instruction dataset)",
+  "kind": "source",
+  "cell": 519,
+  "share_in_cell": 0.019,
+  "l1": "Novels, authors and fiction writing"
+ },
+ "135": {
+  "product": "atlas-v3",
+  "slice": "winddude__reddit_finance_43_250k (legal / finance dataset)",
+  "kind": "source",
+  "cell": 29,
+  "share_in_cell": 0.035,
+  "l1": "Personal finance, loans and banking"
+ },
+ "19": {
+  "product": "atlas-v3-prev",
+  "slice": "winddude__reddit_finance_43_250k (legal / finance dataset)",
+  "kind": "source",
+  "cell": 361,
+  "share_in_cell": 0.059,
+  "l1": "Loans, credit cards and personal payments"
+ },
+ "214": {
+  "product": "atlas-v3",
+  "slice": "xlangai__spider (structured dataset)",
+  "kind": "source",
+  "cell": 3006,
+  "share_in_cell": 0.02,
+  "l1": "Cities, streets and urban spaces"
+ },
+ "124": {
+  "product": "atlas-v3-prev",
+  "slice": "xlangai__spider (structured dataset)",
+  "kind": "source",
+  "cell": 875,
+  "share_in_cell": 0.086,
+  "l1": "Court records, web pages and digitised books"
+ },
+ "37": {
+  "product": "atlas-v3",
+  "slice": "xlcost-text-to-code__Python (code dataset)",
+  "kind": "source",
+  "cell": 1385,
+  "share_in_cell": 0.768,
+  "l1": "Mixed encyclopedic fragments with no shared subject"
+ },
+ "52": {
+  "product": "atlas-v3-prev",
+  "slice": "xlcost-text-to-code__Python (code dataset)",
+  "kind": "source",
+  "cell": 586,
+  "share_in_cell": 0.292,
+  "l1": "Product listings, sizes and shopping-cart pages"
+ },
+ "25": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: abstract algebra",
+  "kind": "mmlu",
+  "cell": 2854,
+  "share_in_cell": 0.26436781609195403,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "116": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: abstract algebra",
+  "kind": "mmlu",
+  "cell": 162,
+  "share_in_cell": 0.367816091954023,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "142": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: anatomy",
+  "kind": "mmlu",
+  "cell": 2459,
+  "share_in_cell": 0.08148148148148149,
+  "l1": "Molecular biology, cells and genetics"
+ },
+ "76": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: anatomy",
+  "kind": "mmlu",
+  "cell": 1590,
+  "share_in_cell": 0.1037037037037037,
+  "l1": "Musculoskeletal injuries, pain and therapy"
+ },
+ "13": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: astronomy",
+  "kind": "mmlu",
+  "cell": 3408,
+  "share_in_cell": 0.12666666666666668,
+  "l1": "Astronomy, planets and space exploration"
+ },
+ "168": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: astronomy",
+  "kind": "mmlu",
+  "cell": 1420,
+  "share_in_cell": 0.16666666666666666,
+  "l1": "Astronomy, asteroids and space missions"
+ },
+ "0": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: business ethics",
+  "kind": "mmlu",
+  "cell": 4074,
+  "share_in_cell": 0.10869565217391304,
+  "l1": "Philosophy, ethics and religious thought"
+ },
+ "39": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: business ethics",
+  "kind": "mmlu",
+  "cell": 1235,
+  "share_in_cell": 0.05434782608695652,
+  "l1": "Philosophy, ideas and the humanities"
+ },
+ "4": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: clinical knowledge",
+  "kind": "mmlu",
+  "cell": 2059,
+  "share_in_cell": 0.03435114503816794,
+  "l1": "Common illnesses, symptoms and body-system conditions"
+ },
+ "127": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: clinical knowledge",
+  "kind": "mmlu",
+  "cell": 2530,
+  "share_in_cell": 0.03435114503816794,
+  "l1": "Symptoms, illnesses and medication side effects"
+ },
+ "64": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: college biology",
+  "kind": "mmlu",
+  "cell": 2470,
+  "share_in_cell": 0.09722222222222222,
+  "l1": "Molecular biology, cells and genetics"
+ },
+ "35": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: college biology",
+  "kind": "mmlu",
+  "cell": 950,
+  "share_in_cell": 0.09027777777777778,
+  "l1": "Cell biology, proteins and immunology"
+ },
+ "112": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: college chemistry",
+  "kind": "mmlu",
+  "cell": 3783,
+  "share_in_cell": 0.08247422680412371,
+  "l1": "Chemistry, chemical compounds and biochemistry"
+ },
+ "70": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: college chemistry",
+  "kind": "mmlu",
+  "cell": 163,
+  "share_in_cell": 0.1134020618556701,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "42": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: college computer science",
+  "kind": "mmlu",
+  "cell": 2840,
+  "share_in_cell": 0.08,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "130": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: college computer science",
+  "kind": "mmlu",
+  "cell": 168,
+  "share_in_cell": 0.05,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "91": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: college mathematics",
+  "kind": "mmlu",
+  "cell": 2850,
+  "share_in_cell": 0.09183673469387756,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "48": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: college mathematics",
+  "kind": "mmlu",
+  "cell": 174,
+  "share_in_cell": 0.16326530612244897,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "166": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: college medicine",
+  "kind": "mmlu",
+  "cell": 2470,
+  "share_in_cell": 0.06358381502890173,
+  "l1": "Molecular biology, cells and genetics"
+ },
+ "97": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: college medicine",
+  "kind": "mmlu",
+  "cell": 77,
+  "share_in_cell": 0.046242774566473986,
+  "l1": "Weight loss, nutrition and dieting"
+ },
+ "78": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: college physics",
+  "kind": "mmlu",
+  "cell": 152,
+  "share_in_cell": 0.09803921568627451,
+  "l1": "Physics research, particles and materials science"
+ },
+ "161": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: college physics",
+  "kind": "mmlu",
+  "cell": 3704,
+  "share_in_cell": 0.09803921568627451,
+  "l1": "Quantum physics, optics and nanomaterials"
+ },
+ "131": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: computer security",
+  "kind": "mmlu",
+  "cell": 1648,
+  "share_in_cell": 0.10416666666666667,
+  "l1": "Cybersecurity, servers and online authentication"
+ },
+ "30": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: computer security",
+  "kind": "mmlu",
+  "cell": 1280,
+  "share_in_cell": 0.08333333333333333,
+  "l1": "Cybersecurity, malware and data breaches"
+ },
+ "106": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: conceptual physics",
+  "kind": "mmlu",
+  "cell": 2435,
+  "share_in_cell": 0.06578947368421052,
+  "l1": "Applied physics, optics and sensing technology"
+ },
+ "175": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: conceptual physics",
+  "kind": "mmlu",
+  "cell": 3702,
+  "share_in_cell": 0.06140350877192982,
+  "l1": "Quantum physics, optics and nanomaterials"
+ },
+ "75": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: econometrics",
+  "kind": "mmlu",
+  "cell": 2856,
+  "share_in_cell": 0.24778761061946902,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "5": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: econometrics",
+  "kind": "mmlu",
+  "cell": 2367,
+  "share_in_cell": 0.37168141592920356,
+  "l1": "Machine-learning, statistics and computer science papers"
+ },
+ "190": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: electrical engineering",
+  "kind": "mmlu",
+  "cell": 2015,
+  "share_in_cell": 0.2014388489208633,
+  "l1": "Electrical engineering, electronics and batteries"
+ },
+ "105": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: electrical engineering",
+  "kind": "mmlu",
+  "cell": 2163,
+  "share_in_cell": 0.18705035971223022,
+  "l1": "Motors, power electronics and controllers"
+ },
+ "17": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: elementary mathematics",
+  "kind": "mmlu",
+  "cell": 2838,
+  "share_in_cell": 0.10067114093959731,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "88": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: elementary mathematics",
+  "kind": "mmlu",
+  "cell": 1394,
+  "share_in_cell": 0.10738255033557047,
+  "l1": "Money arithmetic word problems"
+ },
+ "22": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: formal logic",
+  "kind": "mmlu",
+  "cell": 2509,
+  "share_in_cell": 0.11904761904761904,
+  "l1": "Court judgments and procedure in continental Europe"
+ },
+ "145": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: formal logic",
+  "kind": "mmlu",
+  "cell": 162,
+  "share_in_cell": 0.10317460317460317,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "123": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: global facts",
+  "kind": "mmlu",
+  "cell": 2705,
+  "share_in_cell": 0.06060606060606061,
+  "l1": "Economics, economic policy and national economies"
+ },
+ "185": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: global facts",
+  "kind": "mmlu",
+  "cell": 448,
+  "share_in_cell": 0.10101010101010101,
+  "l1": "Children, parenting and child welfare"
+ },
+ "31": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school biology",
+  "kind": "mmlu",
+  "cell": 107,
+  "share_in_cell": 0.054838709677419356,
+  "l1": "General science, its history and research fields"
+ },
+ "72": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school biology",
+  "kind": "mmlu",
+  "cell": 1625,
+  "share_in_cell": 0.054838709677419356,
+  "l1": "Genetics, genomics and biotechnology"
+ },
+ "179": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school chemistry",
+  "kind": "mmlu",
+  "cell": 3783,
+  "share_in_cell": 0.17676767676767677,
+  "l1": "Chemistry, chemical compounds and biochemistry"
+ },
+ "54": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school chemistry",
+  "kind": "mmlu",
+  "cell": 1915,
+  "share_in_cell": 0.1111111111111111,
+  "l1": "Chemical compounds, acids and natural ingredients"
+ },
+ "26": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school computer science",
+  "kind": "mmlu",
+  "cell": 711,
+  "share_in_cell": 0.05813953488372093,
+  "l1": "Linux, Ubuntu and software installation"
+ },
+ "198": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school computer science",
+  "kind": "mmlu",
+  "cell": 168,
+  "share_in_cell": 0.06976744186046512,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "83": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school european history",
+  "kind": "mmlu",
+  "cell": 1506,
+  "share_in_cell": 0.07272727272727272,
+  "l1": "Politics, ideology and political history"
+ },
+ "41": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school european history",
+  "kind": "mmlu",
+  "cell": 182,
+  "share_in_cell": 0.07878787878787878,
+  "l1": "Human rights, democracy and governance"
+ },
+ "71": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school geography",
+  "kind": "mmlu",
+  "cell": 3006,
+  "share_in_cell": 0.03076923076923077,
+  "l1": "Cities, streets and urban spaces"
+ },
+ "180": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school geography",
+  "kind": "mmlu",
+  "cell": 50,
+  "share_in_cell": 0.035897435897435895,
+  "l1": "Cities, streets and urban development"
+ },
+ "86": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school government and politics",
+  "kind": "mmlu",
+  "cell": 44,
+  "share_in_cell": 0.08808290155440414,
+  "l1": "Law, courts and legal systems"
+ },
+ "192": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school government and politics",
+  "kind": "mmlu",
+  "cell": 70,
+  "share_in_cell": 0.06735751295336788,
+  "l1": "Elections, voting and ballots"
+ },
+ "212": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school macroeconomics",
+  "kind": "mmlu",
+  "cell": 2924,
+  "share_in_cell": 0.14910025706940874,
+  "l1": "Financial markets, prices and economic indicators"
+ },
+ "104": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school macroeconomics",
+  "kind": "mmlu",
+  "cell": 429,
+  "share_in_cell": 0.14652956298200515,
+  "l1": "Stock markets, interest rates and market reports"
+ },
+ "149": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school mathematics",
+  "kind": "mmlu",
+  "cell": 2851,
+  "share_in_cell": 0.12396694214876033,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "136": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school mathematics",
+  "kind": "mmlu",
+  "cell": 161,
+  "share_in_cell": 0.13636363636363635,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "89": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school microeconomics",
+  "kind": "mmlu",
+  "cell": 2916,
+  "share_in_cell": 0.14705882352941177,
+  "l1": "Financial markets, prices and economic indicators"
+ },
+ "146": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school microeconomics",
+  "kind": "mmlu",
+  "cell": 429,
+  "share_in_cell": 0.14285714285714285,
+  "l1": "Stock markets, interest rates and market reports"
+ },
+ "98": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school physics",
+  "kind": "mmlu",
+  "cell": 415,
+  "share_in_cell": 0.2251655629139073,
+  "l1": "Mathematical physics, dynamics and quantitative modelling"
+ },
+ "129": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school physics",
+  "kind": "mmlu",
+  "cell": 3796,
+  "share_in_cell": 0.1390728476821192,
+  "l1": "Theoretical physics models and phase transitions"
+ },
+ "107": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school psychology",
+  "kind": "mmlu",
+  "cell": 1106,
+  "share_in_cell": 0.040740740740740744,
+  "l1": "Psychology, cognition and social behaviour"
+ },
+ "181": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school psychology",
+  "kind": "mmlu",
+  "cell": 2179,
+  "share_in_cell": 0.03518518518518519,
+  "l1": "Research methods, studies and academic assessment"
+ },
+ "210": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school statistics",
+  "kind": "mmlu",
+  "cell": 2856,
+  "share_in_cell": 0.09722222222222222,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "111": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school statistics",
+  "kind": "mmlu",
+  "cell": 2367,
+  "share_in_cell": 0.08796296296296297,
+  "l1": "Machine-learning, statistics and computer science papers"
+ },
+ "204": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school us history",
+  "kind": "mmlu",
+  "cell": 1520,
+  "share_in_cell": 0.09803921568627451,
+  "l1": "Politics, ideology and political history"
+ },
+ "55": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school us history",
+  "kind": "mmlu",
+  "cell": 189,
+  "share_in_cell": 0.12745098039215685,
+  "l1": "Human rights, democracy and governance"
+ },
+ "126": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: high school world history",
+  "kind": "mmlu",
+  "cell": 1506,
+  "share_in_cell": 0.046413502109704644,
+  "l1": "Politics, ideology and political history"
+ },
+ "186": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: high school world history",
+  "kind": "mmlu",
+  "cell": 182,
+  "share_in_cell": 0.10126582278481013,
+  "l1": "Human rights, democracy and governance"
+ },
+ "9": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: human aging",
+  "kind": "mmlu",
+  "cell": 375,
+  "share_in_cell": 0.04054054054054054,
+  "l1": "Chronic disease, epidemiology and population health"
+ },
+ "24": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: human aging",
+  "kind": "mmlu",
+  "cell": 448,
+  "share_in_cell": 0.09009009009009009,
+  "l1": "Children, parenting and child welfare"
+ },
+ "93": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: human sexuality",
+  "kind": "mmlu",
+  "cell": 525,
+  "share_in_cell": 0.06870229007633588,
+  "l1": "Women, gender and sexuality"
+ },
+ "34": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: human sexuality",
+  "kind": "mmlu",
+  "cell": 3058,
+  "share_in_cell": 0.07633587786259542,
+  "l1": "Pregnancy, babies and women's health"
+ },
+ "113": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: international law",
+  "kind": "mmlu",
+  "cell": 38,
+  "share_in_cell": 0.1487603305785124,
+  "l1": "Law, courts and legal systems"
+ },
+ "147": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: international law",
+  "kind": "mmlu",
+  "cell": 666,
+  "share_in_cell": 0.19834710743801653,
+  "l1": "Courts, lawyers and legal procedure"
+ },
+ "195": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: jurisprudence",
+  "kind": "mmlu",
+  "cell": 35,
+  "share_in_cell": 0.19444444444444445,
+  "l1": "Law, courts and legal systems"
+ },
+ "109": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: jurisprudence",
+  "kind": "mmlu",
+  "cell": 666,
+  "share_in_cell": 0.3055555555555556,
+  "l1": "Courts, lawyers and legal procedure"
+ },
+ "188": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: logical fallacies",
+  "kind": "mmlu",
+  "cell": 462,
+  "share_in_cell": 0.13496932515337423,
+  "l1": "Mixed short conceptual fragments with no shared subject"
+ },
+ "152": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: logical fallacies",
+  "kind": "mmlu",
+  "cell": 2848,
+  "share_in_cell": 0.147239263803681,
+  "l1": "Criminal charges, trials and prosecutions"
+ },
+ "196": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: machine learning",
+  "kind": "mmlu",
+  "cell": 2856,
+  "share_in_cell": 0.125,
+  "l1": "Mathematics, algorithms and programming problems"
+ },
+ "68": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: machine learning",
+  "kind": "mmlu",
+  "cell": 162,
+  "share_in_cell": 0.25,
+  "l1": "Mathematics papers, proofs and theorems"
+ },
+ "7": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: management",
+  "kind": "mmlu",
+  "cell": 3129,
+  "share_in_cell": 0.049019607843137254,
+  "l1": "Leadership, careers and professional development"
+ },
+ "77": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: management",
+  "kind": "mmlu",
+  "cell": 1080,
+  "share_in_cell": 0.058823529411764705,
+  "l1": "Employment, workers and labour relations"
+ },
+ "10": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: marketing",
+  "kind": "mmlu",
+  "cell": 1725,
+  "share_in_cell": 0.08974358974358974,
+  "l1": "Marketing, advertising and customer growth"
+ },
+ "216": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: marketing",
+  "kind": "mmlu",
+  "cell": 1160,
+  "share_in_cell": 0.09829059829059829,
+  "l1": "Digital marketing and advertising agencies"
+ },
+ "40": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: medical genetics",
+  "kind": "mmlu",
+  "cell": 2458,
+  "share_in_cell": 0.07216494845360824,
+  "l1": "Molecular biology, cells and genetics"
+ },
+ "208": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: medical genetics",
+  "kind": "mmlu",
+  "cell": 1617,
+  "share_in_cell": 0.08247422680412371,
+  "l1": "Genetics, genomics and biotechnology"
+ },
+ "171": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: miscellaneous",
+  "kind": "mmlu",
+  "cell": 543,
+  "share_in_cell": 0.008450704225352112,
+  "l1": "Colours, pigments and colour design"
+ },
+ "206": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: miscellaneous",
+  "kind": "mmlu",
+  "cell": 2406,
+  "share_in_cell": 0.009859154929577466,
+  "l1": "Film, music and celebrity encyclopedia entries"
+ },
+ "99": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: moral disputes",
+  "kind": "mmlu",
+  "cell": 4074,
+  "share_in_cell": 0.13872832369942195,
+  "l1": "Philosophy, ethics and religious thought"
+ },
+ "133": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: moral disputes",
+  "kind": "mmlu",
+  "cell": 1235,
+  "share_in_cell": 0.10982658959537572,
+  "l1": "Philosophy, ideas and the humanities"
+ },
+ "193": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: moral scenarios",
+  "kind": "mmlu",
+  "cell": 676,
+  "share_in_cell": 0.8793296089385475,
+  "l1": "Mixed personal stories and narrative fiction fragments"
+ },
+ "162": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: moral scenarios",
+  "kind": "mmlu",
+  "cell": 0,
+  "share_in_cell": 0.6536312849162011,
+  "l1": "Personal feelings, grief and confessional writing"
+ },
+ "202": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: nutrition",
+  "kind": "mmlu",
+  "cell": 1085,
+  "share_in_cell": 0.07590759075907591,
+  "l1": "Nutrition, healthy foods and dietary supplements"
+ },
+ "38": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: nutrition",
+  "kind": "mmlu",
+  "cell": 82,
+  "share_in_cell": 0.08250825082508251,
+  "l1": "Weight loss, nutrition and dieting"
+ },
+ "163": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: philosophy",
+  "kind": "mmlu",
+  "cell": 4074,
+  "share_in_cell": 0.17363344051446947,
+  "l1": "Philosophy, ethics and religious thought"
+ },
+ "101": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: philosophy",
+  "kind": "mmlu",
+  "cell": 1235,
+  "share_in_cell": 0.1414790996784566,
+  "l1": "Philosophy, ideas and the humanities"
+ },
+ "211": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: prehistory",
+  "kind": "mmlu",
+  "cell": 108,
+  "share_in_cell": 0.08074534161490683,
+  "l1": "General science, its history and research fields"
+ },
+ "140": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: prehistory",
+  "kind": "mmlu",
+  "cell": 1616,
+  "share_in_cell": 0.059006211180124224,
+  "l1": "Genetics, genomics and biotechnology"
+ },
+ "138": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: professional accounting",
+  "kind": "mmlu",
+  "cell": 2860,
+  "share_in_cell": 0.11347517730496454,
+  "l1": "Finance, banking and investment"
+ },
+ "205": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: professional accounting",
+  "kind": "mmlu",
+  "cell": 269,
+  "share_in_cell": 0.12056737588652482,
+  "l1": "Corporate finance, investment and asset management"
+ },
+ "183": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: professional law",
+  "kind": "mmlu",
+  "cell": 1307,
+  "share_in_cell": 0.07822685788787484,
+  "l1": "Criminal justice, trials and corruption investigations"
+ },
+ "49": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: professional law",
+  "kind": "mmlu",
+  "cell": 679,
+  "share_in_cell": 0.0560625814863103,
+  "l1": "Courts, lawyers and legal procedure"
+ },
+ "59": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: professional medicine",
+  "kind": "mmlu",
+  "cell": 2246,
+  "share_in_cell": 0.07720588235294118,
+  "l1": "Clinical medicine, surgery and organ diseases"
+ },
+ "141": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: professional medicine",
+  "kind": "mmlu",
+  "cell": 2530,
+  "share_in_cell": 0.10294117647058823,
+  "l1": "Symptoms, illnesses and medication side effects"
+ },
+ "66": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: professional psychology",
+  "kind": "mmlu",
+  "cell": 564,
+  "share_in_cell": 0.05065359477124183,
+  "l1": "Health services, care provision and health policy"
+ },
+ "120": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: professional psychology",
+  "kind": "mmlu",
+  "cell": 2184,
+  "share_in_cell": 0.06045751633986928,
+  "l1": "Research methods, studies and academic assessment"
+ },
+ "3": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: public relations",
+  "kind": "mmlu",
+  "cell": 1409,
+  "share_in_cell": 0.07547169811320754,
+  "l1": "Organisations, community development and civil society"
+ },
+ "155": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: public relations",
+  "kind": "mmlu",
+  "cell": 2939,
+  "share_in_cell": 0.0660377358490566,
+  "l1": "Innovation, sustainable development and partnerships"
+ },
+ "16": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: security studies",
+  "kind": "mmlu",
+  "cell": 1518,
+  "share_in_cell": 0.2163265306122449,
+  "l1": "Politics, ideology and political history"
+ },
+ "148": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: security studies",
+  "kind": "mmlu",
+  "cell": 193,
+  "share_in_cell": 0.1306122448979592,
+  "l1": "Human rights, democracy and governance"
+ },
+ "160": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: sociology",
+  "kind": "mmlu",
+  "cell": 1109,
+  "share_in_cell": 0.06467661691542288,
+  "l1": "Psychology, cognition and social behaviour"
+ },
+ "121": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: sociology",
+  "kind": "mmlu",
+  "cell": 2178,
+  "share_in_cell": 0.07462686567164178,
+  "l1": "Research methods, studies and academic assessment"
+ },
+ "154": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: us foreign policy",
+  "kind": "mmlu",
+  "cell": 1518,
+  "share_in_cell": 0.0707070707070707,
+  "l1": "Politics, ideology and political history"
+ },
+ "94": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: us foreign policy",
+  "kind": "mmlu",
+  "cell": 197,
+  "share_in_cell": 0.0707070707070707,
+  "l1": "Human rights, democracy and governance"
+ },
+ "33": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: virology",
+  "kind": "mmlu",
+  "cell": 797,
+  "share_in_cell": 0.12121212121212122,
+  "l1": "Infectious diseases, viruses and vaccines"
+ },
+ "139": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: virology",
+  "kind": "mmlu",
+  "cell": 2073,
+  "share_in_cell": 0.2,
+  "l1": "Infectious disease, vaccines and pandemic news"
+ },
+ "151": {
+  "product": "atlas-v3",
+  "slice": "MMLU exam questions: world religions",
+  "kind": "mmlu",
+  "cell": 3893,
+  "share_in_cell": 0.1,
+  "l1": "India, its places and religions"
+ },
+ "60": {
+  "product": "atlas-v3-prev",
+  "slice": "MMLU exam questions: world religions",
+  "kind": "mmlu",
+  "cell": 318,
+  "share_in_cell": 0.0875,
+  "l1": "India, Hindu culture and Indian places"
+ }
+}

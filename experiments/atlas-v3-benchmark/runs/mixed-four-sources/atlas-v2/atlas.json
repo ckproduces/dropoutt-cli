@@ -1,0 +1,5907 @@
+{
+  "schema": "dropoutt.atlas/1",
+  "root": "/private/tmp/claude-501/-Users-crokan-Documents-dropoutt-cli/b585583f-4892-462f-a850-64929286d9e7/scratchpad/bench-cache/cli-corpora/mixed-four-sources",
+  "elapsed_seconds": 2.354,
+  "shards": 1,
+  "includes_evidence": true,
+  "records": 12000,
+  "datasets": 4,
+  "files": 4,
+  "languages": [
+    {
+      "code": "en",
+      "share": 0.994167
+    },
+    {
+      "code": "nl",
+      "share": 0.000833
+    },
+    {
+      "code": "no",
+      "share": 0.000667
+    },
+    {
+      "code": "fr",
+      "share": 0.000417
+    },
+    {
+      "code": "la",
+      "share": 0.000417
+    },
+    {
+      "code": "da",
+      "share": 0.000333
+    },
+    {
+      "code": "de",
+      "share": 0.000333
+    },
+    {
+      "code": "br",
+      "share": 0.00025
+    },
+    {
+      "code": "ca",
+      "share": 0.00025
+    },
+    {
+      "code": "it",
+      "share": 0.00025
+    },
+    {
+      "code": "unknown",
+      "share": 0.00025
+    },
+    {
+      "code": "es",
+      "share": 0.000167
+    },
+    {
+      "code": "id",
+      "share": 0.000167
+    },
+    {
+      "code": "ko",
+      "share": 0.000167
+    },
+    {
+      "code": "pt",
+      "share": 0.000167
+    },
+    {
+      "code": "ru",
+      "share": 0.000167
+    },
+    {
+      "code": "sl",
+      "share": 0.000167
+    },
+    {
+      "code": "af",
+      "share": 0.000083
+    },
+    {
+      "code": "am",
+      "share": 0.000083
+    },
+    {
+      "code": "et",
+      "share": 0.000083
+    },
+    {
+      "code": "fi",
+      "share": 0.000083
+    },
+    {
+      "code": "ja",
+      "share": 0.000083
+    },
+    {
+      "code": "ky",
+      "share": 0.000083
+    },
+    {
+      "code": "lt",
+      "share": 0.000083
+    },
+    {
+      "code": "sw",
+      "share": 0.000083
+    },
+    {
+      "code": "tr",
+      "share": 0.000083
+    },
+    {
+      "code": "zh",
+      "share": 0.000083
+    }
+  ],
+  "language_line": "en 99%, nl under 0.1%, no under 0.1%",
+  "atlas": {
+    "available": true,
+    "identity": {
+      "version": "atlas-v2",
+      "pipeline_hash": "f150f309f8158ecb5eed1489af8b0d71",
+      "encoder_weight_hash": "a5760a941b488c436624bc2e50c1b506",
+      "encoder_built_with": "",
+      "embed_model": "minishlab/potion-multilingual-128M",
+      "normalization_variant": "",
+      "n_l1": 128,
+      "n_regions": 296
+    },
+    "sampled_records": 12000,
+    "placed_records": 10105,
+    "placed_sampled_records": 10105,
+    "placed_estimated": false,
+    "placed_label": "10,105",
+    "placed_note": "of 12,000 sampled records",
+    "too_short_to_place": 0,
+    "subregions_total": 296,
+    "subregions_touched": 274,
+    "effective_reach": 132.9342,
+    "effective_reach_label": "132.9",
+    "shape": "mixed",
+    "shape_detail": "This sits between a specialist set and a general mixture: several areas, with most of the weight in a few of them.",
+    "concentration": 0.745114578939969,
+    "off_map_records": 1895,
+    "off_map_rate": 0.1579,
+    "off_map_line": "16% of sampled records (1,895) look like nothing in the reference corpus. Concentrated in one language: 100% of the off-atlas records are language 'en', where the rate is 16%.",
+    "off_map_detail": {
+      "score": {
+        "cutoff": 0.35,
+        "off_median": 0.3195,
+        "off_p10": 0.2669,
+        "off_max": 0.35,
+        "placed_median": 0.4765,
+        "near_miss_share": 0.7113
+      },
+      "length": {
+        "off_median_chars": 1256,
+        "placed_median_chars": 1092
+      },
+      "coherence": {
+        "off": 0.2921,
+        "placed": 0.2793
+      },
+      "surface": {
+        "off_whitespace": 0.1817,
+        "placed_whitespace": 0.1845,
+        "off_non_letter": 0.088,
+        "placed_non_letter": 0.0906
+      },
+      "nearest_regions": [
+        {
+          "region": 38,
+          "records": 271,
+          "terms": "register, volume, proposed, number"
+        },
+        {
+          "region": 84,
+          "records": 253,
+          "terms": "europea, entre, este, parlamento"
+        },
+        {
+          "region": 116,
+          "records": 57,
+          "terms": "euro, only, back, were"
+        },
+        {
+          "region": 204,
+          "records": 56,
+          "terms": "javascript, html, import, class"
+        },
+        {
+          "region": 195,
+          "records": 54,
+          "terms": "make, were, into, some"
+        },
+        {
+          "region": 225,
+          "records": 50,
+          "terms": "were, into, other, para"
+        }
+      ],
+      "nearest_region_spread": 226,
+      "by_language": {
+        "br": {
+          "off_atlas": 1,
+          "records": 3,
+          "rate": 0.3333,
+          "share_of_off_atlas": 0.0005
+        },
+        "da": {
+          "off_atlas": 1,
+          "records": 4,
+          "rate": 0.25,
+          "share_of_off_atlas": 0.0005
+        },
+        "de": {
+          "off_atlas": 1,
+          "records": 4,
+          "rate": 0.25,
+          "share_of_off_atlas": 0.0005
+        },
+        "en": {
+          "off_atlas": 1887,
+          "records": 11930,
+          "rate": 0.1582,
+          "share_of_off_atlas": 0.9958
+        },
+        "fi": {
+          "off_atlas": 1,
+          "records": 1,
+          "rate": 1.0,
+          "share_of_off_atlas": 0.0005
+        },
+        "fr": {
+          "off_atlas": 1,
+          "records": 5,
+          "rate": 0.2,
+          "share_of_off_atlas": 0.0005
+        },
+        "ja": {
+          "off_atlas": 1,
+          "records": 1,
+          "rate": 1.0,
+          "share_of_off_atlas": 0.0005
+        },
+        "la": {
+          "off_atlas": 2,
+          "records": 5,
+          "rate": 0.4,
+          "share_of_off_atlas": 0.0011
+        }
+      },
+      "by_dataset": {
+        "commitpackft__python": {
+          "off_atlas": 183,
+          "records": 3000,
+          "rate": 0.061,
+          "share_of_off_atlas": 0.0966
+        },
+        "lex_glue__eurlex": {
+          "off_atlas": 790,
+          "records": 3000,
+          "rate": 0.2633,
+          "share_of_off_atlas": 0.4169
+        },
+        "microsoft__orca-math-word-problems-200k": {
+          "off_atlas": 711,
+          "records": 3000,
+          "rate": 0.237,
+          "share_of_off_atlas": 0.3752
+        },
+        "ultrachat_200k": {
+          "off_atlas": 211,
+          "records": 3000,
+          "rate": 0.0703,
+          "share_of_off_atlas": 0.1113
+        }
+      },
+      "diagnosis": "concentrated in one language: 100% of the off-atlas records are language 'en', where the rate is 16%"
+    },
+    "off_map_examples": [
+      {
+        "score": 0.1832,
+        "chars": 978,
+        "dataset": "microsoft__orca-math-word-problems-200k",
+        "language": "en",
+        "excerpt": "Walter goes to the zoo, where he spends some time looking at the seals, eight times as long looking at the penguins, and 13 minutes looking at the elephants. He"
+      },
+      {
+        "score": 0.189,
+        "chars": 1036,
+        "dataset": "microsoft__orca-math-word-problems-200k",
+        "language": "en",
+        "excerpt": "There are some lions in Londolozi at first. Lion cubs are born at the rate of 5 per month and lions die at the rate of 1 per month. If there are 148 lions in Lo"
+      },
+      {
+        "score": 0.1917,
+        "chars": 436,
+        "dataset": "commitpackft__python",
+        "language": "en",
+        "excerpt": "__all__ = [ \"gtr.services.funds.Funds\", \"gtr.services.organisations.Organisations\", \"gtr.services.persons.Persons\", \"gtr.services.projects.Proje"
+      },
+      {
+        "score": 0.1967,
+        "chars": 1414,
+        "dataset": "microsoft__orca-math-word-problems-200k",
+        "language": "en",
+        "excerpt": "In Rodrigo's classroom in the morning there are red chairs, yellow chairs, and blue chairs. There are 4 red chairs. There are some yellow chairs, and there are"
+      }
+    ],
+    "grid_peak_density": 86.9271,
+    "subject_areas": [
+      {
+        "name": "Web servers, SEO and software troubleshooting",
+        "records": 1279,
+        "share": 0.126571,
+        "density": 12.9772,
+        "density_label": "13×",
+        "reach": 9.4534,
+        "reach_label": "9.5",
+        "subregions": 10,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 204,
+            "records": 928,
+            "density": 86.9271,
+            "caption": "javascript, html, import, class"
+          },
+          {
+            "region": 203,
+            "records": 131,
+            "density": 17.8886,
+            "caption": "client, http, application, server"
+          },
+          {
+            "region": 205,
+            "records": 102,
+            "density": 8.8788,
+            "caption": "password, account, puedes, user"
+          },
+          {
+            "region": 201,
+            "records": 38,
+            "density": 4.9412,
+            "caption": "microsoft, database, data, einem"
+          },
+          {
+            "region": 208,
+            "records": 23,
+            "density": 2.5613,
+            "caption": "server, website, domain, internet"
+          },
+          {
+            "region": 200,
+            "records": 16,
+            "density": 1.5614,
+            "caption": "youtube, video, facebook, twitter"
+          },
+          {
+            "region": 202,
+            "records": 8,
+            "density": 1.3011,
+            "caption": "google, search, information, internet"
+          },
+          {
+            "region": 206,
+            "records": 15,
+            "density": 1.2661,
+            "caption": "firefox, chrome, google, explorer"
+          },
+          {
+            "region": 207,
+            "records": 12,
+            "density": 0.7868,
+            "caption": "page, link, blog, site"
+          },
+          {
+            "region": 199,
+            "records": 6,
+            "density": 0.6666,
+            "caption": "wordpress, plugin, site, crear"
+          }
+        ]
+      },
+      {
+        "name": "Windows, servers and software administration",
+        "records": 1137,
+        "share": 0.112519,
+        "density": 9.5577,
+        "density_label": "9.6×",
+        "reach": 1.5559,
+        "reach_label": "1.6",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 76,
+            "records": 1103,
+            "density": 19.0895,
+            "caption": "clone, python, install, bash"
+          },
+          {
+            "region": 77,
+            "records": 34,
+            "density": 0.5559,
+            "caption": "ubuntu, install, tried, sudo"
+          }
+        ]
+      },
+      {
+        "name": "Government regulations, contracts and public records",
+        "records": 875,
+        "share": 0.086591,
+        "density": 8.499,
+        "density_label": "8.5×",
+        "reach": 2.0,
+        "reach_label": "2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": true,
+        "cells": [
+          {
+            "region": 38,
+            "records": 768,
+            "density": 35.6445,
+            "caption": "register, volume, proposed, number"
+          },
+          {
+            "region": 37,
+            "records": 107,
+            "density": 1.3142,
+            "caption": "produced, distributed, online, proofreading"
+          }
+        ]
+      },
+      {
+        "name": "Banking, loans and retail finance",
+        "records": 747,
+        "share": 0.073924,
+        "density": 11.1021,
+        "density_label": "11×",
+        "reach": 2.0,
+        "reach_label": "2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": true,
+        "cells": [
+          {
+            "region": 116,
+            "records": 711,
+            "density": 18.851,
+            "caption": "euro, only, back, were"
+          },
+          {
+            "region": 115,
+            "records": 36,
+            "density": 1.2173,
+            "caption": "crédito, bank, cartão, people"
+          }
+        ]
+      },
+      {
+        "name": "European Union politics, economics and public policy",
+        "records": 739,
+        "share": 0.073132,
+        "density": 11.6196,
+        "density_label": "12×",
+        "reach": 2.0,
+        "reach_label": "2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": true,
+        "cells": [
+          {
+            "region": 84,
+            "records": 672,
+            "density": 22.6084,
+            "caption": "europea, entre, este, parlamento"
+          },
+          {
+            "region": 83,
+            "records": 67,
+            "density": 1.9769,
+            "caption": "into, there, were, time"
+          }
+        ]
+      },
+      {
+        "name": "Recipes, baking and home cooking",
+        "records": 355,
+        "share": 0.035131,
+        "density": 2.4751,
+        "density_label": "2.5×",
+        "reach": 2.0,
+        "reach_label": "2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": true,
+        "cells": [
+          {
+            "region": 195,
+            "records": 185,
+            "density": 3.1773,
+            "caption": "make, were, into, some"
+          },
+          {
+            "region": 196,
+            "records": 170,
+            "density": 1.9949,
+            "caption": "ingredientes, make, para, into"
+          }
+        ]
+      },
+      {
+        "name": "Psychology, relationships and self-help",
+        "records": 346,
+        "share": 0.03424,
+        "density": 5.8029,
+        "density_label": "5.8×",
+        "reach": 1.8078,
+        "reach_label": "1.8",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 159,
+            "records": 327,
+            "density": 9.0587,
+            "caption": "abstract, research, data, such"
+          },
+          {
+            "region": 158,
+            "records": 19,
+            "density": 0.8078,
+            "caption": "nicht, plus, dans, sich"
+          }
+        ]
+      },
+      {
+        "name": "Physics, mathematics and academic research",
+        "records": 192,
+        "share": 0.019,
+        "density": 2.3699,
+        "density_label": "2.4×",
+        "reach": 2.0,
+        "reach_label": "2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": true,
+        "cells": [
+          {
+            "region": 179,
+            "records": 137,
+            "density": 4.0487,
+            "caption": "abstract, institute, science, department"
+          },
+          {
+            "region": 180,
+            "records": 55,
+            "density": 1.1656,
+            "caption": "abstract, institute, physics, university"
+          }
+        ]
+      },
+      {
+        "name": "Nutrition, dieting and metabolic health",
+        "records": 158,
+        "share": 0.015636,
+        "density": 1.7269,
+        "density_label": "1.7×",
+        "reach": 2.0,
+        "reach_label": "2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": true,
+        "cells": [
+          {
+            "region": 5,
+            "records": 89,
+            "density": 2.7955,
+            "caption": "dieta, peso, mais, many"
+          },
+          {
+            "region": 6,
+            "records": 69,
+            "density": 1.1565,
+            "caption": "alimentos, dieta, como, many"
+          }
+        ]
+      },
+      {
+        "name": "Plants, animals and agricultural species",
+        "records": 148,
+        "share": 0.014646,
+        "density": 1.8129,
+        "density_label": "1.8×",
+        "reach": 2.0,
+        "reach_label": "2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": true,
+        "cells": [
+          {
+            "region": 225,
+            "records": 109,
+            "density": 2.4802,
+            "caption": "were, into, other, para"
+          },
+          {
+            "region": 224,
+            "records": 39,
+            "density": 1.0346,
+            "caption": "described, family, taxonomy, endemic"
+          }
+        ]
+      },
+      {
+        "name": "Statutes, court rulings and legal proceedings",
+        "records": 141,
+        "share": 0.013953,
+        "density": 1.3803,
+        "density_label": "1.4×",
+        "reach": 1.1612,
+        "reach_label": "1.2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 112,
+            "records": 131,
+            "density": 3.2753,
+            "caption": "commission, federal, tribunal, number"
+          },
+          {
+            "region": 111,
+            "records": 10,
+            "density": 0.1612,
+            "caption": "other, after, while, para"
+          }
+        ]
+      },
+      {
+        "name": "Macroeconomics, markets and central banks",
+        "records": 125,
+        "share": 0.01237,
+        "density": 1.1579,
+        "density_label": "1.2×",
+        "reach": 1.7895,
+        "reach_label": "1.8",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 216,
+            "records": 87,
+            "density": 1.4543,
+            "caption": "para, like, most, than"
+          },
+          {
+            "region": 215,
+            "records": 38,
+            "density": 0.7895,
+            "caption": "most, over, there, last"
+          }
+        ]
+      },
+      {
+        "name": "Mental health, counseling and wellbeing",
+        "records": 113,
+        "share": 0.011183,
+        "density": 1.4337,
+        "density_label": "1.4×",
+        "reach": 2.0,
+        "reach_label": "2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": true,
+        "cells": [
+          {
+            "region": 218,
+            "records": 55,
+            "density": 1.9048,
+            "caption": "health, study, between, were"
+          },
+          {
+            "region": 217,
+            "records": 58,
+            "density": 1.1611,
+            "caption": "como, other, mental, only"
+          }
+        ]
+      },
+      {
+        "name": "Fish, wildlife and natural geography",
+        "records": 111,
+        "share": 0.010985,
+        "density": 1.37,
+        "density_label": "1.4×",
+        "reach": 1.2873,
+        "reach_label": "1.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 128,
+            "records": 99,
+            "density": 2.5264,
+            "caption": "species, through, part, known"
+          },
+          {
+            "region": 129,
+            "records": 12,
+            "density": 0.2873,
+            "caption": "water, agua, into, were"
+          }
+        ]
+      },
+      {
+        "name": "Music, film and celebrity biographies",
+        "records": 110,
+        "share": 0.010886,
+        "density": 2.0152,
+        "density_label": "2.0×",
+        "reach": 1.8916,
+        "reach_label": "1.9",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 177,
+            "records": 89,
+            "density": 2.868,
+            "caption": "television, radio, american, film"
+          },
+          {
+            "region": 178,
+            "records": 21,
+            "density": 0.8916,
+            "caption": "album, released, music, song"
+          }
+        ]
+      },
+      {
+        "name": "Botanical gardens, plants and landscape design",
+        "records": 97,
+        "share": 0.009599,
+        "density": 2.0749,
+        "density_label": "2.1×",
+        "reach": 2.0,
+        "reach_label": "2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": true,
+        "cells": [
+          {
+            "region": 64,
+            "records": 70,
+            "density": 3.0144,
+            "caption": "located, years, through, many"
+          },
+          {
+            "region": 63,
+            "records": 27,
+            "density": 1.1473,
+            "caption": "pour, these, most, would"
+          }
+        ]
+      },
+      {
+        "name": "Digital marketing, websites and social media",
+        "records": 95,
+        "share": 0.009401,
+        "density": 1.1833,
+        "density_label": "1.2×",
+        "reach": 1.4547,
+        "reach_label": "1.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 23,
+            "records": 77,
+            "density": 1.893,
+            "caption": "marketing, social, facebook, online"
+          },
+          {
+            "region": 24,
+            "records": 18,
+            "density": 0.4547,
+            "caption": "google, online, website, site"
+          }
+        ]
+      },
+      {
+        "name": "Mobile devices, electronics and technical products",
+        "records": 95,
+        "share": 0.009401,
+        "density": 1.169,
+        "density_label": "1.2×",
+        "reach": 1.6497,
+        "reach_label": "1.6",
+        "subregions": 3,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 234,
+            "records": 81,
+            "density": 2.1399,
+            "caption": "pour, very, make, time"
+          },
+          {
+            "region": 233,
+            "records": 5,
+            "density": 0.3299,
+            "caption": "bluetooth, audio, take, would"
+          },
+          {
+            "region": 232,
+            "records": 9,
+            "density": 0.3198,
+            "caption": "used, would, other, into"
+          }
+        ]
+      },
+      {
+        "name": "Climate science, agriculture and environmental policy",
+        "records": 93,
+        "share": 0.009203,
+        "density": 1.2389,
+        "density_label": "1.2×",
+        "reach": 1.9187,
+        "reach_label": "1.9",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 136,
+            "records": 66,
+            "density": 1.4448,
+            "caption": "ambiente, through, como, pour"
+          },
+          {
+            "region": 137,
+            "records": 27,
+            "density": 0.9187,
+            "caption": "years, agricultura, through, como"
+          }
+        ]
+      },
+      {
+        "name": "Universities, schools and academic careers",
+        "records": 91,
+        "share": 0.009005,
+        "density": 0.8936,
+        "density_label": "0.9×",
+        "reach": 1.9077,
+        "reach_label": "1.9",
+        "subregions": 3,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 100,
+            "records": 59,
+            "density": 1.8371,
+            "caption": "school, into, after, would"
+          },
+          {
+            "region": 101,
+            "records": 22,
+            "density": 0.6098,
+            "caption": "university, only, through, over"
+          },
+          {
+            "region": 99,
+            "records": 10,
+            "density": 0.2979,
+            "caption": "very, even, made, many"
+          }
+        ]
+      },
+      {
+        "name": "Books, authors and literary criticism",
+        "records": 89,
+        "share": 0.008808,
+        "density": 0.9696,
+        "density_label": "1.0×",
+        "reach": 1.8973,
+        "reach_label": "1.9",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 51,
+            "records": 46,
+            "density": 1.0485,
+            "caption": "libro, book, livro, como"
+          },
+          {
+            "region": 52,
+            "records": 43,
+            "density": 0.8973,
+            "caption": "libro, published, como, book"
+          }
+        ]
+      },
+      {
+        "name": "Technical how-tos, products and general-interest articles",
+        "records": 89,
+        "share": 0.008808,
+        "density": 1.0696,
+        "density_label": "1.1×",
+        "reach": 1.9992,
+        "reach_label": "2.0",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 86,
+            "records": 54,
+            "density": 1.1208,
+            "caption": "only, time, these, just"
+          },
+          {
+            "region": 85,
+            "records": 35,
+            "density": 0.9992,
+            "caption": "would, while, into, these"
+          }
+        ]
+      },
+      {
+        "name": "Schools, teaching and education policy",
+        "records": 88,
+        "share": 0.008709,
+        "density": 0.6549,
+        "density_label": "0.7×",
+        "reach": 1.381,
+        "reach_label": "1.4",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 164,
+            "records": 50,
+            "density": 0.8979,
+            "caption": "school, high, schüler, élèves"
+          },
+          {
+            "region": 165,
+            "records": 38,
+            "density": 0.4831,
+            "caption": "como, sobre, para, into"
+          }
+        ]
+      },
+      {
+        "name": "Film, television and superhero entertainment",
+        "records": 87,
+        "share": 0.00861,
+        "density": 1.0195,
+        "density_label": "1.0×",
+        "reach": 2.3801,
+        "reach_label": "2.4",
+        "subregions": 4,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 57,
+            "records": 58,
+            "density": 3.0293,
+            "caption": "film, plot, come, está"
+          },
+          {
+            "region": 58,
+            "records": 13,
+            "density": 0.7202,
+            "caption": "série, temporada, netflix, episode"
+          },
+          {
+            "region": 56,
+            "records": 10,
+            "density": 0.3454,
+            "caption": "filme, film, película, films"
+          },
+          {
+            "region": 55,
+            "records": 6,
+            "density": 0.3145,
+            "caption": "comics, marvel, anime, mais"
+          }
+        ]
+      },
+      {
+        "name": "Recipes, food and social occasions",
+        "records": 74,
+        "share": 0.007323,
+        "density": 0.7799,
+        "density_label": "0.8×",
+        "reach": 1.5452,
+        "reach_label": "1.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 270,
+            "records": 48,
+            "density": 1.0175,
+            "caption": "restaurant, only, other, like"
+          },
+          {
+            "region": 271,
+            "records": 26,
+            "density": 0.5452,
+            "caption": "restaurant, last, other, para"
+          }
+        ]
+      },
+      {
+        "name": "Retail sales, products and order fulfillment",
+        "records": 72,
+        "share": 0.007125,
+        "density": 0.8027,
+        "density_label": "0.8×",
+        "reach": 1.5998,
+        "reach_label": "1.6",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 110,
+            "records": 45,
+            "density": 1.0075,
+            "caption": "online, como, para, like"
+          },
+          {
+            "region": 109,
+            "records": 27,
+            "density": 0.5998,
+            "caption": "online, pour, para, make"
+          }
+        ]
+      },
+      {
+        "name": "Personal development, education and wellbeing",
+        "records": 71,
+        "share": 0.007026,
+        "density": 0.8747,
+        "density_label": "0.9×",
+        "reach": 2.1997,
+        "reach_label": "2.2",
+        "subregions": 3,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 70,
+            "records": 40,
+            "density": 1.6504,
+            "caption": "leben, eine, mais, como"
+          },
+          {
+            "region": 69,
+            "records": 23,
+            "density": 0.9557,
+            "caption": "vida, todos, tudo, cada"
+          },
+          {
+            "region": 71,
+            "records": 8,
+            "density": 0.244,
+            "caption": "these, many, into, para"
+          }
+        ]
+      },
+      {
+        "name": "Workplace management and professional development",
+        "records": 67,
+        "share": 0.00663,
+        "density": 0.7689,
+        "density_label": "0.8×",
+        "reach": 1.6169,
+        "reach_label": "1.6",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 29,
+            "records": 29,
+            "density": 0.9429,
+            "caption": "team, business, como, other"
+          },
+          {
+            "region": 30,
+            "records": 38,
+            "density": 0.674,
+            "caption": "good, para, into, only"
+          }
+        ]
+      },
+      {
+        "name": "Parenting, families and child development",
+        "records": 66,
+        "share": 0.006531,
+        "density": 0.8584,
+        "density_label": "0.9×",
+        "reach": 1.7284,
+        "reach_label": "1.7",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 168,
+            "records": 33,
+            "density": 0.9343,
+            "caption": "niños, kind, kinder, como"
+          },
+          {
+            "region": 169,
+            "records": 33,
+            "density": 0.7941,
+            "caption": "kinder, other, para, these"
+          }
+        ]
+      },
+      {
+        "name": "Fitness, coaching and amateur sport",
+        "records": 65,
+        "share": 0.006432,
+        "density": 0.9497,
+        "density_label": "0.9×",
+        "reach": 1.69,
+        "reach_label": "1.7",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 106,
+            "records": 40,
+            "density": 1.242,
+            "caption": "training, fitness, yoga, into"
+          },
+          {
+            "region": 105,
+            "records": 25,
+            "density": 0.69,
+            "caption": "sport, training, voor, only"
+          }
+        ]
+      },
+      {
+        "name": "Renewable energy, power systems and climate policy",
+        "records": 64,
+        "share": 0.006333,
+        "density": 1.0187,
+        "density_label": "1.0×",
+        "reach": 1.5462,
+        "reach_label": "1.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 148,
+            "records": 46,
+            "density": 1.5408,
+            "caption": "such, make, many, other"
+          },
+          {
+            "region": 149,
+            "records": 18,
+            "density": 0.5462,
+            "caption": "energie, plus, solar, dans"
+          }
+        ]
+      },
+      {
+        "name": "Outdoor recreation, hiking and travel",
+        "records": 60,
+        "share": 0.005938,
+        "density": 1.0295,
+        "density_label": "1.0×",
+        "reach": 1.3045,
+        "reach_label": "1.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 119,
+            "records": 50,
+            "density": 1.9695,
+            "caption": "team, many, great, time"
+          },
+          {
+            "region": 120,
+            "records": 10,
+            "density": 0.3045,
+            "caption": "mountain, would, sich, make"
+          }
+        ]
+      },
+      {
+        "name": "Athlete biographies, team sports and mixed features",
+        "records": 59,
+        "share": 0.005839,
+        "density": 1.027,
+        "density_label": "1.0×",
+        "reach": 1.9462,
+        "reach_label": "1.9",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 281,
+            "records": 27,
+            "density": 1.1427,
+            "caption": "baseball, played, league, season"
+          },
+          {
+            "region": 280,
+            "records": 32,
+            "density": 0.9462,
+            "caption": "were, since, would, many"
+          }
+        ]
+      },
+      {
+        "name": "Design products, home goods and lifestyle brands",
+        "records": 58,
+        "share": 0.00574,
+        "density": 0.7376,
+        "density_label": "0.7×",
+        "reach": 1.3384,
+        "reach_label": "1.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 227,
+            "records": 47,
+            "density": 1.02,
+            "caption": "into, through, back, there"
+          },
+          {
+            "region": 226,
+            "records": 11,
+            "density": 0.3384,
+            "caption": "deze, voor, make, were"
+          }
+        ]
+      },
+      {
+        "name": "Construction materials, home products and industrial goods",
+        "records": 54,
+        "share": 0.005344,
+        "density": 0.5387,
+        "density_label": "0.5×",
+        "reach": 1.0788,
+        "reach_label": "1.1",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 123,
+            "records": 30,
+            "density": 0.6036,
+            "caption": "design, oder, durch, sich"
+          },
+          {
+            "region": 124,
+            "records": 24,
+            "density": 0.4752,
+            "caption": "oder, eine, sich, than"
+          }
+        ]
+      },
+      {
+        "name": "Product listings, reference pages and promotional web content",
+        "records": 53,
+        "share": 0.005245,
+        "density": 0.7263,
+        "density_label": "0.7×",
+        "reach": 1.4573,
+        "reach_label": "1.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 275,
+            "records": 33,
+            "density": 0.9154,
+            "caption": "alebo, genus, ktoré, family"
+          },
+          {
+            "region": 274,
+            "records": 20,
+            "density": 0.5419,
+            "caption": "description, make, other, time"
+          }
+        ]
+      },
+      {
+        "name": "Shell scripts, files and technical media workflows",
+        "records": 52,
+        "share": 0.005146,
+        "density": 0.6631,
+        "density_label": "0.7×",
+        "reach": 1.3255,
+        "reach_label": "1.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 183,
+            "records": 35,
+            "density": 0.8907,
+            "caption": "video, youtube, using, como"
+          },
+          {
+            "region": 184,
+            "records": 17,
+            "density": 0.4348,
+            "caption": "download, software, than, into"
+          }
+        ]
+      },
+      {
+        "name": "Political theory, democracy and international affairs",
+        "records": 49,
+        "share": 0.004849,
+        "density": 0.5512,
+        "density_label": "0.6×",
+        "reach": 1.1459,
+        "reach_label": "1.1",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 235,
+            "records": 42,
+            "density": 1.0304,
+            "caption": "them, these, other, most"
+          },
+          {
+            "region": 236,
+            "records": 7,
+            "density": 0.1459,
+            "caption": "como, make, para, only"
+          }
+        ]
+      },
+      {
+        "name": "Visual arts, theater and cultural events",
+        "records": 49,
+        "share": 0.004849,
+        "density": 0.5186,
+        "density_label": "0.5×",
+        "reach": 1.0447,
+        "reach_label": "1.0",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 7,
+            "records": 30,
+            "density": 0.6531,
+            "caption": "artista, arte, many, most"
+          },
+          {
+            "region": 8,
+            "records": 19,
+            "density": 0.3916,
+            "caption": "teatro, cultura, arte, dans"
+          }
+        ]
+      },
+      {
+        "name": "Wine, beverages and food products",
+        "records": 47,
+        "share": 0.004651,
+        "density": 0.5882,
+        "density_label": "0.6×",
+        "reach": 1.1951,
+        "reach_label": "1.2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 16,
+            "records": 36,
+            "density": 1.5358,
+            "caption": "vino, wine, vins, while"
+          },
+          {
+            "region": 15,
+            "records": 11,
+            "density": 0.1951,
+            "caption": "eine, pour, like, than"
+          }
+        ]
+      },
+      {
+        "name": "American biographies, families and local history",
+        "records": 43,
+        "share": 0.004255,
+        "density": 0.7754,
+        "density_label": "0.8×",
+        "reach": 1.5341,
+        "reach_label": "1.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 155,
+            "records": 26,
+            "density": 0.8378,
+            "caption": "census, population, united, people"
+          },
+          {
+            "region": 154,
+            "records": 17,
+            "density": 0.6963,
+            "caption": "historic, united, located, born"
+          }
+        ]
+      },
+      {
+        "name": "Taxes, debt and personal finance",
+        "records": 43,
+        "share": 0.004255,
+        "density": 0.3902,
+        "density_label": "0.4×",
+        "reach": 1.1766,
+        "reach_label": "1.2",
+        "subregions": 3,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 127,
+            "records": 22,
+            "density": 0.524,
+            "caption": "other, make, most, para"
+          },
+          {
+            "region": 125,
+            "records": 7,
+            "density": 0.3671,
+            "caption": "even, eine, make, oder"
+          },
+          {
+            "region": 126,
+            "records": 14,
+            "density": 0.2855,
+            "caption": "make, than, like, these"
+          }
+        ]
+      },
+      {
+        "name": "Astronomy, spacecraft and planetary science",
+        "records": 42,
+        "share": 0.004156,
+        "density": 0.7042,
+        "density_label": "0.7×",
+        "reach": 1.4088,
+        "reach_label": "1.4",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 48,
+            "records": 22,
+            "density": 0.7404,
+            "caption": "systems, work, very, technology"
+          },
+          {
+            "region": 47,
+            "records": 20,
+            "density": 0.6684,
+            "caption": "nasa, esta, luna, years"
+          }
+        ]
+      },
+      {
+        "name": "Driving, transport and traffic accidents",
+        "records": 42,
+        "share": 0.004156,
+        "density": 0.5328,
+        "density_label": "0.5×",
+        "reach": 1.5902,
+        "reach_label": "1.6",
+        "subregions": 3,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 268,
+            "records": 25,
+            "density": 0.8746,
+            "caption": "auto, last, sich, auch"
+          },
+          {
+            "region": 267,
+            "records": 10,
+            "density": 0.475,
+            "caption": "auto, service, here, only"
+          },
+          {
+            "region": 269,
+            "records": 7,
+            "density": 0.2406,
+            "caption": "veículo, motorista, accidente, acidente"
+          }
+        ]
+      },
+      {
+        "name": "Athlete biographies and sports history",
+        "records": 41,
+        "share": 0.004057,
+        "density": 1.0308,
+        "density_label": "1.0×",
+        "reach": 1.6856,
+        "reach_label": "1.7",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 21,
+            "records": 26,
+            "density": 1.4531,
+            "caption": "international, world, team, played"
+          },
+          {
+            "region": 22,
+            "records": 15,
+            "density": 0.6856,
+            "caption": "league, football, played, english"
+          }
+        ]
+      },
+      {
+        "name": "Philosophy, ethics and intellectual history",
+        "records": 41,
+        "share": 0.004057,
+        "density": 0.4609,
+        "density_label": "0.5×",
+        "reach": 0.9211,
+        "reach_label": "0.9",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 245,
+            "records": 23,
+            "density": 0.4651,
+            "caption": "years, where, only, most"
+          },
+          {
+            "region": 246,
+            "records": 18,
+            "density": 0.456,
+            "caption": "sobre, dans, come, como"
+          }
+        ]
+      },
+      {
+        "name": "Education, publishing and general-interest articles",
+        "records": 40,
+        "share": 0.003958,
+        "density": 0.613,
+        "density_label": "0.6×",
+        "reach": 1.2289,
+        "reach_label": "1.2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 242,
+            "records": 18,
+            "density": 0.625,
+            "caption": "through, than, most, these"
+          },
+          {
+            "region": 241,
+            "records": 22,
+            "density": 0.6039,
+            "caption": "last, many, were, other"
+          }
+        ]
+      },
+      {
+        "name": "Molecular biology, genomics and cancer research",
+        "records": 40,
+        "share": 0.003958,
+        "density": 0.4264,
+        "density_label": "0.4×",
+        "reach": 0.9218,
+        "reach_label": "0.9",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 187,
+            "records": 24,
+            "density": 0.6363,
+            "caption": "cell, protein, cells, gene"
+          },
+          {
+            "region": 188,
+            "records": 16,
+            "density": 0.2855,
+            "caption": "used, study, were, other"
+          }
+        ]
+      },
+      {
+        "name": "Video games, mobile games and online play",
+        "records": 40,
+        "share": 0.003958,
+        "density": 0.4056,
+        "density_label": "0.4×",
+        "reach": 0.7167,
+        "reach_label": "0.7",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 54,
+            "records": 37,
+            "density": 0.6431,
+            "caption": "game, juego, games, online"
+          },
+          {
+            "region": 53,
+            "records": 3,
+            "density": 0.0736,
+            "caption": "xbox, playstation, nintendo, game"
+          }
+        ]
+      },
+      {
+        "name": "Personal blogs, family life and serialized stories",
+        "records": 39,
+        "share": 0.003859,
+        "density": 0.5891,
+        "density_label": "0.6×",
+        "reach": 1.1622,
+        "reach_label": "1.2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 254,
+            "records": 33,
+            "density": 1.1344,
+            "caption": "till, before, were, make"
+          },
+          {
+            "region": 255,
+            "records": 6,
+            "density": 0.1622,
+            "caption": "minha, quando, casa, mijn"
+          }
+        ]
+      },
+      {
+        "name": "Local history, culture and public information",
+        "records": 37,
+        "share": 0.003662,
+        "density": 0.4762,
+        "density_label": "0.5×",
+        "reach": 1.4028,
+        "reach_label": "1.4",
+        "subregions": 3,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 221,
+            "records": 16,
+            "density": 0.5262,
+            "caption": "take, people, time, make"
+          },
+          {
+            "region": 222,
+            "records": 13,
+            "density": 0.4862,
+            "caption": "both, these, many, people"
+          },
+          {
+            "region": 223,
+            "records": 8,
+            "density": 0.3904,
+            "caption": "curso, inscrições, online, know"
+          }
+        ]
+      },
+      {
+        "name": "Real estate, housing and local services",
+        "records": 37,
+        "share": 0.003662,
+        "density": 0.4775,
+        "density_label": "0.5×",
+        "reach": 0.8885,
+        "reach_label": "0.9",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 34,
+            "records": 30,
+            "density": 0.6769,
+            "caption": "avec, sich, appartement, years"
+          },
+          {
+            "region": 33,
+            "records": 7,
+            "density": 0.2116,
+            "caption": "work, make, into, after"
+          }
+        ]
+      },
+      {
+        "name": "Fashion, color and interior styling",
+        "records": 36,
+        "share": 0.003563,
+        "density": 0.375,
+        "density_label": "0.4×",
+        "reach": 1.1318,
+        "reach_label": "1.1",
+        "subregions": 3,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 253,
+            "records": 17,
+            "density": 0.5205,
+            "caption": "design, pour, said, make"
+          },
+          {
+            "region": 252,
+            "records": 11,
+            "density": 0.3756,
+            "caption": "color, look, mais, best"
+          },
+          {
+            "region": 251,
+            "records": 8,
+            "density": 0.2357,
+            "caption": "moda, estilo, look, vestido"
+          }
+        ]
+      },
+      {
+        "name": "Fashion, retail and consumer products",
+        "records": 36,
+        "share": 0.003563,
+        "density": 0.4405,
+        "density_label": "0.4×",
+        "reach": 0.8755,
+        "reach_label": "0.9",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 75,
+            "records": 21,
+            "density": 0.4664,
+            "caption": "avec, design, while, made"
+          },
+          {
+            "region": 74,
+            "records": 15,
+            "density": 0.4091,
+            "caption": "design, look, mais, komfort"
+          }
+        ]
+      },
+      {
+        "name": "Motorsport, competitions and general sports",
+        "records": 36,
+        "share": 0.003563,
+        "density": 0.6429,
+        "density_label": "0.6×",
+        "reach": 2.3644,
+        "reach_label": "2.4",
+        "subregions": 5,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 82,
+            "records": 23,
+            "density": 1.7795,
+            "caption": "piloto, racing, race, team"
+          },
+          {
+            "region": 78,
+            "records": 4,
+            "density": 0.6065,
+            "caption": "could, весе, night, star"
+          },
+          {
+            "region": 80,
+            "records": 3,
+            "density": 0.2867,
+            "caption": "being, through, would, into"
+          },
+          {
+            "region": 79,
+            "records": 3,
+            "density": 0.2608,
+            "caption": "through, last, make, want"
+          },
+          {
+            "region": 81,
+            "records": 3,
+            "density": 0.2104,
+            "caption": "nach, gegen, ersten, sich"
+          }
+        ]
+      },
+      {
+        "name": "Workplace management, business and marketing",
+        "records": 36,
+        "share": 0.003563,
+        "density": 0.3288,
+        "density_label": "0.3×",
+        "reach": 0.6578,
+        "reach_label": "0.7",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 283,
+            "records": 29,
+            "density": 0.5295,
+            "caption": "business, time, into, just"
+          },
+          {
+            "region": 282,
+            "records": 7,
+            "density": 0.1283,
+            "caption": "most, many, other, these"
+          }
+        ]
+      },
+      {
+        "name": "Cars, vehicles and transportation technology",
+        "records": 35,
+        "share": 0.003464,
+        "density": 0.4716,
+        "density_label": "0.5×",
+        "reach": 1.5769,
+        "reach_label": "1.6",
+        "subregions": 3,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 43,
+            "records": 10,
+            "density": 0.7421,
+            "caption": "aircraft, flight, built, design"
+          },
+          {
+            "region": 41,
+            "records": 11,
+            "density": 0.446,
+            "caption": "motor, honda, ferrari, auto"
+          },
+          {
+            "region": 42,
+            "records": 14,
+            "density": 0.3888,
+            "caption": "motor, pour, than, eine"
+          }
+        ]
+      },
+      {
+        "name": "Music albums, composers and live performance",
+        "records": 35,
+        "share": 0.003464,
+        "density": 0.322,
+        "density_label": "0.3×",
+        "reach": 0.6751,
+        "reach_label": "0.7",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 152,
+            "records": 22,
+            "density": 0.4619,
+            "caption": "musik, música, musique, jazz"
+          },
+          {
+            "region": 153,
+            "records": 13,
+            "density": 0.2132,
+            "caption": "album, band, rock, music"
+          }
+        ]
+      },
+      {
+        "name": "Forums, commentary and mixed web content",
+        "records": 34,
+        "share": 0.003365,
+        "density": 0.2782,
+        "density_label": "0.3×",
+        "reach": 0.7345,
+        "reach_label": "0.7",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 163,
+            "records": 19,
+            "density": 0.565,
+            "caption": "know, people, other, most"
+          },
+          {
+            "region": 162,
+            "records": 15,
+            "density": 0.1695,
+            "caption": "last, than, time, only"
+          }
+        ]
+      },
+      {
+        "name": "Historical events, places and military heritage",
+        "records": 31,
+        "share": 0.003068,
+        "density": 0.7038,
+        "density_label": "0.7×",
+        "reach": 1.4014,
+        "reach_label": "1.4",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 156,
+            "records": 20,
+            "density": 0.8929,
+            "caption": "german, history, american, were"
+          },
+          {
+            "region": 157,
+            "records": 11,
+            "density": 0.5085,
+            "caption": "british, english, served, john"
+          }
+        ]
+      },
+      {
+        "name": "Interior design, visual products and home decor",
+        "records": 31,
+        "share": 0.003068,
+        "density": 0.5544,
+        "density_label": "0.6×",
+        "reach": 1.1038,
+        "reach_label": "1.1",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 185,
+            "records": 23,
+            "density": 0.814,
+            "caption": "design, diseño, como, dans"
+          },
+          {
+            "region": 186,
+            "records": 8,
+            "density": 0.2898,
+            "caption": "design, pour, dans, eine"
+          }
+        ]
+      },
+      {
+        "name": "Resorts, beach travel and island destinations",
+        "records": 31,
+        "share": 0.003068,
+        "density": 0.3156,
+        "density_label": "0.3×",
+        "reach": 0.6654,
+        "reach_label": "0.7",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 293,
+            "records": 29,
+            "density": 0.6264,
+            "caption": "turismo, ciudad, como, through"
+          },
+          {
+            "region": 292,
+            "records": 2,
+            "density": 0.039,
+            "caption": "vous, park, dans, these"
+          }
+        ]
+      },
+      {
+        "name": "Smartphones, messaging apps and mobile technology",
+        "records": 31,
+        "share": 0.003068,
+        "density": 0.3349,
+        "density_label": "0.3×",
+        "reach": 0.7699,
+        "reach_label": "0.8",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 49,
+            "records": 15,
+            "density": 0.5181,
+            "caption": "apple, iphone, ipad, icloud"
+          },
+          {
+            "region": 50,
+            "records": 16,
+            "density": 0.2518,
+            "caption": "android, smartphone, google, mobile"
+          }
+        ]
+      },
+      {
+        "name": "Weather, outdoor life and general-interest web content",
+        "records": 31,
+        "share": 0.003068,
+        "density": 0.636,
+        "density_label": "0.6×",
+        "reach": 1.3153,
+        "reach_label": "1.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 166,
+            "records": 18,
+            "density": 0.8382,
+            "caption": "temperatura, entre, other, pour"
+          },
+          {
+            "region": 167,
+            "records": 13,
+            "density": 0.4771,
+            "caption": "were, much, other, there"
+          }
+        ]
+      },
+      {
+        "name": "Windows, consumer devices and system support",
+        "records": 31,
+        "share": 0.003068,
+        "density": 0.3861,
+        "density_label": "0.4×",
+        "reach": 0.7775,
+        "reach_label": "0.8",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 181,
+            "records": 16,
+            "density": 0.4262,
+            "caption": "network, wifi, ubuntu, connect"
+          },
+          {
+            "region": 182,
+            "records": 15,
+            "density": 0.3513,
+            "caption": "windows, intel, ubuntu, system"
+          }
+        ]
+      },
+      {
+        "name": "Employment, labor law and workplace policy",
+        "records": 30,
+        "share": 0.002969,
+        "density": 0.424,
+        "density_label": "0.4×",
+        "reach": 0.7728,
+        "reach_label": "0.8",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 73,
+            "records": 25,
+            "density": 0.6005,
+            "caption": "trabalho, pour, para, than"
+          },
+          {
+            "region": 72,
+            "records": 5,
+            "density": 0.1723,
+            "caption": "suchen, sind, pour, dans"
+          }
+        ]
+      },
+      {
+        "name": "Online shopping, product listings and orders",
+        "records": 30,
+        "share": 0.002969,
+        "density": 0.2663,
+        "density_label": "0.3×",
+        "reach": 0.5734,
+        "reach_label": "0.6",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 192,
+            "records": 24,
+            "density": 0.4767,
+            "caption": "through, made, make, just"
+          },
+          {
+            "region": 191,
+            "records": 6,
+            "density": 0.0967,
+            "caption": "these, time, like, what"
+          }
+        ]
+      },
+      {
+        "name": "Air travel, airlines and vacation planning",
+        "records": 29,
+        "share": 0.00287,
+        "density": 0.4367,
+        "density_label": "0.4×",
+        "reach": 0.8772,
+        "reach_label": "0.9",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 19,
+            "records": 12,
+            "density": 0.4475,
+            "caption": "airlines, airport, much, international"
+          },
+          {
+            "region": 20,
+            "records": 17,
+            "density": 0.4297,
+            "caption": "viajar, nach, most, eine"
+          }
+        ]
+      },
+      {
+        "name": "Cookie notices, privacy policies and website boilerplate",
+        "records": 29,
+        "share": 0.00287,
+        "density": 1.139,
+        "density_label": "1.1×",
+        "reach": 1.0838,
+        "reach_label": "1.1",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 67,
+            "records": 28,
+            "density": 2.1171,
+            "caption": "cookies, sito, questo, gebruik"
+          },
+          {
+            "region": 68,
+            "records": 1,
+            "density": 0.0838,
+            "caption": "unserer, cookies, informationen, verwendet"
+          }
+        ]
+      },
+      {
+        "name": "Cryptocurrency, forex and market trading",
+        "records": 29,
+        "share": 0.00287,
+        "density": 0.4727,
+        "density_label": "0.5×",
+        "reach": 2.3543,
+        "reach_label": "2.4",
+        "subregions": 5,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 3,
+            "records": 13,
+            "density": 1.0045,
+            "caption": "dollars, plus, york, facebook"
+          },
+          {
+            "region": 0,
+            "records": 6,
+            "density": 0.5043,
+            "caption": "bitcoin, blockchain, kryptowährungen, ethereum"
+          },
+          {
+            "region": 4,
+            "records": 5,
+            "density": 0.3909,
+            "caption": "help, through, would, many"
+          },
+          {
+            "region": 1,
+            "records": 3,
+            "density": 0.3156,
+            "caption": "forex, trading, trader, broker"
+          },
+          {
+            "region": 2,
+            "records": 2,
+            "density": 0.1435,
+            "caption": "great, before, nicht, into"
+          }
+        ]
+      },
+      {
+        "name": "Online orders, customer support and returns",
+        "records": 29,
+        "share": 0.00287,
+        "density": 0.3849,
+        "density_label": "0.4×",
+        "reach": 0.849,
+        "reach_label": "0.8",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 135,
+            "records": 24,
+            "density": 0.7309,
+            "caption": "bestellung, vous, alle, nicht"
+          },
+          {
+            "region": 134,
+            "records": 5,
+            "density": 0.1181,
+            "caption": "email, make, would, like"
+          }
+        ]
+      },
+      {
+        "name": "Customer service, websites and online support",
+        "records": 28,
+        "share": 0.002771,
+        "density": 0.3522,
+        "density_label": "0.4×",
+        "reach": 0.6332,
+        "reach_label": "0.6",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 239,
+            "records": 24,
+            "density": 0.5088,
+            "caption": "email, people, time, most"
+          },
+          {
+            "region": 240,
+            "records": 4,
+            "density": 0.1244,
+            "caption": "daten, datos, privacy, información"
+          }
+        ]
+      },
+      {
+        "name": "Community services, local government and public information",
+        "records": 27,
+        "share": 0.002672,
+        "density": 0.51,
+        "density_label": "0.5×",
+        "reach": 1.1362,
+        "reach_label": "1.1",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 93,
+            "records": 17,
+            "density": 0.8271,
+            "caption": "help, know, time, para"
+          },
+          {
+            "region": 94,
+            "records": 10,
+            "density": 0.3091,
+            "caption": "last, people, even, would"
+          }
+        ]
+      },
+      {
+        "name": "Cinema, performers and film industry news",
+        "records": 25,
+        "share": 0.002474,
+        "density": 0.2661,
+        "density_label": "0.3×",
+        "reach": 0.4963,
+        "reach_label": "0.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 138,
+            "records": 20,
+            "density": 0.3707,
+            "caption": "films, film, directed, festival"
+          },
+          {
+            "region": 139,
+            "records": 5,
+            "density": 0.1256,
+            "caption": "last, were, like, most"
+          }
+        ]
+      },
+      {
+        "name": "Events, weddings and cultural festivals",
+        "records": 25,
+        "share": 0.002474,
+        "density": 0.2528,
+        "density_label": "0.3×",
+        "reach": 0.5165,
+        "reach_label": "0.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 210,
+            "records": 15,
+            "density": 0.328,
+            "caption": "festival, evento, música, este"
+          },
+          {
+            "region": 209,
+            "records": 10,
+            "density": 0.1885,
+            "caption": "evento, auch, este, como"
+          }
+        ]
+      },
+      {
+        "name": "Railways, transit and municipal infrastructure",
+        "records": 25,
+        "share": 0.002474,
+        "density": 0.3513,
+        "density_label": "0.4×",
+        "reach": 0.859,
+        "reach_label": "0.9",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 272,
+            "records": 22,
+            "density": 0.7891,
+            "caption": "railway, line, station, opened"
+          },
+          {
+            "region": 273,
+            "records": 3,
+            "density": 0.0699,
+            "caption": "route, highway, state, through"
+          }
+        ]
+      },
+      {
+        "name": "Industrial products, consumer technology and mixed web content",
+        "records": 22,
+        "share": 0.002177,
+        "density": 0.3178,
+        "density_label": "0.3×",
+        "reach": 0.6321,
+        "reach_label": "0.6",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 249,
+            "records": 15,
+            "density": 0.4257,
+            "caption": "eine, because, auch, people"
+          },
+          {
+            "region": 250,
+            "records": 7,
+            "density": 0.2064,
+            "caption": "these, other, most, people"
+          }
+        ]
+      },
+      {
+        "name": "Crime, civil rights and armed conflict news",
+        "records": 21,
+        "share": 0.002078,
+        "density": 0.2972,
+        "density_label": "0.3×",
+        "reach": 1.1948,
+        "reach_label": "1.2",
+        "subregions": 4,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 11,
+            "records": 9,
+            "density": 0.5137,
+            "caption": "help, people, were, para"
+          },
+          {
+            "region": 12,
+            "records": 6,
+            "density": 0.3535,
+            "caption": "derechos, contra, como, take"
+          },
+          {
+            "region": 14,
+            "records": 4,
+            "density": 0.2052,
+            "caption": "last, pour, dans, time"
+          },
+          {
+            "region": 13,
+            "records": 2,
+            "density": 0.1224,
+            "caption": "policía, contra, best, dans"
+          }
+        ]
+      },
+      {
+        "name": "Photography, visual media and social platforms",
+        "records": 21,
+        "share": 0.002078,
+        "density": 0.3403,
+        "density_label": "0.3×",
+        "reach": 0.7036,
+        "reach_label": "0.7",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 276,
+            "records": 10,
+            "density": 0.4071,
+            "caption": "foto, fotos, fotógrafo, photo"
+          },
+          {
+            "region": 277,
+            "records": 11,
+            "density": 0.2965,
+            "caption": "foto, fotos, these, bilder"
+          }
+        ]
+      },
+      {
+        "name": "European municipalities, villages and local geography",
+        "records": 20,
+        "share": 0.001979,
+        "density": 0.3102,
+        "density_label": "0.3×",
+        "reach": 2.9395,
+        "reach_label": "2.9",
+        "subregions": 9,
+        "subregions_unreached": 2,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 261,
+            "records": 8,
+            "density": 0.8737,
+            "caption": "demographics, village, populated, district"
+          },
+          {
+            "region": 256,
+            "records": 2,
+            "density": 0.4417,
+            "caption": "germany, municipalities, towns, district"
+          },
+          {
+            "region": 260,
+            "records": 3,
+            "density": 0.3912,
+            "caption": "province, municipalities, comune, census"
+          },
+          {
+            "region": 263,
+            "records": 2,
+            "density": 0.3786,
+            "caption": "commune, southwestern, french, needing"
+          },
+          {
+            "region": 257,
+            "records": 2,
+            "density": 0.3764,
+            "caption": "north, municipality, village, parish"
+          },
+          {
+            "region": 262,
+            "records": 1,
+            "density": 0.2598,
+            "caption": "districts, province, divisions, administrative"
+          },
+          {
+            "region": 258,
+            "records": 2,
+            "density": 0.2181,
+            "caption": "village, located, population, town"
+          },
+          {
+            "region": 259,
+            "records": 0,
+            "density": 0.0,
+            "caption": "commune, municipality, places, village"
+          },
+          {
+            "region": 264,
+            "records": 0,
+            "density": 0.0,
+            "caption": "gmina, administrative, approximately, within"
+          }
+        ]
+      },
+      {
+        "name": "Civic events, community organizations and local government",
+        "records": 19,
+        "share": 0.00188,
+        "density": 0.1706,
+        "density_label": "0.2×",
+        "reach": 0.3395,
+        "reach_label": "0.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 121,
+            "records": 11,
+            "density": 0.1827,
+            "caption": "like, make, over, other"
+          },
+          {
+            "region": 122,
+            "records": 8,
+            "density": 0.1568,
+            "caption": "sich, these, time, para"
+          }
+        ]
+      },
+      {
+        "name": "Military history, warfare and fantasy",
+        "records": 18,
+        "share": 0.001781,
+        "density": 0.2663,
+        "density_label": "0.3×",
+        "reach": 0.5525,
+        "reach_label": "0.6",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 229,
+            "records": 11,
+            "density": 0.3652,
+            "caption": "army, guerra, during, world"
+          },
+          {
+            "region": 228,
+            "records": 7,
+            "density": 0.1873,
+            "caption": "them, through, para, after"
+          }
+        ]
+      },
+      {
+        "name": "Personal blogs and social web chatter",
+        "records": 18,
+        "share": 0.001781,
+        "density": 0.1987,
+        "density_label": "0.2×",
+        "reach": 0.3953,
+        "reach_label": "0.4",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 10,
+            "records": 12,
+            "density": 0.2597,
+            "caption": "blog, facebook, twitter, para"
+          },
+          {
+            "region": 9,
+            "records": 6,
+            "density": 0.1356,
+            "caption": "blog, habe, mais, nicht"
+          }
+        ]
+      },
+      {
+        "name": "Celebrity, relationships and popular culture",
+        "records": 17,
+        "share": 0.001682,
+        "density": 0.2034,
+        "density_label": "0.2×",
+        "reach": 0.399,
+        "reach_label": "0.4",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 98,
+            "records": 14,
+            "density": 0.3242,
+            "caption": "elle, into, after, time"
+          },
+          {
+            "region": 97,
+            "records": 3,
+            "density": 0.0748,
+            "caption": "good, into, after, make"
+          }
+        ]
+      },
+      {
+        "name": "Christian theology, ministry and church life",
+        "records": 17,
+        "share": 0.001682,
+        "density": 0.2279,
+        "density_label": "0.2×",
+        "reach": 0.5091,
+        "reach_label": "0.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 143,
+            "records": 14,
+            "density": 0.4382,
+            "caption": "jesus, deus, igreja, vida"
+          },
+          {
+            "region": 142,
+            "records": 3,
+            "density": 0.0709,
+            "caption": "jesus, deus, como, people"
+          }
+        ]
+      },
+      {
+        "name": "Industrial manufacturing and company profiles",
+        "records": 17,
+        "share": 0.001682,
+        "density": 0.2283,
+        "density_label": "0.2×",
+        "reach": 0.4569,
+        "reach_label": "0.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 194,
+            "records": 9,
+            "density": 0.2371,
+            "caption": "empresa, company, dans, pour"
+          },
+          {
+            "region": 193,
+            "records": 8,
+            "density": 0.2198,
+            "caption": "empresa, made, como, time"
+          }
+        ]
+      },
+      {
+        "name": "Political parties, elections and government",
+        "records": 17,
+        "share": 0.001682,
+        "density": 0.1508,
+        "density_label": "0.2×",
+        "reach": 0.3195,
+        "reach_label": "0.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 230,
+            "records": 10,
+            "density": 0.2126,
+            "caption": "presidente, would, after, people"
+          },
+          {
+            "region": 231,
+            "records": 7,
+            "density": 0.1069,
+            "caption": "candidato, partido, presidente, nacional"
+          }
+        ]
+      },
+      {
+        "name": "Smartphones, cameras and mobile devices",
+        "records": 17,
+        "share": 0.001682,
+        "density": 0.2901,
+        "density_label": "0.3×",
+        "reach": 0.6076,
+        "reach_label": "0.6",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 278,
+            "records": 10,
+            "density": 0.3979,
+            "caption": "foto, camera, would, full"
+          },
+          {
+            "region": 279,
+            "records": 7,
+            "density": 0.2097,
+            "caption": "smartphone, samsung, galaxy, android"
+          }
+        ]
+      },
+      {
+        "name": "Courts, criminal cases and United States history",
+        "records": 15,
+        "share": 0.001484,
+        "density": 0.2421,
+        "density_label": "0.2×",
+        "reach": 0.4859,
+        "reach_label": "0.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 108,
+            "records": 8,
+            "density": 0.2644,
+            "caption": "tribunal, acusado, after, into"
+          },
+          {
+            "region": 107,
+            "records": 7,
+            "density": 0.2215,
+            "caption": "court, opinion, decided, circuit"
+          }
+        ]
+      },
+      {
+        "name": "General-interest features, travel and commerce",
+        "records": 15,
+        "share": 0.001484,
+        "density": 0.2582,
+        "density_label": "0.3×",
+        "reach": 0.6759,
+        "reach_label": "0.7",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 150,
+            "records": 14,
+            "density": 0.6478,
+            "caption": "people, were, como, most"
+          },
+          {
+            "region": 151,
+            "records": 1,
+            "density": 0.0281,
+            "caption": "many, only, were, these"
+          }
+        ]
+      },
+      {
+        "name": "Accidents, disasters and breaking news",
+        "records": 14,
+        "share": 0.001385,
+        "density": 0.218,
+        "density_label": "0.2×",
+        "reach": 1.2128,
+        "reach_label": "1.2",
+        "subregions": 5,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 171,
+            "records": 4,
+            "density": 0.4064,
+            "caption": "feuerwehr, incendio, brand, bomberos"
+          },
+          {
+            "region": 173,
+            "records": 4,
+            "density": 0.3668,
+            "caption": "including, hasta, della, best"
+          },
+          {
+            "region": 172,
+            "records": 2,
+            "density": 0.1908,
+            "caption": "know, should, wurde, made"
+          },
+          {
+            "region": 174,
+            "records": 2,
+            "density": 0.1368,
+            "caption": "need, people, make, these"
+          },
+          {
+            "region": 170,
+            "records": 2,
+            "density": 0.112,
+            "caption": "verletzt, acidente, einem, polizei"
+          }
+        ]
+      },
+      {
+        "name": "Hospitals, healthcare services and clinical treatment",
+        "records": 14,
+        "share": 0.001385,
+        "density": 0.1372,
+        "density_label": "0.1×",
+        "reach": 0.2665,
+        "reach_label": "0.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 211,
+            "records": 12,
+            "density": 0.2249,
+            "caption": "saúde, hospital, salud, make"
+          },
+          {
+            "region": 212,
+            "records": 2,
+            "density": 0.0416,
+            "caption": "time, were, after, make"
+          }
+        ]
+      },
+      {
+        "name": "Middle East politics, conflict and religion",
+        "records": 14,
+        "share": 0.001385,
+        "density": 0.2179,
+        "density_label": "0.2×",
+        "reach": 0.5221,
+        "reach_label": "0.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 132,
+            "records": 9,
+            "density": 0.4023,
+            "caption": "islam, allah, dalam, yang"
+          },
+          {
+            "region": 133,
+            "records": 5,
+            "density": 0.1198,
+            "caption": "israel, dans, after, were"
+          }
+        ]
+      },
+      {
+        "name": "Police, crime and breaking news",
+        "records": 14,
+        "share": 0.001385,
+        "density": 0.165,
+        "density_label": "0.2×",
+        "reach": 0.3616,
+        "reach_label": "0.4",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 219,
+            "records": 9,
+            "density": 0.2623,
+            "caption": "polizei, polis, nach, were"
+          },
+          {
+            "region": 220,
+            "records": 5,
+            "density": 0.0993,
+            "caption": "polícia, polizei, durante, foram"
+          }
+        ]
+      },
+      {
+        "name": "Real estate, housing and property development",
+        "records": 14,
+        "share": 0.001385,
+        "density": 0.1826,
+        "density_label": "0.2×",
+        "reach": 0.363,
+        "reach_label": "0.4",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 285,
+            "records": 9,
+            "density": 0.187,
+            "caption": "maison, plus, vous, pour"
+          },
+          {
+            "region": 284,
+            "records": 5,
+            "density": 0.176,
+            "caption": "would, most, many, than"
+          }
+        ]
+      },
+      {
+        "name": "Celebrity, television and entertainment news",
+        "records": 13,
+        "share": 0.001286,
+        "density": 0.2158,
+        "density_label": "0.2×",
+        "reach": 0.4986,
+        "reach_label": "0.5",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 114,
+            "records": 11,
+            "density": 0.4413,
+            "caption": "while, where, than, most"
+          },
+          {
+            "region": 113,
+            "records": 2,
+            "density": 0.0573,
+            "caption": "television, show, film, where"
+          }
+        ]
+      },
+      {
+        "name": "Amateur sports, tournaments and athletics",
+        "records": 12,
+        "share": 0.001188,
+        "density": 0.1391,
+        "density_label": "0.1×",
+        "reach": 0.3617,
+        "reach_label": "0.4",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 65,
+            "records": 10,
+            "density": 0.3253,
+            "caption": "olympics, summer, competed, medal"
+          },
+          {
+            "region": 66,
+            "records": 2,
+            "density": 0.0364,
+            "caption": "sport, gegen, club, team"
+          }
+        ]
+      },
+      {
+        "name": "Historic buildings, museums and urban heritage",
+        "records": 12,
+        "share": 0.001188,
+        "density": 0.1546,
+        "density_label": "0.2×",
+        "reach": 0.3307,
+        "reach_label": "0.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 18,
+            "records": 10,
+            "density": 0.2829,
+            "caption": "museum, many, like, other"
+          },
+          {
+            "region": 17,
+            "records": 2,
+            "density": 0.0478,
+            "caption": "built, history, della, located"
+          }
+        ]
+      },
+      {
+        "name": "Rock music, albums and concerts",
+        "records": 12,
+        "share": 0.001188,
+        "density": 0.1554,
+        "density_label": "0.2×",
+        "reach": 0.3169,
+        "reach_label": "0.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 40,
+            "records": 9,
+            "density": 0.2413,
+            "caption": "album, released, single, track"
+          },
+          {
+            "region": 39,
+            "records": 3,
+            "density": 0.0756,
+            "caption": "than, made, para, show"
+          }
+        ]
+      },
+      {
+        "name": "Events, products and lifestyle features",
+        "records": 11,
+        "share": 0.001089,
+        "density": 0.1478,
+        "density_label": "0.1×",
+        "reach": 0.2913,
+        "reach_label": "0.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 288,
+            "records": 7,
+            "density": 0.1731,
+            "caption": "last, make, time, after"
+          },
+          {
+            "region": 289,
+            "records": 4,
+            "density": 0.1182,
+            "caption": "other, very, these, para"
+          }
+        ]
+      },
+      {
+        "name": "Self-help, advice and personal reflection",
+        "records": 11,
+        "share": 0.001089,
+        "density": 0.1135,
+        "density_label": "0.1×",
+        "reach": 0.3488,
+        "reach_label": "0.3",
+        "subregions": 3,
+        "subregions_unreached": 1,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 103,
+            "records": 8,
+            "density": 0.2434,
+            "caption": "nicht, mais, wenn, sich"
+          },
+          {
+            "region": 102,
+            "records": 3,
+            "density": 0.1054,
+            "caption": "very, good, after, than"
+          },
+          {
+            "region": 104,
+            "records": 0,
+            "density": 0.0,
+            "caption": "people, many, other, into"
+          }
+        ]
+      },
+      {
+        "name": "Skincare, haircare and beauty products",
+        "records": 11,
+        "share": 0.001089,
+        "density": 0.135,
+        "density_label": "0.1×",
+        "reach": 0.2746,
+        "reach_label": "0.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 176,
+            "records": 5,
+            "density": 0.1488,
+            "caption": "piel, jest, yang, mais"
+          },
+          {
+            "region": 175,
+            "records": 6,
+            "density": 0.1258,
+            "caption": "peau, haut, piel, crema"
+          }
+        ]
+      },
+      {
+        "name": "Automobiles, driving and vehicle news",
+        "records": 10,
+        "share": 0.00099,
+        "density": 0.148,
+        "density_label": "0.1×",
+        "reach": 0.2815,
+        "reach_label": "0.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 247,
+            "records": 9,
+            "density": 0.2489,
+            "caption": "motor, mais, auto, would"
+          },
+          {
+            "region": 248,
+            "records": 1,
+            "density": 0.0326,
+            "caption": "would, these, other, time"
+          }
+        ]
+      },
+      {
+        "name": "Government policy, advocacy and public affairs",
+        "records": 10,
+        "share": 0.00099,
+        "density": 0.1418,
+        "density_label": "0.1×",
+        "reach": 0.2863,
+        "reach_label": "0.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 131,
+            "records": 7,
+            "density": 0.2022,
+            "caption": "many, into, most, first"
+          },
+          {
+            "region": 130,
+            "records": 3,
+            "density": 0.0841,
+            "caption": "governo, presidente, para, work"
+          }
+        ]
+      },
+      {
+        "name": "Hotels, resorts and accommodation listings",
+        "records": 9,
+        "share": 0.000891,
+        "density": 0.0935,
+        "density_label": "under 0.1×",
+        "reach": 0.1999,
+        "reach_label": "0.2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 90,
+            "records": 5,
+            "density": 0.1304,
+            "caption": "hotel, tripadvisor, pour, vous"
+          },
+          {
+            "region": 89,
+            "records": 4,
+            "density": 0.0695,
+            "caption": "zimmer, hotel, chambres, habitaciones"
+          }
+        ]
+      },
+      {
+        "name": "Russia, Ukraine and international politics",
+        "records": 9,
+        "share": 0.000891,
+        "density": 0.1662,
+        "density_label": "0.2×",
+        "reach": 0.3785,
+        "reach_label": "0.4",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 237,
+            "records": 6,
+            "density": 0.2878,
+            "caption": "putin, ukraine, rusia, vladimir"
+          },
+          {
+            "region": 238,
+            "records": 3,
+            "density": 0.0907,
+            "caption": "estados, unidos, país, trump"
+          }
+        ]
+      },
+      {
+        "name": "Football leagues, transfers and player careers",
+        "records": 8,
+        "share": 0.000792,
+        "density": 0.083,
+        "density_label": "under 0.1×",
+        "reach": 0.3253,
+        "reach_label": "0.3",
+        "subregions": 4,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 27,
+            "records": 5,
+            "density": 0.1947,
+            "caption": "footballers, played, births, club"
+          },
+          {
+            "region": 28,
+            "records": 1,
+            "density": 0.0461,
+            "caption": "madrid, real, manchester, ronaldo"
+          },
+          {
+            "region": 25,
+            "records": 1,
+            "density": 0.0428,
+            "caption": "champions, bayern, league, liga"
+          },
+          {
+            "region": 26,
+            "records": 1,
+            "density": 0.0417,
+            "caption": "copa, campeonato, jogo, técnico"
+          }
+        ]
+      },
+      {
+        "name": "International relations, governments and diplomacy",
+        "records": 8,
+        "share": 0.000792,
+        "density": 0.1377,
+        "density_label": "0.1×",
+        "reach": 0.2651,
+        "reach_label": "0.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 118,
+            "records": 6,
+            "density": 0.1879,
+            "caption": "ministre, dans, président, pour"
+          },
+          {
+            "region": 117,
+            "records": 2,
+            "density": 0.0772,
+            "caption": "through, people, were, after"
+          }
+        ]
+      },
+      {
+        "name": "Online casinos, gambling and betting promotions",
+        "records": 8,
+        "share": 0.000792,
+        "density": 0.1294,
+        "density_label": "0.1×",
+        "reach": 0.2451,
+        "reach_label": "0.2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 287,
+            "records": 6,
+            "density": 0.167,
+            "caption": "spielen, casinos, bonus, slot"
+          },
+          {
+            "region": 286,
+            "records": 2,
+            "density": 0.0781,
+            "caption": "permainan, judi, bermain, poker"
+          }
+        ]
+      },
+      {
+        "name": "Personal blogs, fiction and self-reflection",
+        "records": 8,
+        "share": 0.000792,
+        "density": 0.0859,
+        "density_label": "under 0.1×",
+        "reach": 0.1724,
+        "reach_label": "0.2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 91,
+            "records": 4,
+            "density": 0.088,
+            "caption": "would, other, just, like"
+          },
+          {
+            "region": 92,
+            "records": 4,
+            "density": 0.0844,
+            "caption": "habe, aber, pero, bien"
+          }
+        ]
+      },
+      {
+        "name": "Sports, training and science features",
+        "records": 8,
+        "share": 0.000792,
+        "density": 0.1223,
+        "density_label": "0.1×",
+        "reach": 0.2674,
+        "reach_label": "0.3",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 266,
+            "records": 7,
+            "density": 0.2391,
+            "caption": "last, after, than, into"
+          },
+          {
+            "region": 265,
+            "records": 1,
+            "density": 0.0283,
+            "caption": "were, last, would, after"
+          }
+        ]
+      },
+      {
+        "name": "Diseases, symptoms and clinical care",
+        "records": 7,
+        "share": 0.000693,
+        "density": 0.047,
+        "density_label": "under 0.1×",
+        "reach": 0.1102,
+        "reach_label": "0.1",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 35,
+            "records": 5,
+            "density": 0.0883,
+            "caption": "virus, patients, study, were"
+          },
+          {
+            "region": 36,
+            "records": 2,
+            "density": 0.0219,
+            "caption": "yang, como, penyakit, most"
+          }
+        ]
+      },
+      {
+        "name": "General-interest events, services and health information",
+        "records": 7,
+        "share": 0.000693,
+        "density": 0.1366,
+        "density_label": "0.1×",
+        "reach": 0.2367,
+        "reach_label": "0.2",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 189,
+            "records": 6,
+            "density": 0.179,
+            "caption": "people, make, than, other"
+          },
+          {
+            "region": 190,
+            "records": 1,
+            "density": 0.0577,
+            "caption": "last, very, other, were"
+          }
+        ]
+      },
+      {
+        "name": "Home repair, property and building services",
+        "records": 6,
+        "share": 0.000594,
+        "density": 0.0972,
+        "density_label": "under 0.1×",
+        "reach": 0.1764,
+        "reach_label": "0.2",
+        "subregions": 2,
+        "subregions_unreached": 1,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 161,
+            "records": 6,
+            "density": 0.1764,
+            "caption": "votre, vous, nous, dans"
+          },
+          {
+            "region": 160,
+            "records": 0,
+            "density": 0.0,
+            "caption": "einem, oder, voor, auch"
+          }
+        ]
+      },
+      {
+        "name": "Customer services, charities and local businesses",
+        "records": 4,
+        "share": 0.000396,
+        "density": 0.0685,
+        "density_label": "under 0.1×",
+        "reach": 0.1245,
+        "reach_label": "0.1",
+        "subregions": 2,
+        "subregions_unreached": 1,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 60,
+            "records": 4,
+            "density": 0.1245,
+            "caption": "time, into, where, other"
+          },
+          {
+            "region": 59,
+            "records": 0,
+            "density": 0.0,
+            "caption": "need, than, first, time"
+          }
+        ]
+      },
+      {
+        "name": "Adult services, sexuality and relationships",
+        "records": 3,
+        "share": 0.000297,
+        "density": 0.0477,
+        "density_label": "under 0.1×",
+        "reach": 0.0973,
+        "reach_label": "0.1",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 197,
+            "records": 1,
+            "density": 0.05,
+            "caption": "rencontre, femme, escort, sexe"
+          },
+          {
+            "region": 198,
+            "records": 2,
+            "density": 0.0473,
+            "caption": "porno, escort, massage, gratis"
+          }
+        ]
+      },
+      {
+        "name": "Football matches, clubs and lower leagues",
+        "records": 3,
+        "share": 0.000297,
+        "density": 0.0448,
+        "density_label": "under 0.1×",
+        "reach": 0.0894,
+        "reach_label": "0.1",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 213,
+            "records": 2,
+            "density": 0.0577,
+            "caption": "people, find, were, want"
+          },
+          {
+            "region": 214,
+            "records": 1,
+            "density": 0.0317,
+            "caption": "only, people, after, like"
+          }
+        ]
+      },
+      {
+        "name": "News, personal commentary and community affairs",
+        "records": 2,
+        "share": 0.000198,
+        "density": 0.0261,
+        "density_label": "under 0.1×",
+        "reach": 0.0536,
+        "reach_label": "0.1",
+        "subregions": 2,
+        "subregions_unreached": 0,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 294,
+            "records": 1,
+            "density": 0.0302,
+            "caption": "many, would, were, into"
+          },
+          {
+            "region": 295,
+            "records": 1,
+            "density": 0.0234,
+            "caption": "dans, would, were, pour"
+          }
+        ]
+      },
+      {
+        "name": "Christianity, churches and religious history",
+        "records": 1,
+        "share": 0.000099,
+        "density": 0.0214,
+        "density_label": "under 0.1×",
+        "reach": 0.0426,
+        "reach_label": "0.0",
+        "subregions": 2,
+        "subregions_unreached": 1,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 244,
+            "records": 1,
+            "density": 0.0426,
+            "caption": "were, after, into, over"
+          },
+          {
+            "region": 243,
+            "records": 0,
+            "density": 0.0,
+            "caption": "catholic, roman, bishop, diocese"
+          }
+        ]
+      },
+      {
+        "name": "General news, culture and social issues",
+        "records": 1,
+        "share": 0.000099,
+        "density": 0.0116,
+        "density_label": "under 0.1×",
+        "reach": 0.0236,
+        "reach_label": "0.0",
+        "subregions": 2,
+        "subregions_unreached": 1,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 146,
+            "records": 1,
+            "density": 0.0236,
+            "caption": "after, know, time, many"
+          },
+          {
+            "region": 147,
+            "records": 0,
+            "density": 0.0,
+            "caption": "make, time, after, just"
+          }
+        ]
+      },
+      {
+        "name": "Municipal government, infrastructure and urban projects",
+        "records": 1,
+        "share": 0.000099,
+        "density": 0.0122,
+        "density_label": "under 0.1×",
+        "reach": 0.0233,
+        "reach_label": "0.0",
+        "subregions": 2,
+        "subregions_unreached": 1,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 96,
+            "records": 1,
+            "density": 0.0233,
+            "caption": "municipal, than, other, para"
+          },
+          {
+            "region": 95,
+            "records": 0,
+            "density": 0.0,
+            "caption": "obras, municipal, estado, yang"
+          }
+        ]
+      },
+      {
+        "name": "Personal stories, current affairs and social commentary",
+        "records": 1,
+        "share": 0.000099,
+        "density": 0.0196,
+        "density_label": "under 0.1×",
+        "reach": 0.0393,
+        "reach_label": "0.0",
+        "subregions": 2,
+        "subregions_unreached": 1,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 62,
+            "records": 1,
+            "density": 0.0393,
+            "caption": "έχει, στην, στον, είναι"
+          },
+          {
+            "region": 61,
+            "records": 0,
+            "density": 0.0,
+            "caption": "เวลา, จำนวน, είναι, digital"
+          }
+        ]
+      },
+      {
+        "name": "Civic organizations, school boards and labor governance",
+        "records": 0,
+        "share": 0.0,
+        "density": 0.0008,
+        "density_label": "under 0.1×",
+        "reach": 0.0,
+        "reach_label": "0",
+        "subregions": 2,
+        "subregions_unreached": 2,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 87,
+            "records": 0,
+            "density": 0.0,
+            "caption": "last, back, social, people"
+          },
+          {
+            "region": 88,
+            "records": 0,
+            "density": 0.0,
+            "caption": "sindicato, yang, presidente, sobre"
+          }
+        ]
+      },
+      {
+        "name": "General-interest news, science and local information",
+        "records": 0,
+        "share": 0.0,
+        "density": 0.0004,
+        "density_label": "under 0.1×",
+        "reach": 0.0,
+        "reach_label": "0",
+        "subregions": 2,
+        "subregions_unreached": 2,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 31,
+            "records": 0,
+            "density": 0.0,
+            "caption": "would, last, most, like"
+          },
+          {
+            "region": 32,
+            "records": 0,
+            "density": 0.0,
+            "caption": "were, like, other, these"
+          }
+        ]
+      },
+      {
+        "name": "Middle East news, politics and public affairs",
+        "records": 0,
+        "share": 0.0,
+        "density": 0.0004,
+        "density_label": "under 0.1×",
+        "reach": 0.0,
+        "reach_label": "0",
+        "subregions": 2,
+        "subregions_unreached": 2,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 140,
+            "records": 0,
+            "density": 0.0,
+            "caption": "الذي, خلال, اليوم, التي"
+          },
+          {
+            "region": 141,
+            "records": 0,
+            "density": 0.0,
+            "caption": "יותר, ניתן, לפני, להיות"
+          }
+        ]
+      },
+      {
+        "name": "Professional services, travel and customer relations",
+        "records": 0,
+        "share": 0.0,
+        "density": 0.0005,
+        "density_label": "under 0.1×",
+        "reach": 0.0,
+        "reach_label": "0",
+        "subregions": 2,
+        "subregions_unreached": 2,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 290,
+            "records": 0,
+            "density": 0.0,
+            "caption": "very, these, other, after"
+          },
+          {
+            "region": 291,
+            "records": 0,
+            "density": 0.0,
+            "caption": "unsere, than, were, over"
+          }
+        ]
+      },
+      {
+        "name": "Regional news, publishing and public affairs",
+        "records": 0,
+        "share": 0.0,
+        "density": 0.0002,
+        "density_label": "under 0.1×",
+        "reach": 0.0,
+        "reach_label": "0",
+        "subregions": 2,
+        "subregions_unreached": 2,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 144,
+            "records": 0,
+            "density": 0.0,
+            "caption": "että, myös, ovat, mutta"
+          },
+          {
+            "region": 145,
+            "records": 0,
+            "density": 0.0,
+            "caption": "koji, kako, koje, koja"
+          }
+        ]
+      },
+      {
+        "name": "Ukrainian civil society, war and current affairs",
+        "records": 0,
+        "share": 0.0,
+        "density": 0.0004,
+        "density_label": "under 0.1×",
+        "reach": 0.0,
+        "reach_label": "0",
+        "subregions": 3,
+        "subregions_unreached": 3,
+        "fully_reached": false,
+        "cells": [
+          {
+            "region": 44,
+            "records": 0,
+            "density": 0.0,
+            "caption": "участь, године, који, року"
+          },
+          {
+            "region": 45,
+            "records": 0,
+            "density": 0.0,
+            "caption": "можна, тільки, може, дуже"
+          },
+          {
+            "region": 46,
+            "records": 0,
+            "density": 0.0,
+            "caption": "щодо, україни, також, који"
+          }
+        ]
+      }
+    ],
+    "insights": [
+      {
+        "kind": "over",
+        "label": "over-represented",
+        "headline": "Web servers, SEO and software troubleshooting — 13× denser here than on the map",
+        "detail": "The map holds 1.0% of its reference text in that subject (10 of its 296 places); 13% of your placed records land there. That is what a specialist corpus looks like, and it is only a problem if you meant to build a general one.",
+        "tone": "neutral",
+        "evidence": ""
+      },
+      {
+        "kind": "over",
+        "label": "over-represented",
+        "headline": "Windows, servers and software administration — 9.6× denser here than on the map",
+        "detail": "The map holds 1% of its reference text in that subject (2 of its 296 places); 11% of your placed records land there.",
+        "tone": "neutral",
+        "evidence": ""
+      },
+      {
+        "kind": "over",
+        "label": "over-represented",
+        "headline": "Government regulations, contracts and public records — 8.5× denser here than on the map",
+        "detail": "The map holds 1% of its reference text in that subject (2 of its 296 places); 9% of your placed records land there.",
+        "tone": "neutral",
+        "evidence": ""
+      },
+      {
+        "kind": "thin",
+        "label": "reach without coverage",
+        "headline": "Of the 274 places you reach, 223 hold 25% of your data between them",
+        "detail": "Real presence in 51 places, a toehold in the rest. An occupancy count reads a place holding one record the same as one holding a third of the corpus, which is how a narrow corpus comes to look broad.",
+        "tone": "neutral",
+        "evidence": ""
+      }
+    ],
+    "most_of": [
+      {
+        "region": 204,
+        "area": "Web servers, SEO and software troubleshooting",
+        "records": 928,
+        "share": 0.091836,
+        "density": 86.9271,
+        "density_label": "87×",
+        "cohesion": 0.5351,
+        "repetitive": false,
+        "caption": "javascript, html, import, class",
+        "yours": "# -*- coding: utf-8 -*- \"\"\" flaskjk.restconverter ~~~~~~~~~~~~~~~~~~~~~ Helper functions for converting RestructuredText This class heavily d"
+      },
+      {
+        "region": 38,
+        "area": "Government regulations, contracts and public records",
+        "records": 768,
+        "share": 0.076002,
+        "density": 35.6445,
+        "density_label": "36×",
+        "cohesion": 0.7784,
+        "repetitive": false,
+        "caption": "register, volume, proposed, number",
+        "yours": "COMMISSION REGULATION (EC) No 194/2000 of 27 January 2000 amending Regulation (EC) No 1619/1999 adapting certain fish quotas for 1999 pursuant to Council Regula"
+      },
+      {
+        "region": 84,
+        "area": "European Union politics, economics and public policy",
+        "records": 672,
+        "share": 0.066502,
+        "density": 22.6084,
+        "density_label": "23×",
+        "cohesion": 0.6943,
+        "repetitive": false,
+        "caption": "europea, entre, este, parlamento",
+        "yours": "Read the passage below and answer the question or follow the instruction: Translation: Can you provide a translation of the German broadcaster Deutschlandfunk's"
+      },
+      {
+        "region": 76,
+        "area": "Windows, servers and software administration",
+        "records": 1103,
+        "share": 0.109154,
+        "density": 19.0895,
+        "density_label": "19×",
+        "cohesion": 0.5677,
+        "repetitive": false,
+        "caption": "clone, python, install, bash",
+        "yours": "import os from setuptools import setup, find_packages # Utility function to read the README file. # Used for the long_description. It's nice, because now 1)"
+      },
+      {
+        "region": 116,
+        "area": "Banking, loans and retail finance",
+        "records": 711,
+        "share": 0.070361,
+        "density": 18.851,
+        "density_label": "19×",
+        "cohesion": 0.515,
+        "repetitive": false,
+        "caption": "euro, only, back, were",
+        "yours": "What is the cost price of a certain stock at 4% discount, with 1/5% brokerage, if the final price is Rs 96.2? To find the cost price of the stock, we need to ac"
+      }
+    ],
+    "least_of": [
+      {
+        "region": 36,
+        "area": "Diseases, symptoms and clinical care",
+        "records": 2,
+        "share": 0.000198,
+        "density": 0.0219,
+        "density_label": "under 0.1×",
+        "cohesion": null,
+        "repetitive": false,
+        "caption": "yang, como, penyakit, most",
+        "yours": "Can you summarize the impact of DRGs reimbursement methodology on Medicare program costs and patient care? Generate according to: The impacts of the Prospective"
+      },
+      {
+        "region": 96,
+        "area": "Municipal government, infrastructure and urban projects",
+        "records": 1,
+        "share": 0.000099,
+        "density": 0.0233,
+        "density_label": "under 0.1×",
+        "cohesion": null,
+        "repetitive": false,
+        "caption": "municipal, than, other, para",
+        "yours": "Can you describe the key stakeholders involved in the Spokane community-led initiatives for addressing homelessness and affordable housing?"
+      },
+      {
+        "region": 295,
+        "area": "News, personal commentary and community affairs",
+        "records": 1,
+        "share": 0.000099,
+        "density": 0.0234,
+        "density_label": "under 0.1×",
+        "cohesion": null,
+        "repetitive": false,
+        "caption": "dans, would, were, pour",
+        "yours": "The government pretends that it’s giving the surviving 9/11 masterminds a fair trial, and that justice will prevail. “The Defense Department has farmed out to a"
+      },
+      {
+        "region": 146,
+        "area": "General news, culture and social issues",
+        "records": 1,
+        "share": 0.000099,
+        "density": 0.0236,
+        "density_label": "under 0.1×",
+        "cohesion": null,
+        "repetitive": false,
+        "caption": "after, know, time, many",
+        "yours": "I'm not entirely sure why I'm doing this. I think its because I'm sick and tired of pretending to be somebody I'm not. I've kept my true self a secret for so lo"
+      },
+      {
+        "region": 151,
+        "area": "General-interest features, travel and commerce",
+        "records": 1,
+        "share": 0.000099,
+        "density": 0.0281,
+        "density_label": "under 0.1×",
+        "cohesion": null,
+        "repetitive": false,
+        "caption": "many, only, were, these",
+        "yours": "COMMISSION DECISION of 26 March 2010 on the allocation of import quotas for controlled substances for the period 1 January to 31 December 2010 under Regulation"
+      }
+    ],
+    "imbalances_note": "Where your mix differs most from the map's. Whether to move it depends on what you are building, which the tool has not been told. Subregions never reached come first among the thinner ones.",
+    "imbalances": [
+      {
+        "region": 204,
+        "area": "Web servers, SEO and software troubleshooting",
+        "density": 86.9271,
+        "density_label": "87×",
+        "records": 928,
+        "share": 0.091836,
+        "direction": "denser",
+        "yours": "# -*- coding: utf-8 -*- \"\"\" flaskjk.restconverter ~~~~~~~~~~~~~~~~~~~~~ Helper functions for converting RestructuredText This class heavily d"
+      },
+      {
+        "region": 144,
+        "area": "Regional news, publishing and public affairs",
+        "density": 0.0,
+        "density_label": "0×",
+        "records": 0,
+        "share": 0.0,
+        "direction": "unreached",
+        "yours": ""
+      },
+      {
+        "region": 38,
+        "area": "Government regulations, contracts and public records",
+        "density": 35.6445,
+        "density_label": "36×",
+        "records": 768,
+        "share": 0.076002,
+        "direction": "denser",
+        "yours": "COMMISSION REGULATION (EC) No 194/2000 of 27 January 2000 amending Regulation (EC) No 1619/1999 adapting certain fish quotas for 1999 pursuant to Council Regula"
+      },
+      {
+        "region": 145,
+        "area": "Regional news, publishing and public affairs",
+        "density": 0.0,
+        "density_label": "0×",
+        "records": 0,
+        "share": 0.0,
+        "direction": "unreached",
+        "yours": ""
+      },
+      {
+        "region": 84,
+        "area": "European Union politics, economics and public policy",
+        "density": 22.6084,
+        "density_label": "23×",
+        "records": 672,
+        "share": 0.066502,
+        "direction": "denser",
+        "yours": "Read the passage below and answer the question or follow the instruction: Translation: Can you provide a translation of the German broadcaster Deutschlandfunk's"
+      },
+      {
+        "region": 147,
+        "area": "General news, culture and social issues",
+        "density": 0.0,
+        "density_label": "0×",
+        "records": 0,
+        "share": 0.0,
+        "direction": "unreached",
+        "yours": ""
+      },
+      {
+        "region": 76,
+        "area": "Windows, servers and software administration",
+        "density": 19.0895,
+        "density_label": "19×",
+        "records": 1103,
+        "share": 0.109154,
+        "direction": "denser",
+        "yours": "import os from setuptools import setup, find_packages # Utility function to read the README file. # Used for the long_description. It's nice, because now 1)"
+      },
+      {
+        "region": 31,
+        "area": "General-interest news, science and local information",
+        "density": 0.0,
+        "density_label": "0×",
+        "records": 0,
+        "share": 0.0,
+        "direction": "unreached",
+        "yours": ""
+      }
+    ],
+    "shape_path": [
+      {
+        "region": 212,
+        "records": 2,
+        "density": 0.0416,
+        "caption": "time, were, after, make"
+      },
+      {
+        "region": 211,
+        "records": 12,
+        "density": 0.2249,
+        "caption": "saúde, hospital, salud, make"
+      },
+      {
+        "region": 36,
+        "records": 2,
+        "density": 0.0219,
+        "caption": "yang, como, penyakit, most"
+      },
+      {
+        "region": 217,
+        "records": 58,
+        "density": 1.1611,
+        "caption": "como, other, mental, only"
+      },
+      {
+        "region": 188,
+        "records": 16,
+        "density": 0.2855,
+        "caption": "used, study, were, other"
+      },
+      {
+        "region": 106,
+        "records": 40,
+        "density": 1.242,
+        "caption": "training, fitness, yoga, into"
+      },
+      {
+        "region": 70,
+        "records": 40,
+        "density": 1.6504,
+        "caption": "leben, eine, mais, como"
+      },
+      {
+        "region": 165,
+        "records": 38,
+        "density": 0.4831,
+        "caption": "como, sobre, para, into"
+      },
+      {
+        "region": 187,
+        "records": 24,
+        "density": 0.6363,
+        "caption": "cell, protein, cells, gene"
+      },
+      {
+        "region": 35,
+        "records": 5,
+        "density": 0.0883,
+        "caption": "virus, patients, study, were"
+      },
+      {
+        "region": 218,
+        "records": 55,
+        "density": 1.9048,
+        "caption": "health, study, between, were"
+      },
+      {
+        "region": 176,
+        "records": 5,
+        "density": 0.1488,
+        "caption": "piel, jest, yang, mais"
+      },
+      {
+        "region": 99,
+        "records": 10,
+        "density": 0.2979,
+        "caption": "very, even, made, many"
+      },
+      {
+        "region": 105,
+        "records": 25,
+        "density": 0.69,
+        "caption": "sport, training, voor, only"
+      },
+      {
+        "region": 175,
+        "records": 6,
+        "density": 0.1258,
+        "caption": "peau, haut, piel, crema"
+      },
+      {
+        "region": 164,
+        "records": 50,
+        "density": 0.8979,
+        "caption": "school, high, schüler, élèves"
+      },
+      {
+        "region": 101,
+        "records": 22,
+        "density": 0.6098,
+        "caption": "university, only, through, over"
+      },
+      {
+        "region": 6,
+        "records": 69,
+        "density": 1.1565,
+        "caption": "alimentos, dieta, como, many"
+      },
+      {
+        "region": 190,
+        "records": 1,
+        "density": 0.0577,
+        "caption": "last, very, other, were"
+      },
+      {
+        "region": 8,
+        "records": 19,
+        "density": 0.3916,
+        "caption": "teatro, cultura, arte, dans"
+      },
+      {
+        "region": 223,
+        "records": 8,
+        "density": 0.3904,
+        "caption": "curso, inscrições, online, know"
+      },
+      {
+        "region": 5,
+        "records": 89,
+        "density": 2.7955,
+        "caption": "dieta, peso, mais, many"
+      },
+      {
+        "region": 30,
+        "records": 38,
+        "density": 0.674,
+        "caption": "good, para, into, only"
+      },
+      {
+        "region": 72,
+        "records": 5,
+        "density": 0.1723,
+        "caption": "suchen, sind, pour, dans"
+      },
+      {
+        "region": 264,
+        "records": 0,
+        "density": 0.0,
+        "caption": "gmina, administrative, approximately, within"
+      },
+      {
+        "region": 161,
+        "records": 6,
+        "density": 0.1764,
+        "caption": "votre, vous, nous, dans"
+      },
+      {
+        "region": 151,
+        "records": 1,
+        "density": 0.0281,
+        "caption": "many, only, were, these"
+      },
+      {
+        "region": 29,
+        "records": 29,
+        "density": 0.9429,
+        "caption": "team, business, como, other"
+      },
+      {
+        "region": 180,
+        "records": 55,
+        "density": 1.1656,
+        "caption": "abstract, institute, physics, university"
+      },
+      {
+        "region": 34,
+        "records": 30,
+        "density": 0.6769,
+        "caption": "avec, sich, appartement, years"
+      },
+      {
+        "region": 259,
+        "records": 0,
+        "density": 0.0,
+        "caption": "commune, municipality, places, village"
+      },
+      {
+        "region": 169,
+        "records": 33,
+        "density": 0.7941,
+        "caption": "kinder, other, para, these"
+      },
+      {
+        "region": 291,
+        "records": 0,
+        "density": 0.0,
+        "caption": "unsere, than, were, over"
+      },
+      {
+        "region": 63,
+        "records": 27,
+        "density": 1.1473,
+        "caption": "pour, these, most, would"
+      },
+      {
+        "region": 189,
+        "records": 6,
+        "density": 0.179,
+        "caption": "people, make, than, other"
+      },
+      {
+        "region": 263,
+        "records": 2,
+        "density": 0.3786,
+        "caption": "commune, southwestern, french, needing"
+      },
+      {
+        "region": 124,
+        "records": 24,
+        "density": 0.4752,
+        "caption": "oder, eine, sich, than"
+      },
+      {
+        "region": 122,
+        "records": 8,
+        "density": 0.1568,
+        "caption": "sich, these, time, para"
+      },
+      {
+        "region": 152,
+        "records": 22,
+        "density": 0.4619,
+        "caption": "musik, música, musique, jazz"
+      },
+      {
+        "region": 243,
+        "records": 0,
+        "density": 0.0,
+        "caption": "catholic, roman, bishop, diocese"
+      },
+      {
+        "region": 136,
+        "records": 66,
+        "density": 1.4448,
+        "caption": "ambiente, through, como, pour"
+      },
+      {
+        "region": 256,
+        "records": 2,
+        "density": 0.4417,
+        "caption": "germany, municipalities, towns, district"
+      },
+      {
+        "region": 7,
+        "records": 30,
+        "density": 0.6531,
+        "caption": "artista, arte, many, most"
+      },
+      {
+        "region": 222,
+        "records": 13,
+        "density": 0.4862,
+        "caption": "both, these, many, people"
+      },
+      {
+        "region": 274,
+        "records": 20,
+        "density": 0.5419,
+        "caption": "description, make, other, time"
+      },
+      {
+        "region": 160,
+        "records": 0,
+        "density": 0.0,
+        "caption": "einem, oder, voor, auch"
+      },
+      {
+        "region": 123,
+        "records": 30,
+        "density": 0.6036,
+        "caption": "design, oder, durch, sich"
+      },
+      {
+        "region": 245,
+        "records": 23,
+        "density": 0.4651,
+        "caption": "years, where, only, most"
+      },
+      {
+        "region": 244,
+        "records": 1,
+        "density": 0.0426,
+        "caption": "were, after, into, over"
+      },
+      {
+        "region": 17,
+        "records": 2,
+        "density": 0.0478,
+        "caption": "built, history, della, located"
+      },
+      {
+        "region": 88,
+        "records": 0,
+        "density": 0.0,
+        "caption": "sindicato, yang, presidente, sobre"
+      },
+      {
+        "region": 249,
+        "records": 15,
+        "density": 0.4257,
+        "caption": "eine, because, auch, people"
+      },
+      {
+        "region": 121,
+        "records": 11,
+        "density": 0.1827,
+        "caption": "like, make, over, other"
+      },
+      {
+        "region": 196,
+        "records": 170,
+        "density": 1.9949,
+        "caption": "ingredientes, make, para, into"
+      },
+      {
+        "region": 168,
+        "records": 33,
+        "density": 0.9343,
+        "caption": "niños, kind, kinder, como"
+      },
+      {
+        "region": 186,
+        "records": 8,
+        "density": 0.2898,
+        "caption": "design, pour, dans, eine"
+      },
+      {
+        "region": 89,
+        "records": 4,
+        "density": 0.0695,
+        "caption": "zimmer, hotel, chambres, habitaciones"
+      },
+      {
+        "region": 15,
+        "records": 11,
+        "density": 0.1951,
+        "caption": "eine, pour, like, than"
+      },
+      {
+        "region": 71,
+        "records": 8,
+        "density": 0.244,
+        "caption": "these, many, into, para"
+      },
+      {
+        "region": 129,
+        "records": 12,
+        "density": 0.2873,
+        "caption": "water, agua, into, were"
+      },
+      {
+        "region": 262,
+        "records": 1,
+        "density": 0.2598,
+        "caption": "districts, province, divisions, administrative"
+      },
+      {
+        "region": 225,
+        "records": 109,
+        "density": 2.4802,
+        "caption": "were, into, other, para"
+      },
+      {
+        "region": 224,
+        "records": 39,
+        "density": 1.0346,
+        "caption": "described, family, taxonomy, endemic"
+      },
+      {
+        "region": 87,
+        "records": 0,
+        "density": 0.0,
+        "caption": "last, back, social, people"
+      },
+      {
+        "region": 93,
+        "records": 17,
+        "density": 0.8271,
+        "caption": "help, know, time, para"
+      },
+      {
+        "region": 258,
+        "records": 2,
+        "density": 0.2181,
+        "caption": "village, located, population, town"
+      },
+      {
+        "region": 171,
+        "records": 4,
+        "density": 0.4064,
+        "caption": "feuerwehr, incendio, brand, bomberos"
+      },
+      {
+        "region": 250,
+        "records": 7,
+        "density": 0.2064,
+        "caption": "these, other, most, people"
+      },
+      {
+        "region": 209,
+        "records": 10,
+        "density": 0.1885,
+        "caption": "evento, auch, este, como"
+      },
+      {
+        "region": 210,
+        "records": 15,
+        "density": 0.328,
+        "caption": "festival, evento, música, este"
+      },
+      {
+        "region": 100,
+        "records": 59,
+        "density": 1.8371,
+        "caption": "school, into, after, would"
+      },
+      {
+        "region": 145,
+        "records": 0,
+        "density": 0.0,
+        "caption": "koji, kako, koje, koja"
+      },
+      {
+        "region": 137,
+        "records": 27,
+        "density": 0.9187,
+        "caption": "years, agricultura, through, como"
+      },
+      {
+        "region": 257,
+        "records": 2,
+        "density": 0.3764,
+        "caption": "north, municipality, village, parish"
+      },
+      {
+        "region": 260,
+        "records": 3,
+        "density": 0.3912,
+        "caption": "province, municipalities, comune, census"
+      },
+      {
+        "region": 194,
+        "records": 9,
+        "density": 0.2371,
+        "caption": "empresa, company, dans, pour"
+      },
+      {
+        "region": 16,
+        "records": 36,
+        "density": 1.5358,
+        "caption": "vino, wine, vins, while"
+      },
+      {
+        "region": 275,
+        "records": 33,
+        "density": 0.9154,
+        "caption": "alebo, genus, ktoré, family"
+      },
+      {
+        "region": 44,
+        "records": 0,
+        "density": 0.0,
+        "caption": "участь, године, који, року"
+      },
+      {
+        "region": 64,
+        "records": 70,
+        "density": 3.0144,
+        "caption": "located, years, through, many"
+      },
+      {
+        "region": 120,
+        "records": 10,
+        "density": 0.3045,
+        "caption": "mountain, would, sich, make"
+      },
+      {
+        "region": 271,
+        "records": 26,
+        "density": 0.5452,
+        "caption": "restaurant, last, other, para"
+      },
+      {
+        "region": 292,
+        "records": 2,
+        "density": 0.039,
+        "caption": "vous, park, dans, these"
+      },
+      {
+        "region": 95,
+        "records": 0,
+        "density": 0.0,
+        "caption": "obras, municipal, estado, yang"
+      },
+      {
+        "region": 75,
+        "records": 21,
+        "density": 0.4664,
+        "caption": "avec, design, while, made"
+      },
+      {
+        "region": 94,
+        "records": 10,
+        "density": 0.3091,
+        "caption": "last, people, even, would"
+      },
+      {
+        "region": 261,
+        "records": 8,
+        "density": 0.8737,
+        "caption": "demographics, village, populated, district"
+      },
+      {
+        "region": 285,
+        "records": 9,
+        "density": 0.187,
+        "caption": "maison, plus, vous, pour"
+      },
+      {
+        "region": 290,
+        "records": 0,
+        "density": 0.0,
+        "caption": "very, these, other, after"
+      },
+      {
+        "region": 170,
+        "records": 2,
+        "density": 0.112,
+        "caption": "verletzt, acidente, einem, polizei"
+      },
+      {
+        "region": 221,
+        "records": 16,
+        "density": 0.5262,
+        "caption": "take, people, time, make"
+      },
+      {
+        "region": 143,
+        "records": 14,
+        "density": 0.4382,
+        "caption": "jesus, deus, igreja, vida"
+      },
+      {
+        "region": 18,
+        "records": 10,
+        "density": 0.2829,
+        "caption": "museum, many, like, other"
+      },
+      {
+        "region": 150,
+        "records": 14,
+        "density": 0.6478,
+        "caption": "people, were, como, most"
+      },
+      {
+        "region": 246,
+        "records": 18,
+        "density": 0.456,
+        "caption": "sobre, dans, come, como"
+      },
+      {
+        "region": 241,
+        "records": 22,
+        "density": 0.6039,
+        "caption": "last, many, were, other"
+      },
+      {
+        "region": 69,
+        "records": 23,
+        "density": 0.9557,
+        "caption": "vida, todos, tudo, cada"
+      },
+      {
+        "region": 174,
+        "records": 2,
+        "density": 0.1368,
+        "caption": "need, people, make, these"
+      },
+      {
+        "region": 156,
+        "records": 20,
+        "density": 0.8929,
+        "caption": "german, history, american, were"
+      },
+      {
+        "region": 48,
+        "records": 22,
+        "density": 0.7404,
+        "caption": "systems, work, very, technology"
+      },
+      {
+        "region": 195,
+        "records": 185,
+        "density": 3.1773,
+        "caption": "make, were, into, some"
+      },
+      {
+        "region": 42,
+        "records": 14,
+        "density": 0.3888,
+        "caption": "motor, pour, than, eine"
+      },
+      {
+        "region": 128,
+        "records": 99,
+        "density": 2.5264,
+        "caption": "species, through, part, known"
+      },
+      {
+        "region": 33,
+        "records": 7,
+        "density": 0.2116,
+        "caption": "work, make, into, after"
+      },
+      {
+        "region": 90,
+        "records": 5,
+        "density": 0.1304,
+        "caption": "hotel, tripadvisor, pour, vous"
+      },
+      {
+        "region": 119,
+        "records": 50,
+        "density": 1.9695,
+        "caption": "team, many, great, time"
+      },
+      {
+        "region": 149,
+        "records": 18,
+        "density": 0.5462,
+        "caption": "energie, plus, solar, dans"
+      },
+      {
+        "region": 141,
+        "records": 0,
+        "density": 0.0,
+        "caption": "יותר, ניתן, לפני, להיות"
+      },
+      {
+        "region": 74,
+        "records": 15,
+        "density": 0.4091,
+        "caption": "design, look, mais, komfort"
+      },
+      {
+        "region": 293,
+        "records": 29,
+        "density": 0.6264,
+        "caption": "turismo, ciudad, como, through"
+      },
+      {
+        "region": 227,
+        "records": 47,
+        "density": 1.02,
+        "caption": "into, through, back, there"
+      },
+      {
+        "region": 232,
+        "records": 9,
+        "density": 0.3198,
+        "caption": "used, would, other, into"
+      },
+      {
+        "region": 179,
+        "records": 137,
+        "density": 4.0487,
+        "caption": "abstract, institute, science, department"
+      },
+      {
+        "region": 253,
+        "records": 17,
+        "density": 0.5205,
+        "caption": "design, pour, said, make"
+      },
+      {
+        "region": 270,
+        "records": 48,
+        "density": 1.0175,
+        "caption": "restaurant, only, other, like"
+      },
+      {
+        "region": 185,
+        "records": 23,
+        "density": 0.814,
+        "caption": "design, diseño, como, dans"
+      },
+      {
+        "region": 37,
+        "records": 107,
+        "density": 1.3142,
+        "caption": "produced, distributed, online, proofreading"
+      },
+      {
+        "region": 269,
+        "records": 7,
+        "density": 0.2406,
+        "caption": "veículo, motorista, accidente, acidente"
+      },
+      {
+        "region": 252,
+        "records": 11,
+        "density": 0.3756,
+        "caption": "color, look, mais, best"
+      },
+      {
+        "region": 73,
+        "records": 25,
+        "density": 0.6005,
+        "caption": "trabalho, pour, para, than"
+      },
+      {
+        "region": 47,
+        "records": 20,
+        "density": 0.6684,
+        "caption": "nasa, esta, luna, years"
+      },
+      {
+        "region": 234,
+        "records": 81,
+        "density": 2.1399,
+        "caption": "pour, very, make, time"
+      },
+      {
+        "region": 144,
+        "records": 0,
+        "density": 0.0,
+        "caption": "että, myös, ovat, mutta"
+      },
+      {
+        "region": 193,
+        "records": 8,
+        "density": 0.2198,
+        "caption": "empresa, made, como, time"
+      },
+      {
+        "region": 65,
+        "records": 10,
+        "density": 0.3253,
+        "caption": "olympics, summer, competed, medal"
+      },
+      {
+        "region": 235,
+        "records": 42,
+        "density": 1.0304,
+        "caption": "them, these, other, most"
+      },
+      {
+        "region": 142,
+        "records": 3,
+        "density": 0.0709,
+        "caption": "jesus, deus, como, people"
+      },
+      {
+        "region": 66,
+        "records": 2,
+        "density": 0.0364,
+        "caption": "sport, gegen, club, team"
+      },
+      {
+        "region": 45,
+        "records": 0,
+        "density": 0.0,
+        "caption": "можна, тільки, може, дуже"
+      },
+      {
+        "region": 43,
+        "records": 10,
+        "density": 0.7421,
+        "caption": "aircraft, flight, built, design"
+      },
+      {
+        "region": 140,
+        "records": 0,
+        "density": 0.0,
+        "caption": "الذي, خلال, اليوم, التي"
+      },
+      {
+        "region": 157,
+        "records": 11,
+        "density": 0.5085,
+        "caption": "british, english, served, john"
+      },
+      {
+        "region": 233,
+        "records": 5,
+        "density": 0.3299,
+        "caption": "bluetooth, audio, take, would"
+      },
+      {
+        "region": 272,
+        "records": 22,
+        "density": 0.7891,
+        "caption": "railway, line, station, opened"
+      },
+      {
+        "region": 62,
+        "records": 1,
+        "density": 0.0393,
+        "caption": "έχει, στην, στον, είναι"
+      },
+      {
+        "region": 166,
+        "records": 18,
+        "density": 0.8382,
+        "caption": "temperatura, entre, other, pour"
+      },
+      {
+        "region": 226,
+        "records": 11,
+        "density": 0.3384,
+        "caption": "deze, voor, make, were"
+      },
+      {
+        "region": 51,
+        "records": 46,
+        "density": 1.0485,
+        "caption": "libro, book, livro, como"
+      },
+      {
+        "region": 273,
+        "records": 3,
+        "density": 0.0699,
+        "caption": "route, highway, state, through"
+      },
+      {
+        "region": 60,
+        "records": 4,
+        "density": 0.1245,
+        "caption": "time, into, where, other"
+      },
+      {
+        "region": 173,
+        "records": 4,
+        "density": 0.3668,
+        "caption": "including, hasta, della, best"
+      },
+      {
+        "region": 52,
+        "records": 43,
+        "density": 0.8973,
+        "caption": "libro, published, como, book"
+      },
+      {
+        "region": 167,
+        "records": 13,
+        "density": 0.4771,
+        "caption": "were, much, other, there"
+      },
+      {
+        "region": 155,
+        "records": 26,
+        "density": 0.8378,
+        "caption": "census, population, united, people"
+      },
+      {
+        "region": 198,
+        "records": 2,
+        "density": 0.0473,
+        "caption": "porno, escort, massage, gratis"
+      },
+      {
+        "region": 111,
+        "records": 10,
+        "density": 0.1612,
+        "caption": "other, after, while, para"
+      },
+      {
+        "region": 159,
+        "records": 327,
+        "density": 9.0587,
+        "caption": "abstract, research, data, such"
+      },
+      {
+        "region": 251,
+        "records": 8,
+        "density": 0.2357,
+        "caption": "moda, estilo, look, vestido"
+      },
+      {
+        "region": 96,
+        "records": 1,
+        "density": 0.0233,
+        "caption": "municipal, than, other, para"
+      },
+      {
+        "region": 148,
+        "records": 46,
+        "density": 1.5408,
+        "caption": "such, make, many, other"
+      },
+      {
+        "region": 219,
+        "records": 9,
+        "density": 0.2623,
+        "caption": "polizei, polis, nach, were"
+      },
+      {
+        "region": 153,
+        "records": 13,
+        "density": 0.2132,
+        "caption": "album, band, rock, music"
+      },
+      {
+        "region": 163,
+        "records": 19,
+        "density": 0.565,
+        "caption": "know, people, other, most"
+      },
+      {
+        "region": 229,
+        "records": 11,
+        "density": 0.3652,
+        "caption": "army, guerra, during, world"
+      },
+      {
+        "region": 228,
+        "records": 7,
+        "density": 0.1873,
+        "caption": "them, through, para, after"
+      },
+      {
+        "region": 276,
+        "records": 10,
+        "density": 0.4071,
+        "caption": "foto, fotos, fotógrafo, photo"
+      },
+      {
+        "region": 12,
+        "records": 6,
+        "density": 0.3535,
+        "caption": "derechos, contra, como, take"
+      },
+      {
+        "region": 38,
+        "records": 768,
+        "density": 35.6445,
+        "caption": "register, volume, proposed, number"
+      },
+      {
+        "region": 80,
+        "records": 3,
+        "density": 0.2867,
+        "caption": "being, through, would, into"
+      },
+      {
+        "region": 11,
+        "records": 9,
+        "density": 0.5137,
+        "caption": "help, people, were, para"
+      },
+      {
+        "region": 278,
+        "records": 10,
+        "density": 0.3979,
+        "caption": "foto, camera, would, full"
+      },
+      {
+        "region": 191,
+        "records": 6,
+        "density": 0.0967,
+        "caption": "these, time, like, what"
+      },
+      {
+        "region": 61,
+        "records": 0,
+        "density": 0.0,
+        "caption": "เวลา, จำนวน, είναι, digital"
+      },
+      {
+        "region": 67,
+        "records": 28,
+        "density": 2.1171,
+        "caption": "cookies, sito, questo, gebruik"
+      },
+      {
+        "region": 220,
+        "records": 5,
+        "density": 0.0993,
+        "caption": "polícia, polizei, durante, foram"
+      },
+      {
+        "region": 146,
+        "records": 1,
+        "density": 0.0236,
+        "caption": "after, know, time, many"
+      },
+      {
+        "region": 112,
+        "records": 131,
+        "density": 3.2753,
+        "caption": "commission, federal, tribunal, number"
+      },
+      {
+        "region": 255,
+        "records": 6,
+        "density": 0.1622,
+        "caption": "minha, quando, casa, mijn"
+      },
+      {
+        "region": 132,
+        "records": 9,
+        "density": 0.4023,
+        "caption": "islam, allah, dalam, yang"
+      },
+      {
+        "region": 242,
+        "records": 18,
+        "density": 0.625,
+        "caption": "through, than, most, these"
+      },
+      {
+        "region": 59,
+        "records": 0,
+        "density": 0.0,
+        "caption": "need, than, first, time"
+      },
+      {
+        "region": 248,
+        "records": 1,
+        "density": 0.0326,
+        "caption": "would, these, other, time"
+      },
+      {
+        "region": 277,
+        "records": 11,
+        "density": 0.2965,
+        "caption": "foto, fotos, these, bilder"
+      },
+      {
+        "region": 41,
+        "records": 11,
+        "density": 0.446,
+        "caption": "motor, honda, ferrari, auto"
+      },
+      {
+        "region": 247,
+        "records": 9,
+        "density": 0.2489,
+        "caption": "motor, mais, auto, would"
+      },
+      {
+        "region": 197,
+        "records": 1,
+        "density": 0.05,
+        "caption": "rencontre, femme, escort, sexe"
+      },
+      {
+        "region": 117,
+        "records": 2,
+        "density": 0.0772,
+        "caption": "through, people, were, after"
+      },
+      {
+        "region": 138,
+        "records": 20,
+        "density": 0.3707,
+        "caption": "films, film, directed, festival"
+      },
+      {
+        "region": 139,
+        "records": 5,
+        "density": 0.1256,
+        "caption": "last, were, like, most"
+      },
+      {
+        "region": 98,
+        "records": 14,
+        "density": 0.3242,
+        "caption": "elle, into, after, time"
+      },
+      {
+        "region": 267,
+        "records": 10,
+        "density": 0.475,
+        "caption": "auto, service, here, only"
+      },
+      {
+        "region": 240,
+        "records": 4,
+        "density": 0.1244,
+        "caption": "daten, datos, privacy, información"
+      },
+      {
+        "region": 57,
+        "records": 58,
+        "density": 3.0293,
+        "caption": "film, plot, come, está"
+      },
+      {
+        "region": 14,
+        "records": 4,
+        "density": 0.2052,
+        "caption": "last, pour, dans, time"
+      },
+      {
+        "region": 68,
+        "records": 1,
+        "density": 0.0838,
+        "caption": "unserer, cookies, informationen, verwendet"
+      },
+      {
+        "region": 21,
+        "records": 26,
+        "density": 1.4531,
+        "caption": "international, world, team, played"
+      },
+      {
+        "region": 254,
+        "records": 33,
+        "density": 1.1344,
+        "caption": "till, before, were, make"
+      },
+      {
+        "region": 162,
+        "records": 15,
+        "density": 0.1695,
+        "caption": "last, than, time, only"
+      },
+      {
+        "region": 158,
+        "records": 19,
+        "density": 0.8078,
+        "caption": "nicht, plus, dans, sich"
+      },
+      {
+        "region": 81,
+        "records": 3,
+        "density": 0.2104,
+        "caption": "nach, gegen, ersten, sich"
+      },
+      {
+        "region": 204,
+        "records": 928,
+        "density": 86.9271,
+        "caption": "javascript, html, import, class"
+      },
+      {
+        "region": 76,
+        "records": 1103,
+        "density": 19.0895,
+        "caption": "clone, python, install, bash"
+      },
+      {
+        "region": 266,
+        "records": 7,
+        "density": 0.2391,
+        "caption": "last, after, than, into"
+      },
+      {
+        "region": 184,
+        "records": 17,
+        "density": 0.4348,
+        "caption": "download, software, than, into"
+      },
+      {
+        "region": 46,
+        "records": 0,
+        "density": 0.0,
+        "caption": "щодо, україни, також, који"
+      },
+      {
+        "region": 192,
+        "records": 24,
+        "density": 0.4767,
+        "caption": "through, made, make, just"
+      },
+      {
+        "region": 172,
+        "records": 2,
+        "density": 0.1908,
+        "caption": "know, should, wurde, made"
+      },
+      {
+        "region": 82,
+        "records": 23,
+        "density": 1.7795,
+        "caption": "piloto, racing, race, team"
+      },
+      {
+        "region": 85,
+        "records": 35,
+        "density": 0.9992,
+        "caption": "would, while, into, these"
+      },
+      {
+        "region": 125,
+        "records": 7,
+        "density": 0.3671,
+        "caption": "even, eine, make, oder"
+      },
+      {
+        "region": 289,
+        "records": 4,
+        "density": 0.1182,
+        "caption": "other, very, these, para"
+      },
+      {
+        "region": 183,
+        "records": 35,
+        "density": 0.8907,
+        "caption": "video, youtube, using, como"
+      },
+      {
+        "region": 104,
+        "records": 0,
+        "density": 0.0,
+        "caption": "people, many, other, into"
+      },
+      {
+        "region": 154,
+        "records": 17,
+        "density": 0.6963,
+        "caption": "historic, united, located, born"
+      },
+      {
+        "region": 236,
+        "records": 7,
+        "density": 0.1459,
+        "caption": "como, make, para, only"
+      },
+      {
+        "region": 282,
+        "records": 7,
+        "density": 0.1283,
+        "caption": "most, many, other, these"
+      },
+      {
+        "region": 20,
+        "records": 17,
+        "density": 0.4297,
+        "caption": "viajar, nach, most, eine"
+      },
+      {
+        "region": 22,
+        "records": 15,
+        "density": 0.6856,
+        "caption": "league, football, played, english"
+      },
+      {
+        "region": 25,
+        "records": 1,
+        "density": 0.0428,
+        "caption": "champions, bayern, league, liga"
+      },
+      {
+        "region": 108,
+        "records": 8,
+        "density": 0.2644,
+        "caption": "tribunal, acusado, after, into"
+      },
+      {
+        "region": 13,
+        "records": 2,
+        "density": 0.1224,
+        "caption": "policía, contra, best, dans"
+      },
+      {
+        "region": 280,
+        "records": 32,
+        "density": 0.9462,
+        "caption": "were, since, would, many"
+      },
+      {
+        "region": 294,
+        "records": 1,
+        "density": 0.0302,
+        "caption": "many, would, were, into"
+      },
+      {
+        "region": 177,
+        "records": 89,
+        "density": 2.868,
+        "caption": "television, radio, american, film"
+      },
+      {
+        "region": 288,
+        "records": 7,
+        "density": 0.1731,
+        "caption": "last, make, time, after"
+      },
+      {
+        "region": 32,
+        "records": 0,
+        "density": 0.0,
+        "caption": "were, like, other, these"
+      },
+      {
+        "region": 284,
+        "records": 5,
+        "density": 0.176,
+        "caption": "would, most, many, than"
+      },
+      {
+        "region": 268,
+        "records": 25,
+        "density": 0.8746,
+        "caption": "auto, last, sich, auch"
+      },
+      {
+        "region": 26,
+        "records": 1,
+        "density": 0.0417,
+        "caption": "copa, campeonato, jogo, técnico"
+      },
+      {
+        "region": 201,
+        "records": 38,
+        "density": 4.9412,
+        "caption": "microsoft, database, data, einem"
+      },
+      {
+        "region": 203,
+        "records": 131,
+        "density": 17.8886,
+        "caption": "client, http, application, server"
+      },
+      {
+        "region": 279,
+        "records": 7,
+        "density": 0.2097,
+        "caption": "smartphone, samsung, galaxy, android"
+      },
+      {
+        "region": 27,
+        "records": 5,
+        "density": 0.1947,
+        "caption": "footballers, played, births, club"
+      },
+      {
+        "region": 86,
+        "records": 54,
+        "density": 1.1208,
+        "caption": "only, time, these, just"
+      },
+      {
+        "region": 107,
+        "records": 7,
+        "density": 0.2215,
+        "caption": "court, opinion, decided, circuit"
+      },
+      {
+        "region": 283,
+        "records": 29,
+        "density": 0.5295,
+        "caption": "business, time, into, just"
+      },
+      {
+        "region": 207,
+        "records": 12,
+        "density": 0.7868,
+        "caption": "page, link, blog, site"
+      },
+      {
+        "region": 213,
+        "records": 2,
+        "density": 0.0577,
+        "caption": "people, find, were, want"
+      },
+      {
+        "region": 239,
+        "records": 24,
+        "density": 0.5088,
+        "caption": "email, people, time, most"
+      },
+      {
+        "region": 77,
+        "records": 34,
+        "density": 0.5559,
+        "caption": "ubuntu, install, tried, sudo"
+      },
+      {
+        "region": 78,
+        "records": 4,
+        "density": 0.6065,
+        "caption": "could, весе, night, star"
+      },
+      {
+        "region": 40,
+        "records": 9,
+        "density": 0.2413,
+        "caption": "album, released, single, track"
+      },
+      {
+        "region": 147,
+        "records": 0,
+        "density": 0.0,
+        "caption": "make, time, after, just"
+      },
+      {
+        "region": 182,
+        "records": 15,
+        "density": 0.3513,
+        "caption": "windows, intel, ubuntu, system"
+      },
+      {
+        "region": 237,
+        "records": 6,
+        "density": 0.2878,
+        "caption": "putin, ukraine, rusia, vladimir"
+      },
+      {
+        "region": 199,
+        "records": 6,
+        "density": 0.6666,
+        "caption": "wordpress, plugin, site, crear"
+      },
+      {
+        "region": 178,
+        "records": 21,
+        "density": 0.8916,
+        "caption": "album, released, music, song"
+      },
+      {
+        "region": 133,
+        "records": 5,
+        "density": 0.1198,
+        "caption": "israel, dans, after, were"
+      },
+      {
+        "region": 19,
+        "records": 12,
+        "density": 0.4475,
+        "caption": "airlines, airport, much, international"
+      },
+      {
+        "region": 84,
+        "records": 672,
+        "density": 22.6084,
+        "caption": "europea, entre, este, parlamento"
+      },
+      {
+        "region": 118,
+        "records": 6,
+        "density": 0.1879,
+        "caption": "ministre, dans, président, pour"
+      },
+      {
+        "region": 208,
+        "records": 23,
+        "density": 2.5613,
+        "caption": "server, website, domain, internet"
+      },
+      {
+        "region": 181,
+        "records": 16,
+        "density": 0.4262,
+        "caption": "network, wifi, ubuntu, connect"
+      },
+      {
+        "region": 206,
+        "records": 15,
+        "density": 1.2661,
+        "caption": "firefox, chrome, google, explorer"
+      },
+      {
+        "region": 31,
+        "records": 0,
+        "density": 0.0,
+        "caption": "would, last, most, like"
+      },
+      {
+        "region": 39,
+        "records": 3,
+        "density": 0.0756,
+        "caption": "than, made, para, show"
+      },
+      {
+        "region": 103,
+        "records": 8,
+        "density": 0.2434,
+        "caption": "nicht, mais, wenn, sich"
+      },
+      {
+        "region": 281,
+        "records": 27,
+        "density": 1.1427,
+        "caption": "baseball, played, league, season"
+      },
+      {
+        "region": 54,
+        "records": 37,
+        "density": 0.6431,
+        "caption": "game, juego, games, online"
+      },
+      {
+        "region": 231,
+        "records": 7,
+        "density": 0.1069,
+        "caption": "candidato, partido, presidente, nacional"
+      },
+      {
+        "region": 102,
+        "records": 3,
+        "density": 0.1054,
+        "caption": "very, good, after, than"
+      },
+      {
+        "region": 135,
+        "records": 24,
+        "density": 0.7309,
+        "caption": "bestellung, vous, alle, nicht"
+      },
+      {
+        "region": 295,
+        "records": 1,
+        "density": 0.0234,
+        "caption": "dans, would, were, pour"
+      },
+      {
+        "region": 202,
+        "records": 8,
+        "density": 1.3011,
+        "caption": "google, search, information, internet"
+      },
+      {
+        "region": 109,
+        "records": 27,
+        "density": 0.5998,
+        "caption": "online, pour, para, make"
+      },
+      {
+        "region": 56,
+        "records": 10,
+        "density": 0.3454,
+        "caption": "filme, film, película, films"
+      },
+      {
+        "region": 205,
+        "records": 102,
+        "density": 8.8788,
+        "caption": "password, account, puedes, user"
+      },
+      {
+        "region": 55,
+        "records": 6,
+        "density": 0.3145,
+        "caption": "comics, marvel, anime, mais"
+      },
+      {
+        "region": 58,
+        "records": 13,
+        "density": 0.7202,
+        "caption": "série, temporada, netflix, episode"
+      },
+      {
+        "region": 79,
+        "records": 3,
+        "density": 0.2608,
+        "caption": "through, last, make, want"
+      },
+      {
+        "region": 214,
+        "records": 1,
+        "density": 0.0317,
+        "caption": "only, people, after, like"
+      },
+      {
+        "region": 28,
+        "records": 1,
+        "density": 0.0461,
+        "caption": "madrid, real, manchester, ronaldo"
+      },
+      {
+        "region": 24,
+        "records": 18,
+        "density": 0.4547,
+        "caption": "google, online, website, site"
+      },
+      {
+        "region": 10,
+        "records": 12,
+        "density": 0.2597,
+        "caption": "blog, facebook, twitter, para"
+      },
+      {
+        "region": 265,
+        "records": 1,
+        "density": 0.0283,
+        "caption": "were, last, would, after"
+      },
+      {
+        "region": 113,
+        "records": 2,
+        "density": 0.0573,
+        "caption": "television, show, film, where"
+      },
+      {
+        "region": 131,
+        "records": 7,
+        "density": 0.2022,
+        "caption": "many, into, most, first"
+      },
+      {
+        "region": 91,
+        "records": 4,
+        "density": 0.088,
+        "caption": "would, other, just, like"
+      },
+      {
+        "region": 134,
+        "records": 5,
+        "density": 0.1181,
+        "caption": "email, make, would, like"
+      },
+      {
+        "region": 97,
+        "records": 3,
+        "density": 0.0748,
+        "caption": "good, into, after, make"
+      },
+      {
+        "region": 50,
+        "records": 16,
+        "density": 0.2518,
+        "caption": "android, smartphone, google, mobile"
+      },
+      {
+        "region": 83,
+        "records": 67,
+        "density": 1.9769,
+        "caption": "into, there, were, time"
+      },
+      {
+        "region": 110,
+        "records": 45,
+        "density": 1.0075,
+        "caption": "online, como, para, like"
+      },
+      {
+        "region": 114,
+        "records": 11,
+        "density": 0.4413,
+        "caption": "while, where, than, most"
+      },
+      {
+        "region": 53,
+        "records": 3,
+        "density": 0.0736,
+        "caption": "xbox, playstation, nintendo, game"
+      },
+      {
+        "region": 49,
+        "records": 15,
+        "density": 0.5181,
+        "caption": "apple, iphone, ipad, icloud"
+      },
+      {
+        "region": 127,
+        "records": 22,
+        "density": 0.524,
+        "caption": "other, make, most, para"
+      },
+      {
+        "region": 230,
+        "records": 10,
+        "density": 0.2126,
+        "caption": "presidente, would, after, people"
+      },
+      {
+        "region": 23,
+        "records": 77,
+        "density": 1.893,
+        "caption": "marketing, social, facebook, online"
+      },
+      {
+        "region": 9,
+        "records": 6,
+        "density": 0.1356,
+        "caption": "blog, habe, mais, nicht"
+      },
+      {
+        "region": 92,
+        "records": 4,
+        "density": 0.0844,
+        "caption": "habe, aber, pero, bien"
+      },
+      {
+        "region": 286,
+        "records": 2,
+        "density": 0.0781,
+        "caption": "permainan, judi, bermain, poker"
+      },
+      {
+        "region": 238,
+        "records": 3,
+        "density": 0.0907,
+        "caption": "estados, unidos, país, trump"
+      },
+      {
+        "region": 200,
+        "records": 16,
+        "density": 1.5614,
+        "caption": "youtube, video, facebook, twitter"
+      },
+      {
+        "region": 287,
+        "records": 6,
+        "density": 0.167,
+        "caption": "spielen, casinos, bonus, slot"
+      },
+      {
+        "region": 130,
+        "records": 3,
+        "density": 0.0841,
+        "caption": "governo, presidente, para, work"
+      },
+      {
+        "region": 126,
+        "records": 14,
+        "density": 0.2855,
+        "caption": "make, than, like, these"
+      },
+      {
+        "region": 215,
+        "records": 38,
+        "density": 0.7895,
+        "caption": "most, over, there, last"
+      },
+      {
+        "region": 116,
+        "records": 711,
+        "density": 18.851,
+        "caption": "euro, only, back, were"
+      },
+      {
+        "region": 216,
+        "records": 87,
+        "density": 1.4543,
+        "caption": "para, like, most, than"
+      },
+      {
+        "region": 115,
+        "records": 36,
+        "density": 1.2173,
+        "caption": "crédito, bank, cartão, people"
+      },
+      {
+        "region": 1,
+        "records": 3,
+        "density": 0.3156,
+        "caption": "forex, trading, trader, broker"
+      },
+      {
+        "region": 0,
+        "records": 6,
+        "density": 0.5043,
+        "caption": "bitcoin, blockchain, kryptowährungen, ethereum"
+      },
+      {
+        "region": 2,
+        "records": 2,
+        "density": 0.1435,
+        "caption": "great, before, nicht, into"
+      },
+      {
+        "region": 4,
+        "records": 5,
+        "density": 0.3909,
+        "caption": "help, through, would, many"
+      },
+      {
+        "region": 3,
+        "records": 13,
+        "density": 1.0045,
+        "caption": "dollars, plus, york, facebook"
+      }
+    ]
+  },
+  "findings": [],
+  "degraded": []
+}

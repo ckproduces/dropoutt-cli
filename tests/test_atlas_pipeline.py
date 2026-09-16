@@ -117,24 +117,111 @@ def test_pipeline_hash_is_stable():
 
 def test_bundled_atlas_products_match_their_profiles():
     from dropoutt.atlas.apply import load_bundled
-    from dropoutt.atlas.profiles import ATLAS_V2, ATLAS_V2_LITE, DEFAULT_ATLAS_VERSION
+    from dropoutt.atlas.profiles import (
+        ATLAS_V2,
+        ATLAS_V2_LITE,
+        ATLAS_V3,
+        DEFAULT_ATLAS_VERSION,
+    )
 
-    lite = load_bundled()
+    default = load_bundled()
+    assert default is not None, "the default product must be bundled"
+    assert default.meta.get("version") == DEFAULT_ATLAS_VERSION == ATLAS_V3.version
+    assert default.dim == ATLAS_V3.dim == 128
+    assert default.n_l1 == ATLAS_V3.n_l1 == 256
+    assert default.n_regions == ATLAS_V3.l2_budget == 4096
+    assert len(default.region_terms) == default.n_regions
+    # The map ships with the evidence that it is a map of subjects: how much
+    # language a linear probe still recovers after normalization, and that
+    # each record's language was detected rather than inherited from its shard.
+    probe = default.meta.get("language_probe") or {}
+    assert probe.get("language_normalized", 1.0) < probe.get("language_raw", 0.0)
+    assert default.meta.get("language_labels_source", "").startswith("detected-per-record")
+    assert len(default.meta["normalization"]["lang_labels"]) >= 45
+
+    lite = load_bundled("atlas-v2-lite")
     assert lite is not None, "atlas-v2-lite must be bundled"
-    assert lite.meta.get("version") == DEFAULT_ATLAS_VERSION == ATLAS_V2_LITE.version
-    assert lite.dim == ATLAS_V2_LITE.dim == 16
-    assert lite.n_l1 == ATLAS_V2_LITE.n_l1 == 16
-    assert lite.n_regions == 34
-    assert len(lite.region_terms) == 34
+    assert lite.meta.get("version") == ATLAS_V2_LITE.version
+    assert lite.dim == ATLAS_V2_LITE.dim == 64
+    assert lite.n_l1 == ATLAS_V2_LITE.n_l1 == 32
+    assert 32 <= lite.n_regions <= 320
+    assert len(lite.region_terms) == lite.n_regions
     assert lite.embed_model == "minishlab/potion-multilingual-128M"
 
     full = load_bundled("atlas-v2")
     assert full is not None, "atlas-v2 must be bundled"
     assert full.meta.get("version") == ATLAS_V2.version
-    assert full.dim == ATLAS_V2.dim == 256
-    assert full.n_l1 == ATLAS_V2.n_l1 == 256
-    assert full.n_regions == 689
-    assert len(full.region_terms) == 689
+    assert full.dim == ATLAS_V2.dim == 128
+    assert full.n_l1 == ATLAS_V2.n_l1 == 128
+    assert 128 <= full.n_regions <= 1_280
+    assert len(full.region_terms) == full.n_regions
+
+
+def test_bundled_v3_carries_an_explicit_off_atlas_cutoff():
+    """The cutoff ships in the artifact; the loader's 0.35 is a fallback only.
+
+    docs/atlas.md promises the 2nd percentile of the atlas's own reference
+    records. A map that leaves the key out silently takes 0.35 instead, and on
+    atlas-v2 that number sits above the map's own 2nd percentile (0.309), which
+    is what put 12-18% of ordinary held-out prose off-atlas there. atlas-v3 has
+    to say its cutoff itself, and say how it was calibrated.
+    """
+    from dropoutt.atlas.apply import load_bundled
+
+    atlas = load_bundled("atlas-v3")
+    assert atlas is not None, "atlas-v3 must be bundled"
+    assert "off_atlas_threshold" in atlas.meta, "cutoff must be stamped, not defaulted"
+    cutoff = atlas.meta["off_atlas_threshold"]
+    assert isinstance(cutoff, float)
+    assert atlas.off_threshold == cutoff
+    calibration = atlas.meta["off_atlas_calibration"]
+    assert calibration["percentile"] == 2.0
+    assert calibration["draw"] == "language-axis-balanced"
+    assert abs(calibration["reference_percentiles"]["p2"] - cutoff) < 1e-4
+    assert calibration["rows_scored"] >= 1_000_000
+    # Held-out in-family prose scores p2 0.425 on this map (benchmark b4); a
+    # cutoff above that would reject ordinary prose, below 0.2 nothing at all.
+    assert 0.2 <= cutoff <= 0.45
+
+
+def test_bundled_maps_carry_no_reference_text():
+    """Centroids, sizes, constants and names ship; reference records do not.
+
+    The builder writes `exemplar_texts`, a few hundred characters of the
+    records nearest each cell's centre, as a labelling aid. Nothing at runtime
+    reads it, and in the wheel it was 16,384 verbatim excerpts of web, forum
+    and encyclopedia text with no licence manifest. `tools/strip_atlas_exemplars.py`
+    removes it before release; this keeps it removed.
+    """
+    import numpy as np
+
+    from dropoutt.atlas.apply import atlas_path_for
+
+    for version in ("atlas-v3", "atlas-v2", "atlas-v2-lite", "atlas-v1-lite"):
+        path = atlas_path_for(version)
+        assert path is not None, f"{version} must be bundled"
+        data = np.load(path, allow_pickle=True)
+        assert "exemplar_texts" not in data.files, f"{version} ships reference excerpts"
+        for name in data.files:
+            if name in ("meta", "prototype_record_ids"):
+                continue
+            assert data[name].dtype.kind not in "OSU", (
+                f"{version}: array {name!r} holds text ({data[name].dtype})"
+            )
+
+
+def test_v2_products_carry_distinct_l1_subject_labels():
+    from dropoutt.atlas.apply import load_bundled
+    from dropoutt.atlas.compare import category_labels
+    from dropoutt.atlas.profiles import ATLAS_V2, ATLAS_V2_LITE
+
+    for version, profile in (("atlas-v2-lite", ATLAS_V2_LITE), ("atlas-v2", ATLAS_V2)):
+        atlas = load_bundled(version)
+        assert atlas is not None
+        labels = category_labels(atlas)
+        assert len(labels) == profile.n_l1
+        assert len(set(labels.values())) == profile.n_l1
+        assert atlas.meta.get("l1_labels_source") == f"curated:l1_labels_{version}.json"
 
 
 def test_v1_lite_still_carries_curated_subject_labels():
@@ -228,12 +315,12 @@ def test_atlas_v2_profile_windows_and_columns_are_declared():
     from dropoutt.atlas.profiles import get_profile
 
     full = get_profile("atlas-v2")
-    lite = get_profile()
+    lite = get_profile("atlas-v2-lite")  # the default product is atlas-v3 now
     assert (full.dim, full.pooling, full.max_chars, full.max_tokens, full.default_sample) == (
-        256, "sif", 4_000, 1_024, 200_000,
+        128, "sif", 2_000, 512, 200_000,
     )
     assert (lite.version, lite.dim, lite.pooling, lite.max_chars, lite.max_tokens, lite.default_sample) == (
-        "atlas-v2-lite", 16, "mean", 1_024, 256, 50_000,
+        "atlas-v2-lite", 64, "sif", 2_000, 512, 50_000,
     )
     assert select_token_windows(list(range(100)), 10) == [0, 1, 2, 3, 49, 50, 96, 97, 98, 99]
 
@@ -410,6 +497,47 @@ def test_per_language_centering_changes_placement_only_for_known_languages(tmp_p
     assert np.allclose(tr_first[2], tr_first[3])
 
 
+def test_a_record_that_pooled_to_nothing_is_never_placed(tmp_path):
+    """Forty spaces must not land, confidently, in one particular cell.
+
+    Mean removal turns an all-zero embedding into the fixed direction ``-mean``,
+    which on atlas-v3 scores 0.76 against one cell — above the cutoff, so a
+    blank record was placed as if it were about something. The build's own
+    calibration dropped such rows; the runtime has to as well.
+    """
+    means = np.stack([np.full(8, 0.5, dtype=np.float32), np.zeros(8, dtype=np.float32)])
+    atlas = _tiny_atlas(tmp_path, lang_means=means, lang_labels=("tr", "en"))
+    atlas.meta["off_atlas_threshold"] = 0.1
+    rng = np.random.default_rng(5)
+    x = rng.normal(size=(4, 8)).astype(np.float32)
+    x[1] = 0.0
+    x[3] = 0.0
+
+    projected = atlas.project(x, ["tr", "tr", "en", "unknown"])
+    assert not projected[1].any() and not projected[3].any()
+    assert projected[0].any() and projected[2].any()
+
+    placed = atlas.assign_all(x, ["tr", "tr", "en", "unknown"])
+    assert placed.best[1] == -1 and placed.best[3] == -1
+    assert placed.score[1] == 0.0 and placed.score[3] == 0.0
+    assert placed.best[0] >= 0 and placed.best[2] >= 0
+    best, score, _ = atlas.assign_full(x, ["tr", "tr", "en", "unknown"])
+    assert best[1] == -1 and score[1] == 0.0
+    # Without language centering the same rule holds through the global path.
+    plain = _tiny_atlas(tmp_path)
+    plain.meta["off_atlas_threshold"] = 0.1
+    assert plain.assign(x)[0][1] == -1
+
+
+def test_assignment_chunks_are_sized_by_the_map(tmp_path):
+    """A chunk is a byte budget, not a row count tuned for a 212-cell map."""
+    atlas = _tiny_atlas(tmp_path)
+    for cells, rows in ((215, 32_768), (4_096, 2_048), (65, 32_768), (16_384, 1_024)):
+        atlas.centroids = np.zeros((cells, 8), dtype=np.float32)
+        assert atlas.assign_chunk_rows() == rows
+        assert rows * cells * 4 <= max(atlas.ASSIGN_CHUNK_BYTES, 1_024 * cells * 4)
+
+
 def test_coarse_distance_correction_pulls_novelty_down(tmp_path):
     atlas = _tiny_atlas(tmp_path)
     raw = np.array([0.25, 0.5, 0.75], dtype=np.float32)
@@ -445,3 +573,19 @@ def test_containment_crosswalk_scores_a_clean_split_as_continuity():
     assert result["summary"]["clean_split"] == 1
     assert result["summary"]["unchanged"] == 1
     assert result["summary"]["continuity_rate"] == 1.0
+
+
+def test_region_labels_rescore_artifacts_that_predate_them():
+    """A map without stored labels still captions itself contrastively."""
+    from dropoutt.atlas.apply import _contrastive_labels
+
+    terms = [
+        "this, with, firefox, chrome",
+        "this, with, taxonomy, described",
+        "this, with, directed, films",
+    ]
+
+    labels = _contrastive_labels(terms, width=2)
+
+    assert labels[0] == "firefox, chrome"
+    assert all("this" not in label for label in labels)

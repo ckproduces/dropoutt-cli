@@ -1,0 +1,1433 @@
+{
+ "_written_at": "2026-09-16T15:55:25",
+ "products": {
+  "atlas-v3": {
+   "probes": {
+    "same_topic_pairs": 84,
+    "same_topic_l1_agree": 0.5476190476190477,
+    "same_topic_l2_agree": 0.2976190476190476,
+    "same_topic_l1_agree_ci95": [
+     0.44142846686988807,
+     0.6496445554794317
+    ],
+    "diff_topic_same_lang_pairs": 364,
+    "diff_topic_l1_collide": 0.01098901098901099,
+    "diff_topic_l2_collide": 0.0,
+    "probe_off_atlas": 0.0,
+    "ood_off_atlas": 0.0,
+    "ood_names": [
+     "base64_blob",
+     "hex_log",
+     "dna_sequence",
+     "minified_js"
+    ],
+    "ood_scores": [
+     0.3799999952316284,
+     0.4449999928474426,
+     0.3540000021457672,
+     0.3869999945163727
+    ],
+    "per_topic_l1": {
+     "astronomy_redshift": [
+      86,
+      212
+     ],
+     "bread_recipe": [
+      64,
+      239
+     ],
+     "classical_music": [
+      86,
+      142
+     ],
+     "climate_emissions": [
+      17
+     ],
+     "contract_law": [
+      62,
+      192
+     ],
+     "database_query": [
+      64,
+      111,
+      161,
+      178
+     ],
+     "diabetes_care": [
+      24,
+      129
+     ],
+     "football_match": [
+      41
+     ],
+     "freight_logistics": [
+      92,
+      159
+     ],
+     "monetary_policy": [
+      182
+     ],
+     "neural_networks": [
+      185
+     ],
+     "photosynthesis": [
+      17,
+      183
+     ],
+     "roman_republic": [
+      94,
+      150,
+      170
+     ],
+     "volcanic_eruption": [
+      11,
+      18,
+      199
+     ]
+    }
+   },
+   "wmt17": {
+    "pairs": 8000,
+    "off_atlas_en": 0.009375,
+    "off_atlas_tr": 0.03125,
+    "l1_agree": 0.413,
+    "l1_agree_chance": 0.02101478125,
+    "l1_agree_ci95": [
+     0.4022546708995551,
+     0.4238288437966879
+    ],
+    "l2_agree": 0.26225,
+    "l2_agree_chance": 0.0066203828125,
+    "l2_agree_ci95": [
+     0.2527269402247343,
+     0.2720012852813777
+    ],
+    "l2_in_top5_soft": 0.622375,
+    "l2_in_top5_soft_ci95": [
+     0.6116951536852219,
+     0.6329373737750917
+    ],
+    "l1_agree_both_placed": 0.4234117188515006,
+    "median_sim_en": 0.535728931427002,
+    "median_sim_tr": 0.4986221194267273,
+    "hist_cosine_l1": 0.9258185841997085,
+    "hist_cosine_l2": 0.8520933277728282
+   },
+   "web_langs": {
+    "n": 36000,
+    "n_langs": 9,
+    "off_atlas_rate": 0.0011111111111111111,
+    "nmi_l2": 0.18822114825828723,
+    "ami_l2": 0.1063884737585767,
+    "dominant_lift_l2": 4.2785,
+    "share_records_in_90pct_single_language_cells_l2": 0.1298888888888889,
+    "cells_used_l2": 3884,
+    "nmi_l1": 0.0909516929203163,
+    "ami_l1": 0.08386297797099419,
+    "dominant_lift_l1": 2.74575,
+    "share_records_in_90pct_single_language_cells_l1": 0.03325,
+    "cells_used_l1": 256,
+    "per_language": {
+     "ar": {
+      "off_atlas": 0.001,
+      "median_sim": 0.6155175566673279,
+      "l1_used": 245,
+      "l2_used": 1475
+     },
+     "de": {
+      "off_atlas": 0.002,
+      "median_sim": 0.6248719096183777,
+      "l1_used": 253,
+      "l2_used": 1944
+     },
+     "en": {
+      "off_atlas": 0.0005,
+      "median_sim": 0.658722996711731,
+      "l1_used": 249,
+      "l2_used": 2115
+     },
+     "es": {
+      "off_atlas": 0.00075,
+      "median_sim": 0.6525769233703613,
+      "l1_used": 250,
+      "l2_used": 2023
+     },
+     "fr": {
+      "off_atlas": 0.00075,
+      "median_sim": 0.6360611915588379,
+      "l1_used": 252,
+      "l2_used": 2056
+     },
+     "ja": {
+      "off_atlas": 0.00225,
+      "median_sim": 0.6232614517211914,
+      "l1_used": 240,
+      "l2_used": 1652
+     },
+     "ru": {
+      "off_atlas": 0.001,
+      "median_sim": 0.66422438621521,
+      "l1_used": 249,
+      "l2_used": 1870
+     },
+     "tr": {
+      "off_atlas": 0.00125,
+      "median_sim": 0.6282028555870056,
+      "l1_used": 249,
+      "l2_used": 1726
+     },
+     "zh": {
+      "off_atlas": 0.0005,
+      "median_sim": 0.6812546253204346,
+      "l1_used": 234,
+      "l2_used": 902
+     }
+    },
+    "mean_top10_l1_overlap_between_languages": 0.20555555555555555
+   },
+   "wiki_langs": {
+    "n": 39000,
+    "n_langs": 13,
+    "off_atlas_rate": 0.004615384615384616,
+    "nmi_l2": 0.2118620142660684,
+    "ami_l2": 0.14452206957811162,
+    "dominant_lift_l2": 5.512,
+    "share_records_in_90pct_single_language_cells_l2": 0.06066666666666667,
+    "cells_used_l2": 2827,
+    "nmi_l1": 0.10666324195485334,
+    "ami_l1": 0.09676871564143967,
+    "dominant_lift_l1": 3.284666666666667,
+    "share_records_in_90pct_single_language_cells_l1": 5.128205128205128e-05,
+    "cells_used_l1": 253,
+    "per_language": {
+     "ar": {
+      "off_atlas": 0.007333333333333333,
+      "median_sim": 0.568251371383667,
+      "l1_used": 210,
+      "l2_used": 961
+     },
+     "az": {
+      "off_atlas": 0.013,
+      "median_sim": 0.630669355392456,
+      "l1_used": 184,
+      "l2_used": 752
+     },
+     "de": {
+      "off_atlas": 0.0016666666666666668,
+      "median_sim": 0.6401984691619873,
+      "l1_used": 206,
+      "l2_used": 976
+     },
+     "en": {
+      "off_atlas": 0.0016666666666666668,
+      "median_sim": 0.6829240322113037,
+      "l1_used": 216,
+      "l2_used": 1139
+     },
+     "es": {
+      "off_atlas": 0.0016666666666666668,
+      "median_sim": 0.6686292886734009,
+      "l1_used": 205,
+      "l2_used": 996
+     },
+     "fa": {
+      "off_atlas": 0.004666666666666667,
+      "median_sim": 0.6043882966041565,
+      "l1_used": 209,
+      "l2_used": 1054
+     },
+     "fr": {
+      "off_atlas": 0.002,
+      "median_sim": 0.6597135066986084,
+      "l1_used": 200,
+      "l2_used": 963
+     },
+     "hi": {
+      "off_atlas": 0.014333333333333333,
+      "median_sim": 0.540247917175293,
+      "l1_used": 205,
+      "l2_used": 802
+     },
+     "ja": {
+      "off_atlas": 0.001,
+      "median_sim": 0.6518425941467285,
+      "l1_used": 199,
+      "l2_used": 816
+     },
+     "ko": {
+      "off_atlas": 0.006,
+      "median_sim": 0.5845704078674316,
+      "l1_used": 203,
+      "l2_used": 838
+     },
+     "ru": {
+      "off_atlas": 0.001,
+      "median_sim": 0.644540011882782,
+      "l1_used": 199,
+      "l2_used": 931
+     },
+     "tr": {
+      "off_atlas": 0.004333333333333333,
+      "median_sim": 0.621460497379303,
+      "l1_used": 211,
+      "l2_used": 1036
+     },
+     "zh": {
+      "off_atlas": 0.0013333333333333333,
+      "median_sim": 0.6211035251617432,
+      "l1_used": 203,
+      "l2_used": 936
+     }
+    },
+    "mean_top10_l1_overlap_between_languages": 0.3243589743589744
+   }
+  },
+  "atlas-v3-prev": {
+   "probes": {
+    "same_topic_pairs": 84,
+    "same_topic_l1_agree": 0.4880952380952381,
+    "same_topic_l2_agree": 0.2619047619047619,
+    "same_topic_l1_agree_ci95": [
+     0.3840817181332218,
+     0.5931500262794481
+    ],
+    "diff_topic_same_lang_pairs": 364,
+    "diff_topic_l1_collide": 0.0027472527472527475,
+    "diff_topic_l2_collide": 0.0,
+    "probe_off_atlas": 0.03571428571428571,
+    "ood_off_atlas": 0.0,
+    "ood_names": [
+     "base64_blob",
+     "hex_log",
+     "dna_sequence",
+     "minified_js"
+    ],
+    "ood_scores": [
+     0.42899999022483826,
+     0.5149999856948853,
+     0.4560000002384186,
+     0.4020000100135803
+    ],
+    "per_topic_l1": {
+     "astronomy_redshift": [
+      60,
+      86
+     ],
+     "bread_recipe": [
+      218,
+      247
+     ],
+     "classical_music": [
+      81,
+      162
+     ],
+     "climate_emissions": [
+      6,
+      64,
+      130
+     ],
+     "contract_law": [
+      41,
+      117,
+      246
+     ],
+     "database_query": [
+      39,
+      168,
+      218
+     ],
+     "diabetes_care": [
+      157
+     ],
+     "football_match": [
+      208
+     ],
+     "freight_logistics": [
+      45,
+      190
+     ],
+     "monetary_policy": [
+      27
+     ],
+     "neural_networks": [
+      147
+     ],
+     "photosynthesis": [
+      68,
+      90,
+      231
+     ],
+     "roman_republic": [
+      4,
+      12,
+      116,
+      138
+     ],
+     "volcanic_eruption": [
+      78,
+      187,
+      224
+     ]
+    }
+   },
+   "wmt17": {
+    "pairs": 8000,
+    "off_atlas_en": 0.018875,
+    "off_atlas_tr": 0.063875,
+    "l1_agree": 0.402,
+    "l1_agree_chance": 0.0202946875,
+    "l1_agree_ci95": [
+     0.39130529763398886,
+     0.41278877639166417
+    ],
+    "l2_agree": 0.24825,
+    "l2_agree_chance": 0.004882781249999999,
+    "l2_agree_ci95": [
+     0.23890576803915592,
+     0.2578358966134779
+    ],
+    "l2_in_top5_soft": 0.619125,
+    "l2_in_top5_soft_ci95": [
+     0.6084290025568226,
+     0.6297066447053621
+    ],
+    "l1_agree_both_placed": 0.4256326972526729,
+    "median_sim_en": 0.5292856693267822,
+    "median_sim_tr": 0.4773706793785095,
+    "hist_cosine_l1": 0.9038827580581632,
+    "hist_cosine_l2": 0.8022749461669225
+   },
+   "web_langs": {
+    "n": 36000,
+    "n_langs": 9,
+    "off_atlas_rate": 0.003,
+    "nmi_l2": 0.18027663542699,
+    "ami_l2": 0.10284641021814314,
+    "dominant_lift_l2": 4.13525,
+    "share_records_in_90pct_single_language_cells_l2": 0.12019444444444445,
+    "cells_used_l2": 3655,
+    "nmi_l1": 0.09086378746942594,
+    "ami_l1": 0.08373370208927856,
+    "dominant_lift_l1": 2.702,
+    "share_records_in_90pct_single_language_cells_l1": 0.042555555555555555,
+    "cells_used_l1": 255,
+    "per_language": {
+     "ar": {
+      "off_atlas": 0.00525,
+      "median_sim": 0.6052372455596924,
+      "l1_used": 235,
+      "l2_used": 1422
+     },
+     "de": {
+      "off_atlas": 0.003,
+      "median_sim": 0.6184806823730469,
+      "l1_used": 247,
+      "l2_used": 1910
+     },
+     "en": {
+      "off_atlas": 0.00075,
+      "median_sim": 0.6484001278877258,
+      "l1_used": 239,
+      "l2_used": 2033
+     },
+     "es": {
+      "off_atlas": 0.00125,
+      "median_sim": 0.6454435586929321,
+      "l1_used": 238,
+      "l2_used": 1935
+     },
+     "fr": {
+      "off_atlas": 0.0025,
+      "median_sim": 0.6319751739501953,
+      "l1_used": 242,
+      "l2_used": 1954
+     },
+     "ja": {
+      "off_atlas": 0.00375,
+      "median_sim": 0.6173056364059448,
+      "l1_used": 236,
+      "l2_used": 1605
+     },
+     "ru": {
+      "off_atlas": 0.0035,
+      "median_sim": 0.6495622396469116,
+      "l1_used": 241,
+      "l2_used": 1841
+     },
+     "tr": {
+      "off_atlas": 0.00625,
+      "median_sim": 0.6070178747177124,
+      "l1_used": 240,
+      "l2_used": 1586
+     },
+     "zh": {
+      "off_atlas": 0.00075,
+      "median_sim": 0.671096682548523,
+      "l1_used": 214,
+      "l2_used": 924
+     }
+    },
+    "mean_top10_l1_overlap_between_languages": 0.19444444444444445
+   },
+   "wiki_langs": {
+    "n": 39000,
+    "n_langs": 13,
+    "off_atlas_rate": 0.004923076923076923,
+    "nmi_l2": 0.21552228144649058,
+    "ami_l2": 0.1453795871723124,
+    "dominant_lift_l2": 5.62,
+    "share_records_in_90pct_single_language_cells_l2": 0.061974358974358976,
+    "cells_used_l2": 2903,
+    "nmi_l1": 0.116555026169253,
+    "ami_l1": 0.10690199298541558,
+    "dominant_lift_l1": 3.4703333333333335,
+    "share_records_in_90pct_single_language_cells_l1": 0.00015384615384615385,
+    "cells_used_l1": 252,
+    "per_language": {
+     "ar": {
+      "off_atlas": 0.01,
+      "median_sim": 0.5802369117736816,
+      "l1_used": 210,
+      "l2_used": 1018
+     },
+     "az": {
+      "off_atlas": 0.014,
+      "median_sim": 0.5929478406906128,
+      "l1_used": 196,
+      "l2_used": 784
+     },
+     "de": {
+      "off_atlas": 0.004,
+      "median_sim": 0.6290624141693115,
+      "l1_used": 209,
+      "l2_used": 1041
+     },
+     "en": {
+      "off_atlas": 0.0023333333333333335,
+      "median_sim": 0.6681783199310303,
+      "l1_used": 207,
+      "l2_used": 1223
+     },
+     "es": {
+      "off_atlas": 0.002,
+      "median_sim": 0.6553659439086914,
+      "l1_used": 206,
+      "l2_used": 1034
+     },
+     "fa": {
+      "off_atlas": 0.003,
+      "median_sim": 0.5904898643493652,
+      "l1_used": 214,
+      "l2_used": 1091
+     },
+     "fr": {
+      "off_atlas": 0.0023333333333333335,
+      "median_sim": 0.6538221836090088,
+      "l1_used": 199,
+      "l2_used": 984
+     },
+     "hi": {
+      "off_atlas": 0.013,
+      "median_sim": 0.5663774013519287,
+      "l1_used": 203,
+      "l2_used": 881
+     },
+     "ja": {
+      "off_atlas": 0.002,
+      "median_sim": 0.6453733444213867,
+      "l1_used": 197,
+      "l2_used": 857
+     },
+     "ko": {
+      "off_atlas": 0.006333333333333333,
+      "median_sim": 0.5884336829185486,
+      "l1_used": 201,
+      "l2_used": 889
+     },
+     "ru": {
+      "off_atlas": 0.0013333333333333333,
+      "median_sim": 0.6180944442749023,
+      "l1_used": 195,
+      "l2_used": 965
+     },
+     "tr": {
+      "off_atlas": 0.0026666666666666666,
+      "median_sim": 0.6143189668655396,
+      "l1_used": 210,
+      "l2_used": 1091
+     },
+     "zh": {
+      "off_atlas": 0.001,
+      "median_sim": 0.6165470480918884,
+      "l1_used": 202,
+      "l2_used": 932
+     }
+    },
+    "mean_top10_l1_overlap_between_languages": 0.2141025641025641
+   }
+  },
+  "atlas-v2": {
+   "probes": {
+    "same_topic_pairs": 84,
+    "same_topic_l1_agree": 0.2976190476190476,
+    "same_topic_l2_agree": 0.23809523809523808,
+    "same_topic_l1_agree_ci95": [
+     0.21044679186262583,
+     0.40249286315276545
+    ],
+    "diff_topic_same_lang_pairs": 364,
+    "diff_topic_l1_collide": 0.21703296703296704,
+    "diff_topic_l2_collide": 0.11538461538461539,
+    "probe_off_atlas": 0.07142857142857142,
+    "ood_off_atlas": 0.25,
+    "ood_names": [
+     "base64_blob",
+     "hex_log",
+     "dna_sequence",
+     "minified_js"
+    ],
+    "ood_scores": [
+     0.5120000243186951,
+     0.49900001287460327,
+     0.4659999907016754,
+     0.28200000524520874
+    ],
+    "per_topic_l1": {
+     "astronomy_redshift": [
+      19,
+      61
+     ],
+     "bread_recipe": [
+      61,
+      87
+     ],
+     "classical_music": [
+      61,
+      67
+     ],
+     "climate_emissions": [
+      61,
+      65
+     ],
+     "contract_law": [
+      45,
+      47,
+      61
+     ],
+     "database_query": [
+      61,
+      89,
+      110
+     ],
+     "diabetes_care": [
+      1,
+      14,
+      61
+     ],
+     "football_match": [
+      8,
+      10,
+      61
+     ],
+     "freight_logistics": [
+      61,
+      116
+     ],
+     "monetary_policy": [
+      93
+     ],
+     "neural_networks": [
+      44,
+      61,
+      73,
+      79
+     ],
+     "photosynthesis": [
+      26,
+      55,
+      61,
+      65
+     ],
+     "roman_republic": [
+      56,
+      61,
+      102,
+      103
+     ],
+     "volcanic_eruption": [
+      51,
+      61,
+      74,
+      112
+     ]
+    }
+   },
+   "wmt17": {
+    "pairs": 8000,
+    "off_atlas_en": 0.2865,
+    "off_atlas_tr": 0.392375,
+    "l1_agree": 0.40675,
+    "l1_agree_chance": 0.035814796875,
+    "l1_agree_ci95": [
+     0.39603275093595336,
+     0.4175567633792726
+    ],
+    "l2_agree": 0.351625,
+    "l2_agree_chance": 0.019656171875,
+    "l2_agree_ci95": [
+     0.34123529511366063,
+     0.3621571358409951
+    ],
+    "l2_in_top5_soft": 0.606375,
+    "l2_in_top5_soft_ci95": [
+     0.5956204940849205,
+     0.6170273923999895
+    ],
+    "l1_agree_both_placed": 0.5492451473759885,
+    "median_sim_en": 0.40852516889572144,
+    "median_sim_tr": 0.37723463773727417,
+    "hist_cosine_l1": 0.9443311850881642,
+    "hist_cosine_l2": 0.9316188424843572
+   },
+   "web_langs": {
+    "n": 36000,
+    "n_langs": 9,
+    "off_atlas_rate": 0.06188888888888889,
+    "nmi_l2": 0.14097494762820145,
+    "ami_l2": 0.1331494933390289,
+    "dominant_lift_l2": 3.285,
+    "share_records_in_90pct_single_language_cells_l2": 0.10561111111111111,
+    "cells_used_l2": 296,
+    "nmi_l1": 0.1375093935061426,
+    "ami_l1": 0.13382339205152344,
+    "dominant_lift_l1": 3.0185,
+    "share_records_in_90pct_single_language_cells_l1": 0.10558333333333333,
+    "cells_used_l1": 128,
+    "per_language": {
+     "ar": {
+      "off_atlas": 0.0,
+      "median_sim": 0.7416260838508606,
+      "l1_used": 41,
+      "l2_used": 54
+     },
+     "de": {
+      "off_atlas": 0.07225,
+      "median_sim": 0.521631121635437,
+      "l1_used": 127,
+      "l2_used": 284
+     },
+     "en": {
+      "off_atlas": 0.05175,
+      "median_sim": 0.5223385095596313,
+      "l1_used": 124,
+      "l2_used": 272
+     },
+     "es": {
+      "off_atlas": 0.0405,
+      "median_sim": 0.5517408847808838,
+      "l1_used": 127,
+      "l2_used": 289
+     },
+     "fr": {
+      "off_atlas": 0.05325,
+      "median_sim": 0.537377119064331,
+      "l1_used": 125,
+      "l2_used": 283
+     },
+     "ja": {
+      "off_atlas": 0.06425,
+      "median_sim": 0.5190079212188721,
+      "l1_used": 127,
+      "l2_used": 277
+     },
+     "ru": {
+      "off_atlas": 0.04825,
+      "median_sim": 0.5540069341659546,
+      "l1_used": 126,
+      "l2_used": 281
+     },
+     "tr": {
+      "off_atlas": 0.0965,
+      "median_sim": 0.5051649808883667,
+      "l1_used": 127,
+      "l2_used": 285
+     },
+     "zh": {
+      "off_atlas": 0.13025,
+      "median_sim": 0.46889352798461914,
+      "l1_used": 127,
+      "l2_used": 280
+     }
+    },
+    "mean_top10_l1_overlap_between_languages": 0.3194444444444445
+   },
+   "wiki_langs": {
+    "n": 39000,
+    "n_langs": 13,
+    "off_atlas_rate": 0.10364102564102565,
+    "nmi_l2": 0.20773083321734567,
+    "ami_l2": 0.1974540401073642,
+    "dominant_lift_l2": 4.668666666666667,
+    "share_records_in_90pct_single_language_cells_l2": 0.028589743589743588,
+    "cells_used_l2": 291,
+    "nmi_l1": 0.19674467430861053,
+    "ami_l1": 0.1916287593449043,
+    "dominant_lift_l1": 4.076666666666667,
+    "share_records_in_90pct_single_language_cells_l1": 0.02941025641025641,
+    "cells_used_l1": 127,
+    "per_language": {
+     "ar": {
+      "off_atlas": 0.005,
+      "median_sim": 0.6975357532501221,
+      "l1_used": 43,
+      "l2_used": 55
+     },
+     "az": {
+      "off_atlas": 0.052,
+      "median_sim": 0.5052530169487,
+      "l1_used": 87,
+      "l2_used": 139
+     },
+     "de": {
+      "off_atlas": 0.096,
+      "median_sim": 0.501990795135498,
+      "l1_used": 108,
+      "l2_used": 207
+     },
+     "en": {
+      "off_atlas": 0.07133333333333333,
+      "median_sim": 0.5516899824142456,
+      "l1_used": 114,
+      "l2_used": 226
+     },
+     "es": {
+      "off_atlas": 0.129,
+      "median_sim": 0.5147522687911987,
+      "l1_used": 115,
+      "l2_used": 221
+     },
+     "fa": {
+      "off_atlas": 0.14133333333333334,
+      "median_sim": 0.4819967746734619,
+      "l1_used": 112,
+      "l2_used": 221
+     },
+     "fr": {
+      "off_atlas": 0.07266666666666667,
+      "median_sim": 0.5205318927764893,
+      "l1_used": 107,
+      "l2_used": 196
+     },
+     "hi": {
+      "off_atlas": 0.15066666666666667,
+      "median_sim": 0.5273321866989136,
+      "l1_used": 83,
+      "l2_used": 127
+     },
+     "ja": {
+      "off_atlas": 0.07066666666666667,
+      "median_sim": 0.5154802203178406,
+      "l1_used": 105,
+      "l2_used": 203
+     },
+     "ko": {
+      "off_atlas": 0.26566666666666666,
+      "median_sim": 0.43549200892448425,
+      "l1_used": 110,
+      "l2_used": 201
+     },
+     "ru": {
+      "off_atlas": 0.083,
+      "median_sim": 0.49359458684921265,
+      "l1_used": 106,
+      "l2_used": 203
+     },
+     "tr": {
+      "off_atlas": 0.122,
+      "median_sim": 0.49423518776893616,
+      "l1_used": 114,
+      "l2_used": 220
+     },
+     "zh": {
+      "off_atlas": 0.088,
+      "median_sim": 0.47853830456733704,
+      "l1_used": 106,
+      "l2_used": 204
+     }
+    },
+    "mean_top10_l1_overlap_between_languages": 0.46794871794871795
+   }
+  },
+  "atlas-v2-lite": {
+   "probes": {
+    "same_topic_pairs": 84,
+    "same_topic_l1_agree": 0.39285714285714285,
+    "same_topic_l2_agree": 0.2976190476190476,
+    "same_topic_l1_agree_ci95": [
+     0.2953018006281275,
+     0.49978389908590315
+    ],
+    "diff_topic_same_lang_pairs": 364,
+    "diff_topic_l1_collide": 0.25,
+    "diff_topic_l2_collide": 0.24175824175824176,
+    "probe_off_atlas": 0.07142857142857142,
+    "ood_off_atlas": 0.25,
+    "ood_names": [
+     "base64_blob",
+     "hex_log",
+     "dna_sequence",
+     "minified_js"
+    ],
+    "ood_scores": [
+     0.5080000162124634,
+     0.5669999718666077,
+     0.5189999938011169,
+     0.27799999713897705
+    ],
+    "per_topic_l1": {
+     "astronomy_redshift": [
+      6,
+      7,
+      10
+     ],
+     "bread_recipe": [
+      9,
+      10
+     ],
+     "classical_music": [
+      6,
+      10,
+      24
+     ],
+     "climate_emissions": [
+      7,
+      10
+     ],
+     "contract_law": [
+      4,
+      10,
+      12,
+      16
+     ],
+     "database_query": [
+      5,
+      8,
+      10,
+      27
+     ],
+     "diabetes_care": [
+      10,
+      26
+     ],
+     "football_match": [
+      10,
+      15
+     ],
+     "freight_logistics": [
+      10,
+      11
+     ],
+     "monetary_policy": [
+      31
+     ],
+     "neural_networks": [
+      7,
+      10,
+      15
+     ],
+     "photosynthesis": [
+      7,
+      10
+     ],
+     "roman_republic": [
+      10,
+      12
+     ],
+     "volcanic_eruption": [
+      0,
+      10
+     ]
+    }
+   },
+   "wmt17": {
+    "pairs": 8000,
+    "off_atlas_en": 0.401875,
+    "off_atlas_tr": 0.43475,
+    "l1_agree": 0.3845,
+    "l1_agree_chance": 0.06712288281249999,
+    "l1_agree_ci95": [
+     0.37389745639443644,
+     0.39521341656436887
+    ],
+    "l2_agree": 0.319375,
+    "l2_agree_chance": 0.04324506249999999,
+    "l2_agree_ci95": [
+     0.3092469648081595,
+     0.3296764241804483
+    ],
+    "l2_in_top5_soft": 0.573125,
+    "l2_in_top5_soft_ci95": [
+     0.5622535242822018,
+     0.5839262801756975
+    ],
+    "l1_agree_both_placed": 0.5397874174087905,
+    "median_sim_en": 0.37878739833831787,
+    "median_sim_tr": 0.3672903776168823,
+    "hist_cosine_l1": 0.9643139465441493,
+    "hist_cosine_l2": 0.939592953300142
+   },
+   "web_langs": {
+    "n": 36000,
+    "n_langs": 9,
+    "off_atlas_rate": 0.0911388888888889,
+    "nmi_l2": 0.13389547226058807,
+    "ami_l2": 0.13188462846932333,
+    "dominant_lift_l2": 2.778,
+    "share_records_in_90pct_single_language_cells_l2": 0.10994444444444444,
+    "cells_used_l2": 65,
+    "nmi_l1": 0.13546776113048006,
+    "ami_l1": 0.13438975849804255,
+    "dominant_lift_l1": 2.63725,
+    "share_records_in_90pct_single_language_cells_l1": 0.11283333333333333,
+    "cells_used_l1": 32,
+    "per_language": {
+     "ar": {
+      "off_atlas": 0.0,
+      "median_sim": 0.7639948129653931,
+      "l1_used": 22,
+      "l2_used": 30
+     },
+     "de": {
+      "off_atlas": 0.11475,
+      "median_sim": 0.4961817264556885,
+      "l1_used": 32,
+      "l2_used": 65
+     },
+     "en": {
+      "off_atlas": 0.08225,
+      "median_sim": 0.49882936477661133,
+      "l1_used": 32,
+      "l2_used": 65
+     },
+     "es": {
+      "off_atlas": 0.075,
+      "median_sim": 0.5242956876754761,
+      "l1_used": 32,
+      "l2_used": 65
+     },
+     "fr": {
+      "off_atlas": 0.09275,
+      "median_sim": 0.5106134414672852,
+      "l1_used": 32,
+      "l2_used": 65
+     },
+     "ja": {
+      "off_atlas": 0.0915,
+      "median_sim": 0.5072430372238159,
+      "l1_used": 32,
+      "l2_used": 65
+     },
+     "ru": {
+      "off_atlas": 0.08425,
+      "median_sim": 0.5221542716026306,
+      "l1_used": 32,
+      "l2_used": 65
+     },
+     "tr": {
+      "off_atlas": 0.1475,
+      "median_sim": 0.4732397794723511,
+      "l1_used": 32,
+      "l2_used": 65
+     },
+     "zh": {
+      "off_atlas": 0.13225,
+      "median_sim": 0.4641721248626709,
+      "l1_used": 32,
+      "l2_used": 65
+     }
+    },
+    "mean_top10_l1_overlap_between_languages": 0.4444444444444444
+   },
+   "wiki_langs": {
+    "n": 39000,
+    "n_langs": 13,
+    "off_atlas_rate": 0.1655128205128205,
+    "nmi_l2": 0.20902628753286137,
+    "ami_l2": 0.20637051679405308,
+    "dominant_lift_l2": 3.916333333333333,
+    "share_records_in_90pct_single_language_cells_l2": 0.027102564102564102,
+    "cells_used_l2": 65,
+    "nmi_l1": 0.20457247395797368,
+    "ami_l1": 0.20318211330554836,
+    "dominant_lift_l1": 3.682,
+    "share_records_in_90pct_single_language_cells_l1": 0.0,
+    "cells_used_l1": 32,
+    "per_language": {
+     "ar": {
+      "off_atlas": 0.006666666666666667,
+      "median_sim": 0.7169688940048218,
+      "l1_used": 24,
+      "l2_used": 34
+     },
+     "az": {
+      "off_atlas": 0.09,
+      "median_sim": 0.5046824216842651,
+      "l1_used": 31,
+      "l2_used": 50
+     },
+     "de": {
+      "off_atlas": 0.18066666666666667,
+      "median_sim": 0.4655827283859253,
+      "l1_used": 31,
+      "l2_used": 59
+     },
+     "en": {
+      "off_atlas": 0.17766666666666667,
+      "median_sim": 0.4892231225967407,
+      "l1_used": 32,
+      "l2_used": 65
+     },
+     "es": {
+      "off_atlas": 0.20033333333333334,
+      "median_sim": 0.47216665744781494,
+      "l1_used": 32,
+      "l2_used": 62
+     },
+     "fa": {
+      "off_atlas": 0.22433333333333333,
+      "median_sim": 0.45161566138267517,
+      "l1_used": 32,
+      "l2_used": 64
+     },
+     "fr": {
+      "off_atlas": 0.15733333333333333,
+      "median_sim": 0.4680311679840088,
+      "l1_used": 32,
+      "l2_used": 63
+     },
+     "hi": {
+      "off_atlas": 0.166,
+      "median_sim": 0.5388060808181763,
+      "l1_used": 28,
+      "l2_used": 49
+     },
+     "ja": {
+      "off_atlas": 0.08466666666666667,
+      "median_sim": 0.49691957235336304,
+      "l1_used": 31,
+      "l2_used": 58
+     },
+     "ko": {
+      "off_atlas": 0.284,
+      "median_sim": 0.4188092350959778,
+      "l1_used": 31,
+      "l2_used": 59
+     },
+     "ru": {
+      "off_atlas": 0.16733333333333333,
+      "median_sim": 0.4599616229534149,
+      "l1_used": 31,
+      "l2_used": 58
+     },
+     "tr": {
+      "off_atlas": 0.24433333333333335,
+      "median_sim": 0.4446732699871063,
+      "l1_used": 32,
+      "l2_used": 64
+     },
+     "zh": {
+      "off_atlas": 0.16833333333333333,
+      "median_sim": 0.45232099294662476,
+      "l1_used": 30,
+      "l2_used": 60
+     }
+    },
+    "mean_top10_l1_overlap_between_languages": 0.5602564102564105
+   }
+  },
+  "atlas-v3 (global mean)": {
+   "probes": {
+    "same_topic_pairs": 84,
+    "same_topic_l1_agree": 0.44047619047619047,
+    "same_topic_l2_agree": 0.20238095238095238,
+    "same_topic_l1_agree_ci95": [
+     0.3392278217957345,
+     0.5469309002676157
+    ],
+    "diff_topic_same_lang_pairs": 364,
+    "diff_topic_l1_collide": 0.013736263736263736,
+    "diff_topic_l2_collide": 0.0027472527472527475,
+    "probe_off_atlas": 0.017857142857142856,
+    "ood_off_atlas": 0.0,
+    "ood_names": [
+     "base64_blob",
+     "hex_log",
+     "dna_sequence",
+     "minified_js"
+    ],
+    "ood_scores": [
+     0.3799999952316284,
+     0.4449999928474426,
+     0.3540000021457672,
+     0.3869999945163727
+    ],
+    "per_topic_l1": {
+     "astronomy_redshift": [
+      86,
+      212
+     ],
+     "bread_recipe": [
+      64,
+      238
+     ],
+     "classical_music": [
+      142,
+      238
+     ],
+     "climate_emissions": [
+      17
+     ],
+     "contract_law": [
+      62,
+      192
+     ],
+     "database_query": [
+      64,
+      158,
+      161,
+      167
+     ],
+     "diabetes_care": [
+      24,
+      93,
+      129
+     ],
+     "football_match": [
+      41,
+      220
+     ],
+     "freight_logistics": [
+      92,
+      159
+     ],
+     "monetary_policy": [
+      182
+     ],
+     "neural_networks": [
+      82,
+      185
+     ],
+     "photosynthesis": [
+      17,
+      183
+     ],
+     "roman_republic": [
+      63,
+      94,
+      125
+     ],
+     "volcanic_eruption": [
+      11,
+      182,
+      199
+     ]
+    }
+   },
+   "wmt17": {
+    "pairs": 8000,
+    "off_atlas_en": 0.0275,
+    "off_atlas_tr": 0.030875,
+    "l1_agree": 0.3955,
+    "l1_agree_chance": 0.0209466171875,
+    "l1_agree_ci95": [
+     0.3848378504230072,
+     0.40626246320638804
+    ],
+    "l2_agree": 0.2335,
+    "l2_agree_chance": 0.005547203125000001,
+    "l2_agree_ci95": [
+     0.22435859550696952,
+     0.24289722824646415
+    ],
+    "l2_in_top5_soft": 0.560625,
+    "l2_in_top5_soft_ci95": [
+     0.549722578947703,
+     0.5714692247481622
+    ],
+    "l1_agree_both_placed": 0.41153134091510185,
+    "median_sim_en": 0.500174880027771,
+    "median_sim_tr": 0.498761922121048,
+    "hist_cosine_l1": 0.908256248825711,
+    "hist_cosine_l2": 0.7840214498692799
+   },
+   "web_langs": {
+    "n": 36000,
+    "n_langs": 9,
+    "off_atlas_rate": 0.004055555555555555,
+    "nmi_l2": 0.25746057388858185,
+    "ami_l2": 0.18615092210553386,
+    "dominant_lift_l2": 5.4475,
+    "share_records_in_90pct_single_language_cells_l2": 0.21563888888888888,
+    "cells_used_l2": 3759,
+    "nmi_l1": 0.1716967691840374,
+    "ami_l1": 0.1651224609264958,
+    "dominant_lift_l1": 3.7885,
+    "share_records_in_90pct_single_language_cells_l1": 0.08480555555555555,
+    "cells_used_l1": 256,
+    "per_language": {
+     "ar": {
+      "off_atlas": 0.016,
+      "median_sim": 0.48716169595718384,
+      "l1_used": 216,
+      "l2_used": 1020
+     },
+     "de": {
+      "off_atlas": 0.00075,
+      "median_sim": 0.6025622487068176,
+      "l1_used": 242,
+      "l2_used": 1678
+     },
+     "en": {
+      "off_atlas": 0.00075,
+      "median_sim": 0.5906386375427246,
+      "l1_used": 231,
+      "l2_used": 1384
+     },
+     "es": {
+      "off_atlas": 0.0005,
+      "median_sim": 0.5964829921722412,
+      "l1_used": 230,
+      "l2_used": 1499
+     },
+     "fr": {
+      "off_atlas": 0.003,
+      "median_sim": 0.5823161602020264,
+      "l1_used": 241,
+      "l2_used": 1535
+     },
+     "ja": {
+      "off_atlas": 0.001,
+      "median_sim": 0.5693938732147217,
+      "l1_used": 226,
+      "l2_used": 1115
+     },
+     "ru": {
+      "off_atlas": 0.00975,
+      "median_sim": 0.5517963171005249,
+      "l1_used": 241,
+      "l2_used": 1519
+     },
+     "tr": {
+      "off_atlas": 0.003,
+      "median_sim": 0.6067047119140625,
+      "l1_used": 248,
+      "l2_used": 1672
+     },
+     "zh": {
+      "off_atlas": 0.00175,
+      "median_sim": 0.6219397783279419,
+      "l1_used": 197,
+      "l2_used": 576
+     }
+    },
+    "mean_top10_l1_overlap_between_languages": 0.14444444444444446
+   },
+   "wiki_langs": {
+    "n": 39000,
+    "n_langs": 13,
+    "off_atlas_rate": 0.012153846153846154,
+    "nmi_l2": 0.27703148916836096,
+    "ami_l2": 0.2151644428504774,
+    "dominant_lift_l2": 6.742333333333334,
+    "share_records_in_90pct_single_language_cells_l2": 0.09974358974358974,
+    "cells_used_l2": 2836,
+    "nmi_l1": 0.1792469962682469,
+    "ami_l1": 0.16999660361350846,
+    "dominant_lift_l1": 4.527333333333333,
+    "share_records_in_90pct_single_language_cells_l1": 0.0007692307692307692,
+    "cells_used_l1": 252,
+    "per_language": {
+     "ar": {
+      "off_atlas": 0.06633333333333333,
+      "median_sim": 0.4443190097808838,
+      "l1_used": 198,
+      "l2_used": 731
+     },
+     "az": {
+      "off_atlas": 0.012666666666666666,
+      "median_sim": 0.5977630615234375,
+      "l1_used": 172,
+      "l2_used": 689
+     },
+     "de": {
+      "off_atlas": 0.0033333333333333335,
+      "median_sim": 0.6015502214431763,
+      "l1_used": 207,
+      "l2_used": 944
+     },
+     "en": {
+      "off_atlas": 0.0023333333333333335,
+      "median_sim": 0.6495939493179321,
+      "l1_used": 193,
+      "l2_used": 905
+     },
+     "es": {
+      "off_atlas": 0.001,
+      "median_sim": 0.6226705312728882,
+      "l1_used": 184,
+      "l2_used": 831
+     },
+     "fa": {
+      "off_atlas": 0.03266666666666666,
+      "median_sim": 0.49684658646583557,
+      "l1_used": 208,
+      "l2_used": 900
+     },
+     "fr": {
+      "off_atlas": 0.0016666666666666668,
+      "median_sim": 0.6167162656784058,
+      "l1_used": 183,
+      "l2_used": 814
+     },
+     "hi": {
+      "off_atlas": 0.008333333333333333,
+      "median_sim": 0.5140813589096069,
+      "l1_used": 175,
+      "l2_used": 593
+     },
+     "ja": {
+      "off_atlas": 0.0013333333333333333,
+      "median_sim": 0.5879606008529663,
+      "l1_used": 191,
+      "l2_used": 638
+     },
+     "ko": {
+      "off_atlas": 0.008666666666666666,
+      "median_sim": 0.5207560062408447,
+      "l1_used": 189,
+      "l2_used": 700
+     },
+     "ru": {
+      "off_atlas": 0.009666666666666667,
+      "median_sim": 0.5293209552764893,
+      "l1_used": 198,
+      "l2_used": 865
+     },
+     "tr": {
+      "off_atlas": 0.006333333333333333,
+      "median_sim": 0.6027402877807617,
+      "l1_used": 208,
+      "l2_used": 1006
+     },
+     "zh": {
+      "off_atlas": 0.0036666666666666666,
+      "median_sim": 0.5713410377502441,
+      "l1_used": 195,
+      "l2_used": 696
+     }
+    },
+    "mean_top10_l1_overlap_between_languages": 0.20512820512820518
+   }
+  }
+ }
+}

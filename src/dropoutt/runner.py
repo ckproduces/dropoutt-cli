@@ -54,7 +54,7 @@ from .tokenizer_panel import CHARS_PER_TOKEN_FALLBACK, TokenizerHandle
 #: Minimum characters for a record to be placed on the atlas. Below this the
 #: embedding is dominated by noise, for the same reason language identification
 #: is gated on length.
-ATLAS_MIN_CHARS = 80
+ATLAS_MIN_CHARS = 40
 
 #: Records placed on the atlas, corpus-wide, split evenly across datasets.
 #:
@@ -74,7 +74,8 @@ ATLAS_UNLIMITED = -1
 #: Records priced by the tokenizer panel, corpus-wide. Deliberately not raised
 #: with the atlas: this sample is tokenized once per family in the panel, which
 #: is five passes of real tokenizers, and the quantity it estimates — tokens per
-#: character — converges long before a coverage histogram over 212 cells does.
+#: character — converges long before a coverage histogram over thousands of
+#: cells does.
 BUDGET_SAMPLE_TARGET = 20_000
 
 
@@ -312,7 +313,9 @@ def scan(
     # Streamed rather than collected. Each shard is folded the moment its
     # predecessors have been, and its samples are released — so the parent holds
     # one shard plus the bounded merged heaps instead of every shard at once.
-    merger = ShardMerger(ctx, active, disc, atlas_target=atlas_sample_target)
+    # The plan may have cut the target to what memory holds; the parent's
+    # merged heap is sized to the same number, not to what was asked for.
+    merger = ShardMerger(ctx, active, disc, atlas_target=plan.sample_target)
     try:
         run_shards(config, plan, ctx=ctx, progress=progress, phase=phase,
                    consume=merger.feed)
@@ -322,7 +325,7 @@ def scan(
         # the single serial result is folded into the fresh state.
         active = [type(check)() for check in active]
         config.check_ids = [c.check_id for c in active]
-        merger = ShardMerger(ctx, active, disc, atlas_target=atlas_sample_target)
+        merger = ShardMerger(ctx, active, disc, atlas_target=plan.sample_target)
         _reset_accumulated(ctx)
         merger.feed(restart.result)
     scanned = merger.finish()
@@ -492,7 +495,14 @@ class ShardMerger:
         else:
             atlas_n = min(self.scanned, self.atlas_target, len(atlas_rows))
         selected = atlas_rows[:atlas_n]
-        weight = (self.scanned / len(selected)) if selected else 1.0
+        # A sampled record stands for scanned / n records of the corpus, but
+        # only when the target actually cut the sample. With `--sampling 0`, or
+        # a target the corpus never reached, every placeable record is here and
+        # stands for itself; weighting it by the records too short to enter the
+        # heap at all turned "250 placed of 321" into "≈256 placed, estimated"
+        # on a corpus that had been placed whole.
+        cut = 0 <= self.atlas_target <= len(atlas_rows)
+        weight = (self.scanned / len(selected)) if selected and cut else 1.0
         if ctx.atlas is not None:
             for _key, text, lang, chars, dataset in selected:
                 # Records below ATLAS_MIN_CHARS are excluded rather than placed.
@@ -853,8 +863,7 @@ def _compute_coverage(
             f"model produces {embedder.dim}; coverage was not computed"
         )
         return
-    if atlas.token_log_prob:
-        embedder = embedder.bind_idf(atlas.token_log_prob)
+    embedder = atlas.bind_embedder(embedder)
 
     texts = [row[0] for row in sample]
     langs = [row[1] for row in sample]
@@ -869,6 +878,30 @@ def _compute_coverage(
             max_chars=profile.max_chars if profile is not None else None,
             max_tokens=profile.max_tokens if profile is not None else 512,
         )
+        # A record long enough to sample can still pool to nothing: forty
+        # spaces, or a string the tokenizer finds no token in. It has no
+        # content to place, which is the same thing the length gate excludes,
+        # so it is counted with the too-short records rather than placed
+        # nowhere and called off-atlas — off-atlas is a statement about being
+        # unlike the map, and a blank is not unlike anything.
+        import numpy as _np
+
+        empty = ~_np.any(_np.asarray(emb), axis=1)
+        if empty.any():
+            keep = [i for i, e in enumerate(empty) if not e]
+            emb = _np.asarray(emb)[keep]
+            texts = [texts[i] for i in keep]
+            langs = [langs[i] for i in keep]
+            datasets = [datasets[i] for i in keep]
+            lengths = [lengths[i] for i in keep]
+            weights = [weights[i] for i in keep]
+            ctx.stats["atlas_too_short"] = (
+                ctx.stats.get("atlas_too_short", 0) + int(empty.sum())
+            )
+            if not texts:
+                ctx.degraded("every sampled record pooled to an empty embedding; "
+                             "coverage was not computed")
+                return
         # One pass over the similarity matrix for all of it. The detected
         # language is passed in because the atlas may centre each record on its
         # own language's mean; when the shipped atlas does not do that, the

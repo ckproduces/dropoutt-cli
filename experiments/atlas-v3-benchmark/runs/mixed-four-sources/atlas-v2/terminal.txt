@@ -1,0 +1,149 @@
+  Discovering supported data files...
+  Loading the atlas...
+  Inferring dataset layouts...
+  Scanning records...
+  Mapping atlas coverage...
+  Finalizing checks...
+  Writing the map...
+  done Placed 10,105 of 12,000 records
+
+  ◧◨ Where this corpus sits on the map
+     atlas-v2
+
+  12,000 records   ·   4 datasets   ·   en 99%, nl under 0.1%, no under 0.1%
+
+    Effective coverage 132.9 of 296 (274 subregions hold any records) (mixed)
+    10,105 placed of 12,000 sampled records · 1,895 off the map (15.8%)
+
+    Each subject area you reached, then the subregions inside it. Density is your share of a subregion against
+the reference corpus's share of the same one: 1.0× matches the map.
+
+    Web servers, SEO and software troubleshooting  9.5/10 reach · 12.7% share · 1,279 records
+         87×  javascript, html, import, class            1.6×  youtube, video, facebook, twitter     
+         18×  client, http, application, server          1.3×  google, search, information, intern…  
+        8.9×  password, account, puedes, user            1.3×  firefox, chrome, google, explorer     
+        4.9×  microsoft, database, data, einem           0.8×  page, link, blog, site                
+        2.6×  server, website, domain, internet          0.7×  wordpress, plugin, site, crear        
+
+    Windows, servers and software administration  1.6/2 reach · 11.3% share · 1,137 records
+         19×  clone, python, install, bash          0.6×  ubuntu, install, tried, sudo  
+
+    Government regulations, contracts and public records  2/2 reach · 8.7% share · 875 records
+         36×  register, volume, proposed, number          1.3×  produced, distributed, online, proo…  
+
+    Banking, loans and retail finance  2/2 reach · 7.4% share · 747 records
+         19×  euro, only, back, were          1.2×  crédito, bank, cartão, people  
+
+    European Union politics, economics and public policy  2/2 reach · 7.3% share · 739 records
+         23×  europea, entre, este, parlamento          2.0×  into, there, were, time  
+
+    Recipes, baking and home cooking  2/2 reach · 3.5% share · 355 records
+        3.2×  make, were, into, some          2.0×  ingredientes, make, para, into  
+
+    Psychology, relationships and self-help  1.8/2 reach · 3.4% share · 346 records
+        9.1×  abstract, research, data, such          0.8×  nicht, plus, dans, sich  
+
+    Physics, mathematics and academic research  2/2 reach · 1.9% share · 192 records
+        4.0×  abstract, institute, science, depar…          1.2×  abstract, institute, physics, unive…  
+
+    114 further areas reached; their subregions are named in the report files
+
+    6 of the map's 128 subject areas never reached
+
+    Web servers, SEO and software troubleshooting — 13× denser here than on the map
+      The map holds 1.0% of its reference text in that subject (10 of its 296 places); 13% of your placed 
+records land there. That is what a specialist corpus looks like, and it is only a problem if you meant to 
+build a general one.
+
+    Windows, servers and software administration — 9.6× denser here than on the map
+      The map holds 1% of its reference text in that subject (2 of its 296 places); 11% of your placed records
+land there.
+
+    Government regulations, contracts and public records — 8.5× denser here than on the map
+      The map holds 1% of its reference text in that subject (2 of its 296 places); 9% of your placed records 
+land there.
+
+    Of the 274 places you reach, 223 hold 25% of your data between them
+      Real presence in 51 places, a toehold in the rest. An occupancy count reads a place holding one record 
+the same as one holding a third of the corpus, which is how a narrow corpus comes to look broad.
+
+    What you have most of, against the map.
+  density    subject area                                 share    one of your records                        
+      87×    Web servers, SEO and software                 9.2%    # -*- coding: utf-8 -*- """                
+             troubleshooting                                       flaskjk.restconverter                      
+                                                                   ~~~~~~~~~~~~~~~~~~~~~ Helper functions…    
+      36×    Government regulations, contracts and         7.6%    COMMISSION REGULATION (EC) No 194/2000 of  
+             public records                                        27 January 2000 amending Regulation (EC)   
+                                                                   No 161…                                    
+      23×    European Union politics, economics and        6.7%    Read the passage below and answer the      
+             public policy                                         question or follow the instruction:        
+                                                                   Translation: Ca…                           
+      19×    Windows, servers and software                10.9%    import os from setuptools import setup,    
+             administration                                        find_packages # Utility function to read   
+                                                                   the READ…                                  
+      19×    Banking, loans and retail finance             7.0%    What is the cost price of a certain stock  
+                                                                   at 4% discount, with 1/5% brokerage, if    
+                                                                   the fin…                                   
+
+    What you have least of, against the map.
+     density    subject area                               share    one of your records                       
+  under 0.1×    Diseases, symptoms and clinical care        0.0%    Can you summarize the impact of DRGs      
+                                                                    reimbursement methodology on Medicare     
+                                                                    program costs…                            
+  under 0.1×    Municipal government, infrastructure        0.0%    Can you describe the key stakeholders     
+                and urban projects                                  involved in the Spokane community-led     
+                                                                    initiatives f…                            
+  under 0.1×    News, personal commentary and community     0.0%    The government pretends that it’s giving  
+                affairs                                             the surviving 9/11 masterminds a fair     
+                                                                    trial, and…                               
+  under 0.1×    General news, culture and social issues     0.0%    I'm not entirely sure why I'm doing       
+                                                                    this. I think its because I'm sick and    
+                                                                    tired of prete…                           
+  under 0.1×    General-interest features, travel and       0.0%    COMMISSION DECISION of 26 March 2010 on   
+                commerce                                            the allocation of import quotas for       
+                                                                    controlled su…                            
+
+    Farthest from the map. Where your mix differs most from the map's. Whether to move it depends on what you 
+are building, which the tool has not been told. Subregions never reached come first among the thinner ones.
+  density    against the map    subject area                        share    one of your records              
+      87×    denser             Web servers, SEO and software        9.2%    # -*- coding: utf-8 -*- """      
+                                troubleshooting                              flaskjk.restconverter            
+                                                                             ~~~~~~~~~~~~~~~~~~~~~ Helper     
+                                                                             functions…                       
+       0×    unreached          Regional news, publishing and           —    never reached                    
+                                public affairs                                                                
+      36×    denser             Government regulations,              7.6%    COMMISSION REGULATION (EC) No    
+                                contracts and public records                 194/2000 of 27 January 2000      
+                                                                             amending Regulation (EC) No      
+                                                                             161…                             
+       0×    unreached          Regional news, publishing and           —    never reached                    
+                                public affairs                                                                
+      23×    denser             European Union politics,             6.7%    Read the passage below and       
+                                economics and public policy                  answer the question or follow    
+                                                                             the instruction: Translation:    
+                                                                             Ca…                              
+       0×    unreached          General news, culture and social        —    never reached                    
+                                issues                                                                        
+      19×    denser             Windows, servers and software       10.9%    import os from setuptools        
+                                administration                               import setup, find_packages #    
+                                                                             Utility function to read the     
+                                                                             READ…                            
+       0×    unreached          General-interest news, science          —    never reached                    
+                                and local information                                                         
+
+    16% of sampled records (1,895) look like nothing in the reference corpus. Concentrated in one language: 
+100% of the off-atlas records are language 'en', where the rate is 16%.
+      similarity 0.18 Walter goes to the zoo, where he spends some time looking at the seals, eight times as 
+long looking at the penguins, and 13 minutes looking at the elephants. He
+      similarity 0.19 There are some lions in Londolozi at first. Lion cubs are born at the rate of 5 per 
+month and lions die at the rate of 1 per month. If there are 148 lions in Lo
+
+  Written to 
+/Users/crokan/Documents/dropoutt-cli/experiments/atlas-v3-benchmark/runs/mixed-four-sources/atlas-v2
+    atlas.html  the map, drawn
+    atlas.md    the same, as text — paste into a PR or a ticket
+    atlas.json  the same, as data — for a dashboard or a gate
+  12,000 records in 2.4s. Run `dropoutt scan` for the checks.
+
+  note atlas.html, atlas.md, atlas.json may contain dataset excerpts and source paths; use --no-evidence 
+before exporting them

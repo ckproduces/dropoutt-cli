@@ -29,6 +29,7 @@ from typing import Any
 
 from ..fingerprint import Fingerprint
 from ..runner import ScanResult
+from .atlas_story import DENSITY_DEFINITION, REACH_DEFINITION, density_ratio
 from .payload import build as build_payload
 from .summary import ScanSummary
 
@@ -72,7 +73,7 @@ def _subregions(area: dict) -> str:
     cells = [cell for cell in area.get("cells", ()) if cell.get("records")]
     cells.sort(key=lambda cell: (-cell.get("density", 0.0), -cell["records"]))
     shown = [
-        f"{(cell.get('density') or 0.0):.1f}× "
+        f"{density_ratio(cell.get('density') or 0.0)} "
         f"{cell.get('caption') or 'subregion ' + str(cell['region'])}"
         for cell in cells[:CELLS_PER_AREA]
     ]
@@ -375,17 +376,15 @@ def _atlas(atlas: dict | None, *, heading: str = "### Where your data sits") -> 
         return [*out, atlas["reason"], ""]
 
     out.append(
-        f"**{atlas['effective_reach_label']} of {atlas['subregions_total']}** in "
-        f"effective coverage ({atlas['subregions_touched']} subregions hold any "
+        f"**{atlas['effective_reach_label']} of {atlas['subregions_total']:,}** in "
+        f"effective coverage ({atlas['subregions_touched']:,} subregions hold any "
         f"records)" + (f" — {atlas['shape']}." if atlas["shape"] else ".")
     )
     out.append("")
     out += _table(
         ["", ""],
         [
-            ["Placed", f"{atlas['placed_records']:,} of "
-                       f"{atlas['sampled_records']:,} sampled records"],
-            ["Too short to place", f"{atlas['too_short_to_place']:,}"],
+            ["Placed", f"{atlas['placed_label']} {atlas['placed_note']}"],
             ["Off the map", f"{atlas['off_map_records']:,} "
                             f"({_pct(atlas['off_map_rate'])})"],
             ["Shape", atlas["shape"] or "—"],
@@ -401,10 +400,7 @@ def _atlas(atlas: dict | None, *, heading: str = "### Where your data sits") -> 
         reached = [area for area in areas if area["records"]]
         out.append(
             "One row per subject area, with the subregions inside it named and "
-            "ranked. Density is your share of a subregion against the reference "
-            "corpus's share of the same one: 1.0× matches the map. Reach sums "
-            "min(1, density) over an area's subregions, so parity is a full "
-            "score and over-representation does not add more."
+            f"ranked. {DENSITY_DEFINITION} {REACH_DEFINITION}"
         )
         out.append("")
         out += _table(
@@ -445,18 +441,15 @@ def _atlas(atlas: dict | None, *, heading: str = "### Where your data sits") -> 
     out += _places("What you have least of, against the map", atlas["least_of"])
 
     if atlas["imbalances"]:
-        out.append(
-            "**Where you are farthest from the map.** Denser than the map: cut "
-            "volume there. Empty or thinner: add that kind of record. Grow "
-            "starts at 0× (never reached)."
-        )
+        out.append(f"**Where you are farthest from the map.** {atlas['imbalances_note']}")
         out.append("")
         out += _table(
-            ["density", "do", "subject area", "share", "one of your records"],
+            ["density", "against the map", "subject area", "share",
+             "one of your records"],
             [
                 [
                     item["density_label"],
-                    item["action"],
+                    item["direction"],
                     item["area"] or "—",
                     _pct(item["share"]) if item["records"] else "—",
                     item["yours"] or (
@@ -587,7 +580,7 @@ def _small_print(data: dict) -> list[str]:
         out.append(
             f"Subject areas and coverage were measured against "
             f"**{identity['version']}**"
-            + (f" ({identity['n_l1']} subject areas over {identity['n_regions']} cells)"
+            + (f" ({identity['n_l1']:,} subject areas over {identity['n_regions']:,} cells)"
                if identity.get("n_l1") else "")
             + f", encoder `{identity['embed_model']}`"
             + (f", {identity['normalization_variant']} normalization"
